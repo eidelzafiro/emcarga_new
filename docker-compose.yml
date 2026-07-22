@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # PHP-FPM Service
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: emcarga-app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: emcarga
+      SERVICE_TAGS: dev
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-emcarga}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - emcarga-network
+
+  # Nginx Service
+  nginx:
+    image: nginx:alpine
+    container_name: emcarga-nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - emcarga-network
+
+  # MySQL Service
+  mysql:
+    image: mysql:8.0
+    container_name: emcarga-mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-emcarga}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - emcarga-mysql-data:/var/lib/mysql/
+      - ./docker/mysql/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    networks:
+      - emcarga-network
+
+  # Redis Service
+  redis:
+    image: redis:alpine
+    container_name: emcarga-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - emcarga-network
+
+# Docker Networks
+networks:
+  emcarga-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  emcarga-mysql-data:
+    driver: local

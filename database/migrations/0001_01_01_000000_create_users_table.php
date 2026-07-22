@@ -11,14 +11,30 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Tabla única de usuarios (decisión D2 del PLAN.md):
+        // absorbe los campos de cod_usuarios del sistema legacy.
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('username', 100)->unique();      // legacy: cod_usuarios.login
+            $table->string('email')->nullable()->unique();
             $table->string('password');
+
+            // Campos legacy de cod_usuarios
+            $table->unsignedBigInteger('idperfil')->nullable();  // FK a perfiles se formaliza en Fase 4.2
+            $table->unsignedBigInteger('idunidad')->nullable();
+            $table->unsignedBigInteger('idgrupo')->nullable();
+            $table->boolean('bloqueado')->default(false);        // bloqueo manual por el administrador
+            $table->unsignedTinyInteger('intentos_fallidos')->default(0); // >= 5 equivale a bloqueado (legacy)
+            $table->timestamp('ultimo_login')->nullable();
+            $table->timestamp('fecha_cambio_password')->nullable();
+            $table->boolean('password_temporal')->default(false); // fuerza cambio en el próximo acceso (legacy: cpass)
+
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->index('idperfil');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

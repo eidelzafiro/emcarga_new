@@ -26,20 +26,36 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'idperfil' => null,
+            'idunidad' => null,
+            'idgrupo' => null,
+            'bloqueado' => false,
+            'intentos_fallidos' => 0,
+            'password_temporal' => false,
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indica que el usuario está bloqueado por el administrador.
      */
-    public function unverified(): static
+    public function bloqueado(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'bloqueado' => true,
+        ]);
+    }
+
+    /**
+     * Indica que el usuario debe cambiar su contraseña temporal.
+     */
+    public function conPasswordTemporal(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'password_temporal' => true,
         ]);
     }
 }

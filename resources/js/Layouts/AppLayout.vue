@@ -23,7 +23,20 @@
             <div class="ml-3 relative">
               <div class="flex items-center space-x-4">
                 <span class="text-sm text-gray-700">{{ user?.name }}</span>
-                <!-- NOTA: el enlace de logout se habilita en la Fase 4.1 (Auth) -->
+                <Link
+                  :href="route('password.edit')"
+                  class="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Cambiar contraseña
+                </Link>
+                <Link
+                  :href="route('logout')"
+                  method="post"
+                  as="button"
+                  class="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Cerrar sesión
+                </Link>
               </div>
             </div>
           </div>

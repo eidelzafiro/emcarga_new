@@ -73,15 +73,63 @@
               <i class="pi" :class="isDark ? 'pi-sun' : 'pi-moon'" />
             </button>
 
-            <button
-              class="p-2 rounded-md text-surface-400 hover:text-surface-600 hover:bg-surface-100 relative"
-              @click="abrirNotificaciones"
-              v-tooltip.bottom="'Notificaciones'"
-            >
-              <i class="pi pi-bell text-lg" />
-              <Badge v-if="notificacionesPendientes > 0" :value="notificacionesPendientes" severity="danger" class="absolute -top-1 -right-1" />
-            </button>
+            <!-- Notificaciones -->
+            <div class="relative" ref="notificacionesRef">
+              <button
+                class="p-2 rounded-md text-surface-400 hover:text-surface-600 hover:bg-surface-100 relative"
+                @click="toggleNotificaciones"
+                v-tooltip.bottom="'Notificaciones'"
+              >
+                <i class="pi pi-bell text-lg" />
+                <Badge v-if="pendientes > 0" :value="pendientes" severity="danger" class="absolute -top-1 -right-1" />
+              </button>
 
+              <div
+                v-if="notificacionesAbiertas"
+                class="absolute right-0 top-full mt-1 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-surface-200 z-50"
+              >
+                <div class="flex items-center justify-between px-4 py-3 border-b border-surface-100">
+                  <h3 class="text-sm font-semibold text-surface-700">Notificaciones</h3>
+                  <button
+                    v-if="pendientes > 0"
+                    class="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                    @click="marcarTodasLeidas"
+                  >
+                    Marcar todas leídas
+                  </button>
+                </div>
+
+                <div class="max-h-80 overflow-y-auto">
+                  <div v-if="notificaciones.length === 0" class="p-6 text-center text-sm text-surface-400">
+                    <i class="pi pi-inbox text-2xl mb-2 block" />
+                    No hay notificaciones
+                  </div>
+
+                  <div
+                    v-for="notif in notificaciones"
+                    :key="notif.id"
+                    class="flex gap-3 px-4 py-3 cursor-pointer border-b border-surface-50 last:border-0 hover:bg-surface-50 transition-colors"
+                    :class="{ 'bg-emerald-50/50': !notif.leida }"
+                    @click="notif.url ? visitar(notif.url) : marcarLeida(notif)"
+                  >
+                    <div
+                      class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                      :class="claseIcono(notif.tipo)"
+                    >
+                      <i :class="notif.icono" class="text-white text-sm" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-surface-800 truncate">{{ notif.titulo }}</p>
+                      <p class="text-xs text-surface-500 truncate">{{ notif.cuerpo }}</p>
+                      <p class="text-xs text-surface-400 mt-0.5">{{ notif.creada }}</p>
+                    </div>
+                    <div v-if="!notif.leida" class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-2" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Usuario -->
             <div class="relative" ref="userMenuRef">
               <button
                 class="flex items-center gap-2 p-1.5 rounded-md hover:bg-surface-100"
@@ -149,7 +197,11 @@ const toast = useToast();
 const sidebarOpen = ref(true);
 const userMenuOpen = ref(false);
 const userMenuRef = ref(null);
+const notificacionesRef = ref(null);
 const isDark = ref(false);
+const notificaciones = ref([]);
+const pendientes = ref(0);
+const notificacionesAbiertas = ref(false);
 
 const isMobile = ref(false);
 const checkMobile = () => {
@@ -161,6 +213,63 @@ const handleClickOutside = (e) => {
   if (userMenuRef.value && !userMenuRef.value.contains(e.target)) {
     userMenuOpen.value = false;
   }
+  if (notificacionesRef.value && !notificacionesRef.value.contains(e.target)) {
+    notificacionesAbiertas.value = false;
+  }
+};
+
+const cargarNotificaciones = async () => {
+  if (!user.value) return;
+  try {
+    const res = await fetch(route('notificaciones.index'));
+    const data = await res.json();
+    notificaciones.value = data.items;
+    pendientes.value = data.pendientes;
+  } catch {
+    // Silencioso
+  }
+};
+
+const marcarLeida = async (notif) => {
+  if (notif.leida) return;
+  try {
+    await fetch(route('notificaciones.leer', notif.id), { method: 'POST' });
+    notif.leida = true;
+    pendientes.value = Math.max(0, pendientes.value - 1);
+  } catch {
+    // Silencioso
+  }
+};
+
+const marcarTodasLeidas = async () => {
+  try {
+    await fetch(route('notificaciones.leer-todas'), { method: 'POST' });
+    notificaciones.value.forEach((n) => (n.leida = true));
+    pendientes.value = 0;
+  } catch {
+    // Silencioso
+  }
+};
+
+const toggleNotificaciones = () => {
+  notificacionesAbiertas.value = !notificacionesAbiertas.value;
+  if (notificacionesAbiertas.value && notificaciones.value.length === 0) {
+    cargarNotificaciones();
+  }
+};
+
+const visitar = (url) => {
+  notificacionesAbiertas.value = false;
+  router.visit(url);
+};
+
+const claseIcono = (tipo) => {
+  return {
+    success: 'bg-emerald-500',
+    error: 'bg-red-500',
+    warning: 'bg-amber-500',
+    info: 'bg-blue-500',
+  }[tipo] || 'bg-surface-400';
 };
 
 onMounted(() => {
@@ -174,17 +283,23 @@ onMounted(() => {
     document.documentElement.classList.add('p-dark');
   }
 
-  // Conectar Echo para tiempo real (Fase 4.7+)
-  if (window.Echo && user.value) {
-    window.Echo.private('test')
-      .listen('.TestBroadcast', (e) => {
-        toast.add({ severity: 'info', summary: 'Tiempo real', detail: e.message, life: 4000 });
-      });
+  cargarNotificaciones();
 
+  if (window.Echo && user.value) {
     window.Echo.private(`App.Models.User.${user.value.id}`)
       .notification((notification) => {
-        notificacionesPendientes.value++;
-        toast.add({ severity: 'info', summary: notification.title || 'Notificación', detail: notification.body || '', life: 5000 });
+        pendientes.value++;
+        notificaciones.value.unshift({
+          id: notification.id,
+          titulo: notification.titulo || 'Notificación',
+          cuerpo: notification.cuerpo || '',
+          tipo: notification.tipo || 'info',
+          url: notification.url || null,
+          icono: notification.icono || 'pi pi-info-circle',
+          leida: false,
+          creada: 'Ahora',
+        });
+        toast.add({ severity: notification.tipo || 'info', summary: notification.titulo || 'Notificación', detail: notification.cuerpo || '', life: 5000 });
       });
   }
 });
@@ -193,11 +308,8 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile);
   document.removeEventListener('click', handleClickOutside);
 
-  if (window.Echo) {
-    window.Echo.leaveChannel('test');
-    if (user.value) {
-      window.Echo.leaveChannel(`App.Models.User.${user.value.id}`);
-    }
+  if (window.Echo && user.value) {
+    window.Echo.leaveChannel(`App.Models.User.${user.value.id}`);
   }
 });
 
@@ -235,12 +347,6 @@ const iniciales = computed(() => {
   if (!user.value?.name) return 'U';
   return user.value.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 });
-
-const notificacionesPendientes = ref(0);
-
-const abrirNotificaciones = () => {
-  // TODO: Fase 4.8
-};
 
 const pageTitle = computed(() => {
   const title = page.props.title;

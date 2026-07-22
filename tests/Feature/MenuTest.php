@@ -29,18 +29,18 @@ class MenuTest extends TestCase
         );
     }
 
-    public function test_tecnica_ve_dashboard_pizarra_y_flota_con_hijos(): void
+    public function test_tecnica_ve_dashboard_pizarra_flota_y_taller(): void
     {
         $user = User::factory()->create();
         $user->assignRole('TECNICA');
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 3)
+                ->has('menu', 4)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Pizarra')
                 ->where('menu.2.label', 'Flota')
-                ->where('menu.2.children.0.label', 'Vehículos')
+                ->where('menu.3.label', 'Taller')
         );
     }
 
@@ -51,10 +51,10 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 4)
-                ->where('menu.3.label', 'Administración')
-                ->where('menu.3.children.0.label', 'Usuarios')
-                ->where('menu.3.children.1.label', 'Perfiles')
+                ->has('menu', 5)
+                ->where('menu.4.label', 'Administración')
+                ->where('menu.4.children.0.label', 'Usuarios')
+                ->where('menu.4.children.1.label', 'Perfiles')
         );
     }
 

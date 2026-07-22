@@ -15,6 +15,7 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OtrosAgregadosController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraController;
+use App\Http\Controllers\TallerController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
 
@@ -83,6 +84,10 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('energia', EnergiaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Módulo Taller
+        Route::resource('taller', TallerController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Administración de usuarios (Fase 4.3)

@@ -39,6 +39,8 @@ class PermissionSeeder extends Seeder
 
             'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
 
+            'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
+
             'pizarra.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
@@ -66,6 +68,7 @@ class PermissionSeeder extends Seeder
                 'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
                 'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
                 'pizarra.ver',
+                'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
             ],
             'RECHUM' => ['dashboard.ver'],
             'COMERCIAL' => ['dashboard.ver'],

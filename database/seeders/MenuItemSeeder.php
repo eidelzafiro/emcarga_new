@@ -69,6 +69,11 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Energía', 'icon' => 'bolt', 'permission' => 'energia.ver', 'orden' => 9, 'parent_id' => $flota->id]
         );
 
+        MenuItem::firstOrCreate(
+            ['route' => 'taller.index'],
+            ['label' => 'Taller', 'icon' => 'wrench', 'permission' => 'taller.ver', 'orden' => 4]
+        );
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

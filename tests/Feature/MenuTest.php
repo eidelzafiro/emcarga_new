@@ -29,20 +29,22 @@ class MenuTest extends TestCase
         );
     }
 
-    public function test_tecnica_ve_dashboard_y_flota_pero_no_administracion(): void
+    public function test_tecnica_ve_dashboard_pizarra_y_flota_con_hijos(): void
     {
         $user = User::factory()->create();
         $user->assignRole('TECNICA');
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 2)
+                ->has('menu', 3)
                 ->where('menu.0.label', 'Dashboard')
-                ->where('menu.1.label', 'Flota')
+                ->where('menu.1.label', 'Pizarra')
+                ->where('menu.2.label', 'Flota')
+                ->where('menu.2.children.0.label', 'Vehículos')
         );
     }
 
-    public function test_admin_ve_administracion_con_usuarios_y_perfiles(): void
+    public function test_admin_ve_todos_los_modulos(): void
     {
         $user = User::factory()->create();
         $user->assignRole('ADMIN');
@@ -50,7 +52,6 @@ class MenuTest extends TestCase
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
                 ->has('menu', 4)
-                ->where('menu.0.label', 'Dashboard')
                 ->where('menu.3.label', 'Administración')
                 ->where('menu.3.children.0.label', 'Usuarios')
                 ->where('menu.3.children.1.label', 'Perfiles')
@@ -71,8 +72,6 @@ class MenuTest extends TestCase
 
     public function test_agrupador_sin_hijos_visibles_no_se_muestra(): void
     {
-        // COMERCIAL solo tiene dashboard.ver: el agrupador Administración
-        // queda sin hijos visibles y no debe aparecer.
         $user = User::factory()->create();
         $user->assignRole('COMERCIAL');
 

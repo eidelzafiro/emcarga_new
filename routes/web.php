@@ -4,7 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BateriasController;
+use App\Http\Controllers\CajasController;
+use App\Http\Controllers\DiferencialesController;
+use App\Http\Controllers\EnergiaController;
+use App\Http\Controllers\LubricantesController;
+use App\Http\Controllers\MotoresController;
+use App\Http\Controllers\NeumaticosController;
 use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\OtrosAgregadosController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraController;
 use App\Http\Controllers\TractivosController;
@@ -51,6 +59,30 @@ Route::middleware('auth')->group(function () {
 
         // Módulo Técnico - Flota
         Route::resource('tractivos', TractivosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('motores', MotoresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('cajas', CajasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('diferenciales', DiferencialesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('baterias', BateriasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('neumaticos', NeumaticosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('lubricantes', LubricantesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('otros-agregados', OtrosAgregadosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('energia', EnergiaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Administración de usuarios (Fase 4.3)

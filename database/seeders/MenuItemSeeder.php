@@ -7,10 +7,6 @@ use Illuminate\Database\Seeder;
 
 class MenuItemSeeder extends Seeder
 {
-    /**
-     * Ítems base del menú. Al migrar cada módulo (Fase 5) se registran
-     * aquí sus ítems con el permiso que los gobierna.
-     */
     public function run(): void
     {
         MenuItem::firstOrCreate(
@@ -19,13 +15,58 @@ class MenuItemSeeder extends Seeder
         );
 
         MenuItem::firstOrCreate(
-            ['route' => 'tractivos.index'],
-            ['label' => 'Flota', 'icon' => 'truck', 'permission' => 'tractivos.ver', 'orden' => 2]
+            ['route' => 'pizarra.index'],
+            ['label' => 'Pizarra', 'icon' => 'map', 'permission' => 'pizarra.ver', 'orden' => 2]
+        );
+
+        $flota = MenuItem::firstOrCreate(
+            ['label' => 'Flota', 'parent_id' => null],
+            ['icon' => 'truck', 'route' => null, 'permission' => null, 'orden' => 3]
         );
 
         MenuItem::firstOrCreate(
-            ['route' => 'pizarra.index'],
-            ['label' => 'Pizarra', 'icon' => 'map', 'permission' => 'pizarra.ver', 'orden' => 3]
+            ['route' => 'tractivos.index'],
+            ['label' => 'Vehículos', 'icon' => 'truck', 'permission' => 'tractivos.ver', 'orden' => 1, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'motores.index'],
+            ['label' => 'Motores', 'icon' => 'cog', 'permission' => 'motores.ver', 'orden' => 2, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'cajas.index'],
+            ['label' => 'Cajas', 'icon' => 'cog', 'permission' => 'cajas.ver', 'orden' => 3, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'diferenciales.index'],
+            ['label' => 'Diferenciales', 'icon' => 'cog', 'permission' => 'diferenciales.ver', 'orden' => 4, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'baterias.index'],
+            ['label' => 'Baterías', 'icon' => 'bolt', 'permission' => 'baterias.ver', 'orden' => 5, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'neumaticos.index'],
+            ['label' => 'Neumáticos', 'icon' => 'cog', 'permission' => 'neumaticos.ver', 'orden' => 6, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'lubricantes.index'],
+            ['label' => 'Lubricantes', 'icon' => 'droplet', 'permission' => 'lubricantes.ver', 'orden' => 7, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'otros-agregados.index'],
+            ['label' => 'Otros Agregados', 'icon' => 'cog', 'permission' => 'otros-agregados.ver', 'orden' => 8, 'parent_id' => $flota->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'energia.index'],
+            ['label' => 'Energía', 'icon' => 'bolt', 'permission' => 'energia.ver', 'orden' => 9, 'parent_id' => $flota->id]
         );
 
         $administracion = MenuItem::firstOrCreate(

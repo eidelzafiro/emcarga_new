@@ -18,12 +18,11 @@ class Tractivo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'descripcion',
-        'placa',
-        'marca',
-        'modelo',
-        'anno',
-        'estado',
+        'codigo', 'descripcion', 'placa', 'id_tipo_vehiculo',
+        'marca', 'modelo', 'anno', 'color',
+        'numero_motor', 'numero_chasis', 'numero_caja',
+        'capacidad_toneladas', 'capacidad_m3',
+        'estado', 'fecha_alta', 'fecha_baja', 'kilometraje_actual',
     ];
 
     /**

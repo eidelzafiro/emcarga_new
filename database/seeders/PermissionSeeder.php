@@ -23,6 +23,22 @@ class PermissionSeeder extends Seeder
 
             'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
 
+            'motores.ver', 'motores.crear', 'motores.editar', 'motores.eliminar',
+
+            'cajas.ver', 'cajas.crear', 'cajas.editar', 'cajas.eliminar',
+
+            'diferenciales.ver', 'diferenciales.crear', 'diferenciales.editar', 'diferenciales.eliminar',
+
+            'baterias.ver', 'baterias.crear', 'baterias.editar', 'baterias.eliminar',
+
+            'neumaticos.ver', 'neumaticos.crear', 'neumaticos.editar', 'neumaticos.eliminar',
+
+            'lubricantes.ver', 'lubricantes.crear', 'lubricantes.editar', 'lubricantes.eliminar',
+
+            'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
+
+            'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
+
             'pizarra.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
@@ -38,7 +54,19 @@ class PermissionSeeder extends Seeder
         // Asignación de permisos por rol (perfiles legacy)
         $asignacion = [
             'ADMIN' => $permisos,
-            'TECNICA' => ['dashboard.ver', 'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar'],
+            'TECNICA' => [
+                'dashboard.ver',
+                'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
+                'motores.ver', 'motores.crear', 'motores.editar', 'motores.eliminar',
+                'cajas.ver', 'cajas.crear', 'cajas.editar', 'cajas.eliminar',
+                'diferenciales.ver', 'diferenciales.crear', 'diferenciales.editar', 'diferenciales.eliminar',
+                'baterias.ver', 'baterias.crear', 'baterias.editar', 'baterias.eliminar',
+                'neumaticos.ver', 'neumaticos.crear', 'neumaticos.editar', 'neumaticos.eliminar',
+                'lubricantes.ver', 'lubricantes.crear', 'lubricantes.editar', 'lubricantes.eliminar',
+                'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
+                'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
+                'pizarra.ver',
+            ],
             'RECHUM' => ['dashboard.ver'],
             'COMERCIAL' => ['dashboard.ver'],
             'CONTABILIDAD' => ['dashboard.ver'],

@@ -173,11 +173,32 @@ onMounted(() => {
     isDark.value = true;
     document.documentElement.classList.add('p-dark');
   }
+
+  // Conectar Echo para tiempo real (Fase 4.7+)
+  if (window.Echo && user.value) {
+    window.Echo.private('test')
+      .listen('.TestBroadcast', (e) => {
+        toast.add({ severity: 'info', summary: 'Tiempo real', detail: e.message, life: 4000 });
+      });
+
+    window.Echo.private(`App.Models.User.${user.value.id}`)
+      .notification((notification) => {
+        notificacionesPendientes.value++;
+        toast.add({ severity: 'info', summary: notification.title || 'Notificación', detail: notification.body || '', life: 5000 });
+      });
+  }
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile);
   document.removeEventListener('click', handleClickOutside);
+
+  if (window.Echo) {
+    window.Echo.leaveChannel('test');
+    if (user.value) {
+      window.Echo.leaveChannel(`App.Models.User.${user.value.id}`);
+    }
+  }
 });
 
 watch(isDark, (val) => {

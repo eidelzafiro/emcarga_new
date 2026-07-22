@@ -1,6 +1,23 @@
+import { usePage } from '@inertiajs/vue3';
+
 /**
- * Configuración de librerías globales del cliente.
- *
- * Laravel Echo (WebSockets con Laravel Reverb) se registrará
- * en la Fase 4.7 del plan de migración.
+ * Laravel Echo — WebSockets con Laravel Reverb.
+ * Configurado en Fase 4.7 del plan de migración.
  */
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+window.Pusher = Pusher;
+
+const echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
+    wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
+    wssPort: import.meta.env.VITE_REVERB_PORT || 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
+    disableStats: true,
+});
+
+window.Echo = echo;

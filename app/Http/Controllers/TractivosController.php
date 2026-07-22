@@ -19,6 +19,7 @@ class TractivosController extends Controller
         })->paginate(20);
 
         return Inertia::render('Tractivos/Index', [
+            'title' => 'Flota de Vehículos',
             'tractivos' => $tractivos,
             'filters' => $request->only(['search']),
         ]);

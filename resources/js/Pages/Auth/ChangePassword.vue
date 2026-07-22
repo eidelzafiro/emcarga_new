@@ -1,88 +1,70 @@
 <template>
   <AppLayout>
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Cambiar contraseña
-      </h2>
-    </template>
+    <div class="max-w-xl mx-auto">
+      <Card>
+        <template #title>Cambiar contraseña</template>
+        <template #content>
+          <div class="mb-6 p-3 bg-surface-50 rounded-lg border border-surface-200">
+            <p class="text-sm font-medium text-surface-700 mb-2">Requisitos:</p>
+            <ul class="text-sm text-surface-500 space-y-1 list-disc pl-5">
+              <li>Mínimo 6 caracteres</li>
+              <li>Al menos una mayúscula, una minúscula, un número y un carácter especial (!@#.$%?&amp;*()_-+=)</li>
+              <li>No puede coincidir con contraseñas utilizadas anteriormente</li>
+            </ul>
+          </div>
 
-    <div class="py-12">
-      <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
-        <div
-          v-if="$page.props.flash.warning"
-          class="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-800"
-        >
-          {{ $page.props.flash.warning }}
-        </div>
-
-        <div class="bg-white shadow rounded-lg p-6">
-          <ul class="mb-6 text-sm text-gray-600 list-disc pl-5 space-y-1">
-            <li>Mínimo 6 caracteres</li>
-            <li>Al menos una mayúscula, una minúscula, un número y un carácter especial (!@#.$%?&amp;*()_-+=)</li>
-            <li>No puede coincidir con contraseñas utilizadas anteriormente</li>
-          </ul>
-
-          <form @submit.prevent="submit">
-            <div class="mb-5">
-              <label for="password_actual" class="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña actual
-              </label>
-              <input
+          <form @submit.prevent="submit" class="space-y-5">
+            <div>
+              <label for="password_actual" class="block text-sm font-medium text-surface-700 mb-1">Contraseña actual</label>
+              <Password
                 id="password_actual"
                 v-model="form.password_actual"
-                type="password"
-                required
-                autocomplete="current-password"
-                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                :class="{ 'border-red-500': form.errors.password_actual }"
+                :feedback="false"
+                toggleMask
+                class="w-full"
+                :class="{ 'p-invalid': form.errors.password_actual }"
+                inputClass="w-full"
+                fluid
               />
-              <p v-if="form.errors.password_actual" class="mt-1 text-sm text-red-600">
-                {{ form.errors.password_actual }}
-              </p>
+              <small v-if="form.errors.password_actual" class="text-red-500">{{ form.errors.password_actual }}</small>
             </div>
 
-            <div class="mb-5">
-              <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                Nueva contraseña
-              </label>
-              <input
+            <div>
+              <label for="password" class="block text-sm font-medium text-surface-700 mb-1">Nueva contraseña</label>
+              <Password
                 id="password"
                 v-model="form.password"
-                type="password"
-                required
-                autocomplete="new-password"
-                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                :class="{ 'border-red-500': form.errors.password }"
+                toggleMask
+                class="w-full"
+                :class="{ 'p-invalid': form.errors.password }"
+                inputClass="w-full"
+                fluid
               />
-              <p v-if="form.errors.password" class="mt-1 text-sm text-red-600">
-                {{ form.errors.password }}
-              </p>
+              <small v-if="form.errors.password" class="text-red-500">{{ form.errors.password }}</small>
             </div>
 
-            <div class="mb-6">
-              <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
-                Confirmar nueva contraseña
-              </label>
-              <input
+            <div>
+              <label for="password_confirmation" class="block text-sm font-medium text-surface-700 mb-1">Confirmar nueva contraseña</label>
+              <Password
                 id="password_confirmation"
                 v-model="form.password_confirmation"
-                type="password"
-                required
-                autocomplete="new-password"
-                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                :feedback="false"
+                toggleMask
+                class="w-full"
+                inputClass="w-full"
+                fluid
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              :disabled="form.processing"
-              class="w-full py-2.5 px-4 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition"
-            >
-              {{ form.processing ? 'Actualizando…' : 'Actualizar contraseña' }}
-            </button>
+              :loading="form.processing"
+              label="Actualizar contraseña"
+              class="w-full"
+            />
           </form>
-        </div>
-      </div>
+        </template>
+      </Card>
     </div>
   </AppLayout>
 </template>

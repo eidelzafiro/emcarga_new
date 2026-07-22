@@ -1,222 +1,225 @@
 <template>
   <AppLayout>
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Gestión de usuarios
-      </h2>
-    </template>
-
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <!-- Mensajes flash -->
-        <div v-if="$page.props.flash.success" class="mb-4 rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
-          {{ $page.props.flash.success }}
-        </div>
-        <div v-if="$page.props.flash.error" class="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800">
-          {{ $page.props.flash.error }}
-        </div>
-
-        <div class="bg-white shadow rounded-lg">
-          <!-- Barra superior: búsqueda + nuevo -->
-          <div class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-200">
-            <input
+    <Card>
+      <template #title>Gestión de usuarios</template>
+      <template #content>
+        <!-- Barra de herramientas -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <div class="relative w-full sm:w-72">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm" />
+            <InputText
               v-model="search"
-              type="text"
               placeholder="Buscar por nombre o usuario…"
-              class="w-full sm:w-80 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              class="w-full pl-9"
               @input="buscar"
             />
-            <button
-              v-if="can('usuarios.crear')"
-              class="inline-flex justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition"
-              @click="abrirCrear"
-            >
-              Nuevo usuario
-            </button>
           </div>
-
-          <!-- Tabla -->
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perfil</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último acceso</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="usuario in usuarios.data" :key="usuario.id">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ usuario.name }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ usuario.username }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ usuario.roles.map(r => r.name).join(', ') || '—' }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span v-if="usuario.bloqueado || usuario.intentos_fallidos >= 5" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Bloqueado
-                    </span>
-                    <span v-else-if="usuario.password_temporal" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      Contraseña temporal
-                    </span>
-                    <span v-else class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Activo
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ formatoFecha(usuario.ultimo_login) }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    <button v-if="can('usuarios.editar')" class="text-indigo-600 hover:text-indigo-900" @click="abrirEditar(usuario)">
-                      Editar
-                    </button>
-                    <button
-                      v-if="can('usuarios.desbloquear') && (usuario.bloqueado || usuario.intentos_fallidos >= 5)"
-                      class="text-yellow-600 hover:text-yellow-900"
-                      @click="desbloquear(usuario)"
-                    >
-                      Desbloquear
-                    </button>
-                    <button v-if="can('usuarios.restablecer')" class="text-gray-600 hover:text-gray-900" @click="abrirRestablecer(usuario)">
-                      Restablecer
-                    </button>
-                    <button v-if="can('usuarios.eliminar')" class="text-red-600 hover:text-red-900" @click="abrirEliminar(usuario)">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="usuarios.data.length === 0">
-                  <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
-                    No se encontraron usuarios.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Paginación -->
-          <div v-if="usuarios.links.length > 3" class="p-4 border-t border-gray-200 flex flex-wrap gap-1">
-            <Link
-              v-for="(link, i) in usuarios.links"
-              :key="i"
-              :href="link.url || '#'"
-              class="px-3 py-1 rounded text-sm"
-              :class="link.active ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
-              v-html="link.label"
-            />
-          </div>
+          <Button
+            v-if="can('usuarios.crear')"
+            icon="pi pi-plus"
+            label="Nuevo usuario"
+            @click="abrirCrear"
+          />
         </div>
-      </div>
-    </div>
+
+        <!-- Tabla -->
+        <DataTable
+          :value="usuarios.data"
+          :rows="10"
+          :paginator="true"
+          :totalRecords="usuarios.total"
+          :lazy="true"
+          :first="(usuarios.current_page - 1) * usuarios.per_page"
+          @page="onPage"
+          sortMode="multiple"
+          stripedRows
+          size="small"
+          class="p-datatable-sm"
+        >
+          <Column field="name" header="Nombre" sortable />
+          <Column field="username" header="Usuario" sortable />
+          <Column header="Perfil">
+            <template #body="{ data }">
+              <span v-for="rol in data.roles" :key="rol.id">
+                <Tag :value="rol.name" severity="info" class="mr-1" />
+              </span>
+              <span v-if="!data.roles.length" class="text-surface-400 text-sm">—</span>
+            </template>
+          </Column>
+          <Column header="Estado">
+            <template #body="{ data }">
+              <Tag
+                v-if="data.bloqueado || data.intentos_fallidos >= 5"
+                value="Bloqueado"
+                severity="danger"
+              />
+              <Tag
+                v-else-if="data.password_temporal"
+                value="Contraseña temporal"
+                severity="warn"
+              />
+              <Tag
+                v-else
+                value="Activo"
+                severity="success"
+              />
+            </template>
+          </Column>
+          <Column header="Último acceso">
+            <template #body="{ data }">
+              <span class="text-sm text-surface-500">{{ formatoFecha(data.ultimo_login) }}</span>
+            </template>
+          </Column>
+          <Column header="Acciones" :exportable="false">
+            <template #body="{ data }">
+              <div class="flex gap-1">
+                <Button
+                  v-if="can('usuarios.editar')"
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  text
+                  rounded
+                  size="small"
+                  @click="abrirEditar(data)"
+                  v-tooltip.left="'Editar'"
+                />
+                <Button
+                  v-if="can('usuarios.desbloquear') && (data.bloqueado || data.intentos_fallidos >= 5)"
+                  icon="pi pi-lock-open"
+                  severity="warn"
+                  text
+                  rounded
+                  size="small"
+                  @click="desbloquear(data)"
+                  v-tooltip.left="'Desbloquear'"
+                />
+                <Button
+                  v-if="can('usuarios.restablecer')"
+                  icon="pi pi-key"
+                  severity="info"
+                  text
+                  rounded
+                  size="small"
+                  @click="abrirRestablecer(data)"
+                  v-tooltip.left="'Restablecer'"
+                />
+                <Button
+                  v-if="can('usuarios.eliminar')"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  text
+                  rounded
+                  size="small"
+                  @click="abrirEliminar(data)"
+                  v-tooltip.left="'Eliminar'"
+                />
+              </div>
+            </template>
+          </Column>
+          <template #empty>
+            <div class="text-center py-8 text-surface-400">
+              <i class="pi pi-users text-3xl mb-2 block" />
+              No se encontraron usuarios.
+            </div>
+          </template>
+        </DataTable>
+      </template>
+    </Card>
 
     <!-- Modal crear/editar -->
-    <Modal v-if="modalForm" @close="cerrarModales">
-      <template #header>{{ editando ? 'Editar usuario' : 'Nuevo usuario' }}</template>
-      <template #body>
-        <form class="space-y-4" @submit.prevent="guardarForm">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
-            <input v-model="form.name" type="text" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
-            <p v-if="form.errors.name" class="mt-1 text-sm text-red-600">{{ form.errors.name }}</p>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-            <input v-model="form.username" type="text" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
-            <p v-if="form.errors.username" class="mt-1 text-sm text-red-600">{{ form.errors.username }}</p>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Correo (opcional)</label>
-            <input v-model="form.email" type="email" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
-            <p v-if="form.errors.email" class="mt-1 text-sm text-red-600">{{ form.errors.email }}</p>
-          </div>
-          <div v-if="!editando">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña temporal</label>
-            <input v-model="form.password" type="text" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
-            <p class="mt-1 text-xs text-gray-500">El usuario deberá cambiarla en su primer acceso.</p>
-            <p v-if="form.errors.password" class="mt-1 text-sm text-red-600">{{ form.errors.password }}</p>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
-            <select v-model="form.role" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-              <option value="" disabled>Seleccione un perfil</option>
-              <option v-for="rol in roles" :key="rol" :value="rol">{{ rol }}</option>
-            </select>
-            <p v-if="form.errors.role" class="mt-1 text-sm text-red-600">{{ form.errors.role }}</p>
-          </div>
-        </form>
-      </template>
+    <Dialog
+      v-model:visible="modalForm"
+      :header="editando ? 'Editar usuario' : 'Nuevo usuario'"
+      :modal="true"
+      class="w-full max-w-lg"
+    >
+      <form class="space-y-4" @submit.prevent="guardarForm">
+        <div>
+          <label class="block text-sm font-medium text-surface-700 mb-1">Nombre completo</label>
+          <InputText v-model="form.name" class="w-full" :class="{ 'p-invalid': form.errors.name }" />
+          <small v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</small>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-surface-700 mb-1">Usuario</label>
+          <InputText v-model="form.username" class="w-full uppercase" :class="{ 'p-invalid': form.errors.username }" />
+          <small v-if="form.errors.username" class="text-red-500">{{ form.errors.username }}</small>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-surface-700 mb-1">Correo (opcional)</label>
+          <InputText v-model="form.email" type="email" class="w-full" :class="{ 'p-invalid': form.errors.email }" />
+          <small v-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</small>
+        </div>
+        <div v-if="!editando">
+          <label class="block text-sm font-medium text-surface-700 mb-1">Contraseña temporal</label>
+          <Password v-model="form.password" :feedback="false" toggleMask class="w-full" inputClass="w-full" fluid />
+          <small class="text-surface-400 block mt-1">El usuario deberá cambiarla en su primer acceso.</small>
+          <small v-if="form.errors.password" class="text-red-500 block">{{ form.errors.password }}</small>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-surface-700 mb-1">Perfil</label>
+          <Select
+            v-model="form.role"
+            :options="roles"
+            placeholder="Seleccione un perfil"
+            class="w-full"
+            :class="{ 'p-invalid': form.errors.role }"
+          />
+          <small v-if="form.errors.role" class="text-red-500">{{ form.errors.role }}</small>
+        </div>
+      </form>
       <template #footer>
-        <button
-          class="w-full inline-flex justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto disabled:opacity-50"
-          :disabled="form.processing"
+        <Button label="Cancelar" severity="secondary" @click="cerrarModales" />
+        <Button
+          :label="form.processing ? 'Guardando…' : 'Guardar'"
+          :loading="form.processing"
           @click="guardarForm"
-        >
-          {{ form.processing ? 'Guardando…' : 'Guardar' }}
-        </button>
-        <button
-          class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-          @click="cerrarModales"
-        >
-          Cancelar
-        </button>
+        />
       </template>
-    </Modal>
+    </Dialog>
 
     <!-- Modal restablecer contraseña -->
-    <Modal v-if="modalReset" @close="cerrarModales">
-      <template #header>Restablecer contraseña</template>
-      <template #body>
-        <p class="text-sm text-gray-600 mb-4">
-          Indique la contraseña temporal para <strong>{{ seleccionado?.username }}</strong>.
-          Deberá cambiarla en su próximo acceso. También se desbloqueará la cuenta.
-        </p>
-        <input v-model="formReset.password" type="text" placeholder="Contraseña temporal" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
-        <p v-if="formReset.errors.password" class="mt-1 text-sm text-red-600">{{ formReset.errors.password }}</p>
-      </template>
+    <Dialog
+      v-model:visible="modalReset"
+      header="Restablecer contraseña"
+      :modal="true"
+      class="w-full max-w-md"
+    >
+      <p class="text-sm text-surface-600 mb-4">
+        Indique la contraseña temporal para <strong>{{ seleccionado?.username }}</strong>.
+        Deberá cambiarla en su próximo acceso. También se desbloqueará la cuenta.
+      </p>
+      <Password v-model="formReset.password" :feedback="false" toggleMask class="w-full" inputClass="w-full" fluid />
+      <small v-if="formReset.errors.password" class="text-red-500 block mt-1">{{ formReset.errors.password }}</small>
       <template #footer>
-        <button
-          class="w-full inline-flex justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto disabled:opacity-50"
-          :disabled="formReset.processing"
+        <Button label="Cancelar" severity="secondary" @click="cerrarModales" />
+        <Button
+          label="Restablecer"
+          :loading="formReset.processing"
           @click="restablecer"
-        >
-          Restablecer
-        </button>
-        <button
-          class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-          @click="cerrarModales"
-        >
-          Cancelar
-        </button>
+        />
       </template>
-    </Modal>
+    </Dialog>
 
     <!-- Modal eliminar -->
-    <Modal v-if="modalEliminar" @close="cerrarModales">
-      <template #header>Eliminar usuario</template>
-      <template #body>
-        <p class="text-sm text-gray-600">
-          ¿Está seguro de eliminar al usuario <strong>{{ seleccionado?.username }}</strong> ({{ seleccionado?.name }})?
-        </p>
-      </template>
+    <Dialog
+      v-model:visible="modalEliminar"
+      header="Eliminar usuario"
+      :modal="true"
+      class="w-full max-w-sm"
+    >
+      <p class="text-sm text-surface-600">
+        ¿Está seguro de eliminar al usuario <strong>{{ seleccionado?.username }}</strong> ({{ seleccionado?.name }})?
+      </p>
       <template #footer>
-        <button
-          class="w-full inline-flex justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sm:ml-3 sm:w-auto disabled:opacity-50"
-          :disabled="formEliminar.processing"
+        <Button label="Cancelar" severity="secondary" @click="cerrarModales" />
+        <Button
+          label="Eliminar"
+          severity="danger"
+          :loading="formEliminar.processing"
           @click="eliminar"
-        >
-          Eliminar
-        </button>
-        <button
-          class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-          @click="cerrarModales"
-        >
-          Cancelar
-        </button>
+        />
       </template>
-    </Modal>
+    </Dialog>
   </AppLayout>
 </template>
 
@@ -225,7 +228,6 @@ import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import Modal from '@/Components/Modal.vue';
 
 const props = defineProps({
   usuarios: Object,
@@ -237,7 +239,6 @@ const page = usePage();
 const permissions = computed(() => page.props.auth?.permissions ?? []);
 const can = (permiso) => permissions.value.includes(permiso);
 
-// Búsqueda
 const search = ref(props.filters?.search ?? '');
 let timer = null;
 const buscar = () => {
@@ -247,7 +248,10 @@ const buscar = () => {
   }, 300);
 };
 
-// Estado de modales
+const onPage = (event) => {
+  router.get(route('usuarios.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true });
+};
+
 const modalForm = ref(false);
 const modalReset = ref(false);
 const modalEliminar = ref(false);

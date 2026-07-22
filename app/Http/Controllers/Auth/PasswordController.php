@@ -17,7 +17,9 @@ class PasswordController extends Controller
      */
     public function edit()
     {
-        return Inertia::render('Auth/ChangePassword');
+        return Inertia::render('Auth/ChangePassword', [
+            'title' => 'Cambiar contraseña',
+        ]);
     }
 
     /**

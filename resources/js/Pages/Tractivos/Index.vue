@@ -1,184 +1,91 @@
 <template>
-  <AppLayout title="Flota de Vehículos">
-    <template #header>
-      <div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-          Flota de Vehículos
-        </h2>
-        <button
-          @click="showModal = true"
-          class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-        >
-          Nuevo Vehículo
-        </button>
-      </div>
-    </template>
-
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <!-- Filtros -->
-        <div class="mb-6">
-          <input
-            v-model="search"
-            type="text"
-            placeholder="Buscar por descripción o placa..."
-            class="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            @input="debouncedSearch"
-          />
+  <AppLayout>
+    <Card>
+      <template #title>Flota de Vehículos</template>
+      <template #subtitle>Gestión de tractivos y vehículos de la flota</template>
+      <template #content>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <div class="relative w-full sm:w-72">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm" />
+            <InputText
+              v-model="search"
+              placeholder="Buscar por descripción o placa…"
+              class="w-full pl-9"
+              @input="debouncedSearch"
+            />
+          </div>
+          <Button icon="pi pi-plus" label="Nuevo vehículo" @click="showModal = true" />
         </div>
 
-        <!-- Tabla -->
-        <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Descripción
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Placa
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Marca
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="tractivo in tractivos.data" :key="tractivo.id">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ tractivo.descripcion }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ tractivo.placa }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ tractivo.marca }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                    :class="tractivo.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                  >
-                    {{ tractivo.estado }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    @click="edit(tractivo)"
-                    class="text-indigo-600 hover:text-indigo-900 mr-3"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    @click="confirmDelete(tractivo)"
-                    class="text-red-600 hover:text-red-900"
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <DataTable :value="tractivos.data" stripedRows size="small" :rows="10" :paginator="true" :totalRecords="tractivos.total" :lazy="true" :first="(tractivos.current_page - 1) * tractivos.per_page" @page="onPage">
+          <Column field="descripcion" header="Descripción" sortable />
+          <Column field="placa" header="Placa" sortable />
+          <Column field="marca" header="Marca" sortable />
+          <Column header="Estado">
+            <template #body="{ data }">
+              <Tag
+                :value="data.estado || 'activo'"
+                :severity="(data.estado || 'activo') === 'activo' ? 'success' : 'danger'"
+              />
+            </template>
+          </Column>
+          <Column header="Acciones" :exportable="false">
+            <template #body="{ data }">
+              <div class="flex gap-1">
+                <Button icon="pi pi-pencil" severity="secondary" text rounded size="small" @click="edit(data)" v-tooltip.left="'Editar'" />
+                <Button icon="pi pi-trash" severity="danger" text rounded size="small" @click="confirmDelete(data)" v-tooltip.left="'Eliminar'" />
+              </div>
+            </template>
+          </Column>
+          <template #empty>
+            <div class="text-center py-8 text-surface-400">
+              <i class="pi pi-truck text-3xl mb-2 block" />
+              No se encontraron vehículos.
+            </div>
+          </template>
+        </DataTable>
+      </template>
+    </Card>
 
-          <!-- Paginación -->
-          <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-            <div class="flex-1 flex justify-between sm:hidden">
-              <Link
-                v-if="tractivos.prev_page_url"
-                :href="tractivos.prev_page_url"
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Anterior
-              </Link>
-              <Link
-                v-if="tractivos.next_page_url"
-                :href="tractivos.next_page_url"
-                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Siguiente
-              </Link>
+    <Dialog v-model:visible="showModal" :header="editing ? 'Editar Vehículo' : 'Nuevo Vehículo'" :modal="true" class="w-full max-w-lg">
+      <form @submit.prevent="submit">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Descripción *</label>
+            <InputText v-model="form.descripcion" required class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Placa *</label>
+            <InputText v-model="form.placa" required class="w-full" />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-surface-700 mb-1">Marca</label>
+              <InputText v-model="form.marca" class="w-full" />
             </div>
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p class="text-sm text-gray-700">
-                  Mostrando {{ tractivos.from }} a {{ tractivos.to }} de {{ tractivos.total }} resultados
-                </p>
-              </div>
-              <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  <Link
-                    v-for="link in tractivos.links"
-                    :key="link.url"
-                    :href="link.url || '#'"
-                    class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                    :class="link.active ? 'bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
-                  >
-                    <span v-html="link.label"></span>
-                  </Link>
-                </nav>
-              </div>
+            <div>
+              <label class="block text-sm font-medium text-surface-700 mb-1">Modelo</label>
+              <InputText v-model="form.modelo" class="w-full" />
             </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Año</label>
+            <InputNumber v-model="form.anno" class="w-full" />
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Modal -->
-    <Modal v-if="showModal" @close="showModal = false">
-      <template #header>
-        <h3>{{ editing ? 'Editar Vehículo' : 'Nuevo Vehículo' }}</h3>
+      </form>
+      <template #footer>
+        <Button label="Cancelar" severity="secondary" @click="showModal = false" />
+        <Button :label="editing ? 'Actualizar' : 'Crear'" @click="submit" />
       </template>
-      <template #body>
-        <form @submit.prevent="submit">
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Descripción *</label>
-              <input v-model="form.descripcion" type="text" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Placa *</label>
-              <input v-model="form.placa" type="text" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Marca</label>
-                <input v-model="form.marca" type="text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Modelo</label>
-                <input v-model="form.modelo" type="text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Año</label>
-              <input v-model="form.anno" type="number" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-            </div>
-          </div>
-          <div class="mt-6 flex justify-end space-x-3">
-            <button type="button" @click="showModal = false" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-              Cancelar
-            </button>
-            <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-              {{ editing ? 'Actualizar' : 'Crear' }}
-            </button>
-          </div>
-        </form>
-      </template>
-    </Modal>
+    </Dialog>
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import Modal from '@/Components/Modal.vue';
 import { debounce } from 'lodash';
 
 const props = defineProps({
@@ -189,7 +96,7 @@ const props = defineProps({
 const search = ref(props.filters?.search || '');
 const showModal = ref(false);
 const editing = ref(false);
-const form = reactive({
+const form = ref({
   id: null,
   descripcion: '',
   placa: '',
@@ -205,15 +112,19 @@ const debouncedSearch = debounce(() => {
   });
 }, 300);
 
+const onPage = (event) => {
+  router.get(route('tractivos.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true });
+};
+
 const edit = (tractivo) => {
   editing.value = true;
-  Object.assign(form, tractivo);
+  form.value = { ...tractivo };
   showModal.value = true;
 };
 
 const submit = () => {
   if (editing.value) {
-    router.put(route('tractivos.update', form.id), form, {
+    router.put(route('tractivos.update', form.value.id), form.value, {
       onSuccess: () => {
         showModal.value = false;
         editing.value = false;
@@ -221,7 +132,7 @@ const submit = () => {
       },
     });
   } else {
-    router.post(route('tractivos.store'), form, {
+    router.post(route('tractivos.store'), form.value, {
       onSuccess: () => {
         showModal.value = false;
         resetForm();
@@ -237,11 +148,6 @@ const confirmDelete = (tractivo) => {
 };
 
 const resetForm = () => {
-  form.id = null;
-  form.descripcion = '';
-  form.placa = '';
-  form.marca = '';
-  form.modelo = '';
-  form.anno = null;
+  form.value = { id: null, descripcion: '', placa: '', marca: '', modelo: '', anno: null };
 };
 </script>

@@ -24,6 +24,7 @@ class PerfilController extends Controller
         $this->authorize('viewAny', Role::class);
 
         return Inertia::render('Perfiles/Index', [
+            'title' => 'Gestión de perfiles',
             'perfiles' => Role::with('permissions:id,name')
                 ->withCount('users')
                 ->orderBy('name')

@@ -30,6 +30,9 @@ Route::middleware('auth')->group(function () {
     Route::get('perfil/cambiar-password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('perfil/cambiar-password', [PasswordController::class, 'update'])->name('password.update');
 
+    // API de KPIs (también accesible con password temporal para el dashboard)
+    Route::get('api/kpis', [DashboardController::class, 'kpis'])->name('api.kpis');
+
     // Las notificaciones se sirven incluso con password temporal
     Route::get('notificaciones', [NotificationsController::class, 'index'])->name('notificaciones.index');
     Route::post('notificaciones/{id}/leer', [NotificationsController::class, 'markAsRead'])->name('notificaciones.leer');

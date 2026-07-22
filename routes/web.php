@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TractivosController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,5 +35,14 @@ Route::middleware('auth')->group(function () {
         // Módulo Técnico - Flota
         Route::resource('tractivos', TractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+
+        // Administración de usuarios (Fase 4.3)
+        Route::resource('usuarios', UserController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['usuarios' => 'user']);
+        Route::post('usuarios/{user}/desbloquear', [UserController::class, 'desbloquear'])
+            ->name('usuarios.desbloquear');
+        Route::post('usuarios/{user}/restablecer-password', [UserController::class, 'restablecerPassword'])
+            ->name('usuarios.restablecer');
     });
 });

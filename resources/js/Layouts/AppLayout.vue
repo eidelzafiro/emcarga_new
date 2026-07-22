@@ -64,12 +64,17 @@ import { route } from 'ziggy-js';
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 
-// NOTA: este menú estático se reemplaza en la Fase 4.5 por el menú
-// dinámico construido según el perfil del usuario autenticado.
-const navigation = [
-  { href: route('dashboard'), label: 'Dashboard' },
-  { href: route('tractivos.index'), label: 'Flota' },
-];
+const permissions = computed(() => page.props.auth?.permissions ?? []);
+const can = (permiso) => permissions.value.includes(permiso);
+
+// NOTA: este menú se reemplaza en la Fase 4.5 por el menú dinámico
+// desde base de datos filtrado por perfil. Por ahora es estático
+// pero ya filtrado por permisos.
+const navigation = computed(() => [
+  { href: route('dashboard'), label: 'Dashboard', show: can('dashboard.ver') },
+  { href: route('tractivos.index'), label: 'Flota', show: can('tractivos.ver') },
+  { href: route('usuarios.index'), label: 'Usuarios', show: can('usuarios.ver') },
+].filter(item => item.show));
 
 const isActive = (href) => {
   return page.url === href;

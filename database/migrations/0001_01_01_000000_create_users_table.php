@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('email')->nullable()->unique();
             $table->string('password');
 
-            // Campos legacy de cod_usuarios
-            $table->unsignedBigInteger('idperfil')->nullable();  // FK a perfiles se formaliza en Fase 4.2
+            // Campos legacy de cod_usuarios.
+            // El perfil se gestiona con roles de spatie/laravel-permission (D7).
             $table->unsignedBigInteger('idunidad')->nullable();
             $table->unsignedBigInteger('idgrupo')->nullable();
             $table->boolean('bloqueado')->default(false);        // bloqueo manual por el administrador
@@ -33,8 +33,6 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
-
-            $table->index('idperfil');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

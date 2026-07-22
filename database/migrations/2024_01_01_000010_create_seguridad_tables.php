@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Perfiles de usuario (legacy: rh_perfiles)
-        Schema::create('perfiles', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre', 100);
-            $table->string('descripcion', 255)->nullable();
-            $table->timestamps();
-        });
+        // NOTA: los perfiles/roles se gestionan con spatie/laravel-permission
+        // (decisión D7 del PLAN.md), cuyas tablas tienen su propia migración.
 
         // Histórico de contraseñas (legacy: cod_usuariosh)
         // Guarda los hashes anteriores para impedir su reutilización.
@@ -54,6 +49,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('bitacora');
         Schema::dropIfExists('password_histories');
-        Schema::dropIfExists('perfiles');
     }
 };

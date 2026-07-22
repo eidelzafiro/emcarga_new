@@ -26,10 +26,10 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'username' => fake()->unique()->userName(),
+            // El username se guarda en mayúsculas (paridad con el legacy)
+            'username' => strtoupper(fake()->unique()->userName()),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
-            'idperfil' => null,
             'idunidad' => null,
             'idgrupo' => null,
             'bloqueado' => false,

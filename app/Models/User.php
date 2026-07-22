@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * Máximo de intentos fallidos antes del bloqueo automático (regla legacy).
@@ -28,7 +28,6 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
-        'idperfil',
         'idunidad',
         'idgrupo',
         'bloqueado',
@@ -72,11 +71,6 @@ class User extends Authenticatable
     public function estaBloqueado(): bool
     {
         return $this->bloqueado || $this->intentos_fallidos >= self::MAX_INTENTOS_LOGIN;
-    }
-
-    public function perfil(): BelongsTo
-    {
-        return $this->belongsTo(Perfil::class, 'idperfil');
     }
 
     public function passwordHistories(): HasMany

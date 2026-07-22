@@ -36,7 +36,8 @@ class LoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        $user = User::where('username', $credenciales['username'])->first();
+        // Los usernames se guardan en mayúsculas (paridad con el legacy)
+        $user = User::where('username', strtoupper($credenciales['username']))->first();
 
         // Mensaje genérico para no revelar si el usuario existe
         if (! $user) {

@@ -7,16 +7,51 @@
             <div class="flex-shrink-0 flex items-center">
               <span class="text-xl font-bold text-indigo-600">EMCARGA</span>
             </div>
+            <!-- Menú dinámico por perfil (Fase 4.5) -->
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
-                v-for="link in navigation"
-                :key="link.href"
-                :href="link.href"
-                class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 text-gray-900 focus:outline-none focus:border-indigo-700 transition duration-150 ease-in-out"
-                :class="isActive(link.href) ? 'border-indigo-500' : 'border-transparent hover:border-gray-300'"
+              <div
+                v-for="item in menu"
+                :key="item.label"
+                class="relative flex"
               >
-                {{ link.label }}
-              </Link>
+                <!-- Ítem con ruta -->
+                <Link
+                  v-if="item.url"
+                  :href="item.url"
+                  class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 text-gray-900 focus:outline-none focus:border-indigo-700 transition duration-150 ease-in-out"
+                  :class="esActivo(item) ? 'border-indigo-500' : 'border-transparent hover:border-gray-300'"
+                >
+                  {{ item.label }}
+                </Link>
+
+                <!-- Agrupador con hijos (dropdown) -->
+                <div v-else class="inline-flex items-center">
+                  <button
+                    class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-900 hover:border-gray-300 focus:outline-none transition duration-150 ease-in-out"
+                    :class="{ 'border-indigo-500': grupoActivo(item) }"
+                    @click="alternarDropdown(item.label)"
+                  >
+                    {{ item.label }}
+                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                  <div
+                    v-show="dropdownAbierto === item.label"
+                    class="absolute top-16 z-10 w-48 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 py-1"
+                  >
+                    <Link
+                      v-for="hijo in item.children"
+                      :key="hijo.label"
+                      :href="hijo.url"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                      :class="{ 'bg-indigo-50 text-indigo-700': esActivo(hijo) }"
+                    >
+                      {{ hijo.label }}
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
@@ -58,25 +93,25 @@
 
 <script setup>
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 
-const permissions = computed(() => page.props.auth?.permissions ?? []);
-const can = (permiso) => permissions.value.includes(permiso);
+// Menú dinámico construido por MenuBuilder según los permisos del usuario
+const menu = computed(() => page.props.menu ?? []);
 
-// NOTA: este menú se reemplaza en la Fase 4.5 por el menú dinámico
-// desde base de datos filtrado por perfil. Por ahora es estático
-// pero ya filtrado por permisos.
-const navigation = computed(() => [
-  { href: route('dashboard'), label: 'Dashboard', show: can('dashboard.ver') },
-  { href: route('tractivos.index'), label: 'Flota', show: can('tractivos.ver') },
-  { href: route('usuarios.index'), label: 'Usuarios', show: can('usuarios.ver') },
-].filter(item => item.show));
+const dropdownAbierto = ref(null);
+const alternarDropdown = (label) => {
+  dropdownAbierto.value = dropdownAbierto.value === label ? null : label;
+};
 
-const isActive = (href) => {
-  return page.url === href;
+const esActivo = (item) => {
+  return item.url && page.url.startsWith(new URL(item.url).pathname);
+};
+
+const grupoActivo = (item) => {
+  return item.children?.some((hijo) => esActivo(hijo));
 };
 </script>

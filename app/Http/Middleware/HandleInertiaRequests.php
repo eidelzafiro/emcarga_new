@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\MenuBuilder;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -25,9 +26,6 @@ class HandleInertiaRequests extends Middleware
     /**
      * Props compartidas por defecto con todas las vistas Inertia.
      *
-     * NOTA: En la Fase 4.5 aquí se compartirá el menú dinámico
-     * construido según el perfil del usuario autenticado.
-     *
      * @return array<string, mixed>
      */
     public function share(Request $request): array
@@ -39,6 +37,8 @@ class HandleInertiaRequests extends Middleware
                 'roles' => fn () => $request->user()?->getRoleNames(),
                 'permissions' => fn () => $request->user()?->getAllPermissions()->pluck('name'),
             ],
+            // Menú dinámico filtrado por los permisos del usuario (Fase 4.5)
+            'menu' => fn () => MenuBuilder::para($request->user()),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

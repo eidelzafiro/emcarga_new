@@ -27,7 +27,8 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             // El username se guarda en mayúsculas (paridad con el legacy)
-            'username' => strtoupper(fake()->unique()->userName()),
+            // y sin puntos para cumplir la regla alpha_dash de los Form Requests
+            'username' => strtoupper(str_replace('.', '', fake()->unique()->userName())),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'idunidad' => null,

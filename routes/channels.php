@@ -10,6 +10,10 @@ Broadcast::channel('kpis', function ($user) {
     return $user !== null;
 });
 
+Broadcast::channel('pizarra', function ($user) {
+    return $user !== null;
+});
+
 Broadcast::channel('test', function ($user) {
     return $user !== null;
 });

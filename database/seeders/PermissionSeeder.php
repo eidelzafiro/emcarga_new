@@ -23,6 +23,8 @@ class PermissionSeeder extends Seeder
 
             'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
 
+            'pizarra.ver',
+
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
             'usuarios.desbloquear', 'usuarios.restablecer',
 

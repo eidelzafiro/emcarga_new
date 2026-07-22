@@ -23,6 +23,11 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Flota', 'icon' => 'truck', 'permission' => 'tractivos.ver', 'orden' => 2]
         );
 
+        MenuItem::firstOrCreate(
+            ['route' => 'pizarra.index'],
+            ['label' => 'Pizarra', 'icon' => 'map', 'permission' => 'pizarra.ver', 'orden' => 3]
+        );
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

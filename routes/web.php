@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\PizarraController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
 
@@ -38,9 +39,15 @@ Route::middleware('auth')->group(function () {
     Route::post('notificaciones/{id}/leer', [NotificationsController::class, 'markAsRead'])->name('notificaciones.leer');
     Route::post('notificaciones/leer-todas', [NotificationsController::class, 'markAllAsRead'])->name('notificaciones.leer-todas');
 
+    // API de pizarra (datos en JSON para Echo/fetch)
+    Route::get('api/pizarra', [PizarraController::class, 'datos'])->name('api.pizarra');
+
     // Requieren contraseña definitiva (no temporal)
     Route::middleware('password.temporal')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Pizarra de vehículos en vivo (Fase 4.10)
+        Route::get('pizarra', [PizarraController::class, 'index'])->name('pizarra.index');
 
         // Módulo Técnico - Flota
         Route::resource('tractivos', TractivosController::class)

@@ -49,10 +49,11 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 3)
-                ->where('menu.2.label', 'Administración')
-                ->where('menu.2.children.0.label', 'Usuarios')
-                ->where('menu.2.children.1.label', 'Perfiles')
+                ->has('menu', 4)
+                ->where('menu.0.label', 'Dashboard')
+                ->where('menu.3.label', 'Administración')
+                ->where('menu.3.children.0.label', 'Usuarios')
+                ->where('menu.3.children.1.label', 'Perfiles')
         );
     }
 

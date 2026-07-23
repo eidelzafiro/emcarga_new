@@ -69,6 +69,124 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Energía', 'icon' => 'bolt', 'permission' => 'energia.ver', 'orden' => 9, 'parent_id' => $flota->id]
         );
 
+        // Flota - Tablas faltantes
+        MenuItem::firstOrCreate(
+            ['route' => 'arrastres.index'],
+            ['label' => 'Arrastres', 'icon' => 'truck', 'permission' => 'arrastres.ver', 'orden' => 10, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'motivos-entrada-taller.index'],
+            ['label' => 'Motivos Entrada Taller', 'icon' => 'sign-in-alt', 'permission' => 'motivos-entrada-taller.ver', 'orden' => 11, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-roturas.index'],
+            ['label' => 'Tipos Roturas', 'icon' => 'exclamation-triangle', 'permission' => 'tipos-roturas.ver', 'orden' => 12, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'clasificaciones-ordenes-taller.index'],
+            ['label' => 'Clasif. OT', 'icon' => 'tags', 'permission' => 'clasificaciones-ordenes-taller.ver', 'orden' => 13, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-sistemas.index'],
+            ['label' => 'Tipos Sistemas', 'icon' => 'cogs', 'permission' => 'tipos-sistemas.ver', 'orden' => 14, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-suspension.index'],
+            ['label' => 'Tipos Suspensión', 'icon' => 'cog', 'permission' => 'tipos-suspension.ver', 'orden' => 15, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'motivos-baja-bateria.index'],
+            ['label' => 'Motivos Baja Batería', 'icon' => 'battery-empty', 'permission' => 'motivos-baja-bateria.ver', 'orden' => 16, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'locales-electricos.index'],
+            ['label' => 'Locales Eléctricos', 'icon' => 'building', 'permission' => 'locales-electricos.ver', 'orden' => 17, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'balances-electricos.index'],
+            ['label' => 'Balances Eléctricos', 'icon' => 'chart-bar', 'permission' => 'balances-electricos.ver', 'orden' => 18, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'hotkeys.index'],
+            ['label' => 'Hotkeys', 'icon' => 'keyboard', 'permission' => 'hotkeys.ver', 'orden' => 19, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'acciones-hotkeys.index'],
+            ['label' => 'Acciones Hotkeys', 'icon' => 'key', 'permission' => 'acciones-hotkeys.ver', 'orden' => 20, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'historial-tractivos.index'],
+            ['label' => 'Historial Tractivos', 'icon' => 'history', 'permission' => 'historial-tractivos.ver', 'orden' => 21, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tarjetero.index'],
+            ['label' => 'Tarjetero', 'icon' => 'box', 'permission' => 'tarjetero.ver', 'orden' => 22, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'lineas-bateria.index'],
+            ['label' => 'Líneas Batería', 'icon' => 'bolt', 'permission' => 'lineas-bateria.ver', 'orden' => 23, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'lineas-diferencial.index'],
+            ['label' => 'Líneas Diferencial', 'icon' => 'cog', 'permission' => 'lineas-diferencial.ver', 'orden' => 24, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'lineas-lubricante.index'],
+            ['label' => 'Líneas Lubricante', 'icon' => 'oil-can', 'permission' => 'lineas-lubricante.ver', 'orden' => 25, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'lineas-neumatico.index'],
+            ['label' => 'Líneas Neumático', 'icon' => 'cog', 'permission' => 'lineas-neumatico.ver', 'orden' => 26, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'lineas-otro-agregado.index'],
+            ['label' => 'Líneas Otros Agregados', 'icon' => 'cog', 'permission' => 'lineas-otro-agregado.ver', 'orden' => 27, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'movimientos-inventario.index'],
+            ['label' => 'Mov. Inventario', 'icon' => 'exchange-alt', 'permission' => 'movimientos-inventario.ver', 'orden' => 28, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'detalle-movimientos-inventario.index'],
+            ['label' => 'Det. Mov. Inventario', 'icon' => 'list', 'permission' => 'detalle-movimientos-inventario.ver', 'orden' => 29, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'detalle-vales-inventario.index'],
+            ['label' => 'Det. Vales Inventario', 'icon' => 'list', 'permission' => 'detalle-vales-inventario.ver', 'orden' => 30, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-aceites.index'],
+            ['label' => 'Tipos Aceites', 'icon' => 'oil-can', 'permission' => 'tipos-aceites.ver', 'orden' => 31, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'choferes.index'],
+            ['label' => 'Choferes', 'icon' => 'user', 'permission' => 'choferes.ver', 'orden' => 32, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'estadisticas-explotacion.index'],
+            ['label' => 'Estad. Explotación', 'icon' => 'chart-line', 'permission' => 'estadisticas-explotacion.ver', 'orden' => 33, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'registro-ordenes-taller.index'],
+            ['label' => 'Reg. OT Taller', 'icon' => 'clipboard-list', 'permission' => 'registro-ordenes-taller.ver', 'orden' => 34, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'causas-gps.index'],
+            ['label' => 'Causas GPS', 'icon' => 'satellite-dish', 'permission' => 'causas-gps.ver', 'orden' => 35, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'causas-multas.index'],
+            ['label' => 'Causas Multas', 'icon' => 'gavel', 'permission' => 'causas-multas.ver', 'orden' => 36, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'importes-gps.index'],
+            ['label' => 'Imp. GPS', 'icon' => 'dollar', 'permission' => 'importes-gps.ver', 'orden' => 37, 'parent_id' => $flota->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'importes-multas.index'],
+            ['label' => 'Imp. Multas', 'icon' => 'dollar', 'permission' => 'importes-multas.ver', 'orden' => 38, 'parent_id' => $flota->id]
+        );
+
         MenuItem::firstOrCreate(
             ['route' => 'taller.index'],
             ['label' => 'Taller', 'icon' => 'wrench', 'permission' => 'taller.ver', 'orden' => 4]
@@ -178,6 +296,35 @@ class MenuItemSeeder extends Seeder
         MenuItem::firstOrCreate(
             ['route' => 'movil-web.index'],
             ['label' => 'Móvil Web', 'icon' => 'mobile', 'permission' => 'movil-web.ver', 'orden' => 20, 'parent_id' => $comercial->id]
+        );
+        // Comercial - Tablas faltantes parte 2
+        MenuItem::firstOrCreate(
+            ['route' => 'unidades.index'],
+            ['label' => 'Unidades', 'icon' => 'building', 'permission' => 'unidades.ver', 'orden' => 21, 'parent_id' => $comercial->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'contenedores.index'],
+            ['label' => 'Contenedores', 'icon' => 'box', 'permission' => 'contenedores.ver', 'orden' => 22, 'parent_id' => $comercial->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'categorias-productos.index'],
+            ['label' => 'Categorías Productos', 'icon' => 'tags', 'permission' => 'categorias-productos.ver', 'orden' => 23, 'parent_id' => $comercial->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-subcta-unidad.index'],
+            ['label' => 'Tipos Subcta Unidad', 'icon' => 'tag', 'permission' => 'tipos-subcta-unidad.ver', 'orden' => 24, 'parent_id' => $comercial->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'clientes-mm.index'],
+            ['label' => 'Clientes MM', 'icon' => 'users', 'permission' => 'clientes-mm.ver', 'orden' => 25, 'parent_id' => $comercial->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'devoluciones.index'],
+            ['label' => 'Devoluciones', 'icon' => 'undo', 'permission' => 'devoluciones.ver', 'orden' => 26, 'parent_id' => $comercial->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'detalle-prefacturas.index'],
+            ['label' => 'Det. Prefacturas', 'icon' => 'list', 'permission' => 'detalle-prefacturas.ver', 'orden' => 27, 'parent_id' => $comercial->id]
         );
 
         $facturacion = MenuItem::firstOrCreate(
@@ -391,6 +538,55 @@ class MenuItemSeeder extends Seeder
             ['route' => 'perfiles-rh.index'],
             ['label' => 'Perfiles RH', 'icon' => 'id-card', 'permission' => 'perfiles-rh.ver', 'orden' => 37, 'parent_id' => $rrhh->id]
         );
+        // RRHH - Tablas faltantes parte 2
+        MenuItem::firstOrCreate(
+            ['route' => 'centros-costos.index'],
+            ['label' => 'Centros Costo', 'icon' => 'dollar', 'permission' => 'centros-costos.ver', 'orden' => 38, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-articulos-bolsa.index'],
+            ['label' => 'Artículos Bolsa', 'icon' => 'shopping-bag', 'permission' => 'tipos-articulos-bolsa.ver', 'orden' => 39, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'competencias-cargo.index'],
+            ['label' => 'Competencias Cargo', 'icon' => 'graduation-cap', 'permission' => 'competencias-cargo.ver', 'orden' => 40, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'funciones-cargo.index'],
+            ['label' => 'Funciones Cargo', 'icon' => 'tasks', 'permission' => 'funciones-cargo.ver', 'orden' => 41, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-jefe-grupo.index'],
+            ['label' => 'Jefes Grupo', 'icon' => 'user-tie', 'permission' => 'tipos-jefe-grupo.ver', 'orden' => 42, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'pagos-adicionales-cargo.index'],
+            ['label' => 'Pagos Adic. Cargo', 'icon' => 'money-bill', 'permission' => 'pagos-adicionales-cargo.ver', 'orden' => 43, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-ramas.index'],
+            ['label' => 'Tipos Ramas', 'icon' => 'sitemap', 'permission' => 'tipos-ramas.ver', 'orden' => 44, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-sistemas-cuc.index'],
+            ['label' => 'Sistemas CUC', 'icon' => 'money-bill-wave', 'permission' => 'tipos-sistemas-cuc.ver', 'orden' => 45, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-entidad.index'],
+            ['label' => 'Tipos Entidad', 'icon' => 'building', 'permission' => 'tipos-entidad.ver', 'orden' => 46, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'empleados.index'],
+            ['label' => 'Empleados', 'icon' => 'users', 'permission' => 'empleados.ver', 'orden' => 47, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'descuentos-empleados.index'],
+            ['label' => 'Desc. Empleados', 'icon' => 'minus-circle', 'permission' => 'descuentos-empleados.ver', 'orden' => 48, 'parent_id' => $rrhh->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'vacaciones.index'],
+            ['label' => 'Vacaciones', 'icon' => 'calendar-alt', 'permission' => 'vacaciones.ver', 'orden' => 49, 'parent_id' => $rrhh->id]
+        );
 
         $contabilidad = MenuItem::firstOrCreate(
             ['label' => 'Contabilidad', 'parent_id' => null],
@@ -470,6 +666,10 @@ class MenuItemSeeder extends Seeder
         MenuItem::firstOrCreate(
             ['route' => 'pagos.index'],
             ['label' => 'Pagos', 'icon' => 'money-bill', 'permission' => 'pagos.ver', 'orden' => 15, 'parent_id' => $contabilidad->id]
+        );
+        MenuItem::firstOrCreate(
+            ['route' => 'elementos-gasto.index'],
+            ['label' => 'Elementos Gasto', 'icon' => 'receipt', 'permission' => 'elementos-gasto.ver', 'orden' => 16, 'parent_id' => $contabilidad->id]
         );
 
         $catalogos = MenuItem::firstOrCreate(

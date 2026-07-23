@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ClasificacionOrdenTaller;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Traits\ManagesCatalog;
+
+class ClasificacionesOrdenesTallerController extends Controller
+{
+    use ManagesCatalog;
+
+    protected function getModelClass(): string
+    {
+        return ClasificacionOrdenTaller::class;
+    }
+
+    protected function getRouteName(): string
+    {
+        return 'clasificaciones-ordenes-taller';
+    }
+
+    protected function getMinRoutePart(): string
+    {
+        return 'clasificacion-orden-taller';
+    }
+
+    protected function getTitle(): string
+    {
+        return 'Clasificaciones de \xd3rdenes de Taller';
+    }
+}

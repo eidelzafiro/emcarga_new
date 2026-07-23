@@ -68,6 +68,55 @@ use App\Http\Controllers\TiposGastosController;
 use App\Http\Controllers\VallasController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AccionesHotkeysController;
+use App\Http\Controllers\ArrastresController;
+use App\Http\Controllers\BalancesElectricosController;
+use App\Http\Controllers\CategoriasProductosController;
+use App\Http\Controllers\CausasGpsController;
+use App\Http\Controllers\CausasMultasController;
+use App\Http\Controllers\CentrosCostosController;
+use App\Http\Controllers\ChoferesController;
+use App\Http\Controllers\ClasificacionesOrdenesTallerController;
+use App\Http\Controllers\ClientesMmController;
+use App\Http\Controllers\CompetenciasCargoController;
+use App\Http\Controllers\ContenedoresController;
+use App\Http\Controllers\DescuentosEmpleadosController;
+use App\Http\Controllers\DetalleMovimientosInventarioController;
+use App\Http\Controllers\DetallePrefacturasController;
+use App\Http\Controllers\DetalleValesInventarioController;
+use App\Http\Controllers\DevolucionesController;
+use App\Http\Controllers\ElementosGastoController;
+use App\Http\Controllers\EmpleadosController;
+use App\Http\Controllers\EstadisticasExplotacionController;
+use App\Http\Controllers\FuncionesCargoController;
+use App\Http\Controllers\HistorialTractivosController;
+use App\Http\Controllers\HotkeysController;
+use App\Http\Controllers\ImportesGpsController;
+use App\Http\Controllers\ImportesMultasController;
+use App\Http\Controllers\LineasBateriaController;
+use App\Http\Controllers\LineasDiferencialController;
+use App\Http\Controllers\LineasLubricanteController;
+use App\Http\Controllers\LineasNeumaticoController;
+use App\Http\Controllers\LineasOtroAgregadoController;
+use App\Http\Controllers\LocalesElectricosController;
+use App\Http\Controllers\MotivosBajaBateriaController;
+use App\Http\Controllers\MotivosEntradaTallerController;
+use App\Http\Controllers\MovimientosInventarioController;
+use App\Http\Controllers\PagosAdicionalesCargoController;
+use App\Http\Controllers\RegistroOrdenesTallerController;
+use App\Http\Controllers\TarjeteroController;
+use App\Http\Controllers\TiposAceitesController;
+use App\Http\Controllers\TiposArticulosBolsaController;
+use App\Http\Controllers\TiposEntidadController;
+use App\Http\Controllers\TiposJefeGrupoController;
+use App\Http\Controllers\TiposRamasController;
+use App\Http\Controllers\TiposRoturasController;
+use App\Http\Controllers\TiposSistemasController;
+use App\Http\Controllers\TiposSistemasCucController;
+use App\Http\Controllers\TiposSubctaUnidadController;
+use App\Http\Controllers\TiposSuspensionController;
+use App\Http\Controllers\UnidadesController;
+use App\Http\Controllers\VacacionesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -460,6 +509,114 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('pagos', PagosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Técnica - Tablas faltantes (Fase 5.8)
+        Route::resource('arrastres', ArrastresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('balances-electricos', BalancesElectricosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('hotkeys', HotkeysController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('historial-tractivos', HistorialTractivosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('motivos-baja-bateria', MotivosBajaBateriaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('motivos-entrada-taller', MotivosEntradaTallerController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-roturas', TiposRoturasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('clasificaciones-ordenes-taller', ClasificacionesOrdenesTallerController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-sistemas', TiposSistemasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-suspension', TiposSuspensionController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('locales-electricos', LocalesElectricosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('acciones-hotkeys', AccionesHotkeysController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // ATM - Inventario/Tarjetero (Fase 5.8)
+        Route::resource('tarjetero', TarjeteroController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('lineas-bateria', LineasBateriaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('lineas-diferencial', LineasDiferencialController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('lineas-lubricante', LineasLubricanteController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('lineas-neumatico', LineasNeumaticoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('lineas-otro-agregado', LineasOtroAgregadoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('movimientos-inventario', MovimientosInventarioController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('detalle-movimientos-inventario', DetalleMovimientosInventarioController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('detalle-vales-inventario', DetalleValesInventarioController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // RRHH - Tablas faltantes (Fase 5.8)
+        Route::resource('centros-costos', CentrosCostosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-articulos-bolsa', TiposArticulosBolsaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('competencias-cargo', CompetenciasCargoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('funciones-cargo', FuncionesCargoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-jefe-grupo', TiposJefeGrupoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('pagos-adicionales-cargo', PagosAdicionalesCargoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-ramas', TiposRamasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-sistemas-cuc', TiposSistemasCucController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Comercial - Tablas faltantes (Fase 5.8)
+        Route::resource('unidades', UnidadesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('contenedores', ContenedoresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('categorias-productos', CategoriasProductosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-subcta-unidad', TiposSubctaUnidadController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Misc - Tablas varias (Fase 5.8)
+        Route::resource('clientes-mm', ClientesMmController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-aceites', TiposAceitesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-entidad', TiposEntidadController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('elementos-gasto', ElementosGastoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('choferes', ChoferesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('empleados', EmpleadosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('devoluciones', DevolucionesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('descuentos-empleados', DescuentosEmpleadosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('causas-gps', CausasGpsController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('causas-multas', CausasMultasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('importes-gps', ImportesGpsController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('importes-multas', ImportesMultasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('vacaciones', VacacionesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('estadisticas-explotacion', EstadisticasExplotacionController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('registro-ordenes-taller', RegistroOrdenesTallerController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('detalle-prefacturas', DetallePrefacturasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Administración de usuarios (Fase 4.3)

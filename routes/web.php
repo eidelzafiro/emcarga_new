@@ -42,6 +42,30 @@ use App\Http\Controllers\TiposPagosAdicionalesController;
 use App\Http\Controllers\TiposPenalizacionesController;
 use App\Http\Controllers\TiposSistemasPagoController;
 use App\Http\Controllers\TiposTasasController;
+use App\Http\Controllers\BuquesController;
+use App\Http\Controllers\CategoriasCargoController;
+use App\Http\Controllers\ColoresController;
+use App\Http\Controllers\ConsecutivosController;
+use App\Http\Controllers\DestinosAgregadosController;
+use App\Http\Controllers\EmbalajesController;
+use App\Http\Controllers\GruposController;
+use App\Http\Controllers\GruposEscalaController;
+use App\Http\Controllers\MarcasController;
+use App\Http\Controllers\MedidasNeumaticosController;
+use App\Http\Controllers\ModelosController;
+use App\Http\Controllers\NavesController;
+use App\Http\Controllers\NavierasController;
+use App\Http\Controllers\OrganismosController;
+use App\Http\Controllers\PaisesController;
+use App\Http\Controllers\PosicionesNeumaticosController;
+use App\Http\Controllers\TalleresController;
+use App\Http\Controllers\TipoAgregadosController;
+use App\Http\Controllers\TipoEquiposController;
+use App\Http\Controllers\TipoNeumaticosController;
+use App\Http\Controllers\TiposCombustiblesController;
+use App\Http\Controllers\TiposServiciosController;
+use App\Http\Controllers\TiposGastosController;
+use App\Http\Controllers\VallasController;
 use App\Http\Controllers\UserController;
 
 /*
@@ -175,6 +199,79 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-tasas', TiposTasasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Catálogos y configuración (Fase 5.7)
+        Route::resource('marcas', MarcasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('modelos', ModelosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('paises', PaisesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('naves', NavesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('vallas', VallasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('destinos-agregados', DestinosAgregadosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('medidas-neumaticos', MedidasNeumaticosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-combustibles', TiposCombustiblesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('consecutivos', ConsecutivosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-servicios', TiposServiciosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-gastos', TiposGastosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('grupos', GruposController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('colores', ColoresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('talleres', TalleresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-equipos', TipoEquiposController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-agregados', TipoAgregadosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-neumaticos', TipoNeumaticosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('posiciones-neumaticos', PosicionesNeumaticosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('embalajes', EmbalajesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('buques', BuquesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('navieras', NavierasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('organismos', OrganismosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('categorias-cargo', CategoriasCargoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('grupos-escala', GruposEscalaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Módulo Contabilidad (Fase 5.6)

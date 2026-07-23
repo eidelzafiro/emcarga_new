@@ -219,6 +219,45 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Vales', 'icon' => 'ticket', 'permission' => 'vales.ver', 'orden' => 7, 'parent_id' => $contabilidad->id]
         );
 
+        $catalogos = MenuItem::firstOrCreate(
+            ['label' => 'Catálogos', 'parent_id' => null],
+            ['icon' => 'bookmark', 'route' => null, 'permission' => null, 'orden' => 9]
+        );
+
+        $catItems = [
+            ['marcas.index', 'Marcas', 'tag', 'marcas.ver', 1],
+            ['modelos.index', 'Modelos', 'cog', 'modelos.ver', 2],
+            ['paises.index', 'Países', 'globe', 'paises.ver', 3],
+            ['grupos.index', 'Grupos', 'objectives', 'grupos.ver', 4],
+            ['colores.index', 'Colores', 'palette', 'colores.ver', 5],
+            ['talleres.index', 'Talleres', 'wrench', 'talleres.ver', 6],
+            ['naves.index', 'Naves', 'building', 'naves.ver', 7],
+            ['vallas.index', 'Vallas', 'th-large', 'vallas.ver', 8],
+            ['destinos-agregados.index', 'Destinos Agregados', 'map', 'destinos-agregados.ver', 9],
+            ['medidas-neumaticos.index', 'Medidas Neumáticos', 'ruler', 'medidas-neumaticos.ver', 10],
+            ['tipos-combustibles.index', 'Tipos Combustible', 'fuel', 'tipos-combustibles.ver', 11],
+            ['tipos-equipos.index', 'Tipos Equipo', 'box', 'tipos-equipos.ver', 12],
+            ['tipos-agregados.index', 'Tipos Agregados', 'layer', 'tipos-agregados.ver', 13],
+            ['tipos-neumaticos.index', 'Tipos Neumáticos', 'circle', 'tipos-neumaticos.ver', 14],
+            ['posiciones-neumaticos.index', 'Posiciones Neumáticos', 'arrows-alt', 'posiciones-neumaticos.ver', 15],
+            ['consecutivos.index', 'Consecutivos', 'list', 'consecutivos.ver', 16],
+            ['tipos-servicios.index', 'Tipos Servicio', 'briefcase', 'tipos-servicios.ver', 17],
+            ['tipos-gastos.index', 'Tipos Gasto', 'dollar', 'tipos-gastos.ver', 18],
+            ['embalajes.index', 'Embalajes', 'box', 'embalajes.ver', 19],
+            ['buques.index', 'Buques', 'ship', 'buques.ver', 20],
+            ['navieras.index', 'Navieras', 'anchor', 'navieras.ver', 21],
+            ['organismos.index', 'Organismos', 'building', 'organismos.ver', 22],
+            ['categorias-cargo.index', 'Categorías Cargo', 'tags', 'categorias-cargo.ver', 23],
+            ['grupos-escala.index', 'Grupos Escala', 'chart-bar', 'grupos-escala.ver', 24],
+        ];
+
+        foreach ($catItems as [$route, $label, $icon, $perm, $orden]) {
+            MenuItem::firstOrCreate(
+                ['route' => $route],
+                ['label' => $label, 'icon' => $icon, 'permission' => $perm, 'orden' => $orden, 'parent_id' => $catalogos->id]
+            );
+        }
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

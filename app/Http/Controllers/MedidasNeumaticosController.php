@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\MedidaNeumatico;
+use App\Http\Controllers\Traits\ManagesCatalog;
+use Illuminate\Http\Request;
+
+class MedidasNeumaticosController extends Controller
+{
+    use ManagesCatalog;
+
+    protected function getModelClass(): string
+    {
+        return MedidaNeumatico::class;
+    }
+
+    protected function getRouteName(): string
+    {
+        return 'medidas-neumaticos';
+    }
+
+    protected function getTitle(): string
+    {
+        return 'Medidas de Neumáticos';
+    }
+    
+    protected function getExtraFields(): array
+    {
+        return [
+            'medida' => ['label' => 'Medida', 'type' => 'text'],
+        ];
+    }
+}

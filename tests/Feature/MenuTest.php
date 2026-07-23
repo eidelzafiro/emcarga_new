@@ -36,11 +36,13 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 4)
+                ->has('menu', 5)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Pizarra')
                 ->where('menu.2.label', 'Flota')
                 ->where('menu.3.label', 'Taller')
+                ->where('menu.4.label', 'Catálogos')
+                ->where('menu.4.children.0.label', 'Marcas')
         );
     }
 
@@ -51,7 +53,7 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 9)
+                ->has('menu', 10)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.4.label', 'Comercial')
                 ->where('menu.4.children.0.label', 'Clientes')
@@ -61,9 +63,11 @@ class MenuTest extends TestCase
                 ->where('menu.6.children.0.label', 'Bolsa')
                 ->where('menu.7.label', 'Contabilidad')
                 ->where('menu.7.children.0.label', 'Conciliaciones')
-                ->where('menu.8.label', 'Administración')
-                ->where('menu.8.children.0.label', 'Usuarios')
-                ->where('menu.8.children.1.label', 'Perfiles')
+                ->where('menu.8.label', 'Catálogos')
+                ->where('menu.8.children.0.label', 'Marcas')
+                ->where('menu.9.label', 'Administración')
+                ->where('menu.9.children.0.label', 'Usuarios')
+                ->where('menu.9.children.1.label', 'Perfiles')
         );
     }
 
@@ -74,9 +78,11 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 2)
+                ->has('menu', 3)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'RRHH')
+                ->where('menu.2.label', 'Catálogos')
+                ->where('menu.2.children.0.label', 'Organismos')
         );
     }
 
@@ -87,10 +93,11 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 3)
+                ->has('menu', 4)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Comercial')
                 ->where('menu.2.label', 'Facturación')
+                ->where('menu.3.label', 'Catálogos')
         );
     }
 

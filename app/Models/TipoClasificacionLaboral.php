@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoClasificacionLaboral extends Model
 {
+    protected $table = 'tipos_clasificacion_laboral';
+
     protected $fillable = [
         'codigo',
         'nombre',

@@ -36,6 +36,7 @@ class PizarraTractivosController extends Controller
             'dias' => 'nullable|array',
         ]);
         PizarraTractivo::create($validated);
+
         return redirect()->route('pizarra-tractivos.index')->with('success', 'Registro creado correctamente.');
     }
 
@@ -48,12 +49,14 @@ class PizarraTractivosController extends Controller
             'dias' => 'nullable|array',
         ]);
         $pizarraTractivo->update($validated);
+
         return redirect()->route('pizarra-tractivos.index')->with('success', 'Registro actualizado correctamente.');
     }
 
     public function destroy(PizarraTractivo $pizarraTractivo)
     {
         $pizarraTractivo->delete();
+
         return redirect()->route('pizarra-tractivos.index')->with('success', 'Registro eliminado correctamente.');
     }
 }

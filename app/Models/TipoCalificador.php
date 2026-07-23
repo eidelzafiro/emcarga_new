@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoCalificador extends Model
 {
+    protected $table = 'tipos_calificadores';
+
     protected $fillable = [
         'codigo',
         'nombre',

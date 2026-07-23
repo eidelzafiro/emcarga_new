@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Moneda;
 use App\Models\Pago;
 use App\Models\TipoDocumento;
-use App\Models\Moneda;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -42,6 +42,7 @@ class PagosController extends Controller
         ]);
         $validated['id_user'] = auth()->id();
         Pago::create($validated);
+
         return redirect()->route('pagos.index')->with('success', 'Pago creado correctamente.');
     }
 
@@ -57,12 +58,14 @@ class PagosController extends Controller
             'estado' => 'required|in:pendiente,aprobado,rechazado',
         ]);
         $pago->update($validated);
+
         return redirect()->route('pagos.index')->with('success', 'Pago actualizado correctamente.');
     }
 
     public function destroy(Pago $pago)
     {
         $pago->delete();
+
         return redirect()->route('pagos.index')->with('success', 'Pago eliminado correctamente.');
     }
 }

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CategoriasProducto;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\CategoriasProducto;
 
 class CategoriasProductosController extends Controller
 {

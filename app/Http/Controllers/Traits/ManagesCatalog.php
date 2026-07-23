@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Traits;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 trait ManagesCatalog
 {
     abstract protected function getModelClass(): string;
+
     abstract protected function getRouteName(): string;
+
     abstract protected function getTitle(): string;
 
     protected function getExtraFields(): array
@@ -75,6 +76,7 @@ trait ManagesCatalog
         $data = $request->validate($this->getValidationRules());
 
         $model::create($data);
+
         return redirect()->back()->with('success', 'Creado correctamente');
     }
 
@@ -85,6 +87,7 @@ trait ManagesCatalog
         $data = $request->validate($this->getValidationRules($id));
 
         $item->update($data);
+
         return redirect()->back()->with('success', 'Actualizado correctamente');
     }
 
@@ -93,6 +96,7 @@ trait ManagesCatalog
         $model = $this->getModelClass();
         $item = $model::findOrFail($id);
         $item->delete();
+
         return redirect()->back()->with('success', 'Eliminado correctamente');
     }
 }

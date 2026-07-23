@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TipoCausasBaja extends Model
 {
+    protected $table = 'tipos_causas_baja';
+
     protected $fillable = [
         'codigo',
         'nombre',

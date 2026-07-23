@@ -1,122 +1,172 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\AcuerdosController;
-use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\BateriasController;
-use App\Http\Controllers\CajasController;
-use App\Http\Controllers\ClientesController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DiferencialesController;
-use App\Http\Controllers\DistanciasController;
-use App\Http\Controllers\EnergiaController;
-use App\Http\Controllers\GirosController;
-use App\Http\Controllers\LubricantesController;
-use App\Http\Controllers\LugaresController;
-use App\Http\Controllers\MotoresController;
-use App\Http\Controllers\NeumaticosController;
-use App\Http\Controllers\NotificationsController;
-use App\Http\Controllers\OtrosAgregadosController;
-use App\Http\Controllers\PerfilController;
-use App\Http\Controllers\PizarraController;
-use App\Http\Controllers\FacturasController;
-use App\Http\Controllers\PrefacturasController;
-use App\Http\Controllers\SolicitudesController;
-use App\Http\Controllers\TallerController;
-use App\Http\Controllers\TipoIngresosController;
-use App\Http\Controllers\TractivosController;
-use App\Http\Controllers\BolsaController;
-use App\Http\Controllers\CombustibleCargasController;
-use App\Http\Controllers\CombustibleDescargasController;
-use App\Http\Controllers\ConciliacionesController;
-use App\Http\Controllers\HistorialMovimientosController;
-use App\Http\Controllers\InventarioController;
-use App\Http\Controllers\OtrosGastosController;
-use App\Http\Controllers\TiposConceptosController;
-use App\Http\Controllers\ValesController;
-use App\Http\Controllers\PlantillaController;
-use App\Http\Controllers\TiposContratosController;
-use App\Http\Controllers\TiposIncidenciasController;
-use App\Http\Controllers\TiposPagosAdicionalesController;
-use App\Http\Controllers\TiposPenalizacionesController;
-use App\Http\Controllers\TiposSistemasPagoController;
-use App\Http\Controllers\TiposTasasController;
-use App\Http\Controllers\BuquesController;
-use App\Http\Controllers\CategoriasCargoController;
-use App\Http\Controllers\ColoresController;
-use App\Http\Controllers\ConsecutivosController;
-use App\Http\Controllers\DestinosAgregadosController;
-use App\Http\Controllers\EmbalajesController;
-use App\Http\Controllers\GruposController;
-use App\Http\Controllers\GruposEscalaController;
-use App\Http\Controllers\MarcasController;
-use App\Http\Controllers\MedidasNeumaticosController;
-use App\Http\Controllers\ModelosController;
-use App\Http\Controllers\NavesController;
-use App\Http\Controllers\NavierasController;
-use App\Http\Controllers\OrganismosController;
-use App\Http\Controllers\PaisesController;
-use App\Http\Controllers\PosicionesNeumaticosController;
-use App\Http\Controllers\TalleresController;
-use App\Http\Controllers\TipoAgregadosController;
-use App\Http\Controllers\TipoEquiposController;
-use App\Http\Controllers\TipoNeumaticosController;
-use App\Http\Controllers\TiposCombustiblesController;
-use App\Http\Controllers\TiposServiciosController;
-use App\Http\Controllers\TiposGastosController;
-use App\Http\Controllers\VallasController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\AccionesHotkeysController;
+use App\Http\Controllers\AcuerdosController;
+use App\Http\Controllers\AlertasController;
 use App\Http\Controllers\ArrastresController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\BalancesElectricosController;
+use App\Http\Controllers\BateriasController;
+use App\Http\Controllers\BolsaController;
+use App\Http\Controllers\BuquesController;
+use App\Http\Controllers\CajasController;
+use App\Http\Controllers\CategoriasCargoController;
 use App\Http\Controllers\CategoriasProductosController;
 use App\Http\Controllers\CausasGpsController;
 use App\Http\Controllers\CausasMultasController;
 use App\Http\Controllers\CentrosCostosController;
 use App\Http\Controllers\ChoferesController;
 use App\Http\Controllers\ClasificacionesOrdenesTallerController;
+use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\ClientesMmController;
+use App\Http\Controllers\ClientesSeleccionController;
+use App\Http\Controllers\ColoresController;
+use App\Http\Controllers\CombustibleCargasController;
+use App\Http\Controllers\CombustibleDescargasController;
+use App\Http\Controllers\CombustiblesLubricantesController;
 use App\Http\Controllers\CompetenciasCargoController;
+use App\Http\Controllers\ConciliacionesController;
+use App\Http\Controllers\ConfiguracionesModeloController;
+use App\Http\Controllers\ConsecutivosController;
 use App\Http\Controllers\ContenedoresController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DemandasController;
 use App\Http\Controllers\DescuentosEmpleadosController;
+use App\Http\Controllers\DestinosAgregadosController;
 use App\Http\Controllers\DetalleMovimientosInventarioController;
 use App\Http\Controllers\DetallePrefacturasController;
+use App\Http\Controllers\DetallesCargaCombustibleController;
 use App\Http\Controllers\DetalleValesInventarioController;
 use App\Http\Controllers\DevolucionesController;
+use App\Http\Controllers\DiferencialesController;
+use App\Http\Controllers\DistanciasController;
 use App\Http\Controllers\ElementosGastoController;
+use App\Http\Controllers\EmbalajesController;
 use App\Http\Controllers\EmpleadosController;
+use App\Http\Controllers\EnergiaController;
 use App\Http\Controllers\EstadisticasExplotacionController;
+use App\Http\Controllers\EstadosTarjetasController;
+use App\Http\Controllers\FacturasController;
+use App\Http\Controllers\FirmasAutorizadasController;
+use App\Http\Controllers\FirmasController;
+use App\Http\Controllers\FondosTiempoController;
 use App\Http\Controllers\FuncionesCargoController;
+use App\Http\Controllers\GirosController;
+use App\Http\Controllers\GruposController;
+use App\Http\Controllers\GruposEscalaController;
+use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
 use App\Http\Controllers\HotkeysController;
 use App\Http\Controllers\ImportesGpsController;
 use App\Http\Controllers\ImportesMultasController;
+use App\Http\Controllers\IndicadoresController;
+use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\LineasBateriaController;
 use App\Http\Controllers\LineasDiferencialController;
 use App\Http\Controllers\LineasLubricanteController;
 use App\Http\Controllers\LineasNeumaticoController;
 use App\Http\Controllers\LineasOtroAgregadoController;
 use App\Http\Controllers\LocalesElectricosController;
+use App\Http\Controllers\LubricantesController;
+use App\Http\Controllers\LugaresController;
+use App\Http\Controllers\MarcasController;
+use App\Http\Controllers\MedidasNeumaticosController;
+use App\Http\Controllers\MediosProteccionController;
+use App\Http\Controllers\MesesController;
+use App\Http\Controllers\ModelosController;
 use App\Http\Controllers\MotivosBajaBateriaController;
 use App\Http\Controllers\MotivosEntradaTallerController;
+use App\Http\Controllers\MotoresController;
+use App\Http\Controllers\MovilWebController;
 use App\Http\Controllers\MovimientosInventarioController;
+use App\Http\Controllers\MunicipiosController;
+use App\Http\Controllers\NavesController;
+use App\Http\Controllers\NavierasController;
+use App\Http\Controllers\NeumaticosController;
+use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\OrganismosController;
+use App\Http\Controllers\OsdesController;
+use App\Http\Controllers\OtrosAgregadosController;
+use App\Http\Controllers\OtrosGastosController;
+use App\Http\Controllers\OtrosIngresosPreController;
 use App\Http\Controllers\PagosAdicionalesCargoController;
+use App\Http\Controllers\PagosController;
+use App\Http\Controllers\PaisesController;
+use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\PerfilesRhController;
+use App\Http\Controllers\PizarraController;
+use App\Http\Controllers\PizarraTractivosController;
+use App\Http\Controllers\PlantillaController;
+use App\Http\Controllers\PosicionesNeumaticosController;
+use App\Http\Controllers\PrefacturasController;
+use App\Http\Controllers\ProvinciasController;
 use App\Http\Controllers\RegistroOrdenesTallerController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReportesCostosController;
+use App\Http\Controllers\SalariosAdministrativosController;
+use App\Http\Controllers\SalariosController;
+use App\Http\Controllers\ServicentrosController;
+use App\Http\Controllers\SolicitudesController;
+use App\Http\Controllers\TallerController;
+use App\Http\Controllers\TalleresController;
+use App\Http\Controllers\TarifasController;
 use App\Http\Controllers\TarjeteroController;
+use App\Http\Controllers\TipoAgregadosController;
+use App\Http\Controllers\TipoEquiposController;
+use App\Http\Controllers\TipoIngresosController;
+use App\Http\Controllers\TipoNeumaticosController;
 use App\Http\Controllers\TiposAceitesController;
 use App\Http\Controllers\TiposArticulosBolsaController;
+use App\Http\Controllers\TiposCalificadoresController;
+use App\Http\Controllers\TiposCargasReporteController;
+use App\Http\Controllers\TiposCatalogoLugaresController;
+use App\Http\Controllers\TiposCausasBajaController;
+use App\Http\Controllers\TiposCausasLaboralesController;
+use App\Http\Controllers\TiposCausasMovimientoController;
+use App\Http\Controllers\TiposClasificacionLaboralController;
+use App\Http\Controllers\TiposColorPielController;
+use App\Http\Controllers\TiposCombustiblesController;
+use App\Http\Controllers\TiposConceptosController;
+use App\Http\Controllers\TiposContratosController;
+use App\Http\Controllers\TiposDeduccionesController;
+use App\Http\Controllers\TiposDocumentosController;
 use App\Http\Controllers\TiposEntidadController;
+use App\Http\Controllers\TiposEspecialidadController;
+use App\Http\Controllers\TiposEstadoCivilController;
+use App\Http\Controllers\TiposEstadosController;
+use App\Http\Controllers\TiposGastosController;
+use App\Http\Controllers\TiposGrupoHorarioController;
+use App\Http\Controllers\TiposIncidenciasController;
+use App\Http\Controllers\TiposIntegracionPoliticaController;
 use App\Http\Controllers\TiposJefeGrupoController;
+use App\Http\Controllers\TiposMediosCargoController;
+use App\Http\Controllers\TiposMediosProteccionController;
+use App\Http\Controllers\TiposModeloController;
+use App\Http\Controllers\TiposNivelEducacionController;
+use App\Http\Controllers\TiposPagosAdicionalesController;
+use App\Http\Controllers\TiposPenalizacionesController;
+use App\Http\Controllers\TiposPlantillasController;
 use App\Http\Controllers\TiposRamasController;
 use App\Http\Controllers\TiposRoturasController;
+use App\Http\Controllers\TiposServiciosController;
+use App\Http\Controllers\TiposSexoController;
 use App\Http\Controllers\TiposSistemasController;
 use App\Http\Controllers\TiposSistemasCucController;
+use App\Http\Controllers\TiposSistemasPagoController;
 use App\Http\Controllers\TiposSubctaUnidadController;
 use App\Http\Controllers\TiposSuspensionController;
+use App\Http\Controllers\TiposTallasController;
+use App\Http\Controllers\TiposTasasController;
+use App\Http\Controllers\TiposUbicacionDefensaController;
+use App\Http\Controllers\TractivosController;
+use App\Http\Controllers\TurnosComercialesController;
 use App\Http\Controllers\UnidadesController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VacacionesController;
+use App\Http\Controllers\ValesController;
+use App\Http\Controllers\VallasController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,7 +190,9 @@ Route::middleware('auth')->group(function () {
     Route::put('perfil/cambiar-password', [PasswordController::class, 'update'])->name('password.update');
 
     // API de KPIs (también accesible con password temporal para el dashboard)
-    Route::get('api/kpis', [DashboardController::class, 'kpis'])->name('api.kpis');
+    Route::get('api/kpis', [DashboardController::class, 'kpis'])
+        ->middleware('permission:dashboard.ver')
+        ->name('api.kpis');
 
     // Las notificaciones se sirven incluso con password temporal
     Route::get('notificaciones', [NotificationsController::class, 'index'])->name('notificaciones.index');
@@ -148,10 +200,13 @@ Route::middleware('auth')->group(function () {
     Route::post('notificaciones/leer-todas', [NotificationsController::class, 'markAllAsRead'])->name('notificaciones.leer-todas');
 
     // API de pizarra (datos en JSON para Echo/fetch)
-    Route::get('api/pizarra', [PizarraController::class, 'datos'])->name('api.pizarra');
+    Route::get('api/pizarra', [PizarraController::class, 'datos'])
+        ->middleware('permission:pizarra.ver')
+        ->name('api.pizarra');
 
-    // Requieren contraseña definitiva (no temporal)
-    Route::middleware('password.temporal')->group(function () {
+    // Requieren contraseña definitiva (no temporal) y el permiso del módulo
+    // (EnsureModulePermission infiere modulo.accion desde el nombre de la ruta)
+    Route::middleware(['password.temporal', 'permiso.modulo'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Pizarra de vehículos en vivo (Fase 4.10)

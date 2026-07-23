@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoMedioProteccion extends Model
 {
+    protected $table = 'tipos_medios_proteccion';
+
     protected $fillable = [
         'codigo',
         'nombre',

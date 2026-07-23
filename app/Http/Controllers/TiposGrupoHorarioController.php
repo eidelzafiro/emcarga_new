@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoGrupoHorario;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoGrupoHorario;
 
 class TiposGrupoHorarioController extends Controller
 {

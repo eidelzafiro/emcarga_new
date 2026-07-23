@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TiposSubctaUnidad;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TiposSubctaUnidad;
 
 class TiposSubctaUnidadController extends Controller
 {

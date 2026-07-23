@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\TipoVehiculo;
-use App\Models\Tractivo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -24,6 +22,7 @@ class TallerTest extends TestCase
         $user->assignRole('TECNICA');
         $user->password_temporal = false;
         $user->save();
+
         return $user;
     }
 

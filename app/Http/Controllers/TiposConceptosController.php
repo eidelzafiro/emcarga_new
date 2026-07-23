@@ -29,23 +29,26 @@ class TiposConceptosController extends Controller
             'activo' => 'boolean',
         ]);
         TipoConcepto::create($validated);
+
         return redirect()->route('tipos-conceptos.index')->with('success', 'Tipo de concepto creado correctamente.');
     }
 
     public function update(Request $request, TipoConcepto $tipoConcepto)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:tipos_conceptos,codigo,' . $tipoConcepto->id . '|max:50',
+            'codigo' => 'required|unique:tipos_conceptos,codigo,'.$tipoConcepto->id.'|max:50',
             'nombre' => 'required|max:255',
             'activo' => 'boolean',
         ]);
         $tipoConcepto->update($validated);
+
         return redirect()->route('tipos-conceptos.index')->with('success', 'Tipo de concepto actualizado correctamente.');
     }
 
     public function destroy(TipoConcepto $tipoConcepto)
     {
         $tipoConcepto->delete();
+
         return redirect()->route('tipos-conceptos.index')->with('success', 'Tipo de concepto eliminado correctamente.');
     }
 }

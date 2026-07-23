@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoGrupoHorario extends Model
 {
+    protected $table = 'tipos_grupo_horario';
+
     protected $fillable = [
         'codigo',
         'nombre',

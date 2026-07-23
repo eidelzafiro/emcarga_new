@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoClasificacionLaboral;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoClasificacionLaboral;
 
 class TiposClasificacionLaboralController extends Controller
 {

@@ -43,7 +43,7 @@ class EnergiaController extends Controller
     public function update(Request $request, Medidore $medidore)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:medidores,codigo,' . $medidore->id,
+            'codigo' => 'required|unique:medidores,codigo,'.$medidore->id,
             'ruta_folio' => 'nullable|string|max:100',
             'metro' => 'nullable|string|max:100',
             'prepago' => 'boolean',

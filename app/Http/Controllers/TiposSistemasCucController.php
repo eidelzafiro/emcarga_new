@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TiposSistemasCuc;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TiposSistemasCuc;
 
 class TiposSistemasCucController extends Controller
 {

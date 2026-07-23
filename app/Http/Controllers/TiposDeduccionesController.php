@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoDeduccione;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoDeduccione;
 
 class TiposDeduccionesController extends Controller
 {

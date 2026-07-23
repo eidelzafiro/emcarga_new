@@ -33,6 +33,7 @@ class FirmasController extends Controller
             'activo' => 'boolean',
         ]);
         Firma::create($validated);
+
         return redirect()->route('firmas.index')->with('success', 'Firma creada correctamente.');
     }
 
@@ -49,12 +50,14 @@ class FirmasController extends Controller
             'activo' => 'boolean',
         ]);
         $firma->update($validated);
+
         return redirect()->route('firmas.index')->with('success', 'Firma actualizada correctamente.');
     }
 
     public function destroy(Firma $firma)
     {
         $firma->delete();
+
         return redirect()->route('firmas.index')->with('success', 'Firma eliminada correctamente.');
     }
 }

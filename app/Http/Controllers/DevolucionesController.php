@@ -11,6 +11,7 @@ class DevolucionesController extends Controller
     public function index()
     {
         $items = Devolucione::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Devoluciones',
@@ -40,6 +41,7 @@ class DevolucionesController extends Controller
     public function show($id)
     {
         $item = Devolucione::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Devolución',
@@ -50,6 +52,7 @@ class DevolucionesController extends Controller
     public function edit($id)
     {
         $item = Devolucione::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Devolución',

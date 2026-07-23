@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pais;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Pais;
 
 class PaisesController extends Controller
 {
@@ -24,5 +23,4 @@ class PaisesController extends Controller
     {
         return 'Países';
     }
-    
 }

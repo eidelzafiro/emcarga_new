@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoEquipo;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\TipoEquipo;
 
 class TipoEquiposController extends Controller
 {
@@ -24,5 +23,4 @@ class TipoEquiposController extends Controller
     {
         return 'Tipos de Equipo';
     }
-    
 }

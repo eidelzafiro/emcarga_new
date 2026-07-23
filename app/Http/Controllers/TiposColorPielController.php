@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoColorPiel;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoColorPiel;
 
 class TiposColorPielController extends Controller
 {

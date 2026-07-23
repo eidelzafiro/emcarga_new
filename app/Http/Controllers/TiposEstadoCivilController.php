@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoEstadoCivil;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoEstadoCivil;
 
 class TiposEstadoCivilController extends Controller
 {

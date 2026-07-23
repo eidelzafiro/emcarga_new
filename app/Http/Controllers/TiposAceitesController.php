@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TiposAceite;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TiposAceite;
 
 class TiposAceitesController extends Controller
 {

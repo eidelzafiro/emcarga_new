@@ -11,6 +11,7 @@ class DescuentosEmpleadosController extends Controller
     public function index()
     {
         $items = DescuentosEmpleado::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Descuentos de Empleados',
@@ -40,6 +41,7 @@ class DescuentosEmpleadosController extends Controller
     public function show($id)
     {
         $item = DescuentosEmpleado::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Descuento de Empleado',
@@ -50,6 +52,7 @@ class DescuentosEmpleadosController extends Controller
     public function edit($id)
     {
         $item = DescuentosEmpleado::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Descuento de Empleado',

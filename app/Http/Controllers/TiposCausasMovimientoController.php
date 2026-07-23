@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoCausasMovimiento;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoCausasMovimiento;
 
 class TiposCausasMovimientoController extends Controller
 {

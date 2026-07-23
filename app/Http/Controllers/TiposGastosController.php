@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoGasto;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\TipoGasto;
 
 class TiposGastosController extends Controller
 {
@@ -24,7 +23,7 @@ class TiposGastosController extends Controller
     {
         return 'Tipos de Gasto';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

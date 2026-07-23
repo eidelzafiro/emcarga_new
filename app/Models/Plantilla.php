@@ -10,6 +10,8 @@ class Plantilla extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'plantilla';
+
     protected $fillable = [
         'codigo',
         'nombre',

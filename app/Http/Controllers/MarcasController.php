@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Marca;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Marca;
 
 class MarcasController extends Controller
 {
@@ -24,7 +23,7 @@ class MarcasController extends Controller
     {
         return 'Marcas';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

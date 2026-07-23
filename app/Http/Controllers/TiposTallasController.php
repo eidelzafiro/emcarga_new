@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoTalla;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoTalla;
 
 class TiposTallasController extends Controller
 {

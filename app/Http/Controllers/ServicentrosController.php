@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Servicentro;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\Servicentro;
 
 class ServicentrosController extends Controller
 {

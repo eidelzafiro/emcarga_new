@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoCalificador;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoCalificador;
 
 class TiposCalificadoresController extends Controller
 {

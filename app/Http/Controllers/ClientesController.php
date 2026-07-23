@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,6 +12,7 @@ class ClientesController extends Controller
     {
         $clientes = Cliente::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%"))
             ->paginate(20);
+
         return Inertia::render('Clientes/Index', ['title' => 'Clientes', 'clientes' => $clientes, 'filters' => $request->only(['search'])]);
     }
 
@@ -26,13 +29,14 @@ class ClientesController extends Controller
             'contacto' => 'nullable|max:255',
         ]);
         Cliente::create($validated);
+
         return redirect()->route('clientes.index')->with('success', 'Cliente creado correctamente.');
     }
 
     public function update(Request $request, Cliente $cliente)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:clientes,codigo,' . $cliente->id . '|max:50',
+            'codigo' => 'required|unique:clientes,codigo,'.$cliente->id.'|max:50',
             'nombre' => 'required|max:255',
             'razon_social' => 'nullable|max:255',
             'nit' => 'nullable|max:50',
@@ -42,12 +46,14 @@ class ClientesController extends Controller
             'contacto' => 'nullable|max:255',
         ]);
         $cliente->update($validated);
+
         return redirect()->route('clientes.index')->with('success', 'Cliente actualizado correctamente.');
     }
 
     public function destroy(Cliente $cliente)
     {
         $cliente->delete();
+
         return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente.');
     }
 }

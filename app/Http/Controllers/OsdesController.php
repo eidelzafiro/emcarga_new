@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Osde;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\Osde;
 
 class OsdesController extends Controller
 {

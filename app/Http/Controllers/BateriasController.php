@@ -42,7 +42,7 @@ class BateriasController extends Controller
     public function update(Request $request, Bateria $bateria)
     {
         $validated = $request->validate([
-            'folio' => 'required|unique:baterias,folio,' . $bateria->id,
+            'folio' => 'required|unique:baterias,folio,'.$bateria->id,
             'marca' => 'nullable|string|max:100',
             'modelo' => 'nullable|string|max:100',
             'id_tractivo' => 'nullable|exists:tractivos,id',

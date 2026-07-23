@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoEstado;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\TipoEstado;
 
 class TiposEstadosController extends Controller
 {

@@ -11,6 +11,7 @@ class RegistroOrdenesTallerController extends Controller
     public function index()
     {
         $items = RegistroOrdenesTaller::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Registro de Órdenes de Taller',
@@ -40,6 +41,7 @@ class RegistroOrdenesTallerController extends Controller
     public function show($id)
     {
         $item = RegistroOrdenesTaller::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Registro de Orden de Taller',
@@ -50,6 +52,7 @@ class RegistroOrdenesTallerController extends Controller
     public function edit($id)
     {
         $item = RegistroOrdenesTaller::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Registro de Orden de Taller',

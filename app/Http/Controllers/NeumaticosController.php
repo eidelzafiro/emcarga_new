@@ -44,7 +44,7 @@ class NeumaticosController extends Controller
     public function update(Request $request, Neumatico $neumatico)
     {
         $validated = $request->validate([
-            'folio' => 'required|unique:neumaticos,folio,' . $neumatico->id,
+            'folio' => 'required|unique:neumaticos,folio,'.$neumatico->id,
             'marca' => 'nullable|string|max:100',
             'modelo' => 'nullable|string|max:100',
             'medida' => 'nullable|string|max:50',

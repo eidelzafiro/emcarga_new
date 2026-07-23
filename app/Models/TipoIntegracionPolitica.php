@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoIntegracionPolitica extends Model
 {
+    protected $table = 'tipos_integracion_politica';
+
     protected $fillable = [
         'codigo',
         'nombre',

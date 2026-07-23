@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FondoTiempo;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\FondoTiempo;
 
 class FondosTiempoController extends Controller
 {

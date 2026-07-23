@@ -33,6 +33,7 @@ class ConciliacionesController extends Controller
             'descripcion' => 'nullable|max:500',
         ]);
         Conciliacione::create($validated);
+
         return redirect()->route('conciliaciones.index')->with('success', 'Conciliación creada correctamente.');
     }
 
@@ -46,12 +47,14 @@ class ConciliacionesController extends Controller
             'descripcion' => 'nullable|max:500',
         ]);
         $conciliacione->update($validated);
+
         return redirect()->route('conciliaciones.index')->with('success', 'Conciliación actualizada correctamente.');
     }
 
     public function destroy(Conciliacione $conciliacione)
     {
         $conciliacione->delete();
+
         return redirect()->route('conciliaciones.index')->with('success', 'Conciliación eliminada correctamente.');
     }
 }

@@ -44,7 +44,7 @@ class PerfilController extends Controller
         $perfil = Role::create(['name' => $datos['nombre']]);
         $perfil->syncPermissions($datos['permisos'] ?? []);
 
-        Bitacora::registrar('crear_perfil', "Perfil {$perfil->name} creado con ".count($datos['permisos'] ?? [])." permisos.");
+        Bitacora::registrar('crear_perfil', "Perfil {$perfil->name} creado con ".count($datos['permisos'] ?? []).' permisos.');
 
         return redirect()->route('perfiles.index')
             ->with('success', 'Perfil creado correctamente.');
@@ -66,7 +66,7 @@ class PerfilController extends Controller
         $perfil->update(['name' => $datos['nombre']]);
         $perfil->syncPermissions($datos['permisos'] ?? []);
 
-        Bitacora::registrar('editar_perfil', "Perfil {$perfil->name} actualizado con ".count($datos['permisos'] ?? [])." permisos.");
+        Bitacora::registrar('editar_perfil', "Perfil {$perfil->name} actualizado con ".count($datos['permisos'] ?? []).' permisos.');
 
         return redirect()->route('perfiles.index')
             ->with('success', 'Perfil actualizado correctamente.');

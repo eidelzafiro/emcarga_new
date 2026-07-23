@@ -11,6 +11,7 @@ class LineasNeumaticoController extends Controller
     public function index()
     {
         $items = LineasNeumatico::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Líneas de Neumático',
@@ -40,6 +41,7 @@ class LineasNeumaticoController extends Controller
     public function show($id)
     {
         $item = LineasNeumatico::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Línea de Neumático',
@@ -50,6 +52,7 @@ class LineasNeumaticoController extends Controller
     public function edit($id)
     {
         $item = LineasNeumatico::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Línea de Neumático',

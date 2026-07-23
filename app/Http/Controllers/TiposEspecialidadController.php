@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoEspecialidad;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoEspecialidad;
 
 class TiposEspecialidadController extends Controller
 {

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MovilWeb;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\MovilWeb;
 
 class MovilWebController extends Controller
 {

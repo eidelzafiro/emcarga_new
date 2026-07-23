@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoSexo;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoSexo;
 
 class TiposSexoController extends Controller
 {

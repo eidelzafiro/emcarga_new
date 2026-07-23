@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PosicionNeumatico;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\PosicionNeumatico;
 
 class PosicionesNeumaticosController extends Controller
 {
@@ -24,7 +23,7 @@ class PosicionesNeumaticosController extends Controller
     {
         return 'Posiciones de Neumáticos';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

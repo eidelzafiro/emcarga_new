@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DetalleCargaCombustible;
-use App\Models\CombustibleCarga;
-use App\Models\Tractivo;
 use App\Models\Bolsa;
+use App\Models\CombustibleCarga;
+use App\Models\DetalleCargaCombustible;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -44,6 +44,7 @@ class DetallesCargaCombustibleController extends Controller
             'observaciones' => 'nullable|string',
         ]);
         DetalleCargaCombustible::create($validated);
+
         return redirect()->route('detalles-carga-combustible.index')->with('success', 'Detalle creado correctamente.');
     }
 
@@ -60,12 +61,14 @@ class DetallesCargaCombustibleController extends Controller
             'observaciones' => 'nullable|string',
         ]);
         $detallesCargaCombustible->update($validated);
+
         return redirect()->route('detalles-carga-combustible.index')->with('success', 'Detalle actualizado correctamente.');
     }
 
     public function destroy(DetalleCargaCombustible $detallesCargaCombustible)
     {
         $detallesCargaCombustible->delete();
+
         return redirect()->route('detalles-carga-combustible.index')->with('success', 'Detalle eliminado correctamente.');
     }
 }

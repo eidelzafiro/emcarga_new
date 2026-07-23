@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoIntegracionPolitica;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoIntegracionPolitica;
 
 class TiposIntegracionPoliticaController extends Controller
 {

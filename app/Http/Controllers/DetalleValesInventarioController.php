@@ -11,6 +11,7 @@ class DetalleValesInventarioController extends Controller
     public function index()
     {
         $items = DetalleValesInventario::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Detalle de Vales',
@@ -40,6 +41,7 @@ class DetalleValesInventarioController extends Controller
     public function show($id)
     {
         $item = DetalleValesInventario::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Detalle de Vale',
@@ -50,6 +52,7 @@ class DetalleValesInventarioController extends Controller
     public function edit($id)
     {
         $item = DetalleValesInventario::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Detalle de Vale',

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PerfilesRh;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\PerfilesRh;
 
 class PerfilesRhController extends Controller
 {

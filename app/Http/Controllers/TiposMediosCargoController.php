@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoMedioCargo;
-use App\Models\MedioProteccion;
 use App\Models\Cargo;
+use App\Models\MedioProteccion;
+use App\Models\TipoMedioCargo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -34,6 +34,7 @@ class TiposMediosCargoController extends Controller
             'id_cargo' => 'required|exists:cargos,id',
         ]);
         TipoMedioCargo::create($validated);
+
         return redirect()->route('tipos-medios-cargo.index')->with('success', 'Asignación creada correctamente.');
     }
 
@@ -44,12 +45,14 @@ class TiposMediosCargoController extends Controller
             'id_cargo' => 'required|exists:cargos,id',
         ]);
         $tiposMediosCargo->update($validated);
+
         return redirect()->route('tipos-medios-cargo.index')->with('success', 'Asignación actualizada correctamente.');
     }
 
     public function destroy(TipoMedioCargo $tiposMediosCargo)
     {
         $tiposMediosCargo->delete();
+
         return redirect()->route('tipos-medios-cargo.index')->with('success', 'Asignación eliminada correctamente.');
     }
 }

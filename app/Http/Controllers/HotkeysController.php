@@ -11,6 +11,7 @@ class HotkeysController extends Controller
     public function index()
     {
         $items = Hotkey::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Hotkeys',
@@ -40,6 +41,7 @@ class HotkeysController extends Controller
     public function show($id)
     {
         $item = Hotkey::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Hotkey',
@@ -50,6 +52,7 @@ class HotkeysController extends Controller
     public function edit($id)
     {
         $item = Hotkey::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Hotkey',

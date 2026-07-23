@@ -32,7 +32,7 @@ class ActualizarPizarra extends Command
                 'tonelaje' => $p->tonelaje,
             ]);
 
-        $this->info('Pizarra actualizada: ' . count($registros) . ' vehículos.');
+        $this->info('Pizarra actualizada: '.count($registros).' vehículos.');
 
         if ($this->option('broadcast')) {
             broadcast(new PizarraUpdated($registros->toArray()));

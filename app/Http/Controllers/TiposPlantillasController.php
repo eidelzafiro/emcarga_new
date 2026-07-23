@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoPlantilla;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoPlantilla;
 
 class TiposPlantillasController extends Controller
 {

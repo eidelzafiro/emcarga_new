@@ -61,6 +61,7 @@ class ReportesCostosController extends Controller
         ]);
         $validated['id_user'] = auth()->id();
         ReporteCosto::create($validated);
+
         return redirect()->route('reportes-costos.index')->with('success', 'Reporte creado correctamente.');
     }
 
@@ -98,12 +99,14 @@ class ReportesCostosController extends Controller
             'observaciones' => 'nullable|string',
         ]);
         $reportesCosto->update($validated);
+
         return redirect()->route('reportes-costos.index')->with('success', 'Reporte actualizado correctamente.');
     }
 
     public function destroy(ReporteCosto $reportesCosto)
     {
         $reportesCosto->delete();
+
         return redirect()->route('reportes-costos.index')->with('success', 'Reporte eliminado correctamente.');
     }
 }

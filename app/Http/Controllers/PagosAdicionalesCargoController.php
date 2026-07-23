@@ -11,6 +11,7 @@ class PagosAdicionalesCargoController extends Controller
     public function index()
     {
         $items = PagosAdicionalesCargo::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Pagos Adicionales de Cargo',
@@ -40,6 +41,7 @@ class PagosAdicionalesCargoController extends Controller
     public function show($id)
     {
         $item = PagosAdicionalesCargo::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Pago Adicional de Cargo',
@@ -50,6 +52,7 @@ class PagosAdicionalesCargoController extends Controller
     public function edit($id)
     {
         $item = PagosAdicionalesCargo::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Pago Adicional de Cargo',

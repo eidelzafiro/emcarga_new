@@ -22,6 +22,7 @@ class ComercialTest extends TestCase
         $user->assignRole('ADMIN');
         $user->password_temporal = false;
         $user->save();
+
         return $user;
     }
 

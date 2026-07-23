@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\Reports\CatalogoReportService;
-use App\Services\Reports\NominaReportService;
 use App\Services\Reports\FacturaReportService;
+use App\Services\Reports\NominaReportService;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller

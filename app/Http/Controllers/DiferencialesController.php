@@ -42,7 +42,7 @@ class DiferencialesController extends Controller
     public function update(Request $request, Diferenciale $diferencial)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:diferenciales,codigo,' . $diferencial->id,
+            'codigo' => 'required|unique:diferenciales,codigo,'.$diferencial->id,
             'descripcion' => 'required|string|max:255',
             'marca' => 'nullable|string|max:100',
             'modelo' => 'nullable|string|max:100',

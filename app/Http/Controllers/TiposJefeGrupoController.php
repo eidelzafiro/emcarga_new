@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TiposJefeGrupo;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TiposJefeGrupo;
 
 class TiposJefeGrupoController extends Controller
 {

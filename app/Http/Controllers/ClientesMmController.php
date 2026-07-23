@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ClientesMm;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\ClientesMm;
 
 class ClientesMmController extends Controller
 {

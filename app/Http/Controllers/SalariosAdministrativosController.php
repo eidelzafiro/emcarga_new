@@ -36,6 +36,7 @@ class SalariosAdministrativosController extends Controller
         ]);
         $validated['id_user'] = auth()->id();
         SalarioAdministrativo::create($validated);
+
         return redirect()->route('salarios-administrativos.index')->with('success', 'Salario creado correctamente.');
     }
 
@@ -54,12 +55,14 @@ class SalariosAdministrativosController extends Controller
             'estado' => 'required|in:borrador,aprobado,cerrado',
         ]);
         $salariosAdministrativo->update($validated);
+
         return redirect()->route('salarios-administrativos.index')->with('success', 'Salario actualizado correctamente.');
     }
 
     public function destroy(SalarioAdministrativo $salariosAdministrativo)
     {
         $salariosAdministrativo->delete();
+
         return redirect()->route('salarios-administrativos.index')->with('success', 'Salario eliminado correctamente.');
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Notifications\NotificacionSistema;
 use App\Models\User;
+use App\Notifications\NotificacionSistema;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

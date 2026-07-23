@@ -24,26 +24,29 @@ class TiposPenalizacionesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:tipo_penalizaciones,codigo|max:50',
+            'codigo' => 'required|unique:tipos_penalizaciones,codigo|max:50',
             'nombre' => 'required|max:255',
         ]);
         TipoPenalizacione::create($validated);
+
         return redirect()->route('tipos-penalizaciones.index')->with('success', 'Tipo de penalización creado correctamente.');
     }
 
     public function update(Request $request, TipoPenalizacione $tiposPenalizacione)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:tipo_penalizaciones,codigo,' . $tiposPenalizacione->id . '|max:50',
+            'codigo' => 'required|unique:tipos_penalizaciones,codigo,'.$tiposPenalizacione->id.'|max:50',
             'nombre' => 'required|max:255',
         ]);
         $tiposPenalizacione->update($validated);
+
         return redirect()->route('tipos-penalizaciones.index')->with('success', 'Tipo de penalización actualizado correctamente.');
     }
 
     public function destroy(TipoPenalizacione $tiposPenalizacione)
     {
         $tiposPenalizacione->delete();
+
         return redirect()->route('tipos-penalizaciones.index')->with('success', 'Tipo de penalización eliminado correctamente.');
     }
 }

@@ -11,6 +11,7 @@ class ImportesGpsController extends Controller
     public function index()
     {
         $items = ImportesGp::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Importes GPS',
@@ -40,6 +41,7 @@ class ImportesGpsController extends Controller
     public function show($id)
     {
         $item = ImportesGp::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Importe GPS',
@@ -50,6 +52,7 @@ class ImportesGpsController extends Controller
     public function edit($id)
     {
         $item = ImportesGp::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Importe GPS',

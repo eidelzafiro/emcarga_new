@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Modelo;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Modelo;
 
 class ModelosController extends Controller
 {
@@ -24,7 +23,7 @@ class ModelosController extends Controller
     {
         return 'Modelos';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

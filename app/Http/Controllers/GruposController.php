@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Grupo;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Grupo;
 
 class GruposController extends Controller
 {
@@ -24,5 +23,4 @@ class GruposController extends Controller
     {
         return 'Grupos';
     }
-    
 }

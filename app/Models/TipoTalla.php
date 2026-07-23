@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoTalla extends Model
 {
+    protected $table = 'tipos_tallas';
+
     protected $fillable = [
         'codigo',
         'nombre',

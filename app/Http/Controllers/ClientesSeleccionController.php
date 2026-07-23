@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ClientesSeleccion;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\ClientesSeleccion;
 
 class ClientesSeleccionController extends Controller
 {

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoCombustible;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\TipoCombustible;
 
 class TiposCombustiblesController extends Controller
 {
@@ -24,5 +23,4 @@ class TiposCombustiblesController extends Controller
     {
         return 'Tipos de Combustible';
     }
-    
 }

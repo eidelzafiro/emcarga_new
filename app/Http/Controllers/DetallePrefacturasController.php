@@ -11,6 +11,7 @@ class DetallePrefacturasController extends Controller
     public function index()
     {
         $items = DetallePrefactura::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Detalle de Prefacturas',
@@ -40,6 +41,7 @@ class DetallePrefacturasController extends Controller
     public function show($id)
     {
         $item = DetallePrefactura::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Detalle de Prefactura',
@@ -50,6 +52,7 @@ class DetallePrefacturasController extends Controller
     public function edit($id)
     {
         $item = DetallePrefactura::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Detalle de Prefactura',

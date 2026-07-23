@@ -29,23 +29,26 @@ class TipoIngresosController extends Controller
             'siglas' => 'nullable|max:20',
         ]);
         TipoIngreso::create($validated);
+
         return redirect()->route('tipo-ingresos.index')->with('success', 'Tipo de ingreso creado correctamente.');
     }
 
     public function update(Request $request, TipoIngreso $tipoIngreso)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:tipo_ingresos,codigo,' . $tipoIngreso->id . '|max:50',
+            'codigo' => 'required|unique:tipo_ingresos,codigo,'.$tipoIngreso->id.'|max:50',
             'nombre' => 'required|max:255',
             'siglas' => 'nullable|max:20',
         ]);
         $tipoIngreso->update($validated);
+
         return redirect()->route('tipo-ingresos.index')->with('success', 'Tipo de ingreso actualizado correctamente.');
     }
 
     public function destroy(TipoIngreso $tipoIngreso)
     {
         $tipoIngreso->delete();
+
         return redirect()->route('tipo-ingresos.index')->with('success', 'Tipo de ingreso eliminado correctamente.');
     }
 }

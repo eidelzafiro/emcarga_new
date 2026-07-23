@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Aforo;
 use App\Models\Cliente;
 use App\Models\Factura;
-use App\Models\Giro;
 use App\Models\TipoIngreso;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -124,7 +123,7 @@ class FacturasController extends Controller
             'ingreso_mt' => 0,
         ]);
 
-        if (!$factura->oventas) {
+        if (! $factura->oventas) {
             Aforo::where('id_factura', $factura->id)->update(['id_factura' => null]);
         }
 

@@ -11,6 +11,7 @@ class LineasDiferencialController extends Controller
     public function index()
     {
         $items = LineasDiferencial::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Líneas de Diferencial',
@@ -40,6 +41,7 @@ class LineasDiferencialController extends Controller
     public function show($id)
     {
         $item = LineasDiferencial::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Línea de Diferencial',
@@ -50,6 +52,7 @@ class LineasDiferencialController extends Controller
     public function edit($id)
     {
         $item = LineasDiferencial::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Línea de Diferencial',

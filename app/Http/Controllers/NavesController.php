@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Nave;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Nave;
 
 class NavesController extends Controller
 {
@@ -24,7 +23,7 @@ class NavesController extends Controller
     {
         return 'Naves';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

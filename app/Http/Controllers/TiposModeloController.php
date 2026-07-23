@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoModelo;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\TipoModelo;
 
 class TiposModeloController extends Controller
 {

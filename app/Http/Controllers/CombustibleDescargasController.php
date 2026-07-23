@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CombustibleCarga;
 use App\Models\CombustibleDescarga;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,8 +17,8 @@ class CombustibleDescargasController extends Controller
             ->orderBy('fecha_descarga', 'desc')
             ->paginate(20);
 
-        $cargas = \App\Models\CombustibleCarga::select('id', 'numero')->orderBy('numero')->get();
-        $tractivos = \App\Models\Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
+        $cargas = CombustibleCarga::select('id', 'numero')->orderBy('numero')->get();
+        $tractivos = Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
 
         return Inertia::render('CombustibleDescargas/Index', [
             'title' => 'Descargas de Combustible',
@@ -38,6 +40,7 @@ class CombustibleDescargasController extends Controller
             'tipo_combustible' => 'required|max:50',
         ]);
         CombustibleDescarga::create($validated);
+
         return redirect()->route('combustible-descargas.index')->with('success', 'Descarga de combustible creada correctamente.');
     }
 
@@ -52,12 +55,14 @@ class CombustibleDescargasController extends Controller
             'tipo_combustible' => 'required|max:50',
         ]);
         $combustibleDescarga->update($validated);
+
         return redirect()->route('combustible-descargas.index')->with('success', 'Descarga de combustible actualizada correctamente.');
     }
 
     public function destroy(CombustibleDescarga $combustibleDescarga)
     {
         $combustibleDescarga->delete();
+
         return redirect()->route('combustible-descargas.index')->with('success', 'Descarga de combustible eliminada correctamente.');
     }
 }

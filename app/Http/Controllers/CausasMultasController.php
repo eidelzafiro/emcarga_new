@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CausasMulta;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\CausasMulta;
 
 class CausasMultasController extends Controller
 {

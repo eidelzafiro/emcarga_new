@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoCausasBaja;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoCausasBaja;
 
 class TiposCausasBajaController extends Controller
 {

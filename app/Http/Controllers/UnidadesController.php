@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Unidade;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Unidade;
 
 class UnidadesController extends Controller
 {

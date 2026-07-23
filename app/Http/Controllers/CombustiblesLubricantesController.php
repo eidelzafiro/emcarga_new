@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CombustibleLubricante;
 use App\Models\CombustibleCarga;
-use App\Models\Tractivo;
-use App\Models\TipoLubricante;
+use App\Models\CombustibleLubricante;
 use App\Models\TipoCausa;
+use App\Models\TipoLubricante;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -48,6 +48,7 @@ class CombustiblesLubricantesController extends Controller
             'observaciones' => 'nullable|string',
         ]);
         CombustibleLubricante::create($validated);
+
         return redirect()->route('combustibles-lubricantes.index')->with('success', 'Registro creado correctamente.');
     }
 
@@ -65,12 +66,14 @@ class CombustiblesLubricantesController extends Controller
             'observaciones' => 'nullable|string',
         ]);
         $combustiblesLubricante->update($validated);
+
         return redirect()->route('combustibles-lubricantes.index')->with('success', 'Registro actualizado correctamente.');
     }
 
     public function destroy(Request $request, CombustibleLubricante $combustiblesLubricante)
     {
         $combustiblesLubricante->delete();
+
         return redirect()->route('combustibles-lubricantes.index')->with('success', 'Registro eliminado correctamente.');
     }
 }

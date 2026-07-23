@@ -32,6 +32,7 @@ class AlertasController extends Controller
         ]);
         $validated['id_user'] = auth()->id();
         Alerta::create($validated);
+
         return redirect()->route('alertas.index')->with('success', 'Alerta creada correctamente.');
     }
 
@@ -45,12 +46,14 @@ class AlertasController extends Controller
             'vencida' => 'boolean',
         ]);
         $alerta->update($validated);
+
         return redirect()->route('alertas.index')->with('success', 'Alerta actualizada correctamente.');
     }
 
     public function destroy(Alerta $alerta)
     {
         $alerta->delete();
+
         return redirect()->route('alertas.index')->with('success', 'Alerta eliminada correctamente.');
     }
 }

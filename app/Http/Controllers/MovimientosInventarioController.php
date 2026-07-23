@@ -11,6 +11,7 @@ class MovimientosInventarioController extends Controller
     public function index()
     {
         $items = MovimientosInventario::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Movimientos de Inventario',
@@ -40,6 +41,7 @@ class MovimientosInventarioController extends Controller
     public function show($id)
     {
         $item = MovimientosInventario::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Movimiento de Inventario',
@@ -50,6 +52,7 @@ class MovimientosInventarioController extends Controller
     public function edit($id)
     {
         $item = MovimientosInventario::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Movimiento de Inventario',

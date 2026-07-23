@@ -36,6 +36,7 @@ class PizarraTest extends TestCase
         $user = User::first();
         $user->password_temporal = false;
         $user->save();
+
         return $user;
     }
 

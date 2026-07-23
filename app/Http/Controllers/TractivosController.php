@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\Tractivo;
 
 class TractivosController extends Controller
 {
@@ -15,7 +15,7 @@ class TractivosController extends Controller
     {
         $tractivos = Tractivo::when($request->search, function ($query, $search) {
             $query->where('descripcion', 'like', "%{$search}%")
-                  ->orWhere('placa', 'like', "%{$search}%");
+                ->orWhere('placa', 'like', "%{$search}%");
         })->paginate(20);
 
         return Inertia::render('Tractivos/Index', [
@@ -35,7 +35,7 @@ class TractivosController extends Controller
             'placa' => 'required|string|max:50|unique:tractivos,placa',
             'marca' => 'nullable|string|max:100',
             'modelo' => 'nullable|string|max:100',
-            'anno' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
+            'anno' => 'nullable|integer|min:1900|max:'.(date('Y') + 1),
         ]);
 
         Tractivo::create($validated);
@@ -51,10 +51,10 @@ class TractivosController extends Controller
     {
         $validated = $request->validate([
             'descripcion' => 'required|string|max:255',
-            'placa' => 'required|string|max:50|unique:tractivos,placa,' . $tractivo->id,
+            'placa' => 'required|string|max:50|unique:tractivos,placa,'.$tractivo->id,
             'marca' => 'nullable|string|max:100',
             'modelo' => 'nullable|string|max:100',
-            'anno' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
+            'anno' => 'nullable|integer|min:1900|max:'.(date('Y') + 1),
         ]);
 
         $tractivo->update($validated);

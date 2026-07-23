@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Valla;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Valla;
 
 class VallasController extends Controller
 {
@@ -24,7 +23,7 @@ class VallasController extends Controller
     {
         return 'Vallas';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

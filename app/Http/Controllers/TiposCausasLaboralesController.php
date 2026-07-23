@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoCausaLaboral;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoCausaLaboral;
 
 class TiposCausasLaboralesController extends Controller
 {

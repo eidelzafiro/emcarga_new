@@ -10,6 +10,8 @@ class Bolsa extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'bolsa';
+
     protected $fillable = [
         'ci',
         'nombre',

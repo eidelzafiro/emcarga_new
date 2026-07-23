@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MotivosEntradaTaller;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\MotivosEntradaTaller;
 
 class MotivosEntradaTallerController extends Controller
 {

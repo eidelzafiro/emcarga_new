@@ -35,6 +35,6 @@ class OrdenesTaller extends Model
 
     public function tipoMantenimiento(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\TiposMantenimiento::class, 'id_tipo_mantenimiento');
+        return $this->belongsTo(TiposMantenimiento::class, 'id_tipo_mantenimiento');
     }
 }

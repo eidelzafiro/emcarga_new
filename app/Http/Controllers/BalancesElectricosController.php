@@ -11,6 +11,7 @@ class BalancesElectricosController extends Controller
     public function index()
     {
         $items = BalanceElectrico::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Balances Eléctricos',
@@ -40,6 +41,7 @@ class BalancesElectricosController extends Controller
     public function show($id)
     {
         $item = BalanceElectrico::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Balance Eléctrico',
@@ -50,6 +52,7 @@ class BalancesElectricosController extends Controller
     public function edit($id)
     {
         $item = BalanceElectrico::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Balance Eléctrico',

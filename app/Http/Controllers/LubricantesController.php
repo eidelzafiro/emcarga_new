@@ -44,7 +44,7 @@ class LubricantesController extends Controller
     public function update(Request $request, ConsumoLubricante $lubricante)
     {
         $validated = $request->validate([
-            'folio' => 'required|unique:consumo_lubricantes,folio,' . $lubricante->id,
+            'folio' => 'required|unique:consumo_lubricantes,folio,'.$lubricante->id,
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'id_tipo_aceite' => 'nullable|exists:tipos_lubricantes,id',
             'id_causa' => 'nullable|exists:tipos_causas,id',

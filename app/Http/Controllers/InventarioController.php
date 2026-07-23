@@ -35,13 +35,14 @@ class InventarioController extends Controller
             'ubicacion' => 'nullable|max:255',
         ]);
         Inventario::create($validated);
+
         return redirect()->route('inventario.index')->with('success', 'Item de inventario creado correctamente.');
     }
 
     public function update(Request $request, Inventario $inventario)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:inventario,codigo,' . $inventario->id . '|max:50',
+            'codigo' => 'required|unique:inventario,codigo,'.$inventario->id.'|max:50',
             'nombre' => 'required|max:255',
             'descripcion' => 'nullable|max:500',
             'categoria' => 'nullable|max:100',
@@ -52,12 +53,14 @@ class InventarioController extends Controller
             'ubicacion' => 'nullable|max:255',
         ]);
         $inventario->update($validated);
+
         return redirect()->route('inventario.index')->with('success', 'Item de inventario actualizado correctamente.');
     }
 
     public function destroy(Inventario $inventario)
     {
         $inventario->delete();
+
         return redirect()->route('inventario.index')->with('success', 'Item de inventario eliminado correctamente.');
     }
 }

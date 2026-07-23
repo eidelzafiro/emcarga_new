@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CategoriaCargo;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\CategoriaCargo;
 
 class CategoriasCargoController extends Controller
 {
@@ -24,7 +23,7 @@ class CategoriasCargoController extends Controller
     {
         return 'Categorías de Cargo';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

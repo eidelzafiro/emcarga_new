@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DestinoAgregado;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\DestinoAgregado;
 
 class DestinosAgregadosController extends Controller
 {
@@ -24,5 +23,4 @@ class DestinosAgregadosController extends Controller
     {
         return 'Destinos Agregados';
     }
-    
 }

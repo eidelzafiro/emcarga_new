@@ -29,22 +29,25 @@ class HistorialMovimientosController extends Controller
             'nombre' => 'required|max:255',
         ]);
         HistorialMovimiento::create($validated);
+
         return redirect()->route('historial-movimientos.index')->with('success', 'Movimiento creado correctamente.');
     }
 
     public function update(Request $request, HistorialMovimiento $historialMovimiento)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:historial_movimientos,codigo,' . $historialMovimiento->id . '|max:50',
+            'codigo' => 'required|unique:historial_movimientos,codigo,'.$historialMovimiento->id.'|max:50',
             'nombre' => 'required|max:255',
         ]);
         $historialMovimiento->update($validated);
+
         return redirect()->route('historial-movimientos.index')->with('success', 'Movimiento actualizado correctamente.');
     }
 
     public function destroy(HistorialMovimiento $historialMovimiento)
     {
         $historialMovimiento->delete();
+
         return redirect()->route('historial-movimientos.index')->with('success', 'Movimiento eliminado correctamente.');
     }
 }

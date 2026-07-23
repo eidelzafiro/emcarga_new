@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Demanda;
 use App\Models\Cliente;
-use App\Models\Producto;
-use App\Models\Lugare;
+use App\Models\Demanda;
 use App\Models\Embalaje;
+use App\Models\Lugare;
+use App\Models\Producto;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -55,6 +55,7 @@ class DemandasController extends Controller
         ]);
         $validated['id_user'] = auth()->id();
         Demanda::create($validated);
+
         return redirect()->route('demandas.index')->with('success', 'Demanda creada correctamente.');
     }
 
@@ -77,12 +78,14 @@ class DemandasController extends Controller
             'estado' => 'required|in:activa,completada,cancelada',
         ]);
         $demanda->update($validated);
+
         return redirect()->route('demandas.index')->with('success', 'Demanda actualizada correctamente.');
     }
 
     public function destroy(Demanda $demanda)
     {
         $demanda->delete();
+
         return redirect()->route('demandas.index')->with('success', 'Demanda eliminada correctamente.');
     }
 }

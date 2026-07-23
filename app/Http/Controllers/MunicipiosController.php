@@ -33,6 +33,7 @@ class MunicipiosController extends Controller
             'id_provincia' => 'required|exists:provincias,id',
         ]);
         Municipio::create($validated);
+
         return redirect()->route('municipios.index')->with('success', 'Municipio creado correctamente.');
     }
 
@@ -43,12 +44,14 @@ class MunicipiosController extends Controller
             'id_provincia' => 'required|exists:provincias,id',
         ]);
         $municipio->update($validated);
+
         return redirect()->route('municipios.index')->with('success', 'Municipio actualizado correctamente.');
     }
 
     public function destroy(Municipio $municipio)
     {
         $municipio->delete();
+
         return redirect()->route('municipios.index')->with('success', 'Municipio eliminado correctamente.');
     }
 }

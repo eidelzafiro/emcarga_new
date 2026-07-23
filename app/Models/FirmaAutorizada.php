@@ -9,6 +9,8 @@ class FirmaAutorizada extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'firmas_autorizadas';
+
     protected $fillable = [
         'nombre',
         'cargo',

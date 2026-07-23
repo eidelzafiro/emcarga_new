@@ -11,6 +11,7 @@ class HistorialTractivosController extends Controller
     public function index()
     {
         $items = HistorialTractivo::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Historial de Tractivos',
@@ -40,6 +41,7 @@ class HistorialTractivosController extends Controller
     public function show($id)
     {
         $item = HistorialTractivo::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Historial de Tractivo',
@@ -50,6 +52,7 @@ class HistorialTractivosController extends Controller
     public function edit($id)
     {
         $item = HistorialTractivo::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Historial de Tractivo',

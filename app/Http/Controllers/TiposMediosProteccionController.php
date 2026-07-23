@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoMedioProteccion;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoMedioProteccion;
 
 class TiposMediosProteccionController extends Controller
 {

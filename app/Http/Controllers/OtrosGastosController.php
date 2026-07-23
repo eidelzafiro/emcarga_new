@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bolsa;
 use App\Models\OtrosGasto;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,8 +17,8 @@ class OtrosGastosController extends Controller
             ->orderBy('fecha', 'desc')
             ->paginate(20);
 
-        $bolsa = \App\Models\Bolsa::select('id', 'nombre')->orderBy('nombre')->get();
-        $tractivos = \App\Models\Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
+        $bolsa = Bolsa::select('id', 'nombre')->orderBy('nombre')->get();
+        $tractivos = Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
 
         return Inertia::render('OtrosGastos/Index', [
             'title' => 'Otros Gastos',
@@ -40,6 +42,7 @@ class OtrosGastosController extends Controller
             'descripcion' => 'nullable|max:500',
         ]);
         OtrosGasto::create($validated);
+
         return redirect()->route('otros-gastos.index')->with('success', 'Gasto creado correctamente.');
     }
 
@@ -56,12 +59,14 @@ class OtrosGastosController extends Controller
             'descripcion' => 'nullable|max:500',
         ]);
         $otrosGasto->update($validated);
+
         return redirect()->route('otros-gastos.index')->with('success', 'Gasto actualizado correctamente.');
     }
 
     public function destroy(OtrosGasto $otrosGasto)
     {
         $otrosGasto->delete();
+
         return redirect()->route('otros-gastos.index')->with('success', 'Gasto eliminado correctamente.');
     }
 }

@@ -11,6 +11,7 @@ class CompetenciasCargoController extends Controller
     public function index()
     {
         $items = CompetenciasCargo::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Competencias de Cargo',
@@ -40,6 +41,7 @@ class CompetenciasCargoController extends Controller
     public function show($id)
     {
         $item = CompetenciasCargo::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Competencia de Cargo',
@@ -50,6 +52,7 @@ class CompetenciasCargoController extends Controller
     public function edit($id)
     {
         $item = CompetenciasCargo::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Competencia de Cargo',

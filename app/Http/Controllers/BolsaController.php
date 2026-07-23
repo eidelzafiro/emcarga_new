@@ -15,8 +15,8 @@ class BolsaController extends Controller
         $items = Bolsa::with(['cargo', 'entidad'])
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('nombre', 'like', "%{$s}%")
-                  ->orWhere('apellidos', 'like', "%{$s}%")
-                  ->orWhere('ci', 'like', "%{$s}%");
+                    ->orWhere('apellidos', 'like', "%{$s}%")
+                    ->orWhere('ci', 'like', "%{$s}%");
             }))
             ->orderBy('nombre')
             ->paginate(20);
@@ -48,13 +48,14 @@ class BolsaController extends Controller
             'id_entidad' => 'nullable|exists:entidades,id',
         ]);
         Bolsa::create($validated);
+
         return redirect()->route('bolsa.index')->with('success', 'Registro creado correctamente.');
     }
 
     public function update(Request $request, Bolsa $bolsa)
     {
         $validated = $request->validate([
-            'ci' => 'required|unique:bolsa,ci,' . $bolsa->id . '|max:20',
+            'ci' => 'required|unique:bolsa,ci,'.$bolsa->id.'|max:20',
             'nombre' => 'required|max:255',
             'apellidos' => 'required|max:255',
             'sexo' => 'nullable|max:1',
@@ -66,12 +67,14 @@ class BolsaController extends Controller
             'id_entidad' => 'nullable|exists:entidades,id',
         ]);
         $bolsa->update($validated);
+
         return redirect()->route('bolsa.index')->with('success', 'Registro actualizado correctamente.');
     }
 
     public function destroy(Bolsa $bolsa)
     {
         $bolsa->delete();
+
         return redirect()->route('bolsa.index')->with('success', 'Registro eliminado correctamente.');
     }
 }

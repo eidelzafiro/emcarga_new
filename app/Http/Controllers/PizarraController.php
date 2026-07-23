@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pizarra;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PizarraController extends Controller

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoServicio;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\TipoServicio;
 
 class TiposServiciosController extends Controller
 {
@@ -24,5 +23,4 @@ class TiposServiciosController extends Controller
     {
         return 'Tipos de Servicio';
     }
-    
 }

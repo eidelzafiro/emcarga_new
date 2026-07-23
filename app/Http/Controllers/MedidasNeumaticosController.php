@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MedidaNeumatico;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\MedidaNeumatico;
 
 class MedidasNeumaticosController extends Controller
 {
@@ -24,7 +23,7 @@ class MedidasNeumaticosController extends Controller
     {
         return 'Medidas de Neumáticos';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

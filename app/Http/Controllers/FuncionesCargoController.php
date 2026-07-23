@@ -11,6 +11,7 @@ class FuncionesCargoController extends Controller
     public function index()
     {
         $items = FuncionesCargo::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Funciones de Cargo',
@@ -40,6 +41,7 @@ class FuncionesCargoController extends Controller
     public function show($id)
     {
         $item = FuncionesCargo::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Función de Cargo',
@@ -50,6 +52,7 @@ class FuncionesCargoController extends Controller
     public function edit($id)
     {
         $item = FuncionesCargo::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Función de Cargo',

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TiposEntidad;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TiposEntidad;
 
 class TiposEntidadController extends Controller
 {

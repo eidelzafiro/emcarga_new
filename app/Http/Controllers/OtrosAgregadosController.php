@@ -41,7 +41,7 @@ class OtrosAgregadosController extends Controller
     public function update(Request $request, OtrosAgregado $otrosAgregado)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:otros_agregados,codigo,' . $otrosAgregado->id,
+            'codigo' => 'required|unique:otros_agregados,codigo,'.$otrosAgregado->id,
             'descripcion' => 'required|string|max:255',
             'numero_serie' => 'nullable|string|max:100',
             'id_marca' => 'nullable|exists:marcas,id',

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PerfilesRh extends Model
 {
+    protected $table = 'perfiles_rh';
+
     protected $fillable = [
         'codigo',
         'nombre',

@@ -11,6 +11,7 @@ class ImportesMultasController extends Controller
     public function index()
     {
         $items = ImportesMulta::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Importes de Multas',
@@ -40,6 +41,7 @@ class ImportesMultasController extends Controller
     public function show($id)
     {
         $item = ImportesMulta::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Importe de Multa',
@@ -50,6 +52,7 @@ class ImportesMultasController extends Controller
     public function edit($id)
     {
         $item = ImportesMulta::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Importe de Multa',

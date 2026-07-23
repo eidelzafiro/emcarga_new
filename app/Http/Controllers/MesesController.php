@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mese;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\Mese;
 
 class MesesController extends Controller
 {

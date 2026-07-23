@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contenedore;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Contenedore;
 
 class ContenedoresController extends Controller
 {

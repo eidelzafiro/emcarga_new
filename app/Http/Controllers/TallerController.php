@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tractivo;
 use App\Models\OrdenesTaller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -47,7 +46,7 @@ class TallerController extends Controller
     public function update(Request $request, OrdenesTaller $ordene)
     {
         $validated = $request->validate([
-            'numero' => 'required|string|max:50|unique:ordenes_taller,numero,' . $ordene->id,
+            'numero' => 'required|string|max:50|unique:ordenes_taller,numero,'.$ordene->id,
             'id_tractivo' => 'required|exists:tractivos,id',
             'id_tipo_mantenimiento' => 'required|exists:tipos_mantenimiento,id',
             'fecha_ingreso' => 'required|date',

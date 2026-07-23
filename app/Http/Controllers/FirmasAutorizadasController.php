@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FirmaAutorizada;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\FirmaAutorizada;
 
 class FirmasAutorizadasController extends Controller
 {

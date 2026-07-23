@@ -35,6 +35,7 @@ class MediosProteccionController extends Controller
             'activo' => 'boolean',
         ]);
         MedioProteccion::create($validated);
+
         return redirect()->route('medios-proteccion.index')->with('success', 'Medio creado correctamente.');
     }
 
@@ -48,12 +49,14 @@ class MediosProteccionController extends Controller
             'activo' => 'boolean',
         ]);
         $mediosProteccion->update($validated);
+
         return redirect()->route('medios-proteccion.index')->with('success', 'Medio actualizado correctamente.');
     }
 
     public function destroy(MedioProteccion $mediosProteccion)
     {
         $mediosProteccion->delete();
+
         return redirect()->route('medios-proteccion.index')->with('success', 'Medio eliminado correctamente.');
     }
 }

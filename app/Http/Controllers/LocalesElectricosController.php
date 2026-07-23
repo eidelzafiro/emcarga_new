@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LocalesElectrico;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\LocalesElectrico;
 
 class LocalesElectricosController extends Controller
 {

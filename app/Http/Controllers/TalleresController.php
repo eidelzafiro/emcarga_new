@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Taller;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Taller;
 
 class TalleresController extends Controller
 {
@@ -24,5 +23,4 @@ class TalleresController extends Controller
     {
         return 'Talleres';
     }
-    
 }

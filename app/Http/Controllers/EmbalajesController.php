@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Embalaje;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Embalaje;
 
 class EmbalajesController extends Controller
 {
@@ -24,5 +23,4 @@ class EmbalajesController extends Controller
     {
         return 'Embalajes';
     }
-    
 }

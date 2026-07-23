@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class CalcularKpis extends Command
 {
     protected $signature = 'emcarga:kpis {--broadcast : Emitir evento de broadcast}';
+
     protected $description = 'Recalcula y muestra los KPIs del dashboard';
 
     public function handle(KpiService $kpiService)

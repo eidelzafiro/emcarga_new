@@ -24,12 +24,14 @@ class FlotaTest extends TestCase
         $user->assignRole('TECNICA');
         $user->password_temporal = false;
         $user->save();
+
         return $user;
     }
 
     private function tractivoValido(): Tractivo
     {
         $tipo = TipoVehiculo::create(['codigo' => 'TST', 'nombre' => 'Test']);
+
         return Tractivo::factory()->create(['id_tipo_vehiculo' => $tipo->id]);
     }
 

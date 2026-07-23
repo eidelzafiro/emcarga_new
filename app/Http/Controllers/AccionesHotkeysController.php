@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AccioneHotkey;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\AccioneHotkey;
 
 class AccionesHotkeysController extends Controller
 {

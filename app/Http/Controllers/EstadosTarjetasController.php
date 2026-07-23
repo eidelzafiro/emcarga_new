@@ -38,6 +38,7 @@ class EstadosTarjetasController extends Controller
             'observaciones' => 'nullable|string',
         ]);
         EstadoTarjeta::create($validated);
+
         return redirect()->route('estados-tarjetas.index')->with('success', 'Estado creado correctamente.');
     }
 
@@ -54,12 +55,14 @@ class EstadosTarjetasController extends Controller
             'observaciones' => 'nullable|string',
         ]);
         $estadosTarjeta->update($validated);
+
         return redirect()->route('estados-tarjetas.index')->with('success', 'Estado actualizado correctamente.');
     }
 
     public function destroy(EstadoTarjeta $estadosTarjeta)
     {
         $estadosTarjeta->delete();
+
         return redirect()->route('estados-tarjetas.index')->with('success', 'Estado eliminado correctamente.');
     }
 }

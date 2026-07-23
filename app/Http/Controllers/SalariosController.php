@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Salario;
-use App\Models\Bolsa;
 use App\Models\Area;
+use App\Models\Bolsa;
 use App\Models\Cargo;
+use App\Models\Salario;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -47,6 +47,7 @@ class SalariosController extends Controller
         ]);
         $validated['id_user'] = auth()->id();
         Salario::create($validated);
+
         return redirect()->route('salarios.index')->with('success', 'Salario creado correctamente.');
     }
 
@@ -62,12 +63,14 @@ class SalariosController extends Controller
             'estado' => 'required|in:borrador,aprobado,cerrado',
         ]);
         $salario->update($validated);
+
         return redirect()->route('salarios.index')->with('success', 'Salario actualizado correctamente.');
     }
 
     public function destroy(Salario $salario)
     {
         $salario->delete();
+
         return redirect()->route('salarios.index')->with('success', 'Salario eliminado correctamente.');
     }
 }

@@ -35,6 +35,7 @@ class ConfiguracionesModeloController extends Controller
         ]);
         $validated['id_user'] = auth()->id();
         ConfiguracioneModelo::create($validated);
+
         return redirect()->route('configuraciones-modelo.index')->with('success', 'Configuración creada correctamente.');
     }
 
@@ -48,12 +49,14 @@ class ConfiguracionesModeloController extends Controller
             'letra' => 'nullable|integer',
         ]);
         $configuracionesModelo->update($validated);
+
         return redirect()->route('configuraciones-modelo.index')->with('success', 'Configuración actualizada correctamente.');
     }
 
     public function destroy(ConfiguracioneModelo $configuracionesModelo)
     {
         $configuracionesModelo->delete();
+
         return redirect()->route('configuraciones-modelo.index')->with('success', 'Configuración eliminada correctamente.');
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoNivelEducacion;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoNivelEducacion;
 
 class TiposNivelEducacionController extends Controller
 {

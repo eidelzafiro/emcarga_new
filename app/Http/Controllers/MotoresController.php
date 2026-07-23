@@ -43,7 +43,7 @@ class MotoresController extends Controller
     public function update(Request $request, Motore $motore)
     {
         $validated = $request->validate([
-            'codigo' => 'required|string|max:50|unique:motores,codigo,' . $motore->id,
+            'codigo' => 'required|string|max:50|unique:motores,codigo,'.$motore->id,
             'descripcion' => 'required|string|max:255',
             'marca' => 'nullable|string|max:100',
             'modelo' => 'nullable|string|max:100',

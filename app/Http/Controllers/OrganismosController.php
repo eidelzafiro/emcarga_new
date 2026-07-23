@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Organismo;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Organismo;
 
 class OrganismosController extends Controller
 {
@@ -24,7 +23,7 @@ class OrganismosController extends Controller
     {
         return 'Organismos';
     }
-    
+
     protected function getExtraFields(): array
     {
         return [

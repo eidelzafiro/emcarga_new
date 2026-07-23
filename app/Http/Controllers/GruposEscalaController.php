@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GrupoEscala;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\GrupoEscala;
 
 class GruposEscalaController extends Controller
 {
@@ -24,5 +23,4 @@ class GruposEscalaController extends Controller
     {
         return 'Grupos de Escala';
     }
-    
 }

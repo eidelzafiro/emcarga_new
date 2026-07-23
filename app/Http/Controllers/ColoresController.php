@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Color;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Color;
 
 class ColoresController extends Controller
 {
@@ -24,5 +23,4 @@ class ColoresController extends Controller
     {
         return 'Colores';
     }
-    
 }

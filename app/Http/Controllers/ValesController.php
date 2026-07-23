@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bolsa;
+use App\Models\Tractivo;
 use App\Models\Vale;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,8 +17,8 @@ class ValesController extends Controller
             ->orderBy('fecha_emision', 'desc')
             ->paginate(20);
 
-        $bolsa = \App\Models\Bolsa::select('id', 'nombre')->orderBy('nombre')->get();
-        $tractivos = \App\Models\Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
+        $bolsa = Bolsa::select('id', 'nombre')->orderBy('nombre')->get();
+        $tractivos = Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
 
         return Inertia::render('Vales/Index', [
             'title' => 'Vales',
@@ -38,13 +40,14 @@ class ValesController extends Controller
             'concepto' => 'nullable|max:255',
         ]);
         Vale::create($validated);
+
         return redirect()->route('vales.index')->with('success', 'Vale creado correctamente.');
     }
 
     public function update(Request $request, Vale $vale)
     {
         $validated = $request->validate([
-            'numero' => 'required|unique:vales,numero,' . $vale->id . '|max:50',
+            'numero' => 'required|unique:vales,numero,'.$vale->id.'|max:50',
             'id_bolsa' => 'required|exists:bolsa,id',
             'id_tractivo' => 'required|exists:tractivos,id',
             'fecha_emision' => 'required|date',
@@ -52,12 +55,14 @@ class ValesController extends Controller
             'concepto' => 'nullable|max:255',
         ]);
         $vale->update($validated);
+
         return redirect()->route('vales.index')->with('success', 'Vale actualizado correctamente.');
     }
 
     public function destroy(Vale $vale)
     {
         $vale->delete();
+
         return redirect()->route('vales.index')->with('success', 'Vale eliminado correctamente.');
     }
 }

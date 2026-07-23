@@ -42,7 +42,7 @@ class CajasController extends Controller
     public function update(Request $request, Caja $caja)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:cajas,codigo,' . $caja->id,
+            'codigo' => 'required|unique:cajas,codigo,'.$caja->id,
             'descripcion' => 'required|string|max:255',
             'marca' => 'nullable|string|max:100',
             'modelo' => 'nullable|string|max:100',

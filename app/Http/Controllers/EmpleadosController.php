@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Empleado;
 use App\Http\Controllers\Traits\ManagesCatalog;
-use Illuminate\Http\Request;
+use App\Models\Empleado;
 
 class EmpleadosController extends Controller
 {

@@ -35,6 +35,7 @@ class TarifasController extends Controller
             'version' => 'required|in:normal,46',
         ]);
         Tarifa::create($validated);
+
         return redirect()->route('tarifas.index')->with('success', 'Tarifa creada correctamente.');
     }
 
@@ -47,12 +48,14 @@ class TarifasController extends Controller
             'version' => 'required|in:normal,46',
         ]);
         $tarifa->update($validated);
+
         return redirect()->route('tarifas.index')->with('success', 'Tarifa actualizada correctamente.');
     }
 
     public function destroy(Tarifa $tarifa)
     {
         $tarifa->delete();
+
         return redirect()->route('tarifas.index')->with('success', 'Tarifa eliminada correctamente.');
     }
 }

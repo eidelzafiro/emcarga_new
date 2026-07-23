@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OtrosIngresosPre;
 use App\Models\CartaPorte;
+use App\Models\OtrosIngresosPre;
 use App\Models\TipoIngreso;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,6 +37,7 @@ class OtrosIngresosPreController extends Controller
             'importe_mn' => 'required|numeric|min:0',
         ]);
         OtrosIngresosPre::create($validated);
+
         return redirect()->route('otros-ingresos-pre.index')->with('success', 'Ingreso creado correctamente.');
     }
 
@@ -49,12 +50,14 @@ class OtrosIngresosPreController extends Controller
             'importe_mn' => 'required|numeric|min:0',
         ]);
         $otrosIngresosPre->update($validated);
+
         return redirect()->route('otros-ingresos-pre.index')->with('success', 'Ingreso actualizado correctamente.');
     }
 
     public function destroy(OtrosIngresosPre $otrosIngresosPre)
     {
         $otrosIngresosPre->delete();
+
         return redirect()->route('otros-ingresos-pre.index')->with('success', 'Ingreso eliminado correctamente.');
     }
 }

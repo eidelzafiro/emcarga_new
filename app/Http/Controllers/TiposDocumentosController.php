@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoDocumento;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoDocumento;
 
 class TiposDocumentosController extends Controller
 {

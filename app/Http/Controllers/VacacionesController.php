@@ -11,6 +11,7 @@ class VacacionesController extends Controller
     public function index()
     {
         $items = Vacacione::orderBy('id')->paginate(50);
+
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
             'title' => 'Vacaciones',
@@ -40,6 +41,7 @@ class VacacionesController extends Controller
     public function show($id)
     {
         $item = Vacacione::findOrFail($id);
+
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
             'title' => 'Vacación',
@@ -50,6 +52,7 @@ class VacacionesController extends Controller
     public function edit($id)
     {
         $item = Vacacione::findOrFail($id);
+
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
             'title' => 'Editar Vacación',

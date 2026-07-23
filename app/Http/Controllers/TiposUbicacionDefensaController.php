@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoUbicacionDefensa;
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\TipoUbicacionDefensa;
 
 class TiposUbicacionDefensaController extends Controller
 {

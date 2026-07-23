@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Indicadore;
-use App\Models\CartaPorte;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -27,6 +26,7 @@ class IndicadoresController extends Controller
             'id_carta_porte' => 'required|exists:cartas_porte,id|unique:indicadores,id_carta_porte',
         ]);
         Indicadore::create($validated);
+
         return redirect()->route('indicadores.index')->with('success', 'Indicadores creados correctamente.');
     }
 
@@ -34,12 +34,14 @@ class IndicadoresController extends Controller
     {
         $validated = $request->validate([]);
         $indicadore->update($request->all());
+
         return redirect()->route('indicadores.index')->with('success', 'Indicadores actualizados correctamente.');
     }
 
     public function destroy(Indicadore $indicadore)
     {
         $indicadore->delete();
+
         return redirect()->route('indicadores.index')->with('success', 'Indicadores eliminados correctamente.');
     }
 }

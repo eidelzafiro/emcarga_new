@@ -51,7 +51,7 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 8)
+                ->has('menu', 9)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.4.label', 'Comercial')
                 ->where('menu.4.children.0.label', 'Clientes')
@@ -59,9 +59,11 @@ class MenuTest extends TestCase
                 ->where('menu.5.children.0.label', 'Facturas')
                 ->where('menu.6.label', 'RRHH')
                 ->where('menu.6.children.0.label', 'Bolsa')
-                ->where('menu.7.label', 'Administración')
-                ->where('menu.7.children.0.label', 'Usuarios')
-                ->where('menu.7.children.1.label', 'Perfiles')
+                ->where('menu.7.label', 'Contabilidad')
+                ->where('menu.7.children.0.label', 'Conciliaciones')
+                ->where('menu.8.label', 'Administración')
+                ->where('menu.8.children.0.label', 'Usuarios')
+                ->where('menu.8.children.1.label', 'Perfiles')
         );
     }
 
@@ -92,15 +94,16 @@ class MenuTest extends TestCase
         );
     }
 
-    public function test_agrupador_sin_hijos_visibles_no_se_muestra(): void
+    public function test_contabilidad_ve_su_modulo(): void
     {
         $user = User::factory()->create();
         $user->assignRole('CONTABILIDAD');
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 1)
+                ->has('menu', 2)
                 ->where('menu.0.label', 'Dashboard')
+                ->where('menu.1.label', 'Contabilidad')
         );
     }
 }

@@ -179,6 +179,46 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Tipos Tasas', 'icon' => 'percentage', 'permission' => 'tipos-tasas.ver', 'orden' => 9, 'parent_id' => $rrhh->id]
         );
 
+        $contabilidad = MenuItem::firstOrCreate(
+            ['label' => 'Contabilidad', 'parent_id' => null],
+            ['icon' => 'book', 'route' => null, 'permission' => null, 'orden' => 8]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'conciliaciones.index'],
+            ['label' => 'Conciliaciones', 'icon' => 'check-circle', 'permission' => 'conciliaciones.ver', 'orden' => 1, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-conceptos.index'],
+            ['label' => 'Tipos Conceptos', 'icon' => 'tag', 'permission' => 'tipos-conceptos.ver', 'orden' => 2, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'otros-gastos.index'],
+            ['label' => 'Otros Gastos', 'icon' => 'dollar', 'permission' => 'otros-gastos.ver', 'orden' => 3, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'combustible-cargas.index'],
+            ['label' => 'Carga Combustible', 'icon' => 'fuel', 'permission' => 'combustible-cargas.ver', 'orden' => 4, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'combustible-descargas.index'],
+            ['label' => 'Descarga Combustible', 'icon' => 'download', 'permission' => 'combustible-descargas.ver', 'orden' => 5, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'inventario.index'],
+            ['label' => 'Inventario', 'icon' => 'box', 'permission' => 'inventario.ver', 'orden' => 6, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'vales.index'],
+            ['label' => 'Vales', 'icon' => 'ticket', 'permission' => 'vales.ver', 'orden' => 7, 'parent_id' => $contabilidad->id]
+        );
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

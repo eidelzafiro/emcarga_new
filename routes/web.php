@@ -27,7 +27,14 @@ use App\Http\Controllers\TallerController;
 use App\Http\Controllers\TipoIngresosController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\BolsaController;
+use App\Http\Controllers\CombustibleCargasController;
+use App\Http\Controllers\CombustibleDescargasController;
+use App\Http\Controllers\ConciliacionesController;
 use App\Http\Controllers\HistorialMovimientosController;
+use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\OtrosGastosController;
+use App\Http\Controllers\TiposConceptosController;
+use App\Http\Controllers\ValesController;
 use App\Http\Controllers\PlantillaController;
 use App\Http\Controllers\TiposContratosController;
 use App\Http\Controllers\TiposIncidenciasController;
@@ -168,6 +175,28 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-tasas', TiposTasasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Módulo Contabilidad (Fase 5.6)
+        Route::resource('conciliaciones', ConciliacionesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-conceptos', TiposConceptosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('otros-gastos', OtrosGastosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('combustible-cargas', CombustibleCargasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('combustible-descargas', CombustibleDescargasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('inventario', InventarioController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('vales', ValesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Administración de usuarios (Fase 4.3)

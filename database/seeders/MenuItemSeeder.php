@@ -109,6 +109,77 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Cartas Porte', 'icon' => 'file', 'permission' => 'giros.ver', 'orden' => 6, 'parent_id' => $comercial->id]
         );
 
+        // Comercial - Tablas faltantes
+        MenuItem::firstOrCreate(
+            ['route' => 'alertas.index'],
+            ['label' => 'Alertas', 'icon' => 'bell', 'permission' => 'alertas.ver', 'orden' => 7, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tarifas.index'],
+            ['label' => 'Tarifas', 'icon' => 'dollar', 'permission' => 'tarifas.ver', 'orden' => 8, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'demandas.index'],
+            ['label' => 'Demandas', 'icon' => 'chart-bar', 'permission' => 'demandas.ver', 'orden' => 9, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'indicadores.index'],
+            ['label' => 'Indicadores', 'icon' => 'chart-line', 'permission' => 'indicadores.ver', 'orden' => 10, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'pizarra-tractivos.index'],
+            ['label' => 'Pizarra Tractivos', 'icon' => 'th', 'permission' => 'pizarra-tractivos.ver', 'orden' => 11, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'turnos-comerciales.index'],
+            ['label' => 'Turnos', 'icon' => 'clock', 'permission' => 'turnos-comerciales.ver', 'orden' => 12, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'clientes-seleccion.index'],
+            ['label' => 'Clientes Selección', 'icon' => 'user-check', 'permission' => 'clientes-seleccion.ver', 'orden' => 13, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'otros-ingresos-pre.index'],
+            ['label' => 'Otros Ingresos Pre', 'icon' => 'plus-circle', 'permission' => 'otros-ingresos-pre.ver', 'orden' => 14, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-estados.index'],
+            ['label' => 'Tipos Estados', 'icon' => 'flag', 'permission' => 'tipos-estados.ver', 'orden' => 15, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-catalogo-lugares.index'],
+            ['label' => 'Catálogo Lugares', 'icon' => 'bookmark', 'permission' => 'tipos-catalogo-lugares.ver', 'orden' => 16, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-modelo.index'],
+            ['label' => 'Tipos Modelo', 'icon' => 'cog', 'permission' => 'tipos-modelo.ver', 'orden' => 17, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'configuraciones-modelo.index'],
+            ['label' => 'Config. Modelo', 'icon' => 'sliders-h', 'permission' => 'configuraciones-modelo.ver', 'orden' => 18, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-cargas-reporte.index'],
+            ['label' => 'Cargas Reporte', 'icon' => 'truck', 'permission' => 'tipos-cargas-reporte.ver', 'orden' => 19, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'movil-web.index'],
+            ['label' => 'Móvil Web', 'icon' => 'mobile', 'permission' => 'movil-web.ver', 'orden' => 20, 'parent_id' => $comercial->id]
+        );
+
         $facturacion = MenuItem::firstOrCreate(
             ['label' => 'Facturación', 'parent_id' => null],
             ['icon' => 'file-invoice', 'route' => null, 'permission' => null, 'orden' => 6]

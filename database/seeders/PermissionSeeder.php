@@ -165,6 +165,22 @@ class PermissionSeeder extends Seeder
             'tipos-tallas.ver', 'tipos-tallas.crear', 'tipos-tallas.editar', 'tipos-tallas.eliminar',
             'tipos-ubicacion-defensa.ver', 'tipos-ubicacion-defensa.crear', 'tipos-ubicacion-defensa.editar', 'tipos-ubicacion-defensa.eliminar',
             'perfiles-rh.ver', 'perfiles-rh.crear', 'perfiles-rh.editar', 'perfiles-rh.eliminar',
+
+            // Comercial - Tablas faltantes
+            'tipos-catalogo-lugares.ver', 'tipos-catalogo-lugares.crear', 'tipos-catalogo-lugares.editar', 'tipos-catalogo-lugares.eliminar',
+            'tipos-modelo.ver', 'tipos-modelo.crear', 'tipos-modelo.editar', 'tipos-modelo.eliminar',
+            'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
+            'tipos-estados.ver', 'tipos-estados.crear', 'tipos-estados.editar', 'tipos-estados.eliminar',
+            'tipos-cargas-reporte.ver', 'tipos-cargas-reporte.crear', 'tipos-cargas-reporte.editar', 'tipos-cargas-reporte.eliminar',
+            'clientes-seleccion.ver', 'clientes-seleccion.crear', 'clientes-seleccion.editar', 'clientes-seleccion.eliminar',
+            'turnos-comerciales.ver', 'turnos-comerciales.crear', 'turnos-comerciales.editar', 'turnos-comerciales.eliminar',
+            'movil-web.ver', 'movil-web.crear', 'movil-web.editar', 'movil-web.eliminar',
+            'alertas.ver', 'alertas.crear', 'alertas.editar', 'alertas.eliminar',
+            'indicadores.ver', 'indicadores.crear', 'indicadores.editar', 'indicadores.eliminar',
+            'demandas.ver', 'demandas.crear', 'demandas.editar', 'demandas.eliminar',
+            'pizarra-tractivos.ver', 'pizarra-tractivos.crear', 'pizarra-tractivos.editar', 'pizarra-tractivos.eliminar',
+            'tarifas.ver', 'tarifas.crear', 'tarifas.editar', 'tarifas.eliminar',
+            'otros-ingresos-pre.ver', 'otros-ingresos-pre.crear', 'otros-ingresos-pre.editar', 'otros-ingresos-pre.eliminar',
         ];
 
         foreach ($permisos as $permiso) {
@@ -224,6 +240,21 @@ class PermissionSeeder extends Seeder
                 'embalajes.ver', 'embalajes.crear', 'embalajes.editar', 'embalajes.eliminar',
                 'buques.ver', 'buques.crear', 'buques.editar', 'buques.eliminar',
                 'navieras.ver', 'navieras.crear', 'navieras.editar', 'navieras.eliminar',
+                // Comercial - Tablas faltantes
+                'tipos-catalogo-lugares.ver', 'tipos-catalogo-lugares.crear', 'tipos-catalogo-lugares.editar', 'tipos-catalogo-lugares.eliminar',
+                'tipos-modelo.ver', 'tipos-modelo.crear', 'tipos-modelo.editar', 'tipos-modelo.eliminar',
+                'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
+                'tipos-estados.ver', 'tipos-estados.crear', 'tipos-estados.editar', 'tipos-estados.eliminar',
+                'tipos-cargas-reporte.ver', 'tipos-cargas-reporte.crear', 'tipos-cargas-reporte.editar', 'tipos-cargas-reporte.eliminar',
+                'clientes-seleccion.ver', 'clientes-seleccion.crear', 'clientes-seleccion.editar', 'clientes-seleccion.eliminar',
+                'turnos-comerciales.ver', 'turnos-comerciales.crear', 'turnos-comerciales.editar', 'turnos-comerciales.eliminar',
+                'movil-web.ver', 'movil-web.crear', 'movil-web.editar', 'movil-web.eliminar',
+                'alertas.ver', 'alertas.crear', 'alertas.editar', 'alertas.eliminar',
+                'indicadores.ver', 'indicadores.crear', 'indicadores.editar', 'indicadores.eliminar',
+                'demandas.ver', 'demandas.crear', 'demandas.editar', 'demandas.eliminar',
+                'pizarra-tractivos.ver', 'pizarra-tractivos.crear', 'pizarra-tractivos.editar', 'pizarra-tractivos.eliminar',
+                'tarifas.ver', 'tarifas.crear', 'tarifas.editar', 'tarifas.eliminar',
+                'otros-ingresos-pre.ver', 'otros-ingresos-pre.crear', 'otros-ingresos-pre.editar', 'otros-ingresos-pre.eliminar',
             ],
             'RECHUM' => [
                 'dashboard.ver',

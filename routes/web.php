@@ -159,6 +159,49 @@ Route::middleware('auth')->group(function () {
         Route::resource('giros', GirosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        // Comercial - Tablas faltantes (Fase 5.3 parte 2)
+        Route::resource('tipos-catalogo-lugares', TiposCatalogoLugaresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-modelo', TiposModeloController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('configuraciones-modelo', ConfiguracionesModeloController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-estados', TiposEstadosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-cargas-reporte', TiposCargasReporteController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('clientes-seleccion', ClientesSeleccionController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('turnos-comerciales', TurnosComercialesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('movil-web', MovilWebController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('alertas', AlertasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('indicadores', IndicadoresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('demandas', DemandasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('pizarra-tractivos', PizarraTractivosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tarifas', TarifasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('otros-ingresos-pre', OtrosIngresosPreController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
         // Módulo Facturación (Fase 5.4)
         Route::resource('facturas', FacturasController::class)
             ->only(['index', 'create', 'store', 'show', 'update', 'destroy']);

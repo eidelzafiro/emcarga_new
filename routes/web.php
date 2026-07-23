@@ -66,6 +66,7 @@ use App\Http\Controllers\TiposCombustiblesController;
 use App\Http\Controllers\TiposServiciosController;
 use App\Http\Controllers\TiposGastosController;
 use App\Http\Controllers\VallasController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 
 /*
@@ -273,6 +274,17 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('grupos-escala', GruposEscalaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+
+        // Reportes PDF/Excel (Fase 6)
+        Route::prefix('reportes')->name('reportes.')->group(function () {
+            Route::get('marcas', [ReportController::class, 'pdfMarcas'])->name('marcas');
+            Route::get('modelos', [ReportController::class, 'pdfModelos'])->name('modelos');
+            Route::get('paises', [ReportController::class, 'pdfPaises'])->name('paises');
+            Route::get('salario-prenomina', [ReportController::class, 'pdfSalarioPrenomina'])->name('salario-prenomina');
+            Route::get('salario-choferes', [ReportController::class, 'pdfSalarioChoferes'])->name('salario-choferes');
+            Route::get('factura/{factura}', [ReportController::class, 'pdfFactura'])->name('factura');
+            Route::get('prefactura/{prefactura}', [ReportController::class, 'pdfPrefactura'])->name('prefactura');
+        });
 
         // Módulo Contabilidad (Fase 5.6)
         Route::resource('conciliaciones', ConciliacionesController::class)

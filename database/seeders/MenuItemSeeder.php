@@ -258,6 +258,26 @@ class MenuItemSeeder extends Seeder
             );
         }
 
+        $reportes = MenuItem::firstOrCreate(
+            ['label' => 'Reportes', 'parent_id' => null],
+            ['icon' => 'file-pdf', 'route' => null, 'permission' => 'reportes.ver', 'orden' => 10]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'reportes.marcas'],
+            ['label' => 'Listado de Marcas', 'icon' => 'tag', 'permission' => 'reportes.generar', 'orden' => 1, 'parent_id' => $reportes->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'reportes.modelos'],
+            ['label' => 'Listado de Modelos', 'icon' => 'cog', 'permission' => 'reportes.generar', 'orden' => 2, 'parent_id' => $reportes->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'reportes.paises'],
+            ['label' => 'Listado de Países', 'icon' => 'globe', 'permission' => 'reportes.generar', 'orden' => 3, 'parent_id' => $reportes->id]
+        );
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

@@ -118,6 +118,8 @@ class PermissionSeeder extends Seeder
             'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
             'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
 
+            'reportes.ver', 'reportes.generar',
+
             'pizarra.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
@@ -145,6 +147,7 @@ class PermissionSeeder extends Seeder
                 'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
                 'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
                 'pizarra.ver',
+                'reportes.ver', 'reportes.generar',
                 'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
                 // Catálogos técnicos
                 'marcas.ver', 'marcas.crear', 'marcas.editar', 'marcas.eliminar',

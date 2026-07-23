@@ -2098,5 +2098,78 @@ return [
                 'activo' => true,
             ],
         ],
+
+        /*
+         * ================================================================
+         * MISC
+         * ================================================================
+         */
+
+        'reportes_legacy' => [
+            'legacy' => 'reportes',
+            'pk' => 'idreporte',
+            'columnas' => [
+                'nombreporte' => 'nombre',
+                'controlador' => 'controlador',
+                'tipo' => 'tipo',
+                'variable' => 'variable',
+            ],
+        ],
+
+        /*
+         * ================================================================
+         * TALLER
+         * ================================================================
+         */
+
+        'mantenimiento_ciclos' => [
+            'legacy' => 'tec_ciclomantenimiento2000',
+            'pk' => null,
+            'columnas' => [
+                'km' => 'km',
+                'tipo' => 'tipo',
+            ],
+        ],
+
+        'motivos_espera' => [
+            'legacy' => 'tec_motespera',
+            'pk' => 'idmotespera',
+            'columnas' => [
+                'motespera' => 'nombre',
+            ],
+        ],
+
+        'cierres_cdt' => [
+            'legacy' => 'tec_cierrecdt',
+            'pk' => 'id',
+            'columnas' => [
+                'fecha' => 'fecha',
+                'tiempogeneral' => 'tiempo_general',
+                'tiempotaller' => 'tiempo_taller',
+                'porciento' => 'porcentaje',
+            ],
+        ],
+
+        'sub_tipos_roturas' => [
+            'legacy' => 'tec_neumaticosroturas',
+            'pk' => 'idneumroturas',
+            'columnas' => [
+                'idneumtiporoturas' => 'id_tipo_rotura',
+                'neumaticosroturas' => 'nombre',
+                'codigo' => 'codigo',
+            ],
+        ],
+
+        'planes_mantenimiento' => [
+            'legacy' => 'tec_otmtto',
+            'pk' => null,
+            'columnas' => [
+                'idOrdenTaller' => 'id_orden_taller',
+                'fMtto' => 'fecha_mantenimiento',
+                'idTipoMantenimiento' => 'id_tipo_mantenimiento',
+                'kmsMtto' => 'kms_mantenimiento',
+                'kmsDisponible' => 'kms_disponible',
+            ],
+        ],
     ],
 ];

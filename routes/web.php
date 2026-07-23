@@ -202,6 +202,92 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-tasas', TiposTasasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        // RRHH - Tablas faltantes (Fase 5.5 parte 3)
+        Route::resource('provincias', ProvinciasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('municipios', MunicipiosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('osdes', OsdesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('firmas', FirmasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('meses', MesesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('fondos-tiempo', FondosTiempoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('medios-proteccion', MediosProteccionController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-medios-cargo', TiposMediosCargoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('salarios', SalariosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('salarios-administrativos', SalariosAdministrativosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // RRHH - Catálogos pequeños (Fase 5.5 parte 3)
+        Route::resource('tipos-calificadores', TiposCalificadoresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-causas-laborales', TiposCausasLaboralesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-causas-baja', TiposCausasBajaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-causas-movimiento', TiposCausasMovimientoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-clasificacion-laboral', TiposClasificacionLaboralController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-color-piel', TiposColorPielController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-deducciones', TiposDeduccionesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-especialidad', TiposEspecialidadController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-estado-civil', TiposEstadoCivilController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-grupo-horario', TiposGrupoHorarioController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-integracion-politica', TiposIntegracionPoliticaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-medios-proteccion', TiposMediosProteccionController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-nivel-educacion', TiposNivelEducacionController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-plantillas', TiposPlantillasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-sexo', TiposSexoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-tallas', TiposTallasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-ubicacion-defensa', TiposUbicacionDefensaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('perfiles-rh', PerfilesRhController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
         // Catálogos y configuración (Fase 5.7)
         Route::resource('marcas', MarcasController::class)
             ->only(['index', 'store', 'update', 'destroy']);

@@ -179,6 +179,148 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Tipos Tasas', 'icon' => 'percentage', 'permission' => 'tipos-tasas.ver', 'orden' => 9, 'parent_id' => $rrhh->id]
         );
 
+        // RRHH - Tablas faltantes (Fase 5.5 parte 3)
+        MenuItem::firstOrCreate(
+            ['route' => 'salarios.index'],
+            ['label' => 'Salarios', 'icon' => 'dollar', 'permission' => 'salarios.ver', 'orden' => 10, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'salarios-administrativos.index'],
+            ['label' => 'Salarios Admin.', 'icon' => 'briefcase', 'permission' => 'salarios-administrativos.ver', 'orden' => 11, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'provincias.index'],
+            ['label' => 'Provincias', 'icon' => 'map', 'permission' => 'provincias.ver', 'orden' => 12, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'municipios.index'],
+            ['label' => 'Municipios', 'icon' => 'map-marker', 'permission' => 'municipios.ver', 'orden' => 13, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'osdes.index'],
+            ['label' => 'OSDEs', 'icon' => 'building', 'permission' => 'osdes.ver', 'orden' => 14, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'firmas.index'],
+            ['label' => 'Firmas', 'icon' => 'signature', 'permission' => 'firmas.ver', 'orden' => 15, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'meses.index'],
+            ['label' => 'Meses', 'icon' => 'calendar', 'permission' => 'meses.ver', 'orden' => 16, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'fondos-tiempo.index'],
+            ['label' => 'Fondos Tiempo', 'icon' => 'clock', 'permission' => 'fondos-tiempo.ver', 'orden' => 17, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'medios-proteccion.index'],
+            ['label' => 'Medios Protección', 'icon' => 'shield', 'permission' => 'medios-proteccion.ver', 'orden' => 18, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-medios-cargo.index'],
+            ['label' => 'Medios x Cargo', 'icon' => 'link', 'permission' => 'tipos-medios-cargo.ver', 'orden' => 19, 'parent_id' => $rrhh->id]
+        );
+
+        // RRHH - Catálogos pequeños
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-calificadores.index'],
+            ['label' => 'Tipos Calificadores', 'icon' => 'star', 'permission' => 'tipos-calificadores.ver', 'orden' => 20, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-causas-laborales.index'],
+            ['label' => 'Causas Laborales', 'icon' => 'question-circle', 'permission' => 'tipos-causas-laborales.ver', 'orden' => 21, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-causas-baja.index'],
+            ['label' => 'Causas Baja', 'icon' => 'times-circle', 'permission' => 'tipos-causas-baja.ver', 'orden' => 22, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-causas-movimiento.index'],
+            ['label' => 'Causas Movimiento', 'icon' => 'arrows-alt', 'permission' => 'tipos-causas-movimiento.ver', 'orden' => 23, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-clasificacion-laboral.index'],
+            ['label' => 'Clasif. Laboral', 'icon' => 'tags', 'permission' => 'tipos-clasificacion-laboral.ver', 'orden' => 24, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-color-piel.index'],
+            ['label' => 'Color Piel', 'icon' => 'palette', 'permission' => 'tipos-color-piel.ver', 'orden' => 25, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-deducciones.index'],
+            ['label' => 'Deducciones', 'icon' => 'minus-circle', 'permission' => 'tipos-deducciones.ver', 'orden' => 26, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-especialidad.index'],
+            ['label' => 'Especialidad', 'icon' => 'graduation-cap', 'permission' => 'tipos-especialidad.ver', 'orden' => 27, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-estado-civil.index'],
+            ['label' => 'Estado Civil', 'icon' => 'users', 'permission' => 'tipos-estado-civil.ver', 'orden' => 28, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-grupo-horario.index'],
+            ['label' => 'Grupo Horario', 'icon' => 'clock', 'permission' => 'tipos-grupo-horario.ver', 'orden' => 29, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-integracion-politica.index'],
+            ['label' => 'Integr. Política', 'icon' => 'flag', 'permission' => 'tipos-integracion-politica.ver', 'orden' => 30, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-medios-proteccion.index'],
+            ['label' => 'Medios Protección', 'icon' => 'shield', 'permission' => 'tipos-medios-proteccion.ver', 'orden' => 31, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-nivel-educacion.index'],
+            ['label' => 'Nivel Educación', 'icon' => 'book', 'permission' => 'tipos-nivel-educacion.ver', 'orden' => 32, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-plantillas.index'],
+            ['label' => 'Tipos Plantilla', 'icon' => 'file', 'permission' => 'tipos-plantillas.ver', 'orden' => 33, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-sexo.index'],
+            ['label' => 'Tipos Sexo', 'icon' => 'venus-mars', 'permission' => 'tipos-sexo.ver', 'orden' => 34, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-tallas.index'],
+            ['label' => 'Tipos Tallas', 'icon' => 'ruler', 'permission' => 'tipos-tallas.ver', 'orden' => 35, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-ubicacion-defensa.index'],
+            ['label' => 'Ubic. Defensa', 'icon' => 'map-pin', 'permission' => 'tipos-ubicacion-defensa.ver', 'orden' => 36, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'perfiles-rh.index'],
+            ['label' => 'Perfiles RH', 'icon' => 'id-card', 'permission' => 'perfiles-rh.ver', 'orden' => 37, 'parent_id' => $rrhh->id]
+        );
+
         $contabilidad = MenuItem::firstOrCreate(
             ['label' => 'Contabilidad', 'parent_id' => null],
             ['icon' => 'book', 'route' => null, 'permission' => null, 'orden' => 8]

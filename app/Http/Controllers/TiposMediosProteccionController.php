@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\TipoMedioProteccion;
+use App\Http\Controllers\Traits\ManagesCatalog;
+
+class TiposMediosProteccionController extends Controller
+{
+    use ManagesCatalog;
+
+    protected function getModelClass(): string
+    {
+        return TipoMedioProteccion::class;
+    }
+
+    protected function getRouteName(): string
+    {
+        return 'tipos-medios-proteccion.index';
+    }
+
+    protected function getTitle(): string
+    {
+        return 'Tipos Medios Protección';
+    }
+}

@@ -18,8 +18,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          extensions: dom, curl, mbstring, zip, pdo, mysql, xml, bcmath, gd
+          php-version: '8.4'
+          extensions: dom, curl, mbstring, zip, pdo, mysql, sqlite, xml, bcmath, gd
           coverage: none
 
       - name: Install PHP dependencies
@@ -42,7 +42,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mysqladmin ping -u root -ppassword"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -54,8 +54,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          extensions: dom, curl, mbstring, zip, pdo, mysql, xml, bcmath, gd
+          php-version: '8.4'
+          extensions: dom, curl, mbstring, zip, pdo, mysql, sqlite, xml, bcmath, gd
           coverage: none
 
       - name: Install dependencies
@@ -86,9 +86,6 @@ jobs:
           DB_PASSWORD: password
         run: php artisan test
 
-      # NOTA: la cobertura mínima y subida a Codecov se habilitan cuando
-      # exista una base de tests real (ver Fase 8 del PLAN.md).
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -116,38 +113,9 @@ jobs:
           name: public-build
           path: public/build/
 
-  docker:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: public-build
-          path: public/build/
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/emcarga:latest
-            ${{ secrets.DOCKER_USERNAME }}/emcarga:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  # docker: (deshabilitado hasta configurar DOCKER_USERNAME/PASSWORD en secrets)
+  #   name: Build Docker Image
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.ref == 'refs/heads/main'
+  #   ...

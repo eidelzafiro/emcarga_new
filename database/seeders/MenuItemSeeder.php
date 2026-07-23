@@ -129,6 +129,56 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Tipos de Ingreso', 'icon' => 'tag', 'permission' => 'tipo-ingresos.ver', 'orden' => 3, 'parent_id' => $facturacion->id]
         );
 
+        $rrhh = MenuItem::firstOrCreate(
+            ['label' => 'RRHH', 'parent_id' => null],
+            ['icon' => 'users', 'route' => null, 'permission' => null, 'orden' => 7]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'bolsa.index'],
+            ['label' => 'Bolsa', 'icon' => 'user', 'permission' => 'bolsa.ver', 'orden' => 1, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'plantilla.index'],
+            ['label' => 'Plantilla', 'icon' => 'table', 'permission' => 'plantilla.ver', 'orden' => 2, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'historial-movimientos.index'],
+            ['label' => 'Historial', 'icon' => 'history', 'permission' => 'historial-movimientos.ver', 'orden' => 3, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-incidencias.index'],
+            ['label' => 'Tipos Incidencias', 'icon' => 'exclamation-triangle', 'permission' => 'tipos-incidencias.ver', 'orden' => 4, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-penalizaciones.index'],
+            ['label' => 'Tipos Penalizaciones', 'icon' => 'ban', 'permission' => 'tipos-penalizaciones.ver', 'orden' => 5, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-contratos.index'],
+            ['label' => 'Tipos Contratos', 'icon' => 'file', 'permission' => 'tipos-contratos.ver', 'orden' => 6, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-sistemas-pago.index'],
+            ['label' => 'Sistemas de Pago', 'icon' => 'dollar', 'permission' => 'tipos-sistemas-pago.ver', 'orden' => 7, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-pagos-adicionales.index'],
+            ['label' => 'Pagos Adicionales', 'icon' => 'plus-circle', 'permission' => 'tipos-pagos-adicionales.ver', 'orden' => 8, 'parent_id' => $rrhh->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-tasas.index'],
+            ['label' => 'Tipos Tasas', 'icon' => 'percentage', 'permission' => 'tipos-tasas.ver', 'orden' => 9, 'parent_id' => $rrhh->id]
+        );
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

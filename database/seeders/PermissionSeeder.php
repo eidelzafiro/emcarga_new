@@ -60,6 +60,24 @@ class PermissionSeeder extends Seeder
 
             'tipo-ingresos.ver', 'tipo-ingresos.crear', 'tipo-ingresos.editar', 'tipo-ingresos.eliminar',
 
+            'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
+
+            'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
+
+            'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
+
+            'tipos-incidencias.ver', 'tipos-incidencias.crear', 'tipos-incidencias.editar', 'tipos-incidencias.eliminar',
+
+            'tipos-penalizaciones.ver', 'tipos-penalizaciones.crear', 'tipos-penalizaciones.editar', 'tipos-penalizaciones.eliminar',
+
+            'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
+
+            'tipos-sistemas-pago.ver', 'tipos-sistemas-pago.crear', 'tipos-sistemas-pago.editar', 'tipos-sistemas-pago.eliminar',
+
+            'tipos-pagos-adicionales.ver', 'tipos-pagos-adicionales.crear', 'tipos-pagos-adicionales.editar', 'tipos-pagos-adicionales.eliminar',
+
+            'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
+
             'pizarra.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
@@ -102,7 +120,18 @@ class PermissionSeeder extends Seeder
                 'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',
                 'tipo-ingresos.ver', 'tipo-ingresos.crear', 'tipo-ingresos.editar', 'tipo-ingresos.eliminar',
             ],
-            'RECHUM' => ['dashboard.ver'],
+            'RECHUM' => [
+                'dashboard.ver',
+                'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
+                'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
+                'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
+                'tipos-incidencias.ver', 'tipos-incidencias.crear', 'tipos-incidencias.editar', 'tipos-incidencias.eliminar',
+                'tipos-penalizaciones.ver', 'tipos-penalizaciones.crear', 'tipos-penalizaciones.editar', 'tipos-penalizaciones.eliminar',
+                'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
+                'tipos-sistemas-pago.ver', 'tipos-sistemas-pago.crear', 'tipos-sistemas-pago.editar', 'tipos-sistemas-pago.eliminar',
+                'tipos-pagos-adicionales.ver', 'tipos-pagos-adicionales.crear', 'tipos-pagos-adicionales.editar', 'tipos-pagos-adicionales.eliminar',
+                'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
+            ],
             'CONTABILIDAD' => ['dashboard.ver'],
             'OPERATIVOS' => ['dashboard.ver'],
         ];

@@ -26,6 +26,15 @@ use App\Http\Controllers\SolicitudesController;
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\TipoIngresosController;
 use App\Http\Controllers\TractivosController;
+use App\Http\Controllers\BolsaController;
+use App\Http\Controllers\HistorialMovimientosController;
+use App\Http\Controllers\PlantillaController;
+use App\Http\Controllers\TiposContratosController;
+use App\Http\Controllers\TiposIncidenciasController;
+use App\Http\Controllers\TiposPagosAdicionalesController;
+use App\Http\Controllers\TiposPenalizacionesController;
+use App\Http\Controllers\TiposSistemasPagoController;
+use App\Http\Controllers\TiposTasasController;
 use App\Http\Controllers\UserController;
 
 /*
@@ -131,6 +140,34 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'create', 'store', 'update', 'destroy']);
 
         Route::resource('tipo-ingresos', TipoIngresosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Módulo RRHH (Fase 5.5)
+        Route::resource('bolsa', BolsaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('plantilla', PlantillaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('historial-movimientos', HistorialMovimientosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-incidencias', TiposIncidenciasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-penalizaciones', TiposPenalizacionesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-contratos', TiposContratosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-sistemas-pago', TiposSistemasPagoController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-pagos-adicionales', TiposPagosAdicionalesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-tasas', TiposTasasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Administración de usuarios (Fase 4.3)

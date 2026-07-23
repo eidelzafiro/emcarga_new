@@ -51,27 +51,30 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 7)
+                ->has('menu', 8)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.4.label', 'Comercial')
                 ->where('menu.4.children.0.label', 'Clientes')
                 ->where('menu.5.label', 'Facturación')
                 ->where('menu.5.children.0.label', 'Facturas')
-                ->where('menu.6.label', 'Administración')
-                ->where('menu.6.children.0.label', 'Usuarios')
-                ->where('menu.6.children.1.label', 'Perfiles')
+                ->where('menu.6.label', 'RRHH')
+                ->where('menu.6.children.0.label', 'Bolsa')
+                ->where('menu.7.label', 'Administración')
+                ->where('menu.7.children.0.label', 'Usuarios')
+                ->where('menu.7.children.1.label', 'Perfiles')
         );
     }
 
-    public function test_rechum_solo_ve_dashboard(): void
+    public function test_rechum_ve_rrhh(): void
     {
         $user = User::factory()->create();
         $user->assignRole('RECHUM');
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 1)
+                ->has('menu', 2)
                 ->where('menu.0.label', 'Dashboard')
+                ->where('menu.1.label', 'RRHH')
         );
     }
 

@@ -53,6 +53,13 @@ class PermissionSeeder extends Seeder
 
             'giros.ver', 'giros.crear', 'giros.editar', 'giros.eliminar',
 
+            'facturas.ver', 'facturas.crear', 'facturas.editar', 'facturas.eliminar',
+            'facturas.cancelar', 'facturas.refacturar', 'facturas.firmar', 'facturas.cobrar',
+
+            'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',
+
+            'tipo-ingresos.ver', 'tipo-ingresos.crear', 'tipo-ingresos.editar', 'tipo-ingresos.eliminar',
+
             'pizarra.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
@@ -90,6 +97,10 @@ class PermissionSeeder extends Seeder
                 'acuerdos.ver', 'acuerdos.crear', 'acuerdos.editar', 'acuerdos.eliminar',
                 'solicitudes.ver', 'solicitudes.crear', 'solicitudes.editar', 'solicitudes.eliminar',
                 'giros.ver', 'giros.crear', 'giros.editar', 'giros.eliminar',
+                'facturas.ver', 'facturas.crear', 'facturas.editar', 'facturas.eliminar',
+                'facturas.cancelar', 'facturas.refacturar', 'facturas.firmar', 'facturas.cobrar',
+                'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',
+                'tipo-ingresos.ver', 'tipo-ingresos.crear', 'tipo-ingresos.editar', 'tipo-ingresos.eliminar',
             ],
             'RECHUM' => ['dashboard.ver'],
             'CONTABILIDAD' => ['dashboard.ver'],

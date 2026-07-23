@@ -82,32 +82,6 @@ return new class extends Migration
             $table->index('fecha_emision');
         });
 
-        // Aforo de fletes (motor de cálculo)
-        Schema::create('aforos', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('id_carta_porte')->constrained('cartas_porte');
-            $table->foreignId('id_cliente')->constrained('clientes');
-            $table->foreignId('id_lugar_origen')->constrained('lugares');
-            $table->foreignId('id_lugar_destino')->constrained('lugares');
-            $table->decimal('distancia_km', 10, 2);
-            $table->decimal('toneladas', 10, 2);
-            $table->decimal('tarifa_base', 10, 2);
-            $table->decimal('tarifa_km', 10, 2);
-            $table->decimal('total_flete', 12, 2);
-            $table->decimal('total_estibadores', 10, 2)->default(0);
-            $table->decimal('total_almacenaje', 10, 2)->default(0);
-            $table->decimal('total_demora', 10, 2)->default(0);
-            $table->decimal('total_otros', 10, 2)->default(0);
-            $table->decimal('total_general', 12, 2);
-            $table->string('estado', 50)->default('calculado');
-            $table->timestamps();
-            $table->softDeletes();
-
-            $table->index('id_carta_porte');
-            $table->index('id_cliente');
-            $table->index('estado');
-        });
-
         // Planes de transporte
         Schema::create('planes', function (Blueprint $table) {
             $table->id();
@@ -131,7 +105,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('planes');
-        Schema::dropIfExists('aforos');
+
         Schema::dropIfExists('cartas_porte');
         Schema::dropIfExists('hojas_ruta');
         Schema::dropIfExists('solicitudes');

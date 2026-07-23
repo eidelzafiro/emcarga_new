@@ -51,13 +51,15 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 6)
+                ->has('menu', 7)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.4.label', 'Comercial')
                 ->where('menu.4.children.0.label', 'Clientes')
-                ->where('menu.5.label', 'Administración')
-                ->where('menu.5.children.0.label', 'Usuarios')
-                ->where('menu.5.children.1.label', 'Perfiles')
+                ->where('menu.5.label', 'Facturación')
+                ->where('menu.5.children.0.label', 'Facturas')
+                ->where('menu.6.label', 'Administración')
+                ->where('menu.6.children.0.label', 'Usuarios')
+                ->where('menu.6.children.1.label', 'Perfiles')
         );
     }
 
@@ -80,9 +82,10 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 2)
+                ->has('menu', 3)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Comercial')
+                ->where('menu.2.label', 'Facturación')
         );
     }
 

@@ -109,6 +109,26 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Cartas Porte', 'icon' => 'file', 'permission' => 'giros.ver', 'orden' => 6, 'parent_id' => $comercial->id]
         );
 
+        $facturacion = MenuItem::firstOrCreate(
+            ['label' => 'Facturación', 'parent_id' => null],
+            ['icon' => 'file-invoice', 'route' => null, 'permission' => null, 'orden' => 6]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'facturas.index'],
+            ['label' => 'Facturas', 'icon' => 'file-invoice', 'permission' => 'facturas.ver', 'orden' => 1, 'parent_id' => $facturacion->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'prefacturas.index'],
+            ['label' => 'Prefacturas', 'icon' => 'file-edit', 'permission' => 'prefacturas.ver', 'orden' => 2, 'parent_id' => $facturacion->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipo-ingresos.index'],
+            ['label' => 'Tipos de Ingreso', 'icon' => 'tag', 'permission' => 'tipo-ingresos.ver', 'orden' => 3, 'parent_id' => $facturacion->id]
+        );
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

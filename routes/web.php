@@ -20,8 +20,11 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OtrosAgregadosController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraController;
+use App\Http\Controllers\FacturasController;
+use App\Http\Controllers\PrefacturasController;
 use App\Http\Controllers\SolicitudesController;
 use App\Http\Controllers\TallerController;
+use App\Http\Controllers\TipoIngresosController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
 
@@ -113,6 +116,21 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('giros', GirosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Módulo Facturación (Fase 5.4)
+        Route::resource('facturas', FacturasController::class)
+            ->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
+        Route::post('facturas/{factura}/cancelar', [FacturasController::class, 'cancelar'])->name('facturas.cancelar');
+        Route::post('facturas/{factura}/refacturar', [FacturasController::class, 'refacturar'])->name('facturas.refacturar');
+        Route::post('facturas/{factura}/firmar', [FacturasController::class, 'firmar'])->name('facturas.firmar');
+        Route::post('facturas/{factura}/cobrar', [FacturasController::class, 'cobrar'])->name('facturas.cobrar');
+        Route::get('aforos-pendientes', [FacturasController::class, 'aforosPendientes'])->name('aforos.pendientes');
+
+        Route::resource('prefacturas', PrefacturasController::class)
+            ->only(['index', 'create', 'store', 'update', 'destroy']);
+
+        Route::resource('tipo-ingresos', TipoIngresosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Administración de usuarios (Fase 4.3)

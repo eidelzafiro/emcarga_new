@@ -11,57 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Facturas
-        Schema::create('facturas', function (Blueprint $table) {
-            $table->id();
-            $table->string('numero', 50)->unique();
-            $table->foreignId('id_cliente')->constrained('clientes');
-            $table->date('fecha_emision');
-            $table->date('fecha_vencimiento')->nullable();
-            $table->decimal('subtotal', 12, 2);
-            $table->decimal('impuestos', 12, 2)->default(0);
-            $table->decimal('total', 12, 2);
-            $table->string('moneda', 3)->default('CUP');
-            $table->string('estado', 50)->default('pendiente');
-            $table->text('observaciones')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-
-            $table->index('numero');
-            $table->index('id_cliente');
-            $table->index('estado');
-            $table->index('fecha_emision');
-        });
-
-        // Detalle de facturas
-        Schema::create('facturas_detalle', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('id_factura')->constrained('facturas');
-            $table->foreignId('id_carta_porte')->constrained('cartas_porte')->nullable();
-            $table->string('descripcion', 255);
-            $table->decimal('cantidad', 10, 2);
-            $table->decimal('precio_unitario', 10, 2);
-            $table->decimal('total', 12, 2);
-            $table->timestamps();
-
-            $table->index('id_factura');
-        });
-
-        // Pre-facturas
-        Schema::create('prefacturas', function (Blueprint $table) {
-            $table->id();
-            $table->string('numero', 50)->unique();
-            $table->foreignId('id_cliente')->constrained('clientes');
-            $table->date('fecha_emision');
-            $table->decimal('total', 12, 2);
-            $table->string('estado', 50)->default('pendiente');
-            $table->timestamps();
-            $table->softDeletes();
-
-            $table->index('numero');
-            $table->index('id_cliente');
-        });
-
         // Tarjetas de combustible
         Schema::create('tarjetas', function (Blueprint $table) {
             $table->id();
@@ -171,8 +120,6 @@ return new class extends Migration
         Schema::dropIfExists('contabilidad');
         Schema::dropIfExists('movimientos_tarjetas');
         Schema::dropIfExists('tarjetas');
-        Schema::dropIfExists('prefacturas');
-        Schema::dropIfExists('facturas_detalle');
-        Schema::dropIfExists('facturas');
+
     }
 };

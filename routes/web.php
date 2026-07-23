@@ -308,6 +308,31 @@ Route::middleware('auth')->group(function () {
         Route::resource('vales', ValesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        // Tablas faltantes Contabilidad (Fase 5.6 parte 3)
+        Route::resource('servicentros', ServicentrosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tipos-documentos', TiposDocumentosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('firmas-autorizadas', FirmasAutorizadasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('reportes-costos', ReportesCostosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('estados-tarjetas', EstadosTarjetasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('detalles-carga-combustible', DetallesCargaCombustibleController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('combustibles-lubricantes', CombustiblesLubricantesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('pagos', PagosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
         // Administración de usuarios (Fase 4.3)
         Route::resource('usuarios', UserController::class)
             ->only(['index', 'store', 'update', 'destroy'])

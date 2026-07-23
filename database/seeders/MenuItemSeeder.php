@@ -219,6 +219,46 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Vales', 'icon' => 'ticket', 'permission' => 'vales.ver', 'orden' => 7, 'parent_id' => $contabilidad->id]
         );
 
+        MenuItem::firstOrCreate(
+            ['route' => 'servicentros.index'],
+            ['label' => 'Servicentros', 'icon' => 'map', 'permission' => 'servicentros.ver', 'orden' => 8, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'tipos-documentos.index'],
+            ['label' => 'Tipos Documentos', 'icon' => 'file', 'permission' => 'tipos-documentos.ver', 'orden' => 9, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'firmas-autorizadas.index'],
+            ['label' => 'Firmas Autorizadas', 'icon' => 'pencil', 'permission' => 'firmas-autorizadas.ver', 'orden' => 10, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'reportes-costos.index'],
+            ['label' => 'Reportes Costos', 'icon' => 'chart-line', 'permission' => 'reportes-costos.ver', 'orden' => 11, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'estados-tarjetas.index'],
+            ['label' => 'Estados Tarjetas', 'icon' => 'credit-card', 'permission' => 'estados-tarjetas.ver', 'orden' => 12, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'detalles-carga-combustible.index'],
+            ['label' => 'Detalles Carga Comb.', 'icon' => 'list', 'permission' => 'detalles-carga-combustible.ver', 'orden' => 13, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'combustibles-lubricantes.index'],
+            ['label' => 'Comb. Lubricantes', 'icon' => 'oil', 'permission' => 'combustibles-lubricantes.ver', 'orden' => 14, 'parent_id' => $contabilidad->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'pagos.index'],
+            ['label' => 'Pagos', 'icon' => 'money-bill', 'permission' => 'pagos.ver', 'orden' => 15, 'parent_id' => $contabilidad->id]
+        );
+
         $catalogos = MenuItem::firstOrCreate(
             ['label' => 'Catálogos', 'parent_id' => null],
             ['icon' => 'bookmark', 'route' => null, 'permission' => null, 'orden' => 9]

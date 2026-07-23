@@ -126,6 +126,15 @@ class PermissionSeeder extends Seeder
             'usuarios.desbloquear', 'usuarios.restablecer',
 
             'perfiles.ver', 'perfiles.editar',
+
+            'servicentros.ver', 'servicentros.crear', 'servicentros.editar', 'servicentros.eliminar',
+            'tipos-documentos.ver', 'tipos-documentos.crear', 'tipos-documentos.editar', 'tipos-documentos.eliminar',
+            'firmas-autorizadas.ver', 'firmas-autorizadas.crear', 'firmas-autorizadas.editar', 'firmas-autorizadas.eliminar',
+            'reportes-costos.ver', 'reportes-costos.crear', 'reportes-costos.editar', 'reportes-costos.eliminar',
+            'estados-tarjetas.ver', 'estados-tarjetas.crear', 'estados-tarjetas.editar', 'estados-tarjetas.eliminar',
+            'detalles-carga-combustible.ver', 'detalles-carga-combustible.crear', 'detalles-carga-combustible.editar', 'detalles-carga-combustible.eliminar',
+            'combustibles-lubricantes.ver', 'combustibles-lubricantes.crear', 'combustibles-lubricantes.editar', 'combustibles-lubricantes.eliminar',
+            'pagos.ver', 'pagos.crear', 'pagos.editar', 'pagos.eliminar',
         ];
 
         foreach ($permisos as $permiso) {
@@ -211,6 +220,14 @@ class PermissionSeeder extends Seeder
                 'combustible-descargas.ver', 'combustible-descargas.crear', 'combustible-descargas.editar', 'combustible-descargas.eliminar',
                 'inventario.ver', 'inventario.crear', 'inventario.editar', 'inventario.eliminar',
                 'vales.ver', 'vales.crear', 'vales.editar', 'vales.eliminar',
+                'servicentros.ver', 'servicentros.crear', 'servicentros.editar', 'servicentros.eliminar',
+                'tipos-documentos.ver', 'tipos-documentos.crear', 'tipos-documentos.editar', 'tipos-documentos.eliminar',
+                'firmas-autorizadas.ver', 'firmas-autorizadas.crear', 'firmas-autorizadas.editar', 'firmas-autorizadas.eliminar',
+                'reportes-costos.ver', 'reportes-costos.crear', 'reportes-costos.editar', 'reportes-costos.eliminar',
+                'estados-tarjetas.ver', 'estados-tarjetas.crear', 'estados-tarjetas.editar', 'estados-tarjetas.eliminar',
+                'detalles-carga-combustible.ver', 'detalles-carga-combustible.crear', 'detalles-carga-combustible.editar', 'detalles-carga-combustible.eliminar',
+                'combustibles-lubricantes.ver', 'combustibles-lubricantes.crear', 'combustibles-lubricantes.editar', 'combustibles-lubricantes.eliminar',
+                'pagos.ver', 'pagos.crear', 'pagos.editar', 'pagos.eliminar',
             ],
             'OPERATIVOS' => ['dashboard.ver'],
         ];

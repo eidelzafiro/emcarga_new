@@ -2,19 +2,25 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AcuerdosController;
 use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BateriasController;
 use App\Http\Controllers\CajasController;
+use App\Http\Controllers\ClientesController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiferencialesController;
+use App\Http\Controllers\DistanciasController;
 use App\Http\Controllers\EnergiaController;
+use App\Http\Controllers\GirosController;
 use App\Http\Controllers\LubricantesController;
+use App\Http\Controllers\LugaresController;
 use App\Http\Controllers\MotoresController;
 use App\Http\Controllers\NeumaticosController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OtrosAgregadosController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraController;
+use App\Http\Controllers\SolicitudesController;
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
@@ -88,6 +94,25 @@ Route::middleware('auth')->group(function () {
 
         // Módulo Taller
         Route::resource('taller', TallerController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        // Módulo Comercial
+        Route::resource('clientes', ClientesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('lugares', LugaresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('distancias', DistanciasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('acuerdos', AcuerdosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('solicitudes', SolicitudesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('giros', GirosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Administración de usuarios (Fase 4.3)

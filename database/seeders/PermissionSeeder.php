@@ -41,6 +41,18 @@ class PermissionSeeder extends Seeder
 
             'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
 
+            'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.eliminar',
+
+            'lugares.ver', 'lugares.crear', 'lugares.editar', 'lugares.eliminar',
+
+            'distancias.ver', 'distancias.crear', 'distancias.editar', 'distancias.eliminar',
+
+            'acuerdos.ver', 'acuerdos.crear', 'acuerdos.editar', 'acuerdos.eliminar',
+
+            'solicitudes.ver', 'solicitudes.crear', 'solicitudes.editar', 'solicitudes.eliminar',
+
+            'giros.ver', 'giros.crear', 'giros.editar', 'giros.eliminar',
+
             'pizarra.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
@@ -70,8 +82,16 @@ class PermissionSeeder extends Seeder
                 'pizarra.ver',
                 'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
             ],
+            'COMERCIAL' => [
+                'dashboard.ver',
+                'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.eliminar',
+                'lugares.ver', 'lugares.crear', 'lugares.editar', 'lugares.eliminar',
+                'distancias.ver', 'distancias.crear', 'distancias.editar', 'distancias.eliminar',
+                'acuerdos.ver', 'acuerdos.crear', 'acuerdos.editar', 'acuerdos.eliminar',
+                'solicitudes.ver', 'solicitudes.crear', 'solicitudes.editar', 'solicitudes.eliminar',
+                'giros.ver', 'giros.crear', 'giros.editar', 'giros.eliminar',
+            ],
             'RECHUM' => ['dashboard.ver'],
-            'COMERCIAL' => ['dashboard.ver'],
             'CONTABILIDAD' => ['dashboard.ver'],
             'OPERATIVOS' => ['dashboard.ver'],
         ];

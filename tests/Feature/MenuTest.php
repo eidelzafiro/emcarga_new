@@ -29,7 +29,7 @@ class MenuTest extends TestCase
         );
     }
 
-    public function test_tecnica_ve_dashboard_pizarra_flota_y_taller(): void
+    public function test_tecnica_ve_modulos_tecnicos_sin_comercial(): void
     {
         $user = User::factory()->create();
         $user->assignRole('TECNICA');
@@ -44,17 +44,20 @@ class MenuTest extends TestCase
         );
     }
 
-    public function test_admin_ve_todos_los_modulos(): void
+    public function test_admin_ve_todos_los_modulos_incluyendo_comercial(): void
     {
         $user = User::factory()->create();
         $user->assignRole('ADMIN');
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 5)
-                ->where('menu.4.label', 'Administración')
-                ->where('menu.4.children.0.label', 'Usuarios')
-                ->where('menu.4.children.1.label', 'Perfiles')
+                ->has('menu', 6)
+                ->where('menu.0.label', 'Dashboard')
+                ->where('menu.4.label', 'Comercial')
+                ->where('menu.4.children.0.label', 'Clientes')
+                ->where('menu.5.label', 'Administración')
+                ->where('menu.5.children.0.label', 'Usuarios')
+                ->where('menu.5.children.1.label', 'Perfiles')
         );
     }
 
@@ -70,10 +73,23 @@ class MenuTest extends TestCase
         );
     }
 
-    public function test_agrupador_sin_hijos_visibles_no_se_muestra(): void
+    public function test_comercial_ve_modulo_comercial(): void
     {
         $user = User::factory()->create();
         $user->assignRole('COMERCIAL');
+
+        $this->actingAs($user)->get('/dashboard')->assertInertia(
+            fn (Assert $page) => $page
+                ->has('menu', 2)
+                ->where('menu.0.label', 'Dashboard')
+                ->where('menu.1.label', 'Comercial')
+        );
+    }
+
+    public function test_agrupador_sin_hijos_visibles_no_se_muestra(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('CONTABILIDAD');
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page

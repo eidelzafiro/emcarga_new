@@ -74,6 +74,41 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Taller', 'icon' => 'wrench', 'permission' => 'taller.ver', 'orden' => 4]
         );
 
+        $comercial = MenuItem::firstOrCreate(
+            ['label' => 'Comercial', 'parent_id' => null],
+            ['icon' => 'briefcase', 'route' => null, 'permission' => null, 'orden' => 5]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'clientes.index'],
+            ['label' => 'Clientes', 'icon' => 'users', 'permission' => 'clientes.ver', 'orden' => 1, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'lugares.index'],
+            ['label' => 'Lugares', 'icon' => 'map-marker', 'permission' => 'lugares.ver', 'orden' => 2, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'distancias.index'],
+            ['label' => 'Distancias', 'icon' => 'arrows-alt', 'permission' => 'distancias.ver', 'orden' => 3, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'acuerdos.index'],
+            ['label' => 'Acuerdos', 'icon' => 'file-invoice', 'permission' => 'acuerdos.ver', 'orden' => 4, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'solicitudes.index'],
+            ['label' => 'Solicitudes', 'icon' => 'envelope', 'permission' => 'solicitudes.ver', 'orden' => 5, 'parent_id' => $comercial->id]
+        );
+
+        MenuItem::firstOrCreate(
+            ['route' => 'giros.index'],
+            ['label' => 'Cartas Porte', 'icon' => 'file', 'permission' => 'giros.ver', 'orden' => 6, 'parent_id' => $comercial->id]
+        );
+
         $administracion = MenuItem::firstOrCreate(
             ['label' => 'Administración', 'parent_id' => null],
             ['icon' => 'cog', 'route' => null, 'permission' => null, 'orden' => 90]

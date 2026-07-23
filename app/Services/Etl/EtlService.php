@@ -197,9 +197,21 @@ class EtlService
         ];
 
         foreach (config('etl.tablas') as $nombre => $config) {
+            try {
+                $legacy = (int) DB::connection('legacy')->table($config['legacy'])->count();
+            } catch (\Throwable) {
+                $legacy = -1;
+            }
+
+            try {
+                $nueva = (int) DB::table($nombre)->count();
+            } catch (\Throwable) {
+                $nueva = -1;
+            }
+
             $resultado[$nombre] = [
-                'legacy' => (int) DB::connection('legacy')->table($config['legacy'])->count(),
-                'nueva' => (int) DB::table($nombre)->count(),
+                'legacy' => $legacy,
+                'nueva' => $nueva,
             ];
         }
 

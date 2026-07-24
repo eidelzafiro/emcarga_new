@@ -22,13 +22,19 @@ jobs:
           extensions: dom, curl, mbstring, zip, pdo, mysql, sqlite, xml, bcmath, gd
           coverage: none
 
+      - name: Install PHP dependencies (sin scripts)
+        run: composer install --no-progress --prefer-dist --no-scripts
+
       - name: Prepare environment
         run: |
           cp .env.example .env
           php artisan key:generate
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
-      - name: Install PHP dependencies
-        run: composer install --no-progress --prefer-dist
+      - name: Package discover
+        run: php artisan package:discover --ansi
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
@@ -66,13 +72,13 @@ jobs:
           extensions: dom, curl, mbstring, zip, pdo, mysql, sqlite, xml, bcmath, gd
           coverage: none
 
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+
       - name: Prepare environment
         run: |
           cp .env.example .env
           php artisan key:generate
-
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist
 
       - name: Run migrations
         env:

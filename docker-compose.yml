@@ -1,8 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
+    image: emcarga-new-app
     container_name: emcarga-app
     restart: unless-stopped
     tty: true
@@ -16,6 +14,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-secret}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      LEGACY_DB_CONNECTION: mysql
+      LEGACY_DB_HOST: mysql
+      LEGACY_DB_PORT: 3306
+      LEGACY_DB_DATABASE: emcarga
+      LEGACY_DB_USERNAME: root
+      LEGACY_DB_PASSWORD: ${DB_PASSWORD:-secret}
     working_dir: /var/www
     volumes:
       - .:/var/www
@@ -52,14 +56,12 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
       - emcarga-mysql-data:/var/lib/mysql/
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/mysql/:/docker-entrypoint-initdb.d/
     networks:
       - emcarga-network
 
   reverb:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
+    image: emcarga-new-app
     container_name: emcarga-reverb
     restart: unless-stopped
     tty: true

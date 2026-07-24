@@ -62,6 +62,20 @@ return new class extends Migration
         });
 
         // ============================================================
+        // Empleados (registro maestro)
+        // ============================================================
+        Schema::create('empleados', function (Blueprint $table) {
+            $table->id();
+            $table->string('codigo', 50)->nullable()->unique();
+            $table->string('nombre', 255);
+            $table->string('expediente', 50)->nullable()->unique();
+            $table->foreignId('id_area')->nullable()->constrained('areas');
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        // ============================================================
         // Choferes
         // ============================================================
         Schema::create('choferes', function (Blueprint $table) {
@@ -71,20 +85,6 @@ return new class extends Migration
             $table->string('ci', 20)->nullable()->unique();
             $table->foreignId('id_tractivo')->nullable()->constrained('tractivos');
             $table->foreignId('id_empleado')->nullable()->constrained('empleados');
-            $table->boolean('activo')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        // ============================================================
-        // Empleados (registro maestro)
-        // ============================================================
-        Schema::create('empleados', function (Blueprint $table) {
-            $table->id();
-            $table->string('codigo', 50)->nullable()->unique();
-            $table->string('nombre', 255);
-            $table->string('expediente', 50)->nullable()->unique();
-            $table->foreignId('id_area')->nullable()->constrained('areas');
             $table->boolean('activo')->default(true);
             $table->timestamps();
             $table->softDeletes();

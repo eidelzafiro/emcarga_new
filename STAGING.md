@@ -65,6 +65,7 @@ docker compose exec app php artisan migrate --force
 docker compose exec app php artisan db:seed --force
 
 # ETL (carga datos desde emcarga → emcarga_new)
+# --no-fresh: no reinicia la BD (ya corremos migrate + seed manual)
 docker compose exec app php artisan emcarga:etl --no-fresh
 ```
 

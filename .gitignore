@@ -28,3 +28,5 @@ Thumbs.db
 
 # Dump de datos legacy (datos de produccion, no versionar)
 docker/mysql/dump.sql
+docker/mysql/emcarga-dump.data
+docker/mysql/*.data

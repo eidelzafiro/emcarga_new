@@ -74,13 +74,33 @@ docker compose exec app npm run build
 
 > La página en blanco (código 200, HTML vacío) generalmente se debe a que falta `public/build/manifest.json`. Verifica: `ls -la public/build/manifest.json`.
 
+## 4b. Cargar datos legacy (requisito para ETL)
+
+Para el piloto necesitas el dump de la BD legacy. El archivo `docker/mysql/emcarga-dump.data`
+está en `.gitignore` por su tamaño (~50 MB). Hay dos opciones:
+
+**Opción A** — Copiar desde servidor legacy o backup:
+```bash
+# Copia el dump al directorio correcto
+cp /ruta/al/dump.sql docker/mysql/emcarga-dump.data
+```
+
+**Opción B** — Si ya tienes MySQL corriendo en otro servidor:
+```bash
+# Configura LEGACY_DB_HOST en .env con la IP del servidor legacy
+# y omite este paso (el ETL leerá desde ahí directamente)
+```
+
+El `init.sh` cargará automáticamente `emcarga-dump.data` en la BD `emcarga`
+al arrancar MySQL por primera vez.
+
 ## 5. Levantar contenedores
 
 ```bash
 docker compose up -d
 ```
 
-Esto inicia: PHP-FPM, Nginx, MySQL, Redis y Reverb (WebSocket).
+Esto inicia: PHP-FPM, Nginx, MySQL (con datos legacy si existe el dump), Redis y Reverb (WebSocket).
 
 ## 6. Ejecutar migraciones
 

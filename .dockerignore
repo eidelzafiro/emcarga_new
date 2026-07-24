@@ -1,0 +1,15 @@
+node_modules
+vendor
+.git
+.env
+.gitignore
+.gitattributes
+docker-compose.yml
+docker/mysql/dump.sql
+*.md
+.editorconfig
+.phpunit.*
+phpunit.xml
+phpstan.neon
+pint.json
+.vite

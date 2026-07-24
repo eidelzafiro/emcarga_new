@@ -1,4 +1,6 @@
-FROM php:8.2-fpm
+FROM php:8.4-fpm
+
+ARG APP_ENV=production
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -8,11 +10,12 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    libicu-dev \
     zip \
     unzip \
     nodejs \
     npm \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,15 +25,30 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . /var/www
+# Copy package files first (Docker layer caching)
+COPY --chown=www-data:www-data package.json package-lock.json* /var/www/
 
-# Copy existing application directory permissions
+# Install Node dependencies and build assets
+RUN npm ci --ignore-scripts && npm run build && rm -rf node_modules
+
+# Copy the rest of the application
 COPY --chown=www-data:www-data . /var/www
 
-# Change current user to www
+# .env por defecto desde .env.example
+RUN if [ ! -f /var/www/.env ]; then cp /var/www/.env.example /var/www/.env; fi
+
+# Permisos storage y cache
+RUN mkdir -p /var/www/storage/framework/cache/data \
+    /var/www/storage/framework/sessions \
+    /var/www/storage/framework/views \
+    /var/www/storage/logs \
+    /var/www/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+# Limpiar node_modules si se colaron del COPY .
+RUN rm -rf /var/www/node_modules
+
 USER www-data
 
-# Expose port 9000 and start php-fpm server
 EXPOSE 9000
 CMD ["php-fpm"]

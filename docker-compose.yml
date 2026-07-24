@@ -1,6 +1,8 @@
 services:
   app:
-    image: emcarga-new-app
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
     container_name: emcarga-app
     restart: unless-stopped
     tty: true
@@ -61,7 +63,9 @@ services:
       - emcarga-network
 
   reverb:
-    image: emcarga-new-app
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
     container_name: emcarga-reverb
     restart: unless-stopped
     tty: true

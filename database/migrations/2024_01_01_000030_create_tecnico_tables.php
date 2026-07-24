@@ -14,7 +14,7 @@ return new class extends Migration
         // Tipos de vehículos
         Schema::create('tipos_vehiculos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('descripcion', 500)->nullable();
             $table->boolean('activo')->default(true);
@@ -24,7 +24,7 @@ return new class extends Migration
         // Tabla principal de tractivos (flota)
         Schema::create('tractivos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->string('placa', 50)->unique();
             $table->foreignId('id_tipo_vehiculo')->constrained('tipos_vehiculos')->nullable();
@@ -52,7 +52,7 @@ return new class extends Migration
         // Motores
         Schema::create('motores', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->string('marca', 100)->nullable();
             $table->string('modelo', 100)->nullable();
@@ -69,7 +69,7 @@ return new class extends Migration
         // Cajas de transmisión
         Schema::create('cajas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->string('marca', 100)->nullable();
             $table->string('modelo', 100)->nullable();
@@ -86,7 +86,7 @@ return new class extends Migration
         // Diferenciales
         Schema::create('diferenciales', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->string('marca', 100)->nullable();
             $table->string('modelo', 100)->nullable();
@@ -103,7 +103,7 @@ return new class extends Migration
         // Tipos de arrastres
         Schema::create('tipos_arrastres', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('descripcion', 500)->nullable();
             $table->decimal('capacidad_toneladas', 8, 2)->nullable();

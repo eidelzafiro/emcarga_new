@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('unidades', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -18,7 +18,7 @@ return new class extends Migration
 
         Schema::create('contenedores', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->foreignId('id_carta_porte')->nullable()->constrained('cartas_porte');
             $table->foreignId('id_carta_porte_retorno')->nullable()->constrained('cartas_porte');
             $table->date('fecha_salida')->nullable();
@@ -31,7 +31,7 @@ return new class extends Migration
 
         Schema::create('categorias_productos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -39,7 +39,7 @@ return new class extends Migration
 
         Schema::create('tipos_subcta_unidad', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();

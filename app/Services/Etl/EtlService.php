@@ -61,21 +61,27 @@ class EtlService
                     $plain = 'Temporal*'.bin2hex(random_bytes(4));
                 }
 
-                $user = User::withTrashed()->updateOrCreate(
-                    ['id' => $legacy->iduser],
-                    [
-                        'name' => trim($legacy->login),
-                        'username' => mb_strtoupper(trim($legacy->login)),
-                        'email' => null,
-                        'password' => Hash::make($plain),
-                        'idunidad' => $legacy->idunidad ?: null,
-                        'bloqueado' => (bool) $legacy->bloqueado,
-                        'intentos_fallidos' => 0,
-                        'fecha_cambio_password' => $legacy->fpass,
-                        'password_temporal' => (bool) $legacy->cpass,
-                        'deleted_at' => null,
-                    ]
-                );
+                $user = User::withTrashed()->find($legacy->iduser);
+
+                if (! $user) {
+                    $user = new User;
+                    $user->id = $legacy->iduser;
+                }
+
+                $user->forceFill([
+                    'name' => trim($legacy->login),
+                    'username' => mb_strtoupper(trim($legacy->login)),
+                    'email' => null,
+                    'password' => Hash::make($plain),
+                    'idunidad' => $legacy->idunidad ?: null,
+                    'bloqueado' => (bool) $legacy->bloqueado,
+                    'intentos_fallidos' => 0,
+                    'fecha_cambio_password' => $legacy->fpass,
+                    'password_temporal' => (bool) $legacy->cpass,
+                    'deleted_at' => null,
+                ]);
+
+                $user->save();
 
                 $rol = $mapeoPerfiles[$legacy->idperfil] ?? null;
                 if ($rol) {
@@ -146,38 +152,74 @@ class EtlService
         $avisos = [];
         $procesados = 0;
 
-        DB::connection('legacy')->table($legacy)
-            ->orderBy($pk)
-            ->chunk($chunk, function ($filas) use ($nombre, $config, $pk, &$procesados, &$avisos) {
+        $query = DB::connection('legacy')->table($legacy);
+
+        if ($pk) {
+            $query->orderBy($pk)->chunk($chunk, function ($filas) use ($nombre, $config, $pk, &$procesados, &$avisos) {
                 foreach ($filas as $fila) {
-                    $datos = ['id' => $fila->{$pk}];
-
-                    foreach ($config['columnas'] as $colLegacy => $colNueva) {
-                        $valor = $fila->{$colLegacy} ?? null;
-                        $datos[$colNueva] = is_string($valor) ? trim($valor) : $valor;
+                    $datos = $this->filaADatos($fila, $config, $pk);
+                    if (array_key_exists('codigo', $datos) && ($datos['codigo'] === null || $datos['codigo'] === '')) {
+                        $avisos[] = "{$nombre}#{$fila->{$pk}}: codigo vacío, omitido";
+                        continue;
                     }
-
-                    foreach ($config['defaults'] ?? [] as $col => $valor) {
-                        $datos[$col] = $datos[$col] ?? $valor;
-                    }
-
-                    $datos['created_at'] = now();
-                    $datos['updated_at'] = now();
-
-                    try {
-                        DB::table($nombre)->updateOrInsert(['id' => $datos['id']], $datos);
-                        $procesados++;
-                    } catch (\Throwable $e) {
-                        $avisos[] = "{$nombre}#{$datos['id']}: {$e->getMessage()}";
-                    }
+                    $datos['id'] = $fila->{$pk};
+                    $this->insertarFila($nombre, $datos, $procesados, $avisos);
                 }
             });
+        } else {
+            $filas = $query->get();
+            foreach ($filas as $fila) {
+                $datos = $this->filaADatos($fila, $config);
+                if (array_key_exists('codigo', $datos) && ($datos['codigo'] === null || $datos['codigo'] === '')) {
+                    $avisos[] = "{$nombre}#?: codigo vacío, omitido";
+                    continue;
+                }
+                unset($datos['id']);
+                $this->insertarFila($nombre, $datos, $procesados, $avisos);
+            }
+        }
 
         $this->reporte[$nombre] = [
             'legacy' => (int) DB::connection('legacy')->table($legacy)->count(),
             'nueva' => $procesados,
             'avisos' => $avisos,
         ];
+    }
+
+    private function filaADatos(object $fila, array $config, ?string $pk = null): array
+    {
+        $datos = [];
+
+        foreach ($config['columnas'] ?? [] as $colLegacy => $colNueva) {
+            $valor = $fila->{$colLegacy} ?? null;
+            $datos[$colNueva] = is_string($valor) ? (trim($valor) ?: null) : $valor;
+        }
+
+        foreach ($config['defaults'] ?? [] as $col => $valor) {
+            if (!array_key_exists($col, $datos)) {
+                $datos[$col] = $valor;
+            }
+        }
+
+        $datos['created_at'] = now();
+        $datos['updated_at'] = now();
+
+        return $datos;
+    }
+
+    private function insertarFila(string $tabla, array $datos, int &$procesados, array &$avisos): void
+    {
+        try {
+            if (isset($datos['id'])) {
+                DB::table($tabla)->updateOrInsert(['id' => $datos['id']], $datos);
+            } else {
+                DB::table($tabla)->insert($datos);
+            }
+            $procesados++;
+        } catch (\Throwable $e) {
+            $id = $datos['id'] ?? '?';
+            $avisos[] = "{$tabla}#{$id}: {$e->getMessage()}";
+        }
     }
 
     /**

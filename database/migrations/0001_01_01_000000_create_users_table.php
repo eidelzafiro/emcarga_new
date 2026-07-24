@@ -26,8 +26,8 @@ return new class extends Migration
             $table->unsignedBigInteger('idgrupo')->nullable();
             $table->boolean('bloqueado')->default(false);        // bloqueo manual por el administrador
             $table->unsignedTinyInteger('intentos_fallidos')->default(0); // >= 5 equivale a bloqueado (legacy)
-            $table->timestamp('ultimo_login')->nullable();
-            $table->timestamp('fecha_cambio_password')->nullable();
+            $table->dateTime('ultimo_login')->nullable();
+            $table->dateTime('fecha_cambio_password')->nullable();
             $table->boolean('password_temporal')->default(false); // fuerza cambio en el próximo acceso (legacy: cpass)
 
             $table->rememberToken();

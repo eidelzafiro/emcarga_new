@@ -26,13 +26,28 @@ class EtlMapeoTest extends TestCase
         );
 
         $this->nuevo = [];
-        foreach (DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'migrations'") as $t) {
+        $tablas = DB::select("
+            SELECT TABLE_NAME AS name
+            FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_TYPE = 'BASE TABLE'
+              AND TABLE_NAME != 'migrations'
+        ");
+        foreach ($tablas as $t) {
             $cols = [];
-            foreach (DB::select("PRAGMA table_info('{$t->name}')") as $c) {
+            $columnas = DB::select("
+                SELECT COLUMN_NAME AS name, DATA_TYPE AS type,
+                       IS_NULLABLE AS anulable,
+                       COLUMN_DEFAULT AS `default`
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = ?
+            ", [$t->name]);
+            foreach ($columnas as $c) {
                 $cols[$c->name] = [
                     'tipo' => strtolower($c->type),
-                    'anulable' => ! (bool) $c->notnull,
-                    'default' => $c->dflt_value,
+                    'anulable' => $c->anulable === 'YES',
+                    'default' => $c->default,
                 ];
             }
             $this->nuevo[$t->name] = $cols;

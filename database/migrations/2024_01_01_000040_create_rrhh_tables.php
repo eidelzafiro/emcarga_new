@@ -14,7 +14,7 @@ return new class extends Migration
         // Áreas del organigrama
         Schema::create('areas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->foreignId('id_area_padre')->nullable()->constrained('areas');
             $table->boolean('activo')->default(true);
@@ -25,7 +25,7 @@ return new class extends Migration
         // Entidades (unidades organizativas)
         Schema::create('entidades', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->foreignId('id_area')->constrained('areas')->nullable();
             $table->boolean('activo')->default(true);
@@ -36,7 +36,7 @@ return new class extends Migration
         // Cargos
         Schema::create('cargos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->text('funciones')->nullable();
             $table->text('medios_requeridos')->nullable();
@@ -72,7 +72,7 @@ return new class extends Migration
         // Turnos de trabajo
         Schema::create('turnos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->time('hora_entrada');
             $table->time('hora_salida');

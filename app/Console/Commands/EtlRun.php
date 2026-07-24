@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\Etl\EtlService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Comando ETL legacy → nuevo esquema (Fase 3).
@@ -19,7 +20,8 @@ class EtlRun extends Command
     protected $signature = 'emcarga:etl
                             {--solo= : Migrar solo una tabla (users o una del mapeo)}
                             {--validar : Solo muestra conteos legacy vs nueva}
-                            {--chunk=1000 : Tamaño del lote de lectura}';
+                            {--chunk=1000 : Tamaño del lote de lectura}
+                            {--no-fresh : Omite migrate:fresh --seed (para re-ejecutar sin reiniciar)}';
 
     protected $description = 'Migra datos del sistema legacy (CodeIgniter) al nuevo esquema (Fase 3)';
 
@@ -29,8 +31,15 @@ class EtlRun extends Command
             return $this->mostrarValidacion($etl);
         }
 
+        if (! $this->option('no-fresh')) {
+            $this->info('Preparando BD (migrate:fresh --seed)...');
+            $this->call('migrate:fresh', ['--seed' => true, '--force' => true]);
+        }
+
         $solo = $this->option('solo');
         $chunk = (int) $this->option('chunk');
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
         if (! $solo || $solo === 'users') {
             $this->info('Migrando usuarios (cod_usuarios → users + password_histories)...');
@@ -38,8 +47,12 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte());
         }
 
+        $excluirDatos = config('etl.excluir_datos', []);
         foreach (array_keys(config('etl.tablas')) as $tabla) {
             if ($solo && $solo !== $tabla) {
+                continue;
+            }
+            if (in_array($tabla, $excluirDatos) && !$solo) {
                 continue;
             }
 
@@ -47,6 +60,8 @@ class EtlRun extends Command
             $etl->migrarTabla($tabla, $chunk);
             $this->mostrarResultado($etl->getReporte(), $tabla);
         }
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $this->newLine();
         $this->info('ETL finalizado. Ejecute php artisan emcarga:etl --validar para verificar conteos.');
@@ -59,8 +74,12 @@ class EtlRun extends Command
         $filas = [];
 
         foreach ($etl->validar() as $tabla => $conteos) {
-            $ok = $conteos['legacy'] === $conteos['nueva'] ? '<fg=green>OK</>' : '<fg=red>DIFIERE</>';
-            $filas[] = [$tabla, $conteos['legacy'], $conteos['nueva'], $ok];
+            if (in_array($tabla, config('etl.excluir_datos', []))) {
+                $estado = '<fg=yellow>SIN DATOS</>';
+            } else {
+                $estado = $conteos['legacy'] === $conteos['nueva'] ? '<fg=green>OK</>' : '<fg=red>DIFIERE</>';
+            }
+            $filas[] = [$tabla, $conteos['legacy'], $conteos['nueva'], $estado];
         }
 
         $this->table(['Tabla', 'Legacy', 'Nueva', 'Estado'], $filas);

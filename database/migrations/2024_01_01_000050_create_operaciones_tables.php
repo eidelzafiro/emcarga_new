@@ -85,7 +85,7 @@ return new class extends Migration
         // Planes de transporte
         Schema::create('planes', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->foreignId('id_cliente')->constrained('clientes');
             $table->date('fecha_inicio');

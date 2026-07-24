@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0-beta.23",
+  "target": "/home/eidel/zafiro26/emcarga-new",
+  "installed_at": "2026-07-23T19:12:33.036Z",
+  "profile": "core",
+  "integration": "full",
+  "assistants": [
+    "opencode"
+  ],
+  "tools": [
+    "copilot",
+    "opencode",
+    "generic-mcp"
+  ],
+  "components": [
+    "laravel-patterns",
+    "laravel-tdd",
+    "laravel-security",
+    "laravel-core-internals",
+    "laravel-eloquent",
+    "laravel-database",
+    "rules",
+    "hooks",
+    "mcp-configs",
+    "laravel-artisan",
+    "laravel-migration",
+    "laravel-container"
+  ]
+}

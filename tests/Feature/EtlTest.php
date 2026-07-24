@@ -231,7 +231,8 @@ class EtlTest extends TestCase
 
         $validacion = $etl->validar();
         $this->assertSame(1, $validacion['users']['legacy']);
-        $this->assertSame(1, $validacion['users']['nueva']);
+        // Incluye el usuario ADMIN del seeder de la plataforma
+        $this->assertSame(2, $validacion['users']['nueva']);
         $this->assertSame(0, $validacion['clientes']['nueva']);
     }
 }

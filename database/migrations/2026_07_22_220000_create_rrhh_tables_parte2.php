@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('tipos_incidencias', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -18,7 +18,7 @@ return new class extends Migration
 
         Schema::create('tipos_penalizaciones', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -26,7 +26,7 @@ return new class extends Migration
 
         Schema::create('tipos_contratos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -34,7 +34,7 @@ return new class extends Migration
 
         Schema::create('tipos_sistemas_pago', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -42,7 +42,7 @@ return new class extends Migration
 
         Schema::create('tipos_pagos_adicionales', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -50,7 +50,7 @@ return new class extends Migration
 
         Schema::create('plantilla', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->foreignId('id_cargo')->nullable()->constrained('cargos');
             $table->foreignId('id_entidad')->nullable()->constrained('entidades');
@@ -91,7 +91,7 @@ return new class extends Migration
 
         Schema::create('tipos_tasas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('unidad', 50)->nullable();
             $table->decimal('valor', 12, 4)->default(0);

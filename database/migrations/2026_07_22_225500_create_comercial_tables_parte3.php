@@ -147,7 +147,7 @@ return new class extends Migration
             $table->decimal('kms_carga', 10, 2)->default(0);
             $table->decimal('tiempo_demanda', 10, 2)->default(0);
             $table->decimal('tiempo_aceptacion', 10, 2)->default(0);
-            $table->json('datos_mensuales')->nullable();
+            $table->longText('datos_mensuales')->nullable();
             $table->text('observaciones')->nullable();
             $table->string('estado', 50)->default('activa');
             $table->foreignId('id_user')->nullable()->constrained('users');
@@ -163,7 +163,7 @@ return new class extends Migration
             $table->integer('mes');
             $table->integer('ano');
             $table->foreignId('id_tractivo')->constrained('tractivos');
-            $table->json('dias')->nullable();
+            $table->longText('dias')->nullable();
             $table->timestamps();
 
             $table->unique(['mes', 'ano', 'id_tractivo']);

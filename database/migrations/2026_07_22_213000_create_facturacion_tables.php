@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('tipo_ingresos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('siglas', 20)->nullable();
             $table->boolean('activo')->default(true);

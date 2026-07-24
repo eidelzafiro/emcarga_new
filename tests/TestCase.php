@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\DB;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -10,7 +11,20 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        // Las páginas Inertia no necesitan assets compilados en los tests
         $this->withoutVite();
+    }
+
+    protected function beforeRefreshingDatabase()
+    {
+        if (config('database.default') === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        }
+    }
+
+    protected function afterRefreshingDatabase()
+    {
+        if (config('database.default') === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

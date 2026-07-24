@@ -13,7 +13,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('centros_costos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -24,7 +24,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('tipos_articulos_bolsa', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -49,7 +49,7 @@ return new class extends Migration
 
         Schema::create('tipos_jefe_grupo', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -67,7 +67,7 @@ return new class extends Migration
 
         Schema::create('tipos_ramas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -75,7 +75,7 @@ return new class extends Migration
 
         Schema::create('tipos_sistemas_cuc', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();

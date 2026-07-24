@@ -35,6 +35,24 @@ return [
         7 => 'OPERATIVOS',  // OPERATIVOS
     ],
 
+    /*
+     * Tablas de negocio/transaccionales: solo estructura, sin migrar datos.
+     * Los catálogos/tipos sí se migran completos.
+     * Los datos faltantes se depuran sobre la BD nueva directamente.
+     */
+    'excluir_datos' => [
+        'clientes', 'configuraciones_modelo', 'demandas', 'distancias',
+        'prefacturas', 'tarifas', 'tarifas_config_carga', 'tarifas_config_contenedor',
+        'amortizaciones', 'combustibles_lubricantes',
+        'balances_electricos', 'control_lubricantes',
+        'diferenciales', 'gastos_orden', 'historial_tractivos',
+        'lecturas_medidores', 'locales_electricos', 'motores',
+        'movimientos_taller', 'motores_movimientos', 'neumaticos',
+        'neumaticos_movimientos', 'ordenes_operaciones', 'ordenes_taller',
+        'otros_agregados', 'lineas_mantenimiento', 'cierres_cdt',
+        'planes_mantenimiento', 'tarjetas',
+    ],
+
     'tablas' => [
 
         /*
@@ -43,107 +61,14 @@ return [
          * ================================================================
          */
 
-        'bitacora' => [
-            'legacy' => 'user_bitacora',
-            'pk' => null,
-            'columnas' => [
-                'operacion' => 'accion',
-                'foperacion' => 'fecha_accion',
-                'iduser' => 'user_id',
-                'tabla' => 'tabla',
-            ],
-        ],
-
         /*
          * ================================================================
          * COMERCIALES
          * ================================================================
          */
 
-        'acuerdos' => [
-            'legacy' => 'com_taracuerdos',
-            'pk' => 'idtaracuerdos',
-            'columnas' => [
-                'idcliente' => 'id_cliente',
-                'fletemtt' => 'tarifa_base',
-            ],
-            'defaults' => [
-                'id_cliente' => null,
-                'activo' => true,
-                'codigo' => '',
-                'descripcion' => '',
-                'fecha_inicio' => '1970-01-01',
-            ],
-        ],
 
-        'aforos' => [
-            'legacy' => 'com_aforo',
-            'pk' => 'idcartaporte',
-            'columnas' => [
-                'idcartaporte' => 'id_carta_porte',
-                'fparte' => 'fecha_parte',
-            ],
-            'defaults' => [
-                'flete_mt' => 0,
-                'flete_mlc' => 0,
-                'flete_demora' => 0,
-                'otros_mt' => 0,
-                'ingreso_mt' => 0,
-                'descuento' => 0,
-                'refactura' => false,
-            ],
-        ],
 
-        'ajustes' => [
-            'legacy' => 'com_ajustes',
-            'pk' => 'idajustes',
-            'columnas' => [
-                'idcartaporte' => 'id_giro',
-                'fajustes' => 'created_at',
-            ],
-            'defaults' => [
-                'concepto' => '',
-                'monto' => 0,
-                'tipo' => 'descuento',
-            ],
-        ],
-
-        'alertas' => [
-            'legacy' => 'com_alertas',
-            'pk' => 'idalertas',
-            'columnas' => [
-                'alerta' => 'mensaje',
-                'femision' => 'fecha_emision',
-                'fvence' => 'fecha_vencimiento',
-                'iduser' => 'id_user',
-                'idperfil' => 'id_perfil',
-                'vencida' => 'vencida',
-            ],
-        ],
-
-        'buques' => [
-            'legacy' => 'com_buques',
-            'pk' => 'idbuque',
-            'columnas' => [
-                'nombbuque' => 'nombre',
-            ],
-            'defaults' => [
-                'codigo' => '',
-                'activo' => true,
-            ],
-        ],
-
-        'categorias_productos' => [
-            'legacy' => 'com_productos_categoria',
-            'pk' => 'idcatproducto',
-            'columnas' => [
-                'nombcatproducto' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'codigo' => '',
-            ],
-        ],
 
         'clientes' => [
             'legacy' => 'com_clientes',
@@ -224,95 +149,14 @@ return [
                 'nombembalaje' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
 
-        'facturas' => [
-            'legacy' => 'com_rfactura',
-            'pk' => 'idfactura',
-            'columnas' => [
-                'ffactura' => 'fecha_emision',
-                'factura' => 'numero',
-                'idcliente' => 'id_cliente',
-                'idunidad' => 'id_unidad',
-                'iduser' => 'id_user',
-            ],
-            'defaults' => [
-                'flete_mt' => 0,
-                'flete_mlc' => 0,
-                'cancelada' => false,
-                'refacturada' => false,
-                'estado' => 'emitida',
-            ],
-        ],
 
-        'giros' => [
-            'legacy' => 'com_girado',
-            'pk' => 'idcartaporte',
-            'columnas' => [
-                'nrocp' => 'numero_carta_porte',
-                'femision' => 'fecha_parte',
-                'idhojaruta' => 'id_solicitud',
-                'idtractivos' => 'id_tractivo',
-                'idcliente' => 'id_cliente',
-                'idorigen' => 'id_lugar_origen',
-                'iddestino' => 'id_lugar_destino',
-                'idproducto1' => 'id_producto',
-                'idtipocarga1' => 'id_tipo_carga',
-                'iduser' => 'id_user',
-            ],
-            'defaults' => [
-                'ingreso_mt' => 0,
-                'flete_mt' => 0,
-                'estado' => 'activo',
-            ],
-        ],
 
-        'hojas_ruta' => [
-            'legacy' => 'com_hojaruta',
-            'pk' => 'idhojaruta',
-            'columnas' => [
-                'nrohr' => 'numero',
-                'femision' => 'fecha_salida',
-                'fcierre' => 'fecha_llegada_real',
-                'idtractivos' => 'id_tractivo',
-            ],
-            'defaults' => [
-                'id_solicitud' => 0,
-                'id_cliente' => 0,
-                'estado' => 'en_transito',
-            ],
-        ],
 
-        'indicadores' => [
-            'legacy' => 'com_indicadores',
-            'pk' => 'idcartaporte',
-            'clave' => ['id_carta_porte'],
-            'columnas' => [
-                'idcartaporte' => 'id_carta_porte',
-            ],
-            'defaults' => [
-                'tn_pos_3' => 0,
-                'tn_real_3' => 0,
-                'km_carga_3' => 0,
-                'km_vacio_3' => 0,
-                'kms_total_3' => 0,
-            ],
-        ],
 
-        'indicadores_planes' => [
-            'legacy' => 'com_indicadores_plan',
-            'pk' => 'idplan',
-            'columnas' => [
-                'idtipoindicadores' => 'id_tipo_indicador',
-                'periodo' => 'periodo',
-                'plan_periodo_actual' => 'plan_periodo',
-                'ajuste_periodo_actual' => 'ajuste_periodo',
-                'real_periodo_anterior' => 'real_periodo_anterior',
-            ],
-        ],
 
         'lugares' => [
             'legacy' => 'com_lugares',
@@ -322,7 +166,6 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
             ],
         ],
 
@@ -333,66 +176,7 @@ return [
                 'monedas' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
-            ],
-        ],
-
-        'movil_web' => [
-            'legacy' => 'com_movilweb',
-            'pk' => null,
-            'columnas' => [
-                'fparte' => 'fecha',
-                'hojaruta' => 'hoja_ruta',
-                'km' => 'km',
-                'comb' => 'combustible',
-            ],
-        ],
-
-        'navieras' => [
-            'legacy' => 'com_navieras',
-            'pk' => 'idnavieras',
-            'columnas' => [
-                'nombnavieras' => 'nombre',
-            ],
-            'defaults' => [
-                'codigo' => '',
-                'activo' => true,
-            ],
-        ],
-
-        'otros_ingresos' => [
-            'legacy' => 'com_otrosingresos',
-            'pk' => 'idotrosingresos',
-            'columnas' => [
-                'impmn' => 'monto',
-                'idcartaporte' => 'id_giro',
-            ],
-            'defaults' => [
-                'concepto' => '',
-                'fecha' => '1970-01-01',
-            ],
-        ],
-
-        'otros_ingresos_pre' => [
-            'legacy' => 'com_otrosingresos_pre',
-            'pk' => 'idotrosingresos',
-            'columnas' => [
-                'idcartaporte' => 'id_carta_porte',
-                'idtipoingresos' => 'id_tipo_ingreso',
-                'cantidad' => 'cantidad',
-            ],
-        ],
-
-        'pizarra_tractivos' => [
-            'legacy' => 'com_pizarra_tractivos',
-            'pk' => null,
-            'columnas' => [
-                'mes' => 'mes',
-                'idtractivos' => 'id_tractivo',
-            ],
-            'defaults' => [
-                'ano' => 0,
             ],
         ],
 
@@ -420,27 +204,9 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
             ],
         ],
 
-        'solicitudes' => [
-            'legacy' => 'com_solicitudes',
-            'pk' => 'idsolicitud',
-            'columnas' => [
-                'fsolicitud' => 'fecha_solicitud',
-                'fplanificado' => 'fecha_requerida',
-                'idsolicitud' => 'numero',
-                'peso1' => 'toneladas_solicitadas',
-                'idcliente' => 'id_cliente',
-                'idorigen' => 'id_lugar_origen',
-                'iddestino' => 'id_lugar_destino',
-            ],
-            'defaults' => [
-                'toneladas_solicitadas' => 0,
-                'estado' => 'pendiente',
-            ],
-        ],
 
         'tarifas' => [
             'legacy' => 'com_tarifas',
@@ -475,7 +241,6 @@ return [
             'pk' => 'idtipoingresos',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -485,7 +250,6 @@ return [
             'pk' => 'idtipocargas',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -518,7 +282,6 @@ return [
             'pk' => 'idtipoindicadores',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -539,7 +302,6 @@ return [
             'pk' => 'idtiposervicios',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -586,36 +348,7 @@ return [
             ],
         ],
 
-        'combustible_cargas' => [
-            'legacy' => 'cont_combcarga',
-            'pk' => 'idcarga',
-            'columnas' => [
-                'folio' => 'numero',
-                'saldocargado' => 'cantidad_litros',
-                'idresponsable' => 'id_bolsa',
-                'idtipocombustibles' => 'tipo_combustible',
-                'notas' => 'observaciones',
-                'fcarga' => 'fecha_carga',
-            ],
-            'defaults' => [
-                'estado' => 'registrada',
-                'precio_litro' => 0,
-                'total' => 0,
-            ],
-        ],
 
-        'combustible_descargas' => [
-            'legacy' => 'cont_combdescarga',
-            'pk' => 'iddescarga',
-            'columnas' => [
-                'idtarjeta' => 'id_tractivo',
-                'fdescarga' => 'fecha_descarga',
-            ],
-            'defaults' => [
-                'estado' => 'registrada',
-                'cantidad_litros' => 0,
-            ],
-        ],
 
         'combustibles_lubricantes' => [
             'legacy' => 'cont_comblubricantes',
@@ -631,176 +364,17 @@ return [
             ],
         ],
 
-        'conciliaciones' => [
-            'legacy' => 'cont_conciliaciones',
-            'pk' => 'idconciliacion',
-            'columnas' => [
-                'fconciliacion' => 'fecha_conciliacion',
-                'idcliente' => 'id_factura',
-            ],
-            'defaults' => [
-                'tipo' => 'cliente',
-                'estado' => 'pendiente',
-                'numero' => '',
-                'monto' => 0,
-            ],
-        ],
 
-        'costos_taller' => [
-            'legacy' => 'cont_costotaller',
-            'pk' => 'idcostotaller',
-            'columnas' => [
-                'fcostotaller' => 'fecha',
-                'idtractivo' => 'id_tractivo',
-                'horastaller' => 'horas_taller',
-            ],
-        ],
 
-        'detalles_carga_combustible' => [
-            'legacy' => 'cont_combdetallecarga',
-            'pk' => 'idmovimiento',
-            'columnas' => [
-                'fcarga' => 'fecha_movimiento',
-                'folio' => 'comprobante',
-                'saldomon' => 'importe_mn',
-                'saldolts' => 'importe_mlc',
-                'idcarga' => 'id_carga',
-                'idtarjeta' => 'id_tractivo',
-            ],
-        ],
 
-        'dietas' => [
-            'legacy' => 'cont_dietas',
-            'pk' => 'idcostodietas',
-            'columnas' => [
-                'fcostodietas' => 'fecha',
-                'total' => 'monto',
-                'idempleado' => 'id_bolsa',
-                'idhojaruta' => 'id_hoja_ruta',
-            ],
-            'defaults' => [
-                'tipo_dieta' => 'normal',
-                'estado' => 'pendiente',
-            ],
-        ],
 
-        'estados_tarjetas' => [
-            'legacy' => 'cont_etarjetas',
-            'pk' => 'idetarjeta',
-            'columnas' => [
-                'fmovimiento' => 'fecha_movimiento',
-                'saldomon' => 'saldo_mn',
-                'idcomprobante' => 'comprobante',
-                'idtarjeta' => 'id_tarjeta',
-                'identrega' => 'id_entrega',
-                'idrecibe' => 'id_recibe',
-            ],
-        ],
 
-        'firmas_autorizadas' => [
-            'legacy' => 'cont_firmaaut',
-            'pk' => 'idfirmaaut',
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'inventario' => [
-            'legacy' => 'cont_inventario',
-            'pk' => null,
-            'columnas' => [
-                'nombre' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'codigo' => '',
-            ],
-        ],
 
-        'movimientos_tarjetas' => [
-            'legacy' => 'cont_htarjetas',
-            'pk' => 'idhtarjeta',
-            'columnas' => [
-                'ftrabajo' => 'fecha_movimiento',
-                'saldoinicialmon' => 'saldo_anterior',
-                'saldoactualmon' => 'saldo_posterior',
-                'saldocargadomon' => 'monto',
-                'idtarjeta' => 'id_tarjeta',
-            ],
-            'defaults' => [
-                'tipo_movimiento' => 'carga',
-                'saldo_anterior' => 0,
-                'saldo_posterior' => 0,
-            ],
-        ],
 
-        'otros_gastos' => [
-            'legacy' => 'cont_ogastos',
-            'pk' => 'idotrosgastos',
-            'columnas' => [
-                'fotrosgastos' => 'fecha',
-                'importemn' => 'monto_mn',
-                'folio' => 'concepto',
-                'idtractivos' => 'id_tractivo',
-            ],
-            'defaults' => [
-                'monto_mlc' => 0,
-                'estado' => 'pendiente',
-            ],
-        ],
 
-        'pagos' => [
-            'legacy' => 'cont_pagos',
-            'pk' => 'idpago',
-            'columnas' => [
-                'fpago' => 'fecha_pago',
-            ],
-            'defaults' => [
-                'estado' => 'pendiente',
-            ],
-        ],
 
-        'piezas' => [
-            'legacy' => 'cont_piezas',
-            'pk' => 'idpiezas',
-            'defaults' => [
-                'activo' => true,
-                'codigo' => '',
-                'nombre' => '',
-            ],
-        ],
 
-        'reembolsos' => [
-            'legacy' => 'cont_dietasreembolso',
-            'pk' => 'idreembolso',
-            'columnas' => [
-                'freembolso' => 'fecha',
-                'importe' => 'monto',
-            ],
-            'defaults' => [
-                'estado' => 'pendiente',
-                'id_bolsa' => 0,
-                'concepto' => '',
-            ],
-        ],
-
-        'reportes_costos' => [
-            'legacy' => 'cont_costoreporte',
-            'pk' => 'idcostoreporte',
-            'columnas' => [
-                'fcostoreporte' => 'fecha_reporte',
-                'utilidad' => 'utilidad_mlc',
-                'costo' => 'costo_mlc',
-                'salariotot' => 'salario_total',
-                'ogastosmn' => 'otros_gastos_mn',
-                'costotnkms' => 'costo_tn_kms',
-                'idtractivos' => 'id_tractivo',
-            ],
-            'defaults' => [
-                'estado' => 'borrador',
-            ],
-        ],
 
         'servicentros' => [
             'legacy' => 'cont_servicentros',
@@ -816,7 +390,6 @@ return [
             'pk' => 'idtipoconcepto',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -826,7 +399,6 @@ return [
             'pk' => 'idtipodoc',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -836,7 +408,6 @@ return [
             'pk' => 'idtipogastos',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -847,46 +418,8 @@ return [
          * ================================================================
          */
 
-        'areas' => [
-            'legacy' => 'rh_areas',
-            'pk' => 'idareas',
-            'columnas' => [
-                'nombarea' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'codigo' => '',
-            ],
-        ],
 
-        'bolsa' => [
-            'legacy' => 'rh_bolsa',
-            'pk' => 'idbolsa',
-            'columnas' => [
-                'nombrecompleto' => 'nombre',
-                'direccion' => 'direccion',
-                'telefono' => 'telefono',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'ci' => '',
-                'apellidos' => '',
-                'id_cargo' => 0,
-                'id_entidad' => 0,
-            ],
-        ],
 
-        'cargos' => [
-            'legacy' => 'rh_cargos',
-            'pk' => 'idcargos',
-            'columnas' => [
-                'nombcargo' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'codigo' => '',
-            ],
-        ],
 
         'categorias_cargo' => [
             'legacy' => 'rh_tipocatcargos',
@@ -897,23 +430,10 @@ return [
                 'perfeccionamiento' => 'perfeccionamiento',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
 
-        'entidades' => [
-            'legacy' => 'rh_entidades',
-            'pk' => 'identidades',
-            'columnas' => [
-                'codigo' => 'codigo',
-                'nombentidad' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'id_area' => 0,
-            ],
-        ],
 
         'firmas' => [
             'legacy' => 'rh_firmas',
@@ -944,38 +464,10 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
             ],
         ],
 
-        'historial_movimientos' => [
-            'legacy' => 'rh_hmovimientos',
-            'pk' => 'idmovimientos',
-            'columnas' => [
-                'tipomov' => 'tipo',
-                'idmovimientos' => 'id_movimiento',
-                'idbolsa' => 'id_bolsa',
-                'iduser' => 'id_user',
-            ],
-            'defaults' => [
-                'fecha' => '1970-01-01',
-            ],
-        ],
 
-        'incidencias' => [
-            'legacy' => 'rh_incidencias',
-            'pk' => 'idincidencias',
-            'columnas' => [
-                'inicio' => 'fecha_inicio',
-                'final' => 'fecha_fin',
-                'idtipoincidencias' => 'tipo_incidencia',
-            ],
-            'defaults' => [
-                'tipo_incidencia' => '',
-                'estado' => 'pendiente',
-                'id_bolsa' => 0,
-            ],
-        ],
 
         'medios_proteccion' => [
             'legacy' => 'rh_mediosproteccion',
@@ -993,27 +485,10 @@ return [
             'pk' => 'idmes',
             'columnas' => [
                 'nombmes' => 'nombre',
-            ],
-            'defaults' => [
-                'codigo' => '',
+                'codigo' => 'codigo',
             ],
         ],
 
-        'movimientos' => [
-            'legacy' => 'rh_movimientos',
-            'pk' => 'idmovimientos',
-            'columnas' => [
-                'idbolsa' => 'id_bolsa',
-            ],
-            'defaults' => [
-                'tipo_movimiento' => '',
-                'fecha_movimiento' => '1970-01-01',
-                'id_entidad_origen' => 0,
-                'id_entidad_destino' => 0,
-                'id_cargo' => 0,
-                'id_turno' => 0,
-            ],
-        ],
 
         'municipios' => [
             'legacy' => 'rh_municipios',
@@ -1033,7 +508,6 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
             ],
         ],
 
@@ -1051,19 +525,6 @@ return [
             ],
         ],
 
-        'penalizaciones' => [
-            'legacy' => 'rh_penalizaciones',
-            'pk' => 'idpenalizaciones',
-            'columnas' => [
-                'fpenalizacion' => 'fecha',
-                'importe' => 'monto',
-            ],
-            'defaults' => [
-                'tipo_penalizacion' => '',
-                'estado' => 'pendiente',
-                'id_bolsa' => 0,
-            ],
-        ],
 
         'perfiles_rh' => [
             'legacy' => 'rh_perfiles',
@@ -1076,20 +537,6 @@ return [
             ],
         ],
 
-        'plantilla' => [
-            'legacy' => 'rh_plantilla',
-            'pk' => 'idplantilla',
-            'columnas' => [
-                'idcargos' => 'id_cargo',
-            ],
-            'defaults' => [
-                'plazas' => 1,
-                'cubiertas' => 0,
-                'activo' => true,
-                'codigo' => '',
-                'nombre' => '',
-            ],
-        ],
 
         'provincias' => [
             'legacy' => 'rh_provincias',
@@ -1099,31 +546,7 @@ return [
             ],
         ],
 
-        'salarios' => [
-            'legacy' => 'rh_salarios',
-            'pk' => 'idsalario',
-            'columnas' => [
-                'idbolsa' => 'id_bolsa',
-                'mes' => 'mes',
-                'ano' => 'ano',
-            ],
-            'defaults' => [
-                'salario_base' => 0,
-                'estado' => 'borrador',
-            ],
-        ],
 
-        'salarios_administrativos' => [
-            'legacy' => 'rh_saladmin',
-            'pk' => 'idsaladmin',
-            'columnas' => [
-                'fsaladmin' => 'fecha',
-                'idmovimientos' => 'id_movimiento',
-            ],
-            'defaults' => [
-                'estado' => 'borrador',
-            ],
-        ],
 
         'tipos_calificadores' => [
             'legacy' => 'rh_tipocalificadores',
@@ -1202,7 +625,6 @@ return [
                 'nombtipocontrato' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1216,7 +638,6 @@ return [
                 'clave' => 'clave',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1261,7 +682,6 @@ return [
                 'nombincidencias' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1318,7 +738,6 @@ return [
                 'nombpagosadicionales' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1330,7 +749,6 @@ return [
                 'nombpenalizacion' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1364,7 +782,6 @@ return [
                 'nombsistemapago' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1388,7 +805,6 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
             ],
         ],
 
@@ -1415,21 +831,11 @@ return [
             ],
         ],
 
-        'arrastre_tractivo' => [
-            'legacy' => 'tec_asociaciones',
-            'pk' => 'idasociaciones',
-            'clave' => ['id_tractivo', 'id_arrastre'],
-            'columnas' => [
-                'idtractivos' => 'id_tractivo',
-                'idarrastres' => 'id_arrastre',
-            ],
-        ],
 
         'arrastres' => [
             'legacy' => 'tec_naves',
             'pk' => 'idnave',
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1447,54 +853,14 @@ return [
             ],
         ],
 
-        'baterias' => [
-            'legacy' => 'tec_baterias',
-            'pk' => 'idbaterias',
-            'columnas' => [
-                'finstalada' => 'fecha_instalacion',
-                'fbaja' => 'fecha_retiro',
-                'codigo' => 'folio',
-                'idmarca' => 'marca',
-                'idtractivos' => 'id_tractivo',
-            ],
-            'defaults' => [
-                'estado' => 'activa',
-            ],
-        ],
 
-        'baterias_movimientos' => [
-            'legacy' => 'tec_bateriasmov',
-            'pk' => 'idbateriasmov',
-            'columnas' => [
-                'idbaterias' => 'id_bateria',
-                'idtractivos' => 'id_tractivo',
-                'fmovimiento' => 'fecha_movimiento',
-            ],
-            'defaults' => [
-                'tipo' => '',
-            ],
-        ],
 
-        'cajas' => [
-            'legacy' => 'tec_cajas',
-            'pk' => 'idcajas',
-            'columnas' => [
-                'nroserie' => 'numero_serie',
-                'idtractivos' => 'id_tractivo',
-            ],
-            'defaults' => [
-                'estado' => 'disponible',
-                'codigo' => '',
-                'descripcion' => '',
-            ],
-        ],
 
         'clasificaciones_ordenes_taller' => [
             'legacy' => 'tec_tipoclasificacion',
             'pk' => 'idtipoclasificacion',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1504,7 +870,6 @@ return [
             'pk' => 'idcolores',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1513,7 +878,6 @@ return [
             'legacy' => 'tec_consecutivos',
             'pk' => 'idconsecutivos',
             'defaults' => [
-                'codigo' => '',
                 'descripcion' => '',
             ],
         ],
@@ -1537,7 +901,6 @@ return [
             'pk' => 'iddestagregados',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1560,7 +923,6 @@ return [
             'pk' => 'idelectequipos',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1570,7 +932,6 @@ return [
             'pk' => 'idequiposgaraje',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1580,7 +941,6 @@ return [
             'pk' => 'idtipoestados',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1602,7 +962,6 @@ return [
             'pk' => 'idgrupo',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1656,7 +1015,6 @@ return [
             'pk' => 'idelectlocales',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1666,7 +1024,6 @@ return [
             'pk' => 'idlubricantes',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1676,7 +1033,6 @@ return [
             'pk' => 'idmarca',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1686,7 +1042,6 @@ return [
             'pk' => 'idneumaticosmedidas',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1710,7 +1065,6 @@ return [
             'pk' => 'idmodelo',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
                 'id_marca' => 0,
             ],
@@ -1721,7 +1075,6 @@ return [
             'pk' => 'idmotbajabat',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1731,7 +1084,6 @@ return [
             'pk' => 'idmotentrada',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1745,7 +1097,6 @@ return [
             ],
             'defaults' => [
                 'estado' => 'disponible',
-                'codigo' => '',
                 'descripcion' => '',
             ],
         ],
@@ -1841,7 +1192,6 @@ return [
                 'idmarca' => 'id_marca',
             ],
             'defaults' => [
-                'codigo' => '',
                 'descripcion' => '',
             ],
         ],
@@ -1851,7 +1201,6 @@ return [
             'pk' => 'idpaises',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1864,7 +1213,6 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
             ],
         ],
 
@@ -1873,9 +1221,9 @@ return [
             'pk' => 'idtiposubsistemas',
             'columnas' => [
                 'tiposubsistemas' => 'nombre',
+                'codigo' => 'codigo',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1887,7 +1235,6 @@ return [
                 'taller' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -1909,7 +1256,6 @@ return [
             'pk' => 'idtipoarrastres',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1920,7 +1266,6 @@ return [
             'defaults' => [
                 'tipo' => 'baja',
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1930,7 +1275,6 @@ return [
             'pk' => 'idtipocombustibles',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1940,7 +1284,6 @@ return [
             'pk' => 'idtipoequipos',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1950,7 +1293,6 @@ return [
             'pk' => 'idtipolubricantes',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1960,7 +1302,6 @@ return [
             'pk' => 'idtipomtto',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1970,7 +1311,6 @@ return [
             'pk' => 'idtiponeumaticos',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -1992,7 +1332,6 @@ return [
             'pk' => 'idneumtiporoturas',
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -2016,7 +1355,6 @@ return [
                 'tiposuspension' => 'nombre',
             ],
             'defaults' => [
-                'codigo' => '',
                 'activo' => true,
             ],
         ],
@@ -2043,27 +1381,10 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
 
-        'tractivos' => [
-            'legacy' => 'tec_tractivos',
-            'pk' => 'idtractivos',
-            'columnas' => [
-                'codtractivo' => 'codigo',
-                'chapa' => 'placa',
-                'chassis' => 'numero_chasis',
-                'falta' => 'fecha_alta',
-                'kmsacum' => 'kilometraje_actual',
-            ],
-            'defaults' => [
-                'descripcion' => '',
-                'estado' => 'activo',
-                'id_tipo_vehiculo' => 0,
-            ],
-        ],
 
         'vallas' => [
             'legacy' => 'tec_vallas',
@@ -2073,7 +1394,6 @@ return [
             ],
             'defaults' => [
                 'activo' => true,
-                'codigo' => '',
                 'nombre' => '',
             ],
         ],
@@ -2084,18 +1404,6 @@ return [
             'columnas' => [
                 'idtipomtto' => 'id_tipo_mantenimiento',
                 'km' => 'kilometraje',
-            ],
-        ],
-
-        'elementos_gasto' => [
-            'legacy' => 'cielem',
-            'pk' => null,
-            'columnas' => [
-                'subeleme' => 'codigo',
-                'nombelem' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
             ],
         ],
 

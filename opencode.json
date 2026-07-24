@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "laraskills": {
+      "type": "local",
+      "command": [
+        "laraskills-mcp"
+      ],
+      "enabled": true,
+      "timeout": 10000
+    }
+  }
+}

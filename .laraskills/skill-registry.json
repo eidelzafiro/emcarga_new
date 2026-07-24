@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0-beta.23",
+  "generated_at": "2026-07-23T19:12:33.077Z",
+  "profile": "core",
+  "skills": [
+    {
+      "name": "laravel-core-internals",
+      "path": ".laraskills/skills/laravel-core-internals/SKILL.md",
+      "description": "Use this skill when you need to understand how Laravel 13 works under the hood. It covers the Service Container, Dependency Injection, Service Providers, Facades, the Request Lifecycle, and the Contract system. Apply this knowledge to write framework-aware code that is testable, swappable, and maintainable.",
+      "tags": [
+        "container",
+        "di",
+        "providers",
+        "facades",
+        "lifecycle",
+        "contracts"
+      ]
+    },
+    {
+      "name": "laravel-database",
+      "path": ".laraskills/skills/laravel-database/SKILL.md",
+      "description": "Use this skill when designing database schemas, optimizing SQL queries, scaling database infrastructure, implementing search features, or working with database-specific capabilities (PostgreSQL or MySQL). This is the definitive reference for database engineering in Laravel 13 applications.",
+      "tags": [
+        "database",
+        "sql",
+        "postgresql",
+        "mysql",
+        "indexing",
+        "transactions",
+        "scaling"
+      ]
+    },
+    {
+      "name": "laravel-eloquent",
+      "path": ".laraskills/skills/laravel-eloquent/SKILL.md",
+      "description": "Use this skill when building Laravel 13 applications that require deep Eloquent knowledge: complex relationship mapping, query performance optimization, domain-driven model design, and advanced ORM features. This is the definitive reference for Eloquent beyond simple CRUD.",
+      "tags": [
+        "eloquent",
+        "orm",
+        "relationships",
+        "performance",
+        "domain-modeling",
+        "n+1"
+      ]
+    },
+    {
+      "name": "laravel-patterns",
+      "path": ".laraskills/skills/laravel-patterns/SKILL.md",
+      "description": "Use this skill when building Laravel 13 applications to ensure consistent, maintainable architecture. It covers the full spectrum of Laravel patterns: from attribute-driven models and modular structure to Actions, Services, DTOs, Eloquent best practices, Queues, Caching, API Resources, and Event-driven design.",
+      "tags": [
+        "architecture",
+        "patterns",
+        "services",
+        "actions",
+        "dto",
+        "queues",
+        "caching"
+      ]
+    },
+    {
+      "name": "laravel-security",
+      "path": ".laraskills/skills/laravel-security/SKILL.md",
+      "description": "Use this skill when building or auditing Laravel 13 applications for security. It covers mass assignment protection (Laravel 13 attributes), SQL injection prevention, XSS/PAO (PHP Attribute Output), CSRF, authentication (Breeze/Jetstream/Fortify), authorization (Gates/Polices), FormRequest validation, rate limiting, HTTP security headers, session security, CORS, file uploads, dependency auditing, APP_KEY rotation, and production hardening.",
+      "tags": [
+        "security",
+        "csrf",
+        "xss",
+        "gates",
+        "policies",
+        "rate-limiting"
+      ]
+    },
+    {
+      "name": "laravel-tdd",
+      "path": ".laraskills/skills/laravel-tdd/SKILL.md",
+      "description": "Use this skill when testing Laravel 13 applications. It covers Pest 4 installation and configuration, feature tests, model factories, HTTP tests, authentication tests, mocking with Laravel fakes, architecture tests, parallel testing, snapshot testing, Dusk browser tests, and CI integration. Target test split: 80% feature tests / 20% unit tests.",
+      "tags": [
+        "testing",
+        "tdd",
+        "pest",
+        "feature-tests",
+        "unit-tests"
+      ]
+    }
+  ]
+}

@@ -22,7 +22,7 @@ return new class extends Migration
 
         Schema::create('tipos_documentos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();

@@ -13,7 +13,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('tarjetero', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('tipo_linea', 50)->comment('bateria, lubricante, diferencial, neumatico, otro');
             $table->foreignId('id_marca')->nullable()->constrained('marcas');

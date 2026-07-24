@@ -27,7 +27,7 @@ return new class extends Migration
 
         Schema::create('tipos_conceptos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -94,7 +94,7 @@ return new class extends Migration
 
         Schema::create('inventario', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->text('descripcion')->nullable();
             $table->string('categoria', 100)->nullable();

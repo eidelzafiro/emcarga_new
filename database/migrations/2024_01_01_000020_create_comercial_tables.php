@@ -14,7 +14,7 @@ return new class extends Migration
         // Tabla de clientes
         Schema::create('clientes', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('razon_social', 255)->nullable();
             $table->string('nit', 50)->nullable();
@@ -33,7 +33,7 @@ return new class extends Migration
         // Tabla de lugares (origen/destino)
         Schema::create('lugares', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('provincia', 100)->nullable();
             $table->string('municipio', 100)->nullable();
@@ -64,7 +64,7 @@ return new class extends Migration
         Schema::create('acuerdos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_cliente')->constrained('clientes');
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->date('fecha_inicio');
             $table->date('fecha_fin')->nullable();

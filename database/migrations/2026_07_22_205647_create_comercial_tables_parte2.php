@@ -11,7 +11,7 @@ return new class extends Migration
         // Catálogos comerciales
         Schema::create('monedas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 10)->unique();
+            $table->string('codigo', 10)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('simbolo', 10)->nullable();
             $table->boolean('activo')->default(true);
@@ -20,7 +20,7 @@ return new class extends Migration
 
         Schema::create('productos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->text('descripcion')->nullable();
             $table->boolean('activo')->default(true);
@@ -29,7 +29,7 @@ return new class extends Migration
 
         Schema::create('tipos_cargas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -37,7 +37,7 @@ return new class extends Migration
 
         Schema::create('tipos_servicios', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -45,7 +45,7 @@ return new class extends Migration
 
         Schema::create('tipos_indicadores', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('unidad', 50)->nullable();
             $table->boolean('activo')->default(true);
@@ -124,7 +124,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_tipo_indicador')->constrained('tipos_indicadores');
             $table->integer('periodo')->comment('año');
-            $table->json('valores_mensuales')->nullable();
+            $table->longText('valores_mensuales')->nullable();
             $table->decimal('plan_periodo', 12, 2)->nullable();
             $table->decimal('ajuste_periodo', 12, 2)->nullable();
             $table->decimal('real_periodo_anterior', 12, 2)->nullable();

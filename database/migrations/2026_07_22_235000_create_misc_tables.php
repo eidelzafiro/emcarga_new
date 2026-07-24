@@ -13,7 +13,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('clientes_mm', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -21,7 +21,7 @@ return new class extends Migration
 
         Schema::create('tipos_aceites', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -30,7 +30,7 @@ return new class extends Migration
         Schema::create('tipos_entidad', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_organismo')->nullable()->constrained('organismos');
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -38,7 +38,7 @@ return new class extends Migration
 
         Schema::create('causas_gps', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -46,7 +46,7 @@ return new class extends Migration
 
         Schema::create('causas_multas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -54,7 +54,7 @@ return new class extends Migration
 
         Schema::create('elementos_gasto', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('subelemento', 100)->nullable();
             $table->boolean('activo')->default(true);
@@ -66,7 +66,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('choferes', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('ci', 20)->nullable()->unique();
             $table->foreignId('id_tractivo')->nullable()->constrained('tractivos');
@@ -81,7 +81,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('empleados', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('expediente', 50)->nullable()->unique();
             $table->foreignId('id_area')->nullable()->constrained('areas');

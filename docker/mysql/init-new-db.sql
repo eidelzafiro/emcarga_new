@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS emcarga_new
+  CHARACTER SET utf8
+  COLLATE utf8_unicode_ci;

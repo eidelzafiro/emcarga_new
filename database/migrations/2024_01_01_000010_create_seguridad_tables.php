@@ -20,7 +20,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('password'); // hash bcrypt de la contraseña anterior
-            $table->timestamp('fecha_cambio')->useCurrent();
+            $table->dateTime('fecha_cambio')->useCurrent();
 
             $table->index('user_id');
         });
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_registro')->nullable();
             $table->text('detalles')->nullable();
             $table->string('ip_address', 45)->nullable();
-            $table->timestamp('fecha_accion')->useCurrent();
+            $table->dateTime('fecha_accion')->useCurrent();
             $table->timestamps();
 
             $table->index(['user_id', 'fecha_accion']);

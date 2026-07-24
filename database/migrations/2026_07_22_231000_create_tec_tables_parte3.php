@@ -14,7 +14,7 @@ return new class extends Migration
 
         Schema::create('motivos_baja_bateria', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -22,7 +22,7 @@ return new class extends Migration
 
         Schema::create('motivos_entrada_taller', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -30,7 +30,7 @@ return new class extends Migration
 
         Schema::create('tipos_roturas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -38,7 +38,7 @@ return new class extends Migration
 
         Schema::create('clasificaciones_ordenes_taller', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -46,7 +46,7 @@ return new class extends Migration
 
         Schema::create('tipos_sistemas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -54,7 +54,7 @@ return new class extends Migration
 
         Schema::create('tipos_suspension', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -62,7 +62,7 @@ return new class extends Migration
 
         Schema::create('locales_electricos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -70,7 +70,7 @@ return new class extends Migration
 
         Schema::create('acciones_hotkeys', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->text('descripcion')->nullable();
             $table->boolean('activo')->default(true);
@@ -82,7 +82,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('arrastres', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('chapa', 50)->nullable();
             $table->foreignId('id_marca')->nullable()->constrained('marcas');
             $table->foreignId('id_tipo_equipo')->nullable()->constrained('tipos_equipos');

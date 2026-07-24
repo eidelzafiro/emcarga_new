@@ -2,19 +2,23 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
+        if (config('database.default') === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        }
         // ============================================================
         // Catálogos
         // ============================================================
 
         Schema::create('marcas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('tipo', 50)->nullable()->comment('motor, caja, diferencial, neumatico, bateria, tractor');
             $table->boolean('activo')->default(true);
@@ -23,7 +27,7 @@ return new class extends Migration
 
         Schema::create('modelos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->foreignId('id_marca')->constrained('marcas')->cascadeOnDelete();
             $table->string('tipo', 50)->nullable();
@@ -33,7 +37,7 @@ return new class extends Migration
 
         Schema::create('estados_componentes', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('tipo', 50)->nullable();
             $table->boolean('activo')->default(true);
@@ -42,7 +46,7 @@ return new class extends Migration
 
         Schema::create('paises', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 10)->unique();
+            $table->string('codigo', 10)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -50,7 +54,7 @@ return new class extends Migration
 
         Schema::create('tipos_lubricantes', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -58,7 +62,7 @@ return new class extends Migration
 
         Schema::create('tipos_causas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('tipo', 50)->nullable()->comment('aceite, rotura, baja');
             $table->boolean('activo')->default(true);
@@ -67,7 +71,7 @@ return new class extends Migration
 
         Schema::create('medidas_neumaticos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('medida', 100)->nullable();
             $table->boolean('activo')->default(true);
@@ -76,7 +80,7 @@ return new class extends Migration
 
         Schema::create('tipos_combustibles', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -84,7 +88,7 @@ return new class extends Migration
 
         Schema::create('destinos_agregados', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->boolean('activo')->default(true);
             $table->timestamps();
@@ -92,7 +96,7 @@ return new class extends Migration
 
         Schema::create('consecutivos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->integer('ultimo')->default(0);
             $table->string('formato', 50)->nullable();
@@ -104,7 +108,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('tipos_tractivos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->foreignId('id_marca')->nullable()->constrained('marcas');
             $table->foreignId('id_modelo')->nullable()->constrained('modelos');
@@ -216,7 +220,7 @@ return new class extends Migration
         // ============================================================
         Schema::create('otros_agregados', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('descripcion', 255);
             $table->string('numero_serie', 100)->nullable();
             $table->foreignId('id_marca')->nullable()->constrained('marcas');
@@ -238,15 +242,15 @@ return new class extends Migration
         // ============================================================
         Schema::create('medidores', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('ruta_folio', 100)->nullable();
             $table->string('metro', 100)->nullable();
             $table->boolean('prepago')->default(false);
             $table->string('tipo', 50)->nullable();
             $table->decimal('lectura_actual', 12, 2)->default(0);
             $table->decimal('factor', 8, 2)->nullable();
-            $table->json('lecturas_mensuales')->nullable();
-            $table->foreignId('id_unidad')->nullable()->constrained();
+            $table->longText('lecturas_mensuales')->nullable();
+            $table->foreignId('id_unidad')->nullable()->constrained('unidades');
             $table->boolean('activo')->default(true);
             $table->timestamps();
         });
@@ -264,7 +268,7 @@ return new class extends Migration
 
         Schema::create('equipos_electricos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('tipo', 50)->nullable();
             $table->decimal('potencia', 8, 2)->nullable();

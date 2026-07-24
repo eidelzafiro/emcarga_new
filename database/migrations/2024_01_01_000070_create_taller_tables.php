@@ -14,7 +14,7 @@ return new class extends Migration
         // Tipos de mantenimiento
         Schema::create('tipos_mantenimiento', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->text('descripcion')->nullable();
             $table->boolean('activo')->default(true);
@@ -25,7 +25,7 @@ return new class extends Migration
         // Subsistemas del vehículo
         Schema::create('subsistemas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->text('descripcion')->nullable();
             $table->boolean('activo')->default(true);
@@ -36,7 +36,7 @@ return new class extends Migration
         // Tipos de operaciones de taller
         Schema::create('tipos_operaciones', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->text('descripcion')->nullable();
             $table->boolean('activo')->default(true);
@@ -86,7 +86,7 @@ return new class extends Migration
         // Piezas y repuestos
         Schema::create('piezas', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('descripcion', 500)->nullable();
             $table->string('unidad_medida', 50)->nullable();
@@ -117,7 +117,7 @@ return new class extends Migration
         // Lubricantes
         Schema::create('lubricantes', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 50)->unique();
+            $table->string('codigo', 50)->nullable()->unique();
             $table->string('nombre', 255);
             $table->string('tipo', 100)->nullable();
             $table->string('viscosidad', 50)->nullable();

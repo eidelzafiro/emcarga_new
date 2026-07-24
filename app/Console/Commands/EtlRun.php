@@ -52,7 +52,7 @@ class EtlRun extends Command
             if ($solo && $solo !== $tabla) {
                 continue;
             }
-            if (in_array($tabla, $excluirDatos) && !$solo) {
+            if (in_array($tabla, $excluirDatos) && ! $solo) {
                 continue;
             }
 

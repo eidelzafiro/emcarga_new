@@ -67,9 +67,6 @@ return [
          * ================================================================
          */
 
-
-
-
         'clientes' => [
             'legacy' => 'com_clientes',
             'pk' => 'idcliente',
@@ -153,11 +150,6 @@ return [
             ],
         ],
 
-
-
-
-
-
         'lugares' => [
             'legacy' => 'com_lugares',
             'pk' => 'idlugar',
@@ -206,7 +198,6 @@ return [
                 'activo' => true,
             ],
         ],
-
 
         'tarifas' => [
             'legacy' => 'com_tarifas',
@@ -348,8 +339,6 @@ return [
             ],
         ],
 
-
-
         'combustibles_lubricantes' => [
             'legacy' => 'cont_comblubricantes',
             'pk' => 'idlubricantes',
@@ -363,18 +352,6 @@ return [
                 'importe_mn' => 0,
             ],
         ],
-
-
-
-
-
-
-
-
-
-
-
-
 
         'servicentros' => [
             'legacy' => 'cont_servicentros',
@@ -418,9 +395,6 @@ return [
          * ================================================================
          */
 
-
-
-
         'categorias_cargo' => [
             'legacy' => 'rh_tipocatcargos',
             'pk' => 'idtipocatcargos',
@@ -433,7 +407,6 @@ return [
                 'activo' => true,
             ],
         ],
-
 
         'firmas' => [
             'legacy' => 'rh_firmas',
@@ -467,8 +440,6 @@ return [
             ],
         ],
 
-
-
         'medios_proteccion' => [
             'legacy' => 'rh_mediosproteccion',
             'pk' => 'idmediosproteccion',
@@ -488,7 +459,6 @@ return [
                 'codigo' => 'codigo',
             ],
         ],
-
 
         'municipios' => [
             'legacy' => 'rh_municipios',
@@ -525,7 +495,6 @@ return [
             ],
         ],
 
-
         'perfiles_rh' => [
             'legacy' => 'rh_perfiles',
             'pk' => 'idperfil',
@@ -537,7 +506,6 @@ return [
             ],
         ],
 
-
         'provincias' => [
             'legacy' => 'rh_provincias',
             'pk' => 'idprovincias',
@@ -545,8 +513,6 @@ return [
                 'nombprovincia' => 'nombre',
             ],
         ],
-
-
 
         'tipos_calificadores' => [
             'legacy' => 'rh_tipocalificadores',
@@ -831,7 +797,6 @@ return [
             ],
         ],
 
-
         'arrastres' => [
             'legacy' => 'tec_naves',
             'pk' => 'idnave',
@@ -852,9 +817,6 @@ return [
                 'fecha' => '1970-01-01',
             ],
         ],
-
-
-
 
         'clasificaciones_ordenes_taller' => [
             'legacy' => 'tec_tipoclasificacion',
@@ -1384,7 +1346,6 @@ return [
                 'nombre' => '',
             ],
         ],
-
 
         'vallas' => [
             'legacy' => 'tec_vallas',

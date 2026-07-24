@@ -35,14 +35,14 @@ class EtlMapeoTest extends TestCase
         ");
         foreach ($tablas as $t) {
             $cols = [];
-            $columnas = DB::select("
+            $columnas = DB::select('
                 SELECT COLUMN_NAME AS name, DATA_TYPE AS type,
                        IS_NULLABLE AS anulable,
                        COLUMN_DEFAULT AS `default`
                 FROM information_schema.COLUMNS
                 WHERE TABLE_SCHEMA = DATABASE()
                   AND TABLE_NAME = ?
-            ", [$t->name]);
+            ', [$t->name]);
             foreach ($columnas as $c) {
                 $cols[$c->name] = [
                     'tipo' => strtolower($c->type),

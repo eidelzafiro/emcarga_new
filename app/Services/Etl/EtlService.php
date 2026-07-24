@@ -160,6 +160,7 @@ class EtlService
                     $datos = $this->filaADatos($fila, $config, $pk);
                     if (array_key_exists('codigo', $datos) && ($datos['codigo'] === null || $datos['codigo'] === '')) {
                         $avisos[] = "{$nombre}#{$fila->{$pk}}: codigo vacío, omitido";
+
                         continue;
                     }
                     $datos['id'] = $fila->{$pk};
@@ -172,6 +173,7 @@ class EtlService
                 $datos = $this->filaADatos($fila, $config);
                 if (array_key_exists('codigo', $datos) && ($datos['codigo'] === null || $datos['codigo'] === '')) {
                     $avisos[] = "{$nombre}#?: codigo vacío, omitido";
+
                     continue;
                 }
                 unset($datos['id']);
@@ -196,7 +198,7 @@ class EtlService
         }
 
         foreach ($config['defaults'] ?? [] as $col => $valor) {
-            if (!array_key_exists($col, $datos)) {
+            if (! array_key_exists($col, $datos)) {
                 $datos[$col] = $valor;
             }
         }

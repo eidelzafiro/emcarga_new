@@ -1,29 +1,27 @@
 <template>
-  <div class="min-h-screen bg-surface-50">
+  <div class="min-h-screen bg-gray-50">
     <Toast position="top-right" />
 
-    <!-- Mobile overlay -->
     <div
       v-if="sidebarOpen && isMobile"
-      class="fixed inset-0 z-20 bg-black/50 lg:hidden"
+      class="fixed inset-0 z-20 bg-black/40 lg:hidden"
       @click="sidebarOpen = false"
     />
 
-    <!-- Sidebar -->
     <aside
-      class="fixed top-0 left-0 z-30 h-full bg-white border-r border-surface-200 shadow-sm sidebar-transition flex flex-col"
+      class="fixed top-0 left-0 z-30 h-full bg-white border-r border-gray-200 shadow-sm sidebar-transition flex flex-col"
       :class="sidebarOpen ? 'w-64' : 'w-0 lg:w-16'"
     >
-      <div class="flex items-center h-16 px-4 border-b border-surface-200 shrink-0">
+      <div class="flex items-center h-16 px-4 border-b border-gray-100 shrink-0">
         <div v-if="sidebarOpen || !isMobile" class="flex items-center gap-3 overflow-hidden">
           <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-            E
+            {{ appName.charAt(0).toUpperCase() }}
           </div>
-          <span v-show="sidebarOpen" class="font-semibold text-surface-900 whitespace-nowrap">EMCARGA</span>
+          <span v-show="sidebarOpen" class="font-semibold text-gray-900 whitespace-nowrap">{{ appName }}</span>
         </div>
         <button
           v-if="sidebarOpen"
-          class="ml-auto p-1.5 rounded-md text-surface-400 hover:text-surface-600 hover:bg-surface-100 lg:hidden"
+          class="ml-auto p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 lg:hidden"
           @click="sidebarOpen = false"
         >
           <i class="pi pi-times text-lg" />
@@ -34,9 +32,9 @@
         <PanelMenu :model="menuItems" class="border-0 !bg-transparent" />
       </nav>
 
-      <div class="hidden lg:flex items-center justify-center h-12 border-t border-surface-200 shrink-0">
+      <div class="hidden lg:flex items-center justify-center h-12 border-t border-gray-100 shrink-0">
         <button
-          class="p-1.5 rounded-md text-surface-400 hover:text-surface-600 hover:bg-surface-100"
+          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
           @click="toggleSidebar"
           v-tooltip.right="sidebarOpen ? 'Colapsar menú' : 'Expandir menú'"
         >
@@ -45,38 +43,36 @@
       </div>
     </aside>
 
-    <!-- Main content -->
     <div
       class="main-content-transition flex flex-col min-h-screen"
       :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'"
     >
-      <header class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-surface-200 shadow-xs">
+      <header class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200">
         <div class="flex items-center justify-between h-16 px-4 lg:px-6">
           <div class="flex items-center gap-3">
             <button
-              class="p-1.5 rounded-md text-surface-500 hover:text-surface-700 hover:bg-surface-100"
+              class="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
               @click="sidebarOpen = !sidebarOpen"
             >
               <i class="pi pi-bars text-lg" />
             </button>
-            <h1 v-if="pageTitle" class="text-lg font-semibold text-surface-800 hidden sm:block">
+            <h1 v-if="pageTitle" class="text-lg font-semibold text-gray-800 hidden sm:block">
               {{ pageTitle }}
             </h1>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1">
             <button
-              class="p-2 rounded-md text-surface-400 hover:text-surface-600 hover:bg-surface-100"
+              class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               @click="toggleDarkMode"
               v-tooltip.bottom="isDark ? 'Modo claro' : 'Modo oscuro'"
             >
               <i class="pi" :class="isDark ? 'pi-sun' : 'pi-moon'" />
             </button>
 
-            <!-- Notificaciones -->
             <div class="relative" ref="notificacionesRef">
               <button
-                class="p-2 rounded-md text-surface-400 hover:text-surface-600 hover:bg-surface-100 relative"
+                class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 relative"
                 @click="toggleNotificaciones"
                 v-tooltip.bottom="'Notificaciones'"
               >
@@ -86,10 +82,10 @@
 
               <div
                 v-if="notificacionesAbiertas"
-                class="absolute right-0 top-full mt-1 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-surface-200 z-50"
+                class="absolute right-0 top-full mt-1 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
               >
-                <div class="flex items-center justify-between px-4 py-3 border-b border-surface-100">
-                  <h3 class="text-sm font-semibold text-surface-700">Notificaciones</h3>
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <h3 class="text-sm font-semibold text-gray-700">Notificaciones</h3>
                   <button
                     v-if="pendientes > 0"
                     class="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
@@ -100,7 +96,7 @@
                 </div>
 
                 <div class="max-h-80 overflow-y-auto">
-                  <div v-if="notificaciones.length === 0" class="p-6 text-center text-sm text-surface-400">
+                  <div v-if="notificaciones.length === 0" class="p-6 text-center text-sm text-gray-400">
                     <i class="pi pi-inbox text-2xl mb-2 block" />
                     No hay notificaciones
                   </div>
@@ -108,7 +104,7 @@
                   <div
                     v-for="notif in notificaciones"
                     :key="notif.id"
-                    class="flex gap-3 px-4 py-3 cursor-pointer border-b border-surface-50 last:border-0 hover:bg-surface-50 transition-colors"
+                    class="flex gap-3 px-4 py-3 cursor-pointer border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
                     :class="{ 'bg-emerald-50/50': !notif.leida }"
                     @click="notif.url ? visitar(notif.url) : marcarLeida(notif)"
                   >
@@ -116,12 +112,12 @@
                       class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                       :class="claseIcono(notif.tipo)"
                     >
-                      <i :class="notif.icono" class="text-white text-sm" />
+                      <i :class="notif.icono || 'pi pi-bell'" class="text-white text-sm" />
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-surface-800 truncate">{{ notif.titulo }}</p>
-                      <p class="text-xs text-surface-500 truncate">{{ notif.cuerpo }}</p>
-                      <p class="text-xs text-surface-400 mt-0.5">{{ notif.creada }}</p>
+                      <p class="text-sm font-medium text-gray-800 truncate">{{ notif.titulo }}</p>
+                      <p class="text-xs text-gray-500 truncate">{{ notif.cuerpo }}</p>
+                      <p class="text-xs text-gray-400 mt-0.5">{{ notif.creada }}</p>
                     </div>
                     <div v-if="!notif.leida" class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-2" />
                   </div>
@@ -129,38 +125,37 @@
               </div>
             </div>
 
-            <!-- Usuario -->
             <div class="relative" ref="userMenuRef">
               <button
-                class="flex items-center gap-2 p-1.5 rounded-md hover:bg-surface-100"
+                class="flex items-center gap-2 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
                 @click="userMenuOpen = !userMenuOpen"
               >
                 <Avatar :label="iniciales" shape="circle" class="!bg-emerald-600 !text-white" size="small" />
-                <span class="hidden sm:block text-sm font-medium text-surface-700">{{ user?.name }}</span>
-                <i class="pi pi-chevron-down text-xs text-surface-400" />
+                <span class="hidden sm:block text-sm font-medium text-gray-700">{{ user?.name }}</span>
+                <i class="pi pi-chevron-down text-xs text-gray-400" />
               </button>
 
               <div
                 v-if="userMenuOpen"
-                class="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-lg border border-surface-200 py-1 z-50"
+                class="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
               >
-                <div class="px-4 py-2 border-b border-surface-100">
-                  <p class="text-sm font-medium text-surface-900">{{ user?.name }}</p>
-                  <p class="text-xs text-surface-500">{{ user?.email || user?.username }}</p>
+                <div class="px-4 py-2.5 border-b border-gray-100">
+                  <p class="text-sm font-medium text-gray-900">{{ user?.name }}</p>
+                  <p class="text-xs text-gray-500">{{ user?.email || user?.username }}</p>
                 </div>
                 <Link
                   :href="route('password.edit')"
-                  class="flex items-center gap-2 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50"
+                  class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <i class="pi pi-key text-surface-400" />
+                  <i class="pi pi-key text-gray-400" />
                   Cambiar contraseña
                 </Link>
-                <hr class="border-surface-100 my-1">
+                <hr class="border-gray-100 my-1">
                 <Link
                   :href="route('logout')"
                   method="post"
                   as="button"
-                  class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                  class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
                 >
                   <i class="pi pi-sign-out" />
                   Cerrar sesión
@@ -175,8 +170,8 @@
         <slot />
       </main>
 
-      <footer class="px-4 lg:px-6 py-3 text-center text-xs text-surface-400 border-t border-surface-100">
-        EMCARGA &copy; {{ new Date().getFullYear() }}
+      <footer class="px-4 lg:px-6 py-3 text-center text-xs text-gray-400 border-t border-gray-100">
+        {{ appName }} &copy; {{ new Date().getFullYear() }} — Sistema de Gestión Empresarial
       </footer>
     </div>
   </div>
@@ -185,6 +180,8 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
+
+const appName = computed(() => usePage().props.appName || 'Zafiro');
 import { route } from 'ziggy-js';
 import { useToast } from 'primevue/usetoast';
 
@@ -226,7 +223,7 @@ const cargarNotificaciones = async () => {
     notificaciones.value = data.items;
     pendientes.value = data.pendientes;
   } catch {
-    // Silencioso
+    //
   }
 };
 
@@ -237,7 +234,7 @@ const marcarLeida = async (notif) => {
     notif.leida = true;
     pendientes.value = Math.max(0, pendientes.value - 1);
   } catch {
-    // Silencioso
+    //
   }
 };
 
@@ -247,7 +244,7 @@ const marcarTodasLeidas = async () => {
     notificaciones.value.forEach((n) => (n.leida = true));
     pendientes.value = 0;
   } catch {
-    // Silencioso
+    //
   }
 };
 
@@ -263,14 +260,12 @@ const visitar = (url) => {
   router.visit(url);
 };
 
-const claseIcono = (tipo) => {
-  return {
-    success: 'bg-emerald-500',
-    error: 'bg-red-500',
-    warning: 'bg-amber-500',
-    info: 'bg-blue-500',
-  }[tipo] || 'bg-surface-400';
-};
+const claseIcono = (tipo) => ({
+  success: 'bg-emerald-500',
+  error: 'bg-red-500',
+  warning: 'bg-amber-500',
+  info: 'bg-blue-500',
+})[tipo] || 'bg-gray-400';
 
 onMounted(() => {
   checkMobile();
@@ -307,7 +302,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile);
   document.removeEventListener('click', handleClickOutside);
-
   if (window.Echo && user.value) {
     window.Echo.leaveChannel(`App.Models.User.${user.value.id}`);
   }
@@ -324,34 +318,20 @@ watch(isDark, (val) => {
 });
 
 watch(flash, (val) => {
-  if (val.success) {
-    toast.add({ severity: 'success', summary: 'Éxito', detail: val.success, life: 3000 });
-  }
-  if (val.error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: val.error, life: 5000 });
-  }
-  if (val.warning) {
-    toast.add({ severity: 'warn', summary: 'Advertencia', detail: val.warning, life: 4000 });
-  }
+  if (val.success) toast.add({ severity: 'success', summary: 'Éxito', detail: val.success, life: 3000 });
+  if (val.error) toast.add({ severity: 'error', summary: 'Error', detail: val.error, life: 5000 });
+  if (val.warning) toast.add({ severity: 'warn', summary: 'Advertencia', detail: val.warning, life: 4000 });
 }, { deep: true, immediate: true });
 
-const toggleDarkMode = () => {
-  isDark.value = !isDark.value;
-};
-
-const toggleSidebar = () => {
-  sidebarOpen.value = !sidebarOpen.value;
-};
+const toggleDarkMode = () => { isDark.value = !isDark.value; };
+const toggleSidebar = () => { sidebarOpen.value = !sidebarOpen.value; };
 
 const iniciales = computed(() => {
   if (!user.value?.name) return 'U';
   return user.value.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 });
 
-const pageTitle = computed(() => {
-  const title = page.props.title;
-  return title || '';
-});
+const pageTitle = computed(() => page.props.title || '');
 
 function transformarMenu(items, parentLabel = '') {
   return items.map((item) => {
@@ -372,9 +352,7 @@ function transformarMenu(items, parentLabel = '') {
       label,
       icon: icono,
       command: () => {
-        if (item.url) {
-          router.visit(item.url);
-        }
+        if (item.url) router.visit(item.url);
       },
     };
   });

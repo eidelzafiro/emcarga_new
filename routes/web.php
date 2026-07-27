@@ -642,5 +642,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('menu-items', MenuItemController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['menu-items' => 'menuItem']);
+        Route::post('menu-items/{menuItem}/toggle-visibility/{role}', [MenuItemController::class, 'toggleVisibility'])
+            ->name('menu-items.toggle-visibility');
     });
 });

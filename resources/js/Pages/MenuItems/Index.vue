@@ -3,21 +3,37 @@
     <Card>
       <template #title>Gestión del menú</template>
       <template #content>
-        <p class="text-sm text-surface-500 mb-4">
-          Ítems del menú de navegación. Los agrupadores (sin ruta) envuelven sub-ítems.
-          El permiso asignado controla qué perfiles ven cada ítem.
+        <p class="text-sm text-surface-500 mb-2">
+          Selecciona un perfil para ver y controlar qué ítems del menú le aparecen.
+          El orden es global (aplica a todos los perfiles).
         </p>
 
-        <div class="mb-4">
-          <Button
-            v-if="can('menus.crear')"
-            icon="pi pi-plus"
-            label="Nuevo ítem"
-            @click="abrirCrear"
-          />
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <div class="w-64">
+            <Select
+              v-model="rolSeleccionado"
+              :options="roles"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Ver menú por perfil…"
+              class="w-full"
+              :showClear="true"
+            />
+          </div>
+          <span v-if="rolSeleccionado" class="text-sm text-surface-500">
+            {{ itemsVisibles }} de {{ itemsFlat.length }} ítems visibles
+          </span>
+          <div class="ml-auto flex gap-2">
+            <Button
+              v-if="can('menus.crear')"
+              icon="pi pi-plus"
+              label="Nuevo ítem"
+              @click="abrirCrear"
+            />
+          </div>
         </div>
 
-        <DataTable :value="itemsFlat" stripedRows size="small" sortField="orden" :sortOrder="1">
+        <DataTable :value="itemsFiltrados" stripedRows size="small" sortField="orden" :sortOrder="1">
           <Column header="Ítem">
             <template #body="{ data }">
               <span
@@ -43,6 +59,12 @@
               <span v-else class="text-xs text-surface-400">—</span>
             </template>
           </Column>
+          <Column v-if="rolSeleccionado" header="Visible" style="width:90px">
+            <template #body="{ data }">
+              <i v-if="esVisible(data)" class="pi pi-check-circle text-green-500 text-lg" />
+              <i v-else class="pi pi-minus-circle text-surface-300 text-lg" />
+            </template>
+          </Column>
           <Column field="orden" header="Orden" style="width:80px" />
           <Column header="Activo" style="width:80px">
             <template #body="{ data }">
@@ -50,9 +72,19 @@
               <i v-else class="pi pi-times-circle text-red-400" />
             </template>
           </Column>
-          <Column header="Acciones" :exportable="false" style="width:120px">
+          <Column header="Acciones" :exportable="false" style="width:160px">
             <template #body="{ data }">
               <div class="flex gap-1">
+                <Button
+                  v-if="can('menus.editar') && rolSeleccionado && data.permission"
+                  :icon="esVisible(data) ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                  severity="secondary"
+                  text
+                  rounded
+                  size="small"
+                  :v-tooltip.left="esVisible(data) ? 'Ocultar del perfil' : 'Mostrar al perfil'"
+                  @click="toggleVisibilidad(data)"
+                />
                 <Button
                   v-if="can('menus.editar')"
                   icon="pi pi-pencil"
@@ -182,7 +214,7 @@
 </template>
 
 <script setup>
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -196,16 +228,21 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Card from 'primevue/card';
+import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
   items: Array,
   permisos: Array,
+  roles: Array,
   parents: Array,
 });
 
 const page = usePage();
+const toast = useToast();
 const permissions = computed(() => page.props.auth?.permissions ?? []);
 const can = (permiso) => permissions.value.includes(permiso);
+
+const rolSeleccionado = ref(null);
 
 function aplanar(nodos, depth = 0) {
   const result = [];
@@ -219,6 +256,24 @@ function aplanar(nodos, depth = 0) {
 }
 
 const itemsFlat = computed(() => aplanar(props.items));
+
+const rolActual = computed(() =>
+  props.roles.find((r) => r.id === rolSeleccionado.value)
+);
+
+function esVisible(item) {
+  if (!rolActual.value || !item.permission) return true;
+  return rolActual.value.permissions.includes(item.permission);
+}
+
+const itemsVisibles = computed(() =>
+  itemsFlat.value.filter((i) => esVisible(i)).length
+);
+
+const itemsFiltrados = computed(() => {
+  if (!rolSeleccionado.value) return itemsFlat.value;
+  return itemsFlat.value.filter((i) => esVisible(i));
+});
 
 const opcionesPadre = computed(() => {
   const build = (nodos, depth = 0) => {
@@ -255,6 +310,21 @@ const form = useForm({
 });
 
 const formEliminar = useForm({});
+
+const formToggle = useForm({});
+
+function toggleVisibilidad(item) {
+  if (!rolSeleccionado.value || !item.permission) return;
+  formToggle.post(route('menu-items.toggle-visibility', [item.id, rolSeleccionado.value]), {
+    preserveScroll: true,
+    onSuccess: () => {
+      const msg = esVisible(item)
+        ? `Ítem ocultado del perfil ${rolActual.value?.name}`
+        : `Ítem mostrado al perfil ${rolActual.value?.name}`;
+      toast.add({ severity: 'success', summary: msg, life: 3000 });
+    },
+  });
+}
 
 const abrirCrear = () => {
   editando.value = false;

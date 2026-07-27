@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\Bitacora;
 use App\Models\MenuItem;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class MenuItemController extends Controller
 {
@@ -20,12 +22,22 @@ class MenuItemController extends Controller
             ->get()
             ->map(fn (MenuItem $item) => $this->mapNode($item));
 
-        $permisos = \Spatie\Permission\Models\Permission::orderBy('name')->pluck('name');
+        $permisos = Permission::orderBy('name')->pluck('name');
+
+        $roles = Role::with('permissions:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Role $role) => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'permissions' => $role->permissions->pluck('name'),
+            ]);
 
         return Inertia::render('MenuItems/Index', [
             'title' => 'Gestión del menú',
             'items' => $items,
             'permisos' => $permisos,
+            'roles' => $roles,
             'parents' => MenuItem::orderBy('label')->get(['id', 'label', 'parent_id']),
         ]);
     }
@@ -71,6 +83,26 @@ class MenuItemController extends Controller
 
         return redirect()->route('menu-items.index')
             ->with('success', 'Ítem de menú eliminado correctamente.');
+    }
+
+    public function toggleVisibility(MenuItem $menuItem, Role $role)
+    {
+        $this->authorize('update', $menuItem);
+
+        $permiso = $menuItem->permission;
+        if (!$permiso) {
+            return back()->with('warning', 'Este ítem no tiene permiso asociado. Asígnese un permiso para controlar su visibilidad.');
+        }
+
+        if ($role->hasPermissionTo($permiso)) {
+            $role->revokePermissionTo($permiso);
+            Bitacora::registrar('ocultar_menu', "Ítem {$menuItem->label} ocultado del rol {$role->name}.");
+            return back()->with('success', "Ítem ocultado del rol {$role->name}.");
+        } else {
+            $role->givePermissionTo($permiso);
+            Bitacora::registrar('mostrar_menu', "Ítem {$menuItem->label} mostrado al rol {$role->name}.");
+            return back()->with('success', "Ítem mostrado al rol {$role->name}.");
+        }
     }
 
     private function mapNode(MenuItem $item): array

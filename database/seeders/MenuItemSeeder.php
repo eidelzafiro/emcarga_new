@@ -592,6 +592,7 @@ class MenuItemSeeder extends Seeder
             ['organismos.index', 'Organismos', 'pi pi-building', 'organismos.ver', 22],
             ['categorias-cargo.index', 'Categorías Cargo', 'pi pi-tags', 'categorias-cargo.ver', 23],
             ['grupos-escala.index', 'Grupos Escala', 'pi pi-chart-bar', 'grupos-escala.ver', 24],
+            ['entidades.index', 'Entidades', 'pi pi-building', 'entidades.ver', 25],
         ];
 
         foreach ($catItems as [$route, $label, $icon, $perm, $orden]) {

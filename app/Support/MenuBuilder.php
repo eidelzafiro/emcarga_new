@@ -52,6 +52,12 @@ class MenuBuilder
             return null;
         }
 
+        // Menú plano: si el agrupador tiene exactamente 1 hijo, lo
+        // promovemos al nivel superior (sin wrapper).
+        if (is_null($item->route) && count($hijos) === 1) {
+            return $hijos[0];
+        }
+
         return [
             'label' => $item->label,
             'icon' => $item->icon,

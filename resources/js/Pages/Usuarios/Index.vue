@@ -166,6 +166,20 @@
           />
           <small v-if="form.errors.role" class="text-red-500">{{ form.errors.role }}</small>
         </div>
+        <div v-if="entidades?.length">
+          <label class="block text-sm font-medium text-surface-700 mb-1">Entidades a las que tiene acceso</label>
+          <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-surface-300 rounded p-2">
+            <div v-for="ent in entidades" :key="ent.id" class="flex items-center gap-2">
+              <Checkbox
+                :inputId="'ent_' + ent.id"
+                :value="ent.id"
+                v-model="form.entidades"
+                :binary="false"
+              />
+              <label :for="'ent_' + ent.id" class="text-sm cursor-pointer">{{ ent.nombre }}</label>
+            </div>
+          </div>
+        </div>
       </form>
       <template #footer>
         <Button label="Cancelar" severity="secondary" @click="cerrarModales" />
@@ -232,6 +246,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 const props = defineProps({
   usuarios: Object,
   roles: Array,
+  entidades: Array,
   filters: Object,
 });
 
@@ -265,6 +280,7 @@ const form = useForm({
   password: '',
   role: '',
   id_entidad: null,
+  entidades: [],
   idgrupo: null,
 });
 
@@ -288,6 +304,7 @@ const abrirEditar = (usuario) => {
   form.password = '';
   form.role = usuario.roles[0]?.name ?? '';
   form.id_entidad = usuario.id_entidad;
+  form.entidades = usuario.entidades?.map((e) => e.id) ?? [];
   form.idgrupo = usuario.idgrupo;
   form.clearErrors();
   modalForm.value = true;

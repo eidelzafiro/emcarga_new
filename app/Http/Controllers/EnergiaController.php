@@ -12,6 +12,7 @@ class EnergiaController extends Controller
     {
         $medidores = Medidore::with('lecturas')
             ->when($request->search, fn ($q, $s) => $q->where('codigo', 'like', "%{$s}%"))
+            ->when(session('entidad_activa_id'), fn ($q, $id) => $q->where('id_entidad', $id))
             ->paginate(20);
 
         return Inertia::render('Energia/Index', [

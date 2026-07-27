@@ -500,6 +500,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('grupos-escala', GruposEscalaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::resource('entidades', EntidadesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
         // Reportes PDF/Excel (Fase 6)
         Route::prefix('reportes')->name('reportes.')->group(function () {
             Route::get('marcas', [ReportController::class, 'pdfMarcas'])->name('marcas');

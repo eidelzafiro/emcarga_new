@@ -116,6 +116,7 @@ class PermissionSeeder extends Seeder
             'organismos.ver', 'organismos.crear', 'organismos.editar', 'organismos.eliminar',
             'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
             'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
+            'entidades.ver', 'entidades.crear', 'entidades.editar', 'entidades.eliminar',
 
             'reportes.ver', 'reportes.generar',
 

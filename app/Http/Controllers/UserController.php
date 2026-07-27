@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Bitacora;
+use App\Models\Entidad;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,7 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $usuarios = User::with('roles:id,name')
+        $usuarios = User::with('roles:id,name', 'entidades:id,nombre')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -34,6 +35,7 @@ class UserController extends Controller
             'title' => 'Gestión de usuarios',
             'usuarios' => $usuarios,
             'roles' => Role::orderBy('name')->pluck('name'),
+            'entidades' => Entidad::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
             'filters' => $request->only(['search']),
         ]);
     }
@@ -57,6 +59,7 @@ class UserController extends Controller
             'password_temporal' => true,
         ]);
         $user->assignRole($datos['role']);
+        $user->entidades()->sync($datos['entidades'] ?? []);
 
         Bitacora::registrar('crear_usuario', "Usuario {$user->username} creado con perfil {$datos['role']}.");
 
@@ -80,6 +83,7 @@ class UserController extends Controller
             'idgrupo' => $datos['idgrupo'] ?? null,
         ]);
         $user->syncRoles([$datos['role']]);
+        $user->entidades()->sync($datos['entidades'] ?? []);
 
         Bitacora::registrar('editar_usuario', "Usuario {$user->username} actualizado (perfil {$datos['role']}).");
 

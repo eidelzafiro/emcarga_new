@@ -10,7 +10,8 @@ class HistorialTractivosController extends Controller
 {
     public function index()
     {
-        $items = HistorialTractivo::orderBy('id')->paginate(50);
+        $items = HistorialTractivo::when(session('entidad_activa_id'), fn ($q, $id) => $q->where('id_entidad', $id))
+            ->orderBy('id')->paginate(50);
 
         return Inertia::render('Catalogo/Index', [
             'items' => $items,

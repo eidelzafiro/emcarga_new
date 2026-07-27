@@ -40,6 +40,8 @@ class StoreUserRequest extends FormRequest
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', 'string', 'exists:roles,name'],
             'id_entidad' => ['nullable', 'integer', 'exists:entidades,id'],
+            'entidades' => ['nullable', 'array'],
+            'entidades.*' => ['integer', 'exists:entidades,id'],
             'idgrupo' => ['nullable', 'integer'],
         ];
     }

@@ -21,6 +21,7 @@ class PlantillaController extends Controller
                 $q->where('codigo', 'like', "%{$s}%")
                     ->orWhere('nombre', 'like', "%{$s}%");
             }))
+            ->when($entidadId = session('entidad_activa_id'), fn ($q) => $q->where('id_entidad', $entidadId))
             ->orderBy('nombre')
             ->paginate(20);
 
@@ -33,7 +34,7 @@ class PlantillaController extends Controller
 
         return Inertia::render('Plantilla/Index', [
             'title' => 'Plantilla',
-            'items' => $items,
+            'plantilla' => $items,
             'cargos' => $cargos,
             'entidades' => $entidades,
             'bolsa' => $bolsa,

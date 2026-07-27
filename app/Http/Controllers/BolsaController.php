@@ -18,6 +18,7 @@ class BolsaController extends Controller
                     ->orWhere('apellidos', 'like', "%{$s}%")
                     ->orWhere('ci', 'like', "%{$s}%");
             }))
+            ->when($entidadId = session('entidad_activa_id'), fn ($q) => $q->where('id_entidad', $entidadId))
             ->orderBy('nombre')
             ->paginate(20);
 
@@ -26,7 +27,7 @@ class BolsaController extends Controller
 
         return Inertia::render('Bolsa/Index', [
             'title' => 'Bolsa de Trabajo',
-            'items' => $items,
+            'bolsa' => $items,
             'cargos' => $cargos,
             'entidades' => $entidades,
             'filters' => $request->only(['search']),

@@ -124,3 +124,8 @@
 .main-content-transition {
     transition: margin-left 0.2s ease-in-out;
 }
+
+/* Oculta el cartel de licencia de PrimeUI (aparece cuando no hay key configurada) */
+#p-license-host {
+    display: none !important;
+}

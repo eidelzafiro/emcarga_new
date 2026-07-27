@@ -57,6 +57,7 @@ createInertiaApp({
         const app = createApp({ render: () => h(App, props) });
 
         app.use(PrimeVue, {
+            license: import.meta.env.VITE_PRIMEUI_LICENSE || false,
             theme: {
                 preset: ZafiroPreset,
                 options: {

@@ -230,7 +230,20 @@ class PermissionSeeder extends Seeder
 
         // Asignación de permisos por rol (perfiles legacy)
         $asignacion = [
-            'ADMIN' => $permisos,
+            'ADMIN' => [
+                'dashboard.ver',
+
+                'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
+                'usuarios.desbloquear', 'usuarios.restablecer',
+
+                'perfiles.ver', 'perfiles.editar',
+
+                'menus.ver', 'menus.crear', 'menus.editar', 'menus.eliminar',
+
+                'entidades.ver', 'entidades.crear', 'entidades.editar', 'entidades.eliminar',
+
+                'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
+            ],
             'TECNICA' => [
                 'dashboard.ver',
                 'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',

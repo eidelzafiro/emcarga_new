@@ -5,11 +5,8 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import PrimeVue from 'primevue/config';
-import { registerLicense } from '@primeui/license-manager';
 import AuraPreset from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
-
-registerLicense('MIT', 'primeui');
 
 // Preset Zafiro: color primario azul (identidad de la app)
 const ZafiroPreset = definePreset(AuraPreset, {

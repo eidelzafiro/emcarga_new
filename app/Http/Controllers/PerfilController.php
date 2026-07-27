@@ -12,9 +12,9 @@ use Spatie\Permission\Models\Role;
 class PerfilController extends Controller
 {
     /**
-     * Perfil protegido del sistema: no se puede eliminar ni renombrar.
+     * Perfiles protegidos del sistema: no se pueden eliminar ni renombrar.
      */
-    private const PERFIL_PROTEGIDO = 'ADMIN';
+    private const PERFILES_PROTEGIDOS = ['ADMIN', 'SUPERADMIN', 'ADMINISTRADOR'];
 
     /**
      * Lista los perfiles con sus permisos y cantidad de usuarios.
@@ -59,8 +59,8 @@ class PerfilController extends Controller
         $this->authorize('update', $perfil);
         $datos = $request->validated();
 
-        if ($perfil->name === self::PERFIL_PROTEGIDO && $datos['nombre'] !== self::PERFIL_PROTEGIDO) {
-            return back()->with('error', 'No se puede renombrar el perfil '.self::PERFIL_PROTEGIDO.'.');
+        if (in_array($perfil->name, self::PERFILES_PROTEGIDOS) && $datos['nombre'] !== $perfil->name) {
+            return back()->with('error', 'No se puede renombrar el perfil '.$perfil->name.'.');
         }
 
         $perfil->update(['name' => $datos['nombre']]);
@@ -80,8 +80,8 @@ class PerfilController extends Controller
     {
         $this->authorize('delete', $perfil);
 
-        if ($perfil->name === self::PERFIL_PROTEGIDO) {
-            return back()->with('error', 'No se puede eliminar el perfil '.self::PERFIL_PROTEGIDO.'.');
+        if (in_array($perfil->name, self::PERFILES_PROTEGIDOS)) {
+            return back()->with('error', 'No se puede eliminar el perfil '.$perfil->name.'.');
         }
 
         if ($perfil->users()->exists()) {

@@ -12,7 +12,7 @@
             <template #body="{ data }">
               <div class="flex items-center gap-2">
                 <span class="font-medium">{{ data.name }}</span>
-                <Tag v-if="data.name === 'ADMIN'" value="protegido" severity="secondary" size="small" />
+                <Tag v-if="['ADMIN','SUPERADMIN','ADMINISTRADOR'].includes(data.name)" value="protegido" severity="secondary" size="small" />
               </div>
             </template>
           </Column>
@@ -50,7 +50,7 @@
                   v-tooltip.left="'Editar'"
                 />
                 <Button
-                  v-if="can('perfiles.editar') && data.name !== 'ADMIN'"
+                  v-if="can('perfiles.editar') && !['ADMIN','SUPERADMIN','ADMINISTRADOR'].includes(data.name)"
                   icon="pi pi-trash"
                   severity="danger"
                   text
@@ -94,7 +94,7 @@
           <InputText
             v-model="form.nombre"
             class="w-full uppercase"
-            :disabled="editando && seleccionado?.name === 'ADMIN'"
+            :disabled="editando && ['ADMIN','SUPERADMIN','ADMINISTRADOR'].includes(seleccionado?.name)"
             :class="{ 'p-invalid': form.errors.nombre }"
           />
           <small v-if="form.errors.nombre" class="text-red-500">{{ form.errors.nombre }}</small>

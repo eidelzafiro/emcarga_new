@@ -395,6 +395,24 @@ return [
          * ================================================================
          */
 
+        /*
+         * Entidades organizativas (empresa filial, UEBs).
+         * Se preserva el id legacy (identidades) porque users.id_entidad
+         * y las tablas operativas con idunidad apuntan a él.
+         * El codigo legacy ('151' repetido) no se migra: no es único.
+         */
+        'entidades' => [
+            'legacy' => 'rh_entidades',
+            'pk' => 'identidades',
+            'columnas' => [
+                'nombentidad' => 'nombre',
+                'abreviatura' => 'abreviatura',
+            ],
+            'defaults' => [
+                'activo' => true,
+            ],
+        ],
+
         'categorias_cargo' => [
             'legacy' => 'rh_tipocatcargos',
             'pk' => 'idtipocatcargos',

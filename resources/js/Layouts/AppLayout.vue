@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <Toast position="top-right" />
 
     <div
@@ -9,19 +9,17 @@
     />
 
     <aside
-      class="fixed top-0 left-0 z-30 h-full bg-white border-r border-gray-200 shadow-sm sidebar-transition flex flex-col"
+      class="fixed top-0 left-0 z-30 h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 shadow-sm sidebar-transition flex flex-col"
       :class="sidebarOpen ? 'w-64' : 'w-0 lg:w-16'"
     >
-      <div class="flex items-center h-16 px-4 border-b border-gray-100 shrink-0">
+      <div class="flex items-center h-16 px-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
         <div v-if="sidebarOpen || !isMobile" class="flex items-center gap-3 overflow-hidden">
-          <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-            {{ appName.charAt(0).toUpperCase() }}
-          </div>
-          <span v-show="sidebarOpen" class="font-semibold text-gray-900 whitespace-nowrap">{{ appName }}</span>
+          <img src="/images/zafiro-icon.png" alt="Zafiro" class="w-8 h-8 rounded-lg bg-white border border-gray-200 dark:border-gray-700 p-0.5 shrink-0" />
+          <span v-show="sidebarOpen" class="font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ appName }}</span>
         </div>
         <button
           v-if="sidebarOpen"
-          class="ml-auto p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 lg:hidden"
+          class="ml-auto p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
           @click="sidebarOpen = false"
         >
           <i class="pi pi-times text-lg" />
@@ -32,9 +30,9 @@
         <PanelMenu :model="menuItems" class="border-0 !bg-transparent" />
       </nav>
 
-      <div class="hidden lg:flex items-center justify-center h-12 border-t border-gray-100 shrink-0">
+      <div class="hidden lg:flex items-center justify-center h-12 border-t border-gray-100 dark:border-gray-800 shrink-0">
         <button
-          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
           @click="toggleSidebar"
           v-tooltip.right="sidebarOpen ? 'Colapsar menú' : 'Expandir menú'"
         >
@@ -47,23 +45,58 @@
       class="main-content-transition flex flex-col min-h-screen"
       :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'"
     >
-      <header class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+      <header class="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
         <div class="flex items-center justify-between h-16 px-4 lg:px-6">
           <div class="flex items-center gap-3">
             <button
-              class="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              class="p-1.5 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               @click="sidebarOpen = !sidebarOpen"
             >
               <i class="pi pi-bars text-lg" />
             </button>
-            <h1 v-if="pageTitle" class="text-lg font-semibold text-gray-800 hidden sm:block">
+            <h1 v-if="pageTitle" class="text-lg font-semibold text-gray-800 dark:text-gray-100 hidden sm:block">
               {{ pageTitle }}
             </h1>
           </div>
 
           <div class="flex items-center gap-1">
+            <!-- Contexto de trabajo: entidad activa + fecha de operaciones -->
+            <div v-if="contexto" class="flex items-center gap-2 mr-1">
+              <Select
+                v-if="contexto.entidades.length > 1"
+                v-model="entidadSeleccionada"
+                :options="contexto.entidades"
+                optionLabel="abreviatura"
+                optionValue="id"
+                size="small"
+                class="w-36 lg:w-44"
+                :loading="cambiandoEntidad"
+                v-tooltip.bottom="'Entidad activa'"
+                @change="cambiarEntidad"
+              />
+              <span
+                v-else-if="contexto.entidadActiva"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-semibold whitespace-nowrap"
+                v-tooltip.bottom="contexto.entidadActiva.nombre"
+              >
+                <i class="pi pi-building text-xs" />
+                {{ contexto.entidadActiva.abreviatura }}
+              </span>
+
+              <DatePicker
+                v-model="fechaOperaciones"
+                dateFormat="dd/mm/yy"
+                showIcon
+                iconDisplay="input"
+                size="small"
+                class="w-32 lg:w-36 hidden sm:block"
+                v-tooltip.bottom="'Fecha de operaciones'"
+                @date-select="cambiarFechaOperaciones"
+              />
+            </div>
+
             <button
-              class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              class="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               @click="toggleDarkMode"
               v-tooltip.bottom="isDark ? 'Modo claro' : 'Modo oscuro'"
             >
@@ -72,7 +105,7 @@
 
             <div class="relative" ref="notificacionesRef">
               <button
-                class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 relative"
+                class="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 relative"
                 @click="toggleNotificaciones"
                 v-tooltip.bottom="'Notificaciones'"
               >
@@ -82,13 +115,13 @@
 
               <div
                 v-if="notificacionesAbiertas"
-                class="absolute right-0 top-full mt-1 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                class="absolute right-0 top-full mt-1 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
               >
-                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                  <h3 class="text-sm font-semibold text-gray-700">Notificaciones</h3>
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Notificaciones</h3>
                   <button
                     v-if="pendientes > 0"
-                    class="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                    class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                     @click="marcarTodasLeidas"
                   >
                     Marcar todas leídas
@@ -96,7 +129,7 @@
                 </div>
 
                 <div class="max-h-80 overflow-y-auto">
-                  <div v-if="notificaciones.length === 0" class="p-6 text-center text-sm text-gray-400">
+                  <div v-if="notificaciones.length === 0" class="p-6 text-center text-sm text-gray-400 dark:text-gray-500">
                     <i class="pi pi-inbox text-2xl mb-2 block" />
                     No hay notificaciones
                   </div>
@@ -104,8 +137,8 @@
                   <div
                     v-for="notif in notificaciones"
                     :key="notif.id"
-                    class="flex gap-3 px-4 py-3 cursor-pointer border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
-                    :class="{ 'bg-emerald-50/50': !notif.leida }"
+                    class="flex gap-3 px-4 py-3 cursor-pointer border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    :class="{ 'bg-blue-50/50 dark:bg-blue-950/30': !notif.leida }"
                     @click="notif.url ? visitar(notif.url) : marcarLeida(notif)"
                   >
                     <div
@@ -115,11 +148,11 @@
                       <i :class="notif.icono || 'pi pi-bell'" class="text-white text-sm" />
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-800 truncate">{{ notif.titulo }}</p>
-                      <p class="text-xs text-gray-500 truncate">{{ notif.cuerpo }}</p>
-                      <p class="text-xs text-gray-400 mt-0.5">{{ notif.creada }}</p>
+                      <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{{ notif.titulo }}</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ notif.cuerpo }}</p>
+                      <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ notif.creada }}</p>
                     </div>
-                    <div v-if="!notif.leida" class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-2" />
+                    <div v-if="!notif.leida" class="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-2" />
                   </div>
                 </div>
               </div>
@@ -127,35 +160,35 @@
 
             <div class="relative" ref="userMenuRef">
               <button
-                class="flex items-center gap-2 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                class="flex items-center gap-2 p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 @click="userMenuOpen = !userMenuOpen"
               >
-                <Avatar :label="iniciales" shape="circle" class="!bg-emerald-600 !text-white" size="small" />
-                <span class="hidden sm:block text-sm font-medium text-gray-700">{{ user?.name }}</span>
-                <i class="pi pi-chevron-down text-xs text-gray-400" />
+                <Avatar :label="iniciales" shape="circle" class="!bg-blue-600 !text-white" size="small" />
+                <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-200">{{ user?.name }}</span>
+                <i class="pi pi-chevron-down text-xs text-gray-400 dark:text-gray-500" />
               </button>
 
               <div
                 v-if="userMenuOpen"
-                class="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                class="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
               >
-                <div class="px-4 py-2.5 border-b border-gray-100">
-                  <p class="text-sm font-medium text-gray-900">{{ user?.name }}</p>
-                  <p class="text-xs text-gray-500">{{ user?.email || user?.username }}</p>
+                <div class="px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user?.name }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ user?.email || user?.username }}</p>
                 </div>
                 <Link
                   :href="route('password.edit')"
-                  class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <i class="pi pi-key text-gray-400" />
                   Cambiar contraseña
                 </Link>
-                <hr class="border-gray-100 my-1">
+                <hr class="border-gray-100 dark:border-gray-700 my-1">
                 <Link
                   :href="route('logout')"
                   method="post"
                   as="button"
-                  class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
+                  class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 w-full text-left transition-colors"
                 >
                   <i class="pi pi-sign-out" />
                   Cerrar sesión
@@ -170,7 +203,7 @@
         <slot />
       </main>
 
-      <footer class="px-4 lg:px-6 py-3 text-center text-xs text-gray-400 border-t border-gray-100">
+      <footer class="px-4 lg:px-6 py-3 text-center text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800">
         {{ appName }} &copy; {{ new Date().getFullYear() }} — Sistema de Gestión Empresarial
       </footer>
     </div>
@@ -189,7 +222,43 @@ const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const menu = computed(() => page.props.menu ?? []);
 const flash = computed(() => page.props.flash ?? {});
+const contexto = computed(() => page.props.contexto ?? null);
 const toast = useToast();
+
+// Contexto de trabajo: entidad activa + fecha de operaciones
+const entidadSeleccionada = ref(page.props.contexto?.entidadActiva?.id ?? null);
+const fechaOperaciones = ref(parseFechaLocal(page.props.contexto?.fechaOperaciones));
+const cambiandoEntidad = ref(false);
+
+function parseFechaLocal(valor) {
+  if (!valor) return null;
+  const [y, m, d] = String(valor).slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
+function aIsoLocal(fecha) {
+  if (!(fecha instanceof Date) || isNaN(fecha)) return null;
+  const y = fecha.getFullYear();
+  const m = String(fecha.getMonth() + 1).padStart(2, '0');
+  const d = String(fecha.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+const cambiarEntidad = () => {
+  if (!entidadSeleccionada.value || entidadSeleccionada.value === page.props.contexto?.entidadActiva?.id) return;
+  cambiandoEntidad.value = true;
+  router.post(route('contexto.entidad'), { entidad_id: entidadSeleccionada.value }, {
+    preserveScroll: true,
+    onFinish: () => { cambiandoEntidad.value = false; },
+  });
+};
+
+const cambiarFechaOperaciones = (valor) => {
+  const iso = aIsoLocal(valor);
+  if (!iso || iso === page.props.contexto?.fechaOperaciones) return;
+  router.post(route('contexto.fecha-operaciones'), { fecha: iso }, { preserveScroll: true });
+};
 
 const sidebarOpen = ref(true);
 const userMenuOpen = ref(false);
@@ -335,7 +404,7 @@ const pageTitle = computed(() => page.props.title || '');
 
 function transformarMenu(items, parentLabel = '') {
   return items.map((item) => {
-    const icono = item.icono || 'pi pi-circle';
+    const icono = item.icon || 'pi pi-circle';
     const label = item.label;
 
     if (item.children && item.children.length > 0) {

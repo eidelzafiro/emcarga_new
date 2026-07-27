@@ -53,7 +53,7 @@ class MigrarUserPassword extends Command
             'username' => mb_strtoupper(trim($legacy->login)),
             'email' => null,
             'password' => Hash::make($plain),
-            'idunidad' => $legacy->idunidad ?: null,
+            'id_entidad' => $legacy->idunidad ?: null,
             'bloqueado' => (bool) $legacy->bloqueado,
             'intentos_fallidos' => 0,
             'fecha_cambio_password' => $legacy->fpass,

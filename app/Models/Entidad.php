@@ -15,6 +15,7 @@ class Entidad extends Model
     protected $fillable = [
         'codigo',
         'nombre',
+        'abreviatura',
         'id_area',
         'activo',
     ];
@@ -29,5 +30,21 @@ class Entidad extends Model
     public function area(): BelongsTo
     {
         return $this->belongsTo(Area::class, 'id_area');
+    }
+
+    /**
+     * Usuarios que tienen esta entidad como principal.
+     */
+    public function usuarios(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(User::class, 'id_entidad');
+    }
+
+    /**
+     * Usuarios con acceso a esta entidad vía pivote multi-entidad.
+     */
+    public function usuariosConAcceso(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'entidad_user')->withTimestamps();
     }
 }

@@ -264,7 +264,7 @@ const form = useForm({
   email: '',
   password: '',
   role: '',
-  idunidad: null,
+  id_entidad: null,
   idgrupo: null,
 });
 
@@ -287,7 +287,7 @@ const abrirEditar = (usuario) => {
   form.email = usuario.email ?? '';
   form.password = '';
   form.role = usuario.roles[0]?.name ?? '';
-  form.idunidad = usuario.idunidad;
+  form.id_entidad = usuario.id_entidad;
   form.idgrupo = usuario.idgrupo;
   form.clearErrors();
   modalForm.value = true;

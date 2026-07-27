@@ -73,7 +73,8 @@ class EtlService
                     'username' => mb_strtoupper(trim($legacy->login)),
                     'email' => null,
                     'password' => Hash::make($plain),
-                    'idunidad' => $legacy->idunidad ?: null,
+                    'id_entidad' => $legacy->idunidad ?: null,
+                    'fecha_operaciones' => $legacy->foperaciones,
                     'bloqueado' => (bool) $legacy->bloqueado,
                     'intentos_fallidos' => 0,
                     'fecha_cambio_password' => $legacy->fpass,
@@ -222,6 +223,55 @@ class EtlService
             $id = $datos['id'] ?? '?';
             $avisos[] = "{$tabla}#{$id}: {$e->getMessage()}";
         }
+    }
+
+    /**
+     * Siembra la pivote entidad_user tras migrar usuarios y entidades:
+     * - cada usuario con su entidad principal (users.id_entidad)
+     * - los ADMIN con acceso a todas las entidades activas
+     *
+     * Repetible: insertOrIgnore respeta la unique (user_id, entidad_id).
+     */
+    public function sembrarPivoteEntidades(): void
+    {
+        $ahora = now();
+
+        $porEntidadPrincipal = User::whereNotNull('id_entidad')
+            ->get(['id', 'id_entidad'])
+            ->map(fn (User $u) => [
+                'user_id' => $u->id,
+                'entidad_id' => $u->id_entidad,
+                'created_at' => $ahora,
+                'updated_at' => $ahora,
+            ])
+            ->all();
+
+        $entidadesActivas = DB::table('entidades')->where('activo', true)->pluck('id');
+        $admins = User::role('ADMIN')->get(['id']);
+
+        $deAdmins = [];
+        foreach ($admins as $admin) {
+            foreach ($entidadesActivas as $entidadId) {
+                $deAdmins[] = [
+                    'user_id' => $admin->id,
+                    'entidad_id' => $entidadId,
+                    'created_at' => $ahora,
+                    'updated_at' => $ahora,
+                ];
+            }
+        }
+
+        $filas = array_merge($porEntidadPrincipal, $deAdmins);
+
+        foreach (array_chunk($filas, 500) as $lote) {
+            DB::table('entidad_user')->insertOrIgnore($lote);
+        }
+
+        $this->reporte['entidad_user'] = [
+            'legacy' => count($filas),
+            'nueva' => (int) DB::table('entidad_user')->count(),
+            'avisos' => [],
+        ];
     }
 
     /**

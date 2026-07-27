@@ -39,7 +39,7 @@ class StoreUserRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', 'string', 'exists:roles,name'],
-            'idunidad' => ['nullable', 'integer'],
+            'id_entidad' => ['nullable', 'integer', 'exists:entidades,id'],
             'idgrupo' => ['nullable', 'integer'],
         ];
     }

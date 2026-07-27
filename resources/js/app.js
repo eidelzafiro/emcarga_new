@@ -6,6 +6,26 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import PrimeVue from 'primevue/config';
 import AuraPreset from '@primeuix/themes/aura';
+import { definePreset } from '@primeuix/themes';
+
+// Preset Zafiro: color primario azul (identidad de la app)
+const ZafiroPreset = definePreset(AuraPreset, {
+    semantic: {
+        primary: {
+            50: '#eff6ff',
+            100: '#dbeafe',
+            200: '#bfdbfe',
+            300: '#93c5fd',
+            400: '#60a5fa',
+            500: '#3b82f6',
+            600: '#2563eb',
+            700: '#1d4ed8',
+            800: '#1e40af',
+            900: '#1e3a5f',
+            950: '#172554',
+        },
+    },
+});
 
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -20,6 +40,7 @@ import ToastService from 'primevue/toastservice';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
 import Password from 'primevue/password';
+import DatePicker from 'primevue/datepicker';
 import ToggleSwitch from 'primevue/toggleswitch';
 import PanelMenu from 'primevue/panelmenu';
 import Avatar from 'primevue/avatar';
@@ -37,7 +58,7 @@ createInertiaApp({
 
         app.use(PrimeVue, {
             theme: {
-                preset: AuraPreset,
+                preset: ZafiroPreset,
                 options: {
                     darkModeSelector: '.p-dark',
                 },
@@ -97,6 +118,7 @@ createInertiaApp({
         app.component('Card', Card);
         app.component('InputNumber', InputNumber);
         app.component('Password', Password);
+        app.component('DatePicker', DatePicker);
         app.component('ToggleSwitch', ToggleSwitch);
         app.component('PanelMenu', PanelMenu);
         app.component('Avatar', Avatar);

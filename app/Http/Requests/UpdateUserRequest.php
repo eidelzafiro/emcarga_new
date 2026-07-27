@@ -41,7 +41,7 @@ class UpdateUserRequest extends FormRequest
             'username' => ['required', 'string', 'max:100', 'alpha_dash', Rule::unique('users', 'username')->ignore($userId)],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'role' => ['required', 'string', 'exists:roles,name'],
-            'idunidad' => ['nullable', 'integer'],
+            'id_entidad' => ['nullable', 'integer', 'exists:entidades,id'],
             'idgrupo' => ['nullable', 'integer'],
         ];
     }

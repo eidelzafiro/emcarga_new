@@ -124,7 +124,7 @@
                     v-model="form.permisos"
                     type="checkbox"
                     :value="permiso"
-                    class="rounded border-surface-300 text-emerald-600 focus:ring-emerald-500"
+                    class="rounded border-surface-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span>{{ permiso.split('.')[1] }}</span>
                 </label>

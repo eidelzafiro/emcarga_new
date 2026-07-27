@@ -52,7 +52,7 @@ class UserController extends Controller
             'username' => strtoupper($datos['username']),
             'email' => $datos['email'] ?? null,
             'password' => $datos['password'],
-            'idunidad' => $datos['idunidad'] ?? null,
+            'id_entidad' => $datos['id_entidad'] ?? null,
             'idgrupo' => $datos['idgrupo'] ?? null,
             'password_temporal' => true,
         ]);
@@ -76,7 +76,7 @@ class UserController extends Controller
             'name' => $datos['name'],
             'username' => strtoupper($datos['username']),
             'email' => $datos['email'] ?? null,
-            'idunidad' => $datos['idunidad'] ?? null,
+            'id_entidad' => $datos['id_entidad'] ?? null,
             'idgrupo' => $datos['idgrupo'] ?? null,
         ]);
         $user->syncRoles([$datos['role']]);

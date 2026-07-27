@@ -43,6 +43,15 @@ class ConsecutivosController extends Controller
         ];
     }
 
+    /**
+     * Los consecutivos son la excepción: el código ES el dato de negocio
+     * (identifica el formato de numeración), así que se edita a mano.
+     */
+    protected function usaCodigoManual(): bool
+    {
+        return true;
+    }
+
     protected function getValidationRules($id = null): array
     {
         $table = 'consecutivos';

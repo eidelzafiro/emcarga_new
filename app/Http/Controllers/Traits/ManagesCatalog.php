@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Traits;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 trait ManagesCatalog
@@ -28,17 +30,39 @@ trait ManagesCatalog
         return ['codigo', 'nombre'];
     }
 
+    /**
+     * Si el catálogo maneja el código manualmente (p.ej. Consecutivos,
+     * donde el código ES el dato de negocio), se mantiene como input
+     * del usuario. Por defecto el código es automático y correlativo.
+     */
+    protected function usaCodigoManual(): bool
+    {
+        return false;
+    }
+
     protected function getValidationRules($id = null): array
     {
-        $model = $this->getModelClass();
-        $table = (new $model)->getTable();
-        $unique = $id ? "unique:{$table},codigo,{$id}" : "unique:{$table},codigo";
-
         return [
-            'codigo' => "required|string|max:50|{$unique}",
             'nombre' => 'required|string|max:255',
             'activo' => 'boolean',
         ];
+    }
+
+    /**
+     * Código correlativo automático por tabla:
+     * max valor numérico existente + 1, con padding de 2 dígitos.
+     * La unique de la columna protege ante creaciones concurrentes.
+     */
+    protected function generarCodigo(): string
+    {
+        $model = $this->getModelClass();
+        $table = (new $model)->getTable();
+
+        $max = DB::table($table)
+            ->selectRaw('MAX(CAST(codigo AS UNSIGNED)) as max_cod')
+            ->value('max_cod');
+
+        return str_pad((string) ((int) $max + 1), 2, '0', STR_PAD_LEFT);
     }
 
     public function index(Request $request)
@@ -61,11 +85,12 @@ trait ManagesCatalog
             'catalogConfig' => [
                 'route' => $this->getRouteName(),
                 'title' => $this->getTitle(),
+                'codigoManual' => $this->usaCodigoManual(),
                 'fields' => array_merge(
-                    ['codigo' => ['label' => 'Código', 'type' => 'text', 'required' => true]],
                     ['nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true]],
                     $this->getExtraFields()
                 ),
+                'extra' => $this->getExtraFields(),
             ],
         ]);
     }
@@ -74,6 +99,10 @@ trait ManagesCatalog
     {
         $model = $this->getModelClass();
         $data = $request->validate($this->getValidationRules());
+
+        if (! $this->usaCodigoManual() && Schema::hasColumn((new $model)->getTable(), 'codigo')) {
+            $data['codigo'] = $this->generarCodigo();
+        }
 
         $model::create($data);
 

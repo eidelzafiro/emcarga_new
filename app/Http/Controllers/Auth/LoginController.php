@@ -33,9 +33,11 @@ class LoginController extends Controller
         $credenciales = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
+            'fecha_operaciones' => ['nullable', 'date_format:Y-m-d'],
         ], [
             'username.required' => 'El usuario es obligatorio.',
             'password.required' => 'La contraseña es obligatoria.',
+            'fecha_operaciones.date_format' => 'La fecha de operaciones no es válida.',
         ]);
 
         // Los usernames se guardan en mayúsculas (paridad con el legacy)
@@ -76,8 +78,19 @@ class LoginController extends Controller
         // Acceso concedido: reiniciar contador y registrar el acceso
         $user->update(['intentos_fallidos' => 0, 'ultimo_login' => now()]);
 
+        // Fecha de operaciones: la elegida en el login (o la de hoy).
+        // Se persiste en el usuario (paridad con cod_usuarios.foperaciones).
+        $fechaOperaciones = $credenciales['fecha_operaciones'] ?? now()->toDateString();
+        if ($user->fecha_operaciones?->toDateString() !== $fechaOperaciones) {
+            $user->update(['fecha_operaciones' => $fechaOperaciones]);
+        }
+
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+
+        // Contexto de trabajo en sesión (el middleware EstablecerContextoTrabajo
+        // completa la entidad activa en el siguiente request)
+        $request->session()->put('fecha_operaciones', $fechaOperaciones);
 
         Bitacora::registrar('login', 'Inicio de sesión exitoso.', $user->id);
 

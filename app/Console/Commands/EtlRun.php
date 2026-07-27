@@ -63,6 +63,13 @@ class EtlRun extends Command
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
+        // Pivote multi-entidad: requiere usuarios + entidades ya migrados
+        if (! $solo) {
+            $this->info('Sembrando pivote entidad_user...');
+            $etl->sembrarPivoteEntidades();
+            $this->mostrarResultado($etl->getReporte(), 'entidad_user');
+        }
+
         $this->newLine();
         $this->info('ETL finalizado. Ejecute php artisan emcarga:etl --validar para verificar conteos.');
 

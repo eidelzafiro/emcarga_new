@@ -45,7 +45,7 @@
                 :key="r.value"
                 @click="periodoActivo = r.value"
                 class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors"
-                :class="periodoActivo === r.value ? 'bg-emerald-50 text-emerald-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'"
+                :class="periodoActivo === r.value ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'"
               >
                 {{ r.label }}
               </button>
@@ -86,7 +86,7 @@
             <h3 class="text-sm font-semibold text-gray-900">Últimos movimientos</h3>
             <p class="text-xs text-gray-500 mt-0.5">Listado de las últimas operaciones registradas</p>
           </div>
-          <button class="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors">
+          <button class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
             Ver todos
             <i class="pi pi-arrow-right ml-1 text-xs" />
           </button>

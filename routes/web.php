@@ -30,6 +30,7 @@ use App\Http\Controllers\ConciliacionesController;
 use App\Http\Controllers\ConfiguracionesModeloController;
 use App\Http\Controllers\ConsecutivosController;
 use App\Http\Controllers\ContenedoresController;
+use App\Http\Controllers\ContextoTrabajoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemandasController;
 use App\Http\Controllers\DescuentosEmpleadosController;
@@ -188,6 +189,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('perfil/cambiar-password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('perfil/cambiar-password', [PasswordController::class, 'update'])->name('password.update');
+
+    // Contexto de trabajo: entidad activa y fecha de operaciones
+    Route::post('contexto/entidad', [ContextoTrabajoController::class, 'cambiarEntidad'])->name('contexto.entidad');
+    Route::post('contexto/fecha-operaciones', [ContextoTrabajoController::class, 'cambiarFechaOperaciones'])->name('contexto.fecha-operaciones');
 
     // API de KPIs (también accesible con password temporal para el dashboard)
     Route::get('api/kpis', [DashboardController::class, 'kpis'])

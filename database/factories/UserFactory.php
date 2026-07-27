@@ -31,7 +31,7 @@ class UserFactory extends Factory
             'username' => strtoupper(str_replace('.', '', fake()->unique()->userName())),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
-            'idunidad' => null,
+            'id_entidad' => null,
             'idgrupo' => null,
             'bloqueado' => false,
             'intentos_fallidos' => 0,

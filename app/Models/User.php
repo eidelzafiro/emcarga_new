@@ -28,7 +28,8 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
-        'idunidad',
+        'id_entidad',
+        'fecha_operaciones',
         'idgrupo',
         'bloqueado',
         'intentos_fallidos',
@@ -61,6 +62,7 @@ class User extends Authenticatable
             'intentos_fallidos' => 'integer',
             'ultimo_login' => 'datetime',
             'fecha_cambio_password' => 'datetime',
+            'fecha_operaciones' => 'date',
         ];
     }
 
@@ -71,6 +73,59 @@ class User extends Authenticatable
     public function estaBloqueado(): bool
     {
         return $this->bloqueado || $this->intentos_fallidos >= self::MAX_INTENTOS_LOGIN;
+    }
+
+    /**
+     * Entidad principal del usuario (su "unidad" en el legacy).
+     */
+    public function entidad(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
+    }
+
+    /**
+     * Entidades a las que el usuario tiene acceso (pivote multi-entidad).
+     */
+    public function entidades(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Entidad::class, 'entidad_user')->withTimestamps();
+    }
+
+    /**
+     * Entidades que el usuario puede seleccionar como contexto de trabajo:
+     * todas las activas si es ADMIN; si no, la pivote + su entidad principal.
+     *
+     * @return \Illuminate\Support\Collection<int, Entidad>
+     */
+    public function entidadesAcceso(): \Illuminate\Support\Collection
+    {
+        if ($this->hasRole('ADMIN')) {
+            return Entidad::where('activo', true)->orderBy('nombre')->get();
+        }
+
+        return $this->entidades()
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get()
+            ->when($this->id_entidad, function ($coleccion) {
+                return $coleccion->contains('id', $this->id_entidad)
+                    ? $coleccion
+                    : $coleccion->push($this->entidad)->filter();
+            })
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * Verifica si el usuario puede trabajar con una entidad dada.
+     */
+    public function tieneAccesoAEntidad(?int $entidadId): bool
+    {
+        if (! $entidadId) {
+            return false;
+        }
+
+        return $this->entidadesAcceso()->contains('id', $entidadId);
     }
 
     public function passwordHistories(): HasMany

@@ -6,6 +6,8 @@
 
         <title inertia>{{ config('app.name', 'EMCARGA') }}</title>
 
+        <link rel="icon" type="image/png" href="{{ asset('images/zafiro-icon.png') }}">
+
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead

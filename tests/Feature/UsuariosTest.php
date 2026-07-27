@@ -33,7 +33,7 @@ class UsuariosTest extends TestCase
             'email' => null,
             'password' => 'temporal123',
             'role' => 'TECNICA',
-            'idunidad' => null,
+            'id_entidad' => null,
             'idgrupo' => null,
         ], $overrides);
     }

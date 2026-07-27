@@ -47,6 +47,8 @@ import Avatar from 'primevue/avatar';
 import Badge from 'primevue/badge';
 import Drawer from 'primevue/drawer';
 import Tooltip from 'primevue/tooltip';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
 const appName = import.meta.env.VITE_APP_NAME || 'EMCARGA';
 
@@ -125,6 +127,8 @@ createInertiaApp({
         app.component('Avatar', Avatar);
         app.component('Badge', Badge);
         app.component('Drawer', Drawer);
+        app.component('IconField', IconField);
+        app.component('InputIcon', InputIcon);
 
         app.use(plugin);
         app.mount(el);

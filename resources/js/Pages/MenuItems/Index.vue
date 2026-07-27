@@ -20,8 +20,14 @@
               :showClear="true"
             />
           </div>
+          <IconField>
+            <InputIcon>
+              <i class="pi pi-search" />
+            </InputIcon>
+            <InputText v-model="busqueda" placeholder="Buscar ítem…" class="w-48" />
+          </IconField>
           <span v-if="rolSeleccionado" class="text-sm text-surface-500">
-            {{ itemsVisibles }} de {{ itemsFlat.length }} ítems visibles
+            {{ itemsVisibles }} de {{ itemsFlatSinFiltro.length }} ítems visibles
           </span>
           <div class="ml-auto flex gap-2">
             <Button
@@ -216,6 +222,8 @@
 <script setup>
 import { useForm, usePage, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from 'primevue/datatable';
@@ -243,6 +251,7 @@ const permissions = computed(() => page.props.auth?.permissions ?? []);
 const can = (permiso) => permissions.value.includes(permiso);
 
 const rolSeleccionado = ref(null);
+const busqueda = ref('');
 
 function aplanar(nodos, depth = 0) {
   const result = [];
@@ -257,6 +266,11 @@ function aplanar(nodos, depth = 0) {
 
 const itemsFlat = computed(() => aplanar(props.items));
 
+const itemsFlatSinFiltro = computed(() => {
+  if (!rolSeleccionado.value) return itemsFlat.value;
+  return itemsFlat.value.filter((i) => esVisible(i));
+});
+
 const rolActual = computed(() =>
   props.roles.find((r) => r.id === rolSeleccionado.value)
 );
@@ -267,12 +281,27 @@ function esVisible(item) {
 }
 
 const itemsVisibles = computed(() =>
-  itemsFlat.value.filter((i) => esVisible(i)).length
+  itemsFlatSinFiltro.value.filter((i) => coincideBusqueda(i)).length
 );
 
+function coincideBusqueda(item) {
+  if (!busqueda.value) return true;
+  const q = busqueda.value.toLowerCase();
+  return (
+    (item.label || '').toLowerCase().includes(q) ||
+    (item.route || '').toLowerCase().includes(q) ||
+    (item.permission || '').toLowerCase().includes(q)
+  );
+}
+
 const itemsFiltrados = computed(() => {
-  if (!rolSeleccionado.value) return itemsFlat.value;
-  return itemsFlat.value.filter((i) => esVisible(i));
+  let base = rolSeleccionado.value
+    ? itemsFlat.value.filter((i) => esVisible(i))
+    : itemsFlat.value;
+  if (busqueda.value) {
+    base = base.filter((i) => coincideBusqueda(i));
+  }
+  return base;
 });
 
 const opcionesPadre = computed(() => {

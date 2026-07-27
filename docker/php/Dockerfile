@@ -1,46 +1,17 @@
-FROM php:8.4-fpm
+# Imagen app/reverb — overlay offline sobre base local.
+#
+# FROM emcarga-php-base:8.4 — imagen local con PHP 8.4-fpm + extensiones
+# (pdo_mysql, mbstring, gd, intl, zip...) + Composer 2.10.2.
+#
+# ¿Por qué no FROM php:8.4-fpm? Docker Hub bloquea Cuba (403) y Debian
+# tampoco es alcanzable para apt-get. La base completa se construye con
+# docker/php/Dockerfile.full cuando HAY acceso a Hub (VPN/staging):
+#
+#   docker build -f docker/php/Dockerfile.full -t emcarga-php-base:8.4 .
+#
+# Si no hay acceso a Hub, la base ya existe localmente y este build
+# funciona 100% offline. NO borrar la imagen emcarga-php-base:8.4.
+FROM emcarga-php-base:8.4
 
-ARG APP_ENV=production
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    libicu-dev \
-    zip \
-    unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Set working directory
-WORKDIR /var/www
-
-# Copy the application (assets ya construidos localmente)
-COPY --chown=www-data:www-data . /var/www
-
-# .env por defecto desde .env.example
-RUN if [ ! -f /var/www/.env ]; then cp /var/www/.env.example /var/www/.env; fi
-
-# Permisos storage y cache
-RUN mkdir -p /var/www/storage/framework/cache/data \
-    /var/www/storage/framework/sessions \
-    /var/www/storage/framework/views \
-    /var/www/storage/logs \
-    /var/www/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-
-# Limpiar node_modules (no necesarios en producción)
-RUN rm -rf /var/www/node_modules
-
-USER www-data
-
-EXPOSE 9000
-CMD ["php-fpm"]
+# Config PHP horneada en la imagen (blindaje anti bind-mounts rotos en WSL2)
+COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini

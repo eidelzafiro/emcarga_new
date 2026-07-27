@@ -25,14 +25,15 @@ services:
     working_dir: /var/www
     volumes:
       - .:/var/www
-      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - emcarga-network
     depends_on:
       - mysql
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
     container_name: emcarga-nginx
     restart: unless-stopped
     tty: true
@@ -40,14 +41,15 @@ services:
       - "${HTTP_PORT:-8080}:80"
     volumes:
       - .:/var/www
-      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - emcarga-network
     depends_on:
       - app
 
   mysql:
-    image: mysql:8.0
+    build:
+      context: .
+      dockerfile: docker/mysql/Dockerfile
     container_name: emcarga-mysql
     restart: unless-stopped
     tty: true
@@ -58,7 +60,6 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
       - emcarga-mysql-data:/var/lib/mysql/
-      - ./docker/mysql/:/docker-entrypoint-initdb.d/
     networks:
       - emcarga-network
 

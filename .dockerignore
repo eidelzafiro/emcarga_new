@@ -6,6 +6,8 @@ vendor
 .gitattributes
 docker-compose.yml
 docker/mysql/dump.sql
+docker/mysql/Dockerfile
+docker/php/Dockerfile.full
 *.md
 .editorconfig
 .phpunit.*

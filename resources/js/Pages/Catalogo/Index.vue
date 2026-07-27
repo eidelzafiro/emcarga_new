@@ -75,8 +75,10 @@ function openEdit(item) {
   if (props.catalogConfig?.codigoManual !== false) f.codigo = item.codigo
   f.nombre = item.nombre
   f.activo = Boolean(item.activo)
-  Object.entries(props.catalogConfig?.extra || {}).forEach(([k]) => {
-    f[k] = item[k] ?? (gridFields.value[k]?.type === 'number' ? null : '')
+  Object.entries(props.catalogConfig?.extra || {}).forEach(([k, v]) => {
+    if (v.type === 'boolean') f[k] = Boolean(item[k])
+    else if (v.type === 'number') f[k] = item[k] ?? null
+    else f[k] = item[k] ?? ''
   })
   form.value = f
   showForm.value = true
@@ -143,6 +145,10 @@ function submit() {
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Textarea v-else-if="cfg.type === 'textarea'" v-model="form[key]" class="w-full" :rows="3" />
               <Select v-else-if="cfg.type === 'select' && cfg.options" v-model="form[key]" :options="cfg.options" optionLabel="label" optionValue="value" placeholder="Seleccionar..." class="w-full" :showClear="true" />
+              <div v-else-if="cfg.type === 'boolean'" class="flex items-center gap-2 pt-2">
+                <ToggleSwitch v-model="form[key]" :inputId="'fld-' + key" />
+                <label :for="'fld-' + key" class="text-sm">{{ cfg.label }}</label>
+              </div>
               <InputText v-else v-model="form[key]" class="w-full" :type="cfg.type === 'email' ? 'email' : 'text'" />
             </div>
           </template>

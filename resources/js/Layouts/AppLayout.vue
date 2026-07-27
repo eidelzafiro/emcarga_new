@@ -165,6 +165,7 @@
               >
                 <Avatar :label="iniciales" shape="circle" class="!bg-blue-600 !text-white" size="small" />
                 <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-200">{{ user?.name }}</span>
+                <Tag v-if="roles.length" :value="roles[0]" severity="contrast" size="small" class="hidden sm:inline-flex" />
                 <i class="pi pi-chevron-down text-xs text-gray-400 dark:text-gray-500" />
               </button>
 
@@ -175,6 +176,9 @@
                 <div class="px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
                   <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user?.name }}</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400">{{ user?.email || user?.username }}</p>
+                  <div v-if="roles.length" class="flex flex-wrap gap-1 mt-1">
+                    <Tag v-for="r in roles" :key="r" :value="r" severity="info" size="small" />
+                  </div>
                 </div>
                 <Link
                   :href="route('password.edit')"
@@ -220,6 +224,7 @@ import { useToast } from 'primevue/usetoast';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+const roles = computed(() => page.props.auth?.roles ?? []);
 const menu = computed(() => page.props.menu ?? []);
 const flash = computed(() => page.props.flash ?? {});
 const contexto = computed(() => page.props.contexto ?? null);

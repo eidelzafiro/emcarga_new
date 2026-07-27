@@ -24,7 +24,7 @@ class MenuSeeder extends Seeder
             ['label' => 'Contabilidad', 'icon' => 'pi pi-calculator', 'route' => null, 'permission' => null, 'orden' => 7],
             ['label' => 'Administración', 'icon' => 'pi pi-shield', 'route' => null, 'permission' => null, 'orden' => 8],
             ['label' => 'Reportes', 'icon' => 'pi pi-chart-bar', 'route' => null, 'permission' => null, 'orden' => 9],
-            ['label' => 'Pizarra', 'icon' => 'pi pi-th-large', 'route' => 'pizarra.index', 'permission' => 'pizarra.ver', 'orden' => 10],
+            // ['label' => 'Pizarra', 'icon' => 'pi pi-th-large', 'route' => 'pizarra.index', 'permission' => 'pizarra.ver', 'orden' => 10],
         ];
 
         foreach ($padres as $i => $p) {
@@ -104,7 +104,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Contabilidad', 'label' => 'Combustible Cargas', 'route' => 'combustible-cargas.index', 'permission' => 'combustible-cargas.ver', 'orden' => 5],
             ['parent' => 'Contabilidad', 'label' => 'Combustible Descargas', 'route' => 'combustible-descargas.index', 'permission' => 'combustible-descargas.ver', 'orden' => 6],
             ['parent' => 'Contabilidad', 'label' => 'Combustibles Lubricantes', 'route' => 'combustibles-lubricantes.index', 'permission' => 'combustibles-lubricantes.ver', 'orden' => 7],
-            ['parent' => 'Contabilidad', 'label' => 'Detalles Carga Combustible', 'route' => 'detalles-carga-combustible.index', 'permission' => 'detalles-carga-combustible.ver', 'orden' => 8],
+            // ['parent' => 'Contabilidad', 'label' => 'Detalles Carga Combustible', 'route' => 'detalles-carga-combustible.index', 'permission' => 'detalles-carga-combustible.ver', 'orden' => 8],
             ['parent' => 'Contabilidad', 'label' => 'Servicentros', 'route' => 'servicentros.index', 'permission' => 'servicentros.ver', 'orden' => 9],
             ['parent' => 'Contabilidad', 'label' => 'Otros Gastos', 'route' => 'otros-gastos.index', 'permission' => 'otros-gastos.ver', 'orden' => 10],
             ['parent' => 'Contabilidad', 'label' => 'Centros Costos', 'route' => 'centros-costos.index', 'permission' => 'centros-costos.ver', 'orden' => 11],

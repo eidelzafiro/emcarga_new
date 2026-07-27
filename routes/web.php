@@ -204,19 +204,12 @@ Route::middleware('auth')->group(function () {
     Route::post('notificaciones/{id}/leer', [NotificationsController::class, 'markAsRead'])->name('notificaciones.leer');
     Route::post('notificaciones/leer-todas', [NotificationsController::class, 'markAllAsRead'])->name('notificaciones.leer-todas');
 
-    // API de pizarra (datos en JSON para Echo/fetch)
-    Route::get('api/pizarra', [PizarraController::class, 'datos'])
-        ->middleware('permission:pizarra.ver')
-        ->name('api.pizarra');
-
     // Requieren contraseña definitiva (no temporal) y el permiso del módulo
     // (EnsureModulePermission infiere modulo.accion desde el nombre de la ruta)
     Route::middleware(['password.temporal', 'permiso.modulo'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Pizarra de vehículos en vivo (Fase 4.10)
-        Route::get('pizarra', [PizarraController::class, 'index'])->name('pizarra.index');
-
         // Módulo Técnico - Flota
         Route::resource('tractivos', TractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -437,9 +430,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-ubicacion-defensa', TiposUbicacionDefensaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('perfiles-rh', PerfilesRhController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         // Catálogos y configuración (Fase 5.7)
         Route::resource('marcas', MarcasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -496,9 +486,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('embalajes', EmbalajesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('buques', BuquesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('navieras', NavierasController::class)
@@ -576,8 +563,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('balances-electricos', BalancesElectricosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('hotkeys', HotkeysController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('historial-tractivos', HistorialTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('motivos-baja-bateria', MotivosBajaBateriaController::class)
@@ -594,60 +579,26 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('locales-electricos', LocalesElectricosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('acciones-hotkeys', AccionesHotkeysController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         // ATM - Inventario/Tarjetero (Fase 5.8)
         Route::resource('tarjetero', TarjeteroController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('lineas-bateria', LineasBateriaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('lineas-diferencial', LineasDiferencialController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('lineas-lubricante', LineasLubricanteController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('lineas-neumatico', LineasNeumaticoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('lineas-otro-agregado', LineasOtroAgregadoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('movimientos-inventario', MovimientosInventarioController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('detalle-movimientos-inventario', DetalleMovimientosInventarioController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('detalle-vales-inventario', DetalleValesInventarioController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         // RRHH - Tablas faltantes (Fase 5.8)
         Route::resource('centros-costos', CentrosCostosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-articulos-bolsa', TiposArticulosBolsaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('competencias-cargo', CompetenciasCargoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('funciones-cargo', FuncionesCargoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-jefe-grupo', TiposJefeGrupoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('pagos-adicionales-cargo', PagosAdicionalesCargoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('tipos-ramas', TiposRamasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('tipos-sistemas-cuc', TiposSistemasCucController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         // Comercial - Tablas faltantes (Fase 5.8)
-        Route::resource('unidades', UnidadesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('contenedores', ContenedoresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('categorias-productos', CategoriasProductosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('tipos-subcta-unidad', TiposSubctaUnidadController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         // Misc - Tablas varias (Fase 5.8)
-        Route::resource('clientes-mm', ClientesMmController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-aceites', TiposAceitesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-entidad', TiposEntidadController::class)
@@ -662,23 +613,12 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('descuentos-empleados', DescuentosEmpleadosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('causas-gps', CausasGpsController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('causas-multas', CausasMultasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('importes-gps', ImportesGpsController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('importes-multas', ImportesMultasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('vacaciones', VacacionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('estadisticas-explotacion', EstadisticasExplotacionController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('registro-ordenes-taller', RegistroOrdenesTallerController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('detalle-prefacturas', DetallePrefacturasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         // Administración de usuarios (Fase 4.3)
         Route::resource('usuarios', UserController::class)
             ->only(['index', 'store', 'update', 'destroy'])

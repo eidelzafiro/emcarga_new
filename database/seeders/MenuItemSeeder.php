@@ -14,11 +14,6 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Dashboard', 'icon' => 'pi pi-home', 'permission' => 'dashboard.ver', 'orden' => 1]
         );
 
-        MenuItem::updateOrCreate(
-            ['route' => 'pizarra.index'],
-            ['label' => 'Pizarra', 'icon' => 'pi pi-map', 'permission' => 'pizarra.ver', 'orden' => 2]
-        );
-
         $flota = MenuItem::updateOrCreate(
             ['label' => 'Flota', 'parent_id' => null],
             ['icon' => 'pi pi-truck', 'route' => null, 'permission' => null, 'orden' => 3]
@@ -107,53 +102,10 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Balances Eléctricos', 'icon' => 'pi pi-chart-bar', 'permission' => 'balances-electricos.ver', 'orden' => 18, 'parent_id' => $flota->id]
         );
         MenuItem::updateOrCreate(
-            ['route' => 'hotkeys.index'],
-            ['label' => 'Hotkeys', 'icon' => 'pi pi-bolt', 'permission' => 'hotkeys.ver', 'orden' => 19, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'acciones-hotkeys.index'],
-            ['label' => 'Acciones Hotkeys', 'icon' => 'pi pi-key', 'permission' => 'acciones-hotkeys.ver', 'orden' => 20, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
             ['route' => 'historial-tractivos.index'],
             ['label' => 'Historial Tractivos', 'icon' => 'pi pi-history', 'permission' => 'historial-tractivos.ver', 'orden' => 21, 'parent_id' => $flota->id]
         );
-        MenuItem::updateOrCreate(
-            ['route' => 'tarjetero.index'],
-            ['label' => 'Tarjetero', 'icon' => 'pi pi-box', 'permission' => 'tarjetero.ver', 'orden' => 22, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'lineas-bateria.index'],
-            ['label' => 'Líneas Batería', 'icon' => 'pi pi-bolt', 'permission' => 'lineas-bateria.ver', 'orden' => 23, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'lineas-diferencial.index'],
-            ['label' => 'Líneas Diferencial', 'icon' => 'pi pi-cog', 'permission' => 'lineas-diferencial.ver', 'orden' => 24, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'lineas-lubricante.index'],
-            ['label' => 'Líneas Lubricante', 'icon' => 'pi pi-eye-dropper', 'permission' => 'lineas-lubricante.ver', 'orden' => 25, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'lineas-neumatico.index'],
-            ['label' => 'Líneas Neumático', 'icon' => 'pi pi-cog', 'permission' => 'lineas-neumatico.ver', 'orden' => 26, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'lineas-otro-agregado.index'],
-            ['label' => 'Líneas Otros Agregados', 'icon' => 'pi pi-cog', 'permission' => 'lineas-otro-agregado.ver', 'orden' => 27, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'movimientos-inventario.index'],
-            ['label' => 'Mov. Inventario', 'icon' => 'pi pi-arrow-right-arrow-left', 'permission' => 'movimientos-inventario.ver', 'orden' => 28, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'detalle-movimientos-inventario.index'],
-            ['label' => 'Det. Mov. Inventario', 'icon' => 'pi pi-list', 'permission' => 'detalle-movimientos-inventario.ver', 'orden' => 29, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'detalle-vales-inventario.index'],
-            ['label' => 'Det. Vales Inventario', 'icon' => 'pi pi-list', 'permission' => 'detalle-vales-inventario.ver', 'orden' => 30, 'parent_id' => $flota->id]
-        );
+        
         MenuItem::updateOrCreate(
             ['route' => 'tipos-aceites.index'],
             ['label' => 'Tipos Aceites', 'icon' => 'pi pi-eye-dropper', 'permission' => 'tipos-aceites.ver', 'orden' => 31, 'parent_id' => $flota->id]
@@ -166,27 +118,7 @@ class MenuItemSeeder extends Seeder
             ['route' => 'estadisticas-explotacion.index'],
             ['label' => 'Estad. Explotación', 'icon' => 'pi pi-chart-line', 'permission' => 'estadisticas-explotacion.ver', 'orden' => 33, 'parent_id' => $flota->id]
         );
-        MenuItem::updateOrCreate(
-            ['route' => 'registro-ordenes-taller.index'],
-            ['label' => 'Reg. OT Taller', 'icon' => 'pi pi-clipboard', 'permission' => 'registro-ordenes-taller.ver', 'orden' => 34, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'causas-gps.index'],
-            ['label' => 'Causas GPS', 'icon' => 'pi pi-map', 'permission' => 'causas-gps.ver', 'orden' => 35, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'causas-multas.index'],
-            ['label' => 'Causas Multas', 'icon' => 'pi pi-hammer', 'permission' => 'causas-multas.ver', 'orden' => 36, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'importes-gps.index'],
-            ['label' => 'Imp. GPS', 'icon' => 'pi pi-dollar', 'permission' => 'importes-gps.ver', 'orden' => 37, 'parent_id' => $flota->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'importes-multas.index'],
-            ['label' => 'Imp. Multas', 'icon' => 'pi pi-dollar', 'permission' => 'importes-multas.ver', 'orden' => 38, 'parent_id' => $flota->id]
-        );
-
+        
         MenuItem::updateOrCreate(
             ['route' => 'taller.index'],
             ['label' => 'Taller', 'icon' => 'pi pi-wrench', 'permission' => 'taller.ver', 'orden' => 4]
@@ -299,10 +231,6 @@ class MenuItemSeeder extends Seeder
         );
         // Comercial - Tablas faltantes parte 2
         MenuItem::updateOrCreate(
-            ['route' => 'unidades.index'],
-            ['label' => 'Unidades', 'icon' => 'pi pi-building', 'permission' => 'unidades.ver', 'orden' => 21, 'parent_id' => $comercial->id]
-        );
-        MenuItem::updateOrCreate(
             ['route' => 'contenedores.index'],
             ['label' => 'Contenedores', 'icon' => 'pi pi-box', 'permission' => 'contenedores.ver', 'orden' => 22, 'parent_id' => $comercial->id]
         );
@@ -311,20 +239,8 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Categorías Productos', 'icon' => 'pi pi-tags', 'permission' => 'categorias-productos.ver', 'orden' => 23, 'parent_id' => $comercial->id]
         );
         MenuItem::updateOrCreate(
-            ['route' => 'tipos-subcta-unidad.index'],
-            ['label' => 'Tipos Subcta Unidad', 'icon' => 'pi pi-tag', 'permission' => 'tipos-subcta-unidad.ver', 'orden' => 24, 'parent_id' => $comercial->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'clientes-mm.index'],
-            ['label' => 'Clientes MM', 'icon' => 'pi pi-users', 'permission' => 'clientes-mm.ver', 'orden' => 25, 'parent_id' => $comercial->id]
-        );
-        MenuItem::updateOrCreate(
             ['route' => 'devoluciones.index'],
             ['label' => 'Devoluciones', 'icon' => 'pi pi-undo', 'permission' => 'devoluciones.ver', 'orden' => 26, 'parent_id' => $comercial->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'detalle-prefacturas.index'],
-            ['label' => 'Det. Prefacturas', 'icon' => 'pi pi-list', 'permission' => 'detalle-prefacturas.ver', 'orden' => 27, 'parent_id' => $comercial->id]
         );
 
         $facturacion = MenuItem::updateOrCreate(
@@ -534,10 +450,6 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Ubic. Defensa', 'icon' => 'pi pi-map-marker', 'permission' => 'tipos-ubicacion-defensa.ver', 'orden' => 36, 'parent_id' => $rrhh->id]
         );
 
-        MenuItem::updateOrCreate(
-            ['route' => 'perfiles-rh.index'],
-            ['label' => 'Perfiles RH', 'icon' => 'pi pi-id-card', 'permission' => 'perfiles-rh.ver', 'orden' => 37, 'parent_id' => $rrhh->id]
-        );
         // RRHH - Tablas faltantes parte 2
         MenuItem::updateOrCreate(
             ['route' => 'centros-costos.index'],
@@ -548,28 +460,12 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Artículos Bolsa', 'icon' => 'pi pi-shopping-bag', 'permission' => 'tipos-articulos-bolsa.ver', 'orden' => 39, 'parent_id' => $rrhh->id]
         );
         MenuItem::updateOrCreate(
-            ['route' => 'competencias-cargo.index'],
-            ['label' => 'Competencias Cargo', 'icon' => 'pi pi-graduation-cap', 'permission' => 'competencias-cargo.ver', 'orden' => 40, 'parent_id' => $rrhh->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'funciones-cargo.index'],
-            ['label' => 'Funciones Cargo', 'icon' => 'pi pi-list-check', 'permission' => 'funciones-cargo.ver', 'orden' => 41, 'parent_id' => $rrhh->id]
-        );
-        MenuItem::updateOrCreate(
             ['route' => 'tipos-jefe-grupo.index'],
             ['label' => 'Jefes Grupo', 'icon' => 'pi pi-id-card', 'permission' => 'tipos-jefe-grupo.ver', 'orden' => 42, 'parent_id' => $rrhh->id]
         );
         MenuItem::updateOrCreate(
             ['route' => 'pagos-adicionales-cargo.index'],
             ['label' => 'Pagos Adic. Cargo', 'icon' => 'pi pi-money-bill', 'permission' => 'pagos-adicionales-cargo.ver', 'orden' => 43, 'parent_id' => $rrhh->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'tipos-ramas.index'],
-            ['label' => 'Tipos Ramas', 'icon' => 'pi pi-sitemap', 'permission' => 'tipos-ramas.ver', 'orden' => 44, 'parent_id' => $rrhh->id]
-        );
-        MenuItem::updateOrCreate(
-            ['route' => 'tipos-sistemas-cuc.index'],
-            ['label' => 'Sistemas CUC', 'icon' => 'pi pi-money-bill', 'permission' => 'tipos-sistemas-cuc.ver', 'orden' => 45, 'parent_id' => $rrhh->id]
         );
         MenuItem::updateOrCreate(
             ['route' => 'tipos-entidad.index'],
@@ -654,11 +550,6 @@ class MenuItemSeeder extends Seeder
         );
 
         MenuItem::updateOrCreate(
-            ['route' => 'detalles-carga-combustible.index'],
-            ['label' => 'Detalles Carga Comb.', 'icon' => 'pi pi-list', 'permission' => 'detalles-carga-combustible.ver', 'orden' => 13, 'parent_id' => $contabilidad->id]
-        );
-
-        MenuItem::updateOrCreate(
             ['route' => 'combustibles-lubricantes.index'],
             ['label' => 'Comb. Lubricantes', 'icon' => 'pi pi-eye-dropper', 'permission' => 'combustibles-lubricantes.ver', 'orden' => 14, 'parent_id' => $contabilidad->id]
         );
@@ -697,7 +588,6 @@ class MenuItemSeeder extends Seeder
             ['tipos-servicios.index', 'Tipos Servicio', 'pi pi-briefcase', 'tipos-servicios.ver', 17],
             ['tipos-gastos.index', 'Tipos Gasto', 'pi pi-dollar', 'tipos-gastos.ver', 18],
             ['embalajes.index', 'Embalajes', 'pi pi-box', 'embalajes.ver', 19],
-            ['buques.index', 'Buques', 'pi pi-compass', 'buques.ver', 20],
             ['navieras.index', 'Navieras', 'pi pi-globe', 'navieras.ver', 21],
             ['organismos.index', 'Organismos', 'pi pi-building', 'organismos.ver', 22],
             ['categorias-cargo.index', 'Categorías Cargo', 'pi pi-tags', 'categorias-cargo.ver', 23],

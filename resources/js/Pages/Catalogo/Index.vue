@@ -67,7 +67,7 @@ function submit() {
             <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total">
                 <Column field="codigo" header="Código" sortable />
                 <Column field="nombre" header="Nombre" sortable />
-                <Column v-for="(label, key) in (catalogConfig?.extra || {})" :key="key" :field="key" :header="label" />
+                <Column v-for="(cfg, key) in (catalogConfig?.fields || {})" :key="key" v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :field="key" :header="cfg.label" />
                 <Column field="activo" header="Activo" :style="{ width: '100px' }">
                     <template #body="{ data }">
                         <i v-if="data.activo !== undefined" :class="data.activo ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />
@@ -96,9 +96,9 @@ function submit() {
                         <label class="block mb-1 font-medium">Nombre</label>
                         <InputText v-model="form.nombre" class="w-full" required />
                     </div>
-                    <template v-for="(label, key) in (catalogConfig?.extra || {})" :key="key">
-                        <div>
-                            <label class="block mb-1 font-medium">{{ label }}</label>
+                    <template v-for="(cfg, key) in (catalogConfig?.fields || {})" :key="key">
+                        <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'">
+                            <label class="block mb-1 font-medium">{{ cfg.label }}</label>
                             <InputText v-model="form[key]" class="w-full" />
                         </div>
                     </template>

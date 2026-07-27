@@ -46,6 +46,7 @@ use App\Http\Controllers\ElementosGastoController;
 use App\Http\Controllers\EmbalajesController;
 use App\Http\Controllers\EmpleadosController;
 use App\Http\Controllers\EnergiaController;
+use App\Http\Controllers\EntidadesController;
 use App\Http\Controllers\EstadisticasExplotacionController;
 use App\Http\Controllers\EstadosTarjetasController;
 use App\Http\Controllers\FacturasController;
@@ -73,6 +74,7 @@ use App\Http\Controllers\LubricantesController;
 use App\Http\Controllers\LugaresController;
 use App\Http\Controllers\MarcasController;
 use App\Http\Controllers\MedidasNeumaticosController;
+use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\MediosProteccionController;
 use App\Http\Controllers\MesesController;
 use App\Http\Controllers\ModelosController;
@@ -635,5 +637,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('perfiles', PerfilController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['perfiles' => 'perfil']);
+
+        // Administración de menú (Fase 5.9)
+        Route::resource('menu-items', MenuItemController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['menu-items' => 'menuItem']);
     });
 });

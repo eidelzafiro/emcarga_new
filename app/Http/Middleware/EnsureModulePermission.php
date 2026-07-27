@@ -32,6 +32,7 @@ class EnsureModulePermission
      */
     private const ALIAS_MODULO = [
         'aforos' => 'facturas',
+        'menu-items' => 'menus',
     ];
 
     private const MAPA_ACCIONES = [

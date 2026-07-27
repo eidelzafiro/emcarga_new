@@ -636,5 +636,10 @@ class MenuItemSeeder extends Seeder
             ['route' => 'perfiles.index'],
             ['label' => 'Perfiles', 'icon' => 'pi pi-shield', 'permission' => 'perfiles.ver', 'orden' => 2, 'parent_id' => $administracion->id]
         );
+
+        MenuItem::updateOrCreate(
+            ['route' => 'menu-items.index'],
+            ['label' => 'Menús', 'icon' => 'pi pi-bars', 'permission' => 'menus.ver', 'orden' => 3, 'parent_id' => $administracion->id]
+        );
     }
 }

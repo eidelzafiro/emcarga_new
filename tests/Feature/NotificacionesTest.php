@@ -17,7 +17,7 @@ class NotificacionesTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        $this->admin = User::whereHas('roles', fn ($q) => $q->where('name', 'ADMIN'))->first();
+        $this->admin = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['SUPERADMIN', 'CONFIGURACIONES']))->first();
         $this->actingAs($this->admin);
     }
 

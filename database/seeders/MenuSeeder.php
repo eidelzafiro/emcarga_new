@@ -113,6 +113,7 @@ class MenuSeeder extends Seeder
             // Administración (parent_id=8)
             ['parent' => 'Administración', 'label' => 'Usuarios', 'route' => 'usuarios.index', 'permission' => 'usuarios.ver', 'orden' => 1],
             ['parent' => 'Administración', 'label' => 'Perfiles', 'route' => 'perfiles.index', 'permission' => 'perfiles.ver', 'orden' => 2],
+            ['parent' => 'Administración', 'label' => 'Catálogos', 'route' => 'catalogo.tipos', 'permission' => 'catalogo.ver', 'orden' => 3],
 
             // Reportes (parent_id=9)
             ['parent' => 'Reportes', 'label' => 'Marcas', 'route' => 'reportes.marcas', 'permission' => 'reportes.generar', 'orden' => 1],

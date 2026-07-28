@@ -18,7 +18,7 @@ class DashboardTest extends TestCase
 
     public function test_usuario_autenticado_puede_ver_dashboard()
     {
-        $user = User::whereHas('roles', fn ($q) => $q->where('name', 'ADMIN'))->first();
+        $user = User::whereHas('roles', fn ($q) => $q->where('name', 'SUPERADMIN'))->first();
         $user->password_temporal = false;
         $user->save();
 

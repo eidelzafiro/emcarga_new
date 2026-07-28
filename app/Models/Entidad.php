@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Entidad extends Model
@@ -13,6 +15,8 @@ class Entidad extends Model
     protected $table = 'entidades';
 
     protected $fillable = [
+        'parent_id',
+        'es_matriz',
         'codigo',
         'nombre',
         'abreviatura',
@@ -57,17 +61,32 @@ class Entidad extends Model
         'id_sistema',
         'id_cajera',
         'id_parqueo',
+        'licencia_vencimiento',
+        'licencia_activa',
     ];
 
     protected function casts(): array
     {
         return [
             'activo' => 'boolean',
+            'es_matriz' => 'boolean',
+            'licencia_activa' => 'boolean',
+            'licencia_vencimiento' => 'date',
             'disponible' => 'boolean',
             'desactivar_disp' => 'boolean',
             'alertas_mtto' => 'boolean',
             'almacenaje' => 'decimal:4',
         ];
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     public function area(): BelongsTo
@@ -85,7 +104,7 @@ class Entidad extends Model
         return $this->belongsTo(Municipio::class, 'id_municipio');
     }
 
-    public function usuarios(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function usuarios(): HasMany
     {
         return $this->hasMany(User::class, 'id_entidad');
     }
@@ -93,5 +112,33 @@ class Entidad extends Model
     public function usuariosConAcceso(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'entidad_user')->withTimestamps();
+    }
+
+    public function licenciaExpirada(): bool
+    {
+        return !$this->licencia_activa || ($this->licencia_vencimiento && $this->licencia_vencimiento->isPast());
+    }
+
+    public function scopeParaEntidad(Builder $q, ?int $entidadId = null): Builder
+    {
+        $entidadId ??= auth()->user()?->id_entidad;
+        if (!$entidadId) return $q;
+
+        $ids = collect(self::subEntidadesIds($entidadId))->push($entidadId)->unique()->values()->all();
+
+        return $q->whereIn('id', $ids);
+    }
+
+    public static function subEntidadesIds(int $entidadId): array
+    {
+        $ids = [];
+        $children = self::where('parent_id', $entidadId)->get(['id']);
+
+        foreach ($children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, self::subEntidadesIds($child->id));
+        }
+
+        return $ids;
     }
 }

@@ -20,7 +20,7 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $usuarios = User::with('roles:id,name', 'entidades:id,nombre')
+        $usuarios = User::with('roles:id,name', 'entidades:id,nombre', 'entidad:id,nombre,abreviatura')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -31,11 +31,27 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $user = $request->user();
+        $entidadesQuery = Entidad::where('activo', true);
+
+        if (! $user->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES'])) {
+            $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
+                ->push($user->id_entidad)
+                ->unique()
+                ->values()
+                ->all();
+            $adicionales = $user->entidades()->pluck('entidades.id')->all();
+            $ids = array_unique([...$ids, ...$adicionales]);
+            $entidadesQuery->whereIn('id', $ids);
+        }
+
         return Inertia::render('Usuarios/Index', [
             'title' => 'Gestión de usuarios',
             'usuarios' => $usuarios,
             'roles' => Role::orderBy('name')->pluck('name'),
-            'entidades' => Entidad::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
+            'entidades' => $entidadesQuery->orderBy('nombre')->get(['id', 'nombre', 'parent_id']),
+            'esAdmin' => $user->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES']),
+            'miEntidadId' => $user->id_entidad,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -54,7 +70,7 @@ class UserController extends Controller
             'username' => strtoupper($datos['username']),
             'email' => $datos['email'] ?? null,
             'password' => $datos['password'],
-            'id_entidad' => $datos['id_entidad'] ?? null,
+            'id_entidad' => $datos['id_entidad'] ?: $request->user()->id_entidad,
             'idgrupo' => $datos['idgrupo'] ?? null,
             'password_temporal' => true,
         ]);
@@ -75,13 +91,18 @@ class UserController extends Controller
         $this->authorize('update', $user);
         $datos = $request->validated();
 
-        $user->update([
+        $payload = [
             'name' => $datos['name'],
             'username' => strtoupper($datos['username']),
             'email' => $datos['email'] ?? null,
-            'id_entidad' => $datos['id_entidad'] ?? null,
             'idgrupo' => $datos['idgrupo'] ?? null,
-        ]);
+        ];
+
+        if ($request->user()->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES'])) {
+            $payload['id_entidad'] = $datos['id_entidad'];
+        }
+
+        $user->update($payload);
         $user->syncRoles([$datos['role']]);
         $user->entidades()->sync($datos['entidades'] ?? []);
 

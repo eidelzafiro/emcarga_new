@@ -36,16 +36,21 @@ class UpdateUserRequest extends FormRequest
     {
         $userId = $this->route('user')?->id;
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:100', 'alpha_dash', Rule::unique('users', 'username')->ignore($userId)],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'role' => ['required', 'string', 'exists:roles,name'],
-            'id_entidad' => ['nullable', 'integer', 'exists:entidades,id'],
             'entidades' => ['nullable', 'array'],
             'entidades.*' => ['integer', 'exists:entidades,id'],
             'idgrupo' => ['nullable', 'integer'],
         ];
+
+        if ($this->user()?->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES'])) {
+            $rules['id_entidad'] = ['required', 'integer', 'exists:entidades,id'];
+        }
+
+        return $rules;
     }
 
     /**

@@ -151,7 +151,7 @@ class EtlTest extends TestCase
         $this->assertNotNull($eidel);
         $this->assertSame('EIDEL', $eidel->username);
         $this->assertTrue(Hash::check('MiClave*1', $eidel->password));
-        $this->assertTrue($eidel->hasRole('ADMIN'));
+        $this->assertTrue($eidel->hasRole('SUPERADMIN'));
         $this->assertFalse((bool) $eidel->password_temporal);
 
         // Mapeo de perfil COMERCIAL y flag cpass → password_temporal

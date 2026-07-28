@@ -247,7 +247,7 @@ class EtlService
             ->all();
 
         $entidadesActivas = DB::table('entidades')->where('activo', true)->pluck('id');
-        $admins = User::role('ADMIN')->get(['id']);
+        $admins = User::role('SUPERADMIN')->get(['id']);
 
         $deAdmins = [];
         foreach ($admins as $admin) {

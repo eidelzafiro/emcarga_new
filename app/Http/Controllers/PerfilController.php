@@ -14,7 +14,7 @@ class PerfilController extends Controller
     /**
      * Perfiles protegidos del sistema: no se pueden eliminar ni renombrar.
      */
-    private const PERFILES_PROTEGIDOS = ['ADMIN', 'SUPERADMIN', 'ADMINISTRADOR'];
+    private const PERFILES_PROTEGIDOS = ['SUPERADMIN', 'CONFIGURACIONES'];
 
     /**
      * Lista los perfiles con sus permisos y cantidad de usuarios.

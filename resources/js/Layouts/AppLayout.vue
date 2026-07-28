@@ -395,6 +395,9 @@ watch(flash, (val) => {
   if (val.success) toast.add({ severity: 'success', summary: 'Éxito', detail: val.success, life: 3000 });
   if (val.error) toast.add({ severity: 'error', summary: 'Error', detail: val.error, life: 5000 });
   if (val.warning) toast.add({ severity: 'warn', summary: 'Advertencia', detail: val.warning, life: 4000 });
+  if (val.licencia_alerta) {
+    toast.add({ severity: val.licencia_tipo || 'warn', summary: 'Licencia', detail: val.licencia_alerta, sticky: true });
+  }
 }, { deep: true, immediate: true });
 
 const toggleDarkMode = () => { isDark.value = !isDark.value; };

@@ -30,8 +30,8 @@ return [
         2 => 'TECNICA',     // TECNICA
         3 => 'COMERCIAL',   // COMERCIAL
         4 => 'CONTABILIDAD', // CONTABILIDAD
-        5 => 'ADMIN',       // DIRECTIVOS → ADMIN (provisional)
-        6 => 'ADMIN',       // ADMINISTRADOR
+        5 => 'SUPERADMIN',       // DIRECTIVOS → SUPERADMIN (provisional)
+        6 => 'SUPERADMIN',       // ADMINISTRADOR
         7 => 'OPERATIVOS',  // OPERATIVOS
     ],
 

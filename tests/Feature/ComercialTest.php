@@ -19,7 +19,7 @@ class ComercialTest extends TestCase
     private function usuarioAdmin(): User
     {
         $user = User::factory()->create();
-        $user->assignRole('ADMIN');
+        $user->assignRole('SUPERADMIN');
         $user->password_temporal = false;
         $user->save();
 

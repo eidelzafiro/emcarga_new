@@ -11,6 +11,7 @@ use App\Http\Controllers\BateriasController;
 use App\Http\Controllers\BolsaController;
 use App\Http\Controllers\BuquesController;
 use App\Http\Controllers\CajasController;
+use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\CategoriasCargoController;
 use App\Http\Controllers\CategoriasProductosController;
 use App\Http\Controllers\CausasGpsController;
@@ -644,5 +645,12 @@ Route::middleware('auth')->group(function () {
             ->parameters(['menu-items' => 'menuItem']);
         Route::post('menu-items/{menuItem}/toggle-visibility/{role}', [MenuItemController::class, 'toggleVisibility'])
             ->name('menu-items.toggle-visibility');
+
+        // Catálogo unificado (Fase 6.1)
+        Route::get('catalogo', [CatalogoController::class, 'tipos'])->name('catalogo.tipos');
+        Route::get('catalogo/{tipo}', [CatalogoController::class, 'index'])->name('catalogo.index');
+        Route::post('catalogo/{tipo}', [CatalogoController::class, 'store'])->name('catalogo.store');
+        Route::put('catalogo/{tipo}/{id}', [CatalogoController::class, 'update'])->name('catalogo.update');
+        Route::delete('catalogo/{tipo}/{id}', [CatalogoController::class, 'destroy'])->name('catalogo.destroy');
     });
 });

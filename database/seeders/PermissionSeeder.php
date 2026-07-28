@@ -127,6 +127,8 @@ class PermissionSeeder extends Seeder
 
             'menus.ver', 'menus.crear', 'menus.editar', 'menus.eliminar',
 
+            'catalogo.ver', 'catalogo.crear', 'catalogo.editar', 'catalogo.eliminar',
+
             'servicentros.ver', 'servicentros.crear', 'servicentros.editar', 'servicentros.eliminar',
             'tipos-documentos.ver', 'tipos-documentos.crear', 'tipos-documentos.editar', 'tipos-documentos.eliminar',
             'firmas-autorizadas.ver', 'firmas-autorizadas.crear', 'firmas-autorizadas.editar', 'firmas-autorizadas.eliminar',
@@ -230,20 +232,7 @@ class PermissionSeeder extends Seeder
 
         // Asignación de permisos por rol (perfiles legacy)
         $asignacion = [
-            'ADMIN' => [
-                'dashboard.ver',
-
-                'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
-                'usuarios.desbloquear', 'usuarios.restablecer',
-
-                'perfiles.ver', 'perfiles.editar',
-
-                'menus.ver', 'menus.crear', 'menus.editar', 'menus.eliminar',
-
-                'entidades.ver', 'entidades.crear', 'entidades.editar', 'entidades.eliminar',
-
-                'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
-            ],
+            'SUPERADMIN' => $permisos,
             'TECNICA' => [
                 'dashboard.ver',
                 'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
@@ -422,9 +411,7 @@ class PermissionSeeder extends Seeder
                 'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',
             ],
 
-            'SUPERADMIN' => $permisos,
-
-            'ADMINISTRADOR' => [
+            'CONFIGURACIONES' => [
                 'dashboard.ver',
 
                 'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
@@ -433,6 +420,7 @@ class PermissionSeeder extends Seeder
                 'perfiles.ver', 'perfiles.editar',
 
                 'menus.ver', 'menus.crear', 'menus.editar', 'menus.eliminar',
+                'catalogo.ver', 'catalogo.crear', 'catalogo.editar', 'catalogo.eliminar',
 
                 'entidades.ver', 'entidades.crear', 'entidades.editar', 'entidades.eliminar',
 

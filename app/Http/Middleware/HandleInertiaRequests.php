@@ -48,6 +48,8 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'warning' => fn () => $request->session()->get('warning'),
+                'licencia_alerta' => fn () => $request->session()->get('licencia_alerta'),
+                'licencia_tipo' => fn () => $request->session()->get('licencia_tipo'),
             ],
         ];
     }

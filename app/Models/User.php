@@ -93,25 +93,39 @@ class User extends Authenticatable
 
     /**
      * Entidades que el usuario puede seleccionar como contexto de trabajo:
-     * todas las activas si es ADMIN; si no, la pivote + su entidad principal.
+     * su propia entidad + las subordinadas en la jerarquía (para ADMIN
+     * también). La entidad principal siempre se incluye.
      *
      * @return \Illuminate\Support\Collection<int, Entidad>
      */
     public function entidadesAcceso(): \Illuminate\Support\Collection
     {
-        if ($this->hasRole('ADMIN')) {
-            return Entidad::where('activo', true)->orderBy('nombre')->get();
+        if (! $this->id_entidad) {
+            return collect();
         }
 
-        return $this->entidades()
+        $ids = collect(Entidad::subEntidadesIds($this->id_entidad))
+            ->push($this->id_entidad)
+            ->unique()
+            ->values()
+            ->all();
+
+        $porJerarquia = Entidad::whereIn('id', $ids)
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get()
-            ->when($this->id_entidad, function ($coleccion) {
-                return $coleccion->contains('id', $this->id_entidad)
-                    ? $coleccion
-                    : $coleccion->push($this->entidad)->filter();
-            })
+            ->get();
+
+        if ($this->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES'])) {
+            return $porJerarquia;
+        }
+
+        $adicionales = $this->entidades()
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get();
+
+        return $porJerarquia
+            ->merge($adicionales)
             ->unique('id')
             ->values();
     }

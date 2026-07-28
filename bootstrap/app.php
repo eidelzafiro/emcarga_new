@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             EstablecerContextoTrabajo::class,
+            \App\Http\Middleware\LicenciaMiddleware::class,
         ]);
 
         $middleware->alias([

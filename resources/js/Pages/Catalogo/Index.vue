@@ -16,6 +16,7 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast } from 'primevue/usetoast'
 
 const props = defineProps({ items: Object, filters: Object, catalogConfig: Object })
+const tipo = computed(() => props.catalogConfig?.tipo)
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
@@ -30,7 +31,7 @@ const baseForm = () => ({
 const form = ref(baseForm())
 
 watch(search, () => {
-  router.get(route(`${props.catalogConfig.route}.index`), { search: search.value }, { preserveState: true, replace: true })
+  router.get(route(`${props.catalogConfig.route}.index`, { tipo: props.catalogConfig.tipo }), { search: search.value }, { preserveState: true, replace: true })
 })
 
 const allFields = computed(() => {
@@ -86,7 +87,7 @@ function openEdit(item) {
 
 function submit() {
   const rt = props.catalogConfig.route
-  const url = editing.value ? route(`${rt}.update`, editing.value.id) : route(`${rt}.store`)
+  const url = editing.value ? route(`${rt}.update`, { tipo: tipo.value, id: editing.value.id }) : route(`${rt}.store`, { tipo: tipo.value })
   const method = editing.value ? 'put' : 'post'
   router[method](url, form.value, {
     onSuccess: () => { showForm.value = false; toast.add({ severity: 'success', summary: editing.value ? 'Actualizado' : 'Creado', life: 3000 }) },
@@ -121,7 +122,7 @@ function submit() {
             <div class="flex gap-1">
               <Button icon="pi pi-pencil" rounded text severity="info" @click="openEdit(data)" />
               <Button icon="pi pi-trash" rounded text severity="danger"
-                @click="router.delete(route(`${catalogConfig.route}.destroy`, data.id))" />
+                @click="router.delete(route(`${catalogConfig.route}.destroy`, { tipo: catalogConfig.tipo, id: data.id }))" />
             </div>
           </template>
         </Column>

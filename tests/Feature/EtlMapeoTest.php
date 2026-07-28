@@ -162,7 +162,7 @@ class EtlMapeoTest extends TestCase
     public function test_mapeo_perfiles_es_valido(): void
     {
         $perfiles = $this->mapeo['mapeo_perfiles'];
-        $roles = ['RECHUM', 'TECNICA', 'COMERCIAL', 'CONTABILIDAD', 'ADMIN', 'OPERATIVOS'];
+        $roles = ['RECHUM', 'TECNICA', 'COMERCIAL', 'CONTABILIDAD', 'SUPERADMIN', 'OPERATIVOS'];
         foreach ($perfiles as $id => $rol) {
             $this->assertContains($rol, $roles, "Perfil {$id} → {$rol} no es un rol válido");
         }

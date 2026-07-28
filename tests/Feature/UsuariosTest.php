@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Entidad;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,6 +14,7 @@ class UsuariosTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+    private Entidad $entidad;
 
     protected function setUp(): void
     {
@@ -21,8 +23,14 @@ class UsuariosTest extends TestCase
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         $this->seed(PermissionSeeder::class);
 
-        $this->admin = User::factory()->create();
-        $this->admin->assignRole('ADMIN');
+        $this->entidad = Entidad::create([
+            'codigo' => '001',
+            'nombre' => 'Entidad de Prueba',
+            'abreviatura' => 'EPRUEBA',
+        ]);
+
+        $this->admin = User::factory()->create(['id_entidad' => $this->entidad->id]);
+        $this->admin->assignRole('SUPERADMIN');
     }
 
     private function datosUsuario(array $overrides = []): array
@@ -33,7 +41,7 @@ class UsuariosTest extends TestCase
             'email' => null,
             'password' => 'temporal123',
             'role' => 'TECNICA',
-            'id_entidad' => null,
+            'id_entidad' => $this->entidad->id,
             'idgrupo' => null,
         ], $overrides);
     }

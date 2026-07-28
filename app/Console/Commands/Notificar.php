@@ -23,7 +23,7 @@ class Notificar extends Command
         } elseif ($userId = $this->option('user')) {
             $usuarios = User::where('id', $userId)->get();
         } else {
-            $usuarios = User::whereHas('roles', fn ($q) => $q->where('name', 'ADMIN'))->get();
+            $usuarios = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['SUPERADMIN', 'CONFIGURACIONES']))->get();
         }
 
         $bar = $this->output->createProgressBar($usuarios->count());

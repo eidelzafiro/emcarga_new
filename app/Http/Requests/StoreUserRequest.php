@@ -14,23 +14,16 @@ class StoreUserRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Normaliza el username a mayúsculas antes de validar
-     * (paridad con el legacy y consistencia con la BD).
-     */
     protected function prepareForValidation(): void
     {
         if ($this->username) {
             $this->merge(['username' => strtoupper($this->username)]);
         }
+        if (! $this->id_entidad) {
+            $this->merge(['id_entidad' => $this->user()?->id_entidad]);
+        }
     }
 
-    /**
-     * Reglas para crear un usuario. La contraseña indicada es temporal:
-     * el usuario deberá cambiarla en su primer acceso.
-     *
-     * @return array<string, mixed>
-     */
     public function rules(): array
     {
         return [
@@ -39,7 +32,7 @@ class StoreUserRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', 'string', 'exists:roles,name'],
-            'id_entidad' => ['nullable', 'integer', 'exists:entidades,id'],
+            'id_entidad' => ['required', 'integer', 'exists:entidades,id'],
             'entidades' => ['nullable', 'array'],
             'entidades.*' => ['integer', 'exists:entidades,id'],
             'idgrupo' => ['nullable', 'integer'],

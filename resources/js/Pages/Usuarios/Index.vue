@@ -36,8 +36,12 @@
           size="small"
           class="p-datatable-sm"
         >
-          <Column field="name" header="Nombre" sortable />
           <Column field="username" header="Usuario" sortable />
+          <Column header="Entidad">
+            <template #body="{ data }">
+              <span class="text-sm">{{ data.entidad?.abreviatura ?? '—' }}</span>
+            </template>
+          </Column>
           <Column header="Perfil">
             <template #body="{ data }">
               <span v-for="rol in data.roles" :key="rol.id">
@@ -166,10 +170,30 @@
           />
           <small v-if="form.errors.role" class="text-red-500">{{ form.errors.role }}</small>
         </div>
-        <div v-if="entidades?.length">
+        <div>
+          <label class="block text-sm font-medium text-surface-700 mb-1">Entidad</label>
+          <Select
+            v-model="form.id_entidad"
+            :options="entidades"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Seleccione una entidad"
+            class="w-full"
+            :disabled="!esAdmin"
+            :class="{ 'p-invalid': form.errors.id_entidad }"
+          />
+          <small v-if="form.errors.id_entidad" class="text-red-500">{{ form.errors.id_entidad }}</small>
+          <small v-if="!esAdmin && miEntidadId" class="text-surface-400 block mt-1">
+            Solo el administrador puede cambiar la entidad.
+          </small>
+        </div>
+        <div v-if="entidadesAccesoOptions.length">
           <label class="block text-sm font-medium text-surface-700 mb-1">Entidades a las que tiene acceso</label>
+          <small v-if="entidadesAccesoOptions.length === 1" class="text-surface-400 block mb-1">
+            La entidad principal no tiene subordinadas, solo se muestra ella misma.
+          </small>
           <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-surface-300 rounded p-2">
-            <div v-for="ent in entidades" :key="ent.id" class="flex items-center gap-2">
+            <div v-for="ent in entidadesAccesoOptions" :key="ent.id" class="flex items-center gap-2">
               <Checkbox
                 :inputId="'ent_' + ent.id"
                 :value="ent.id"
@@ -247,12 +271,20 @@ const props = defineProps({
   usuarios: Object,
   roles: Array,
   entidades: Array,
+  esAdmin: Boolean,
+  miEntidadId: Number,
   filters: Object,
 });
 
 const page = usePage();
 const permissions = computed(() => page.props.auth?.permissions ?? []);
 const can = (permiso) => permissions.value.includes(permiso);
+
+const entidadesAccesoOptions = computed(() => {
+  if (!form.id_entidad) return [];
+  const hijas = props.entidades.filter((e) => e.parent_id === form.id_entidad);
+  return hijas.length > 0 ? hijas : props.entidades.filter((e) => e.id === form.id_entidad);
+});
 
 const search = ref(props.filters?.search ?? '');
 let timer = null;
@@ -292,6 +324,7 @@ const abrirCrear = () => {
   seleccionado.value = null;
   form.reset();
   form.clearErrors();
+  form.id_entidad = miEntidadId;
   modalForm.value = true;
 };
 
@@ -303,7 +336,7 @@ const abrirEditar = (usuario) => {
   form.email = usuario.email ?? '';
   form.password = '';
   form.role = usuario.roles[0]?.name ?? '';
-  form.id_entidad = usuario.id_entidad;
+  form.id_entidad = usuario.id_entidad ?? miEntidadId;
   form.entidades = usuario.entidades?.map((e) => e.id) ?? [];
   form.idgrupo = usuario.idgrupo;
   form.clearErrors();

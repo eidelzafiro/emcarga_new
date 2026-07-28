@@ -51,7 +51,7 @@ class MenuTest extends TestCase
     public function test_admin_ve_todos_los_modulos_incluyendo_comercial(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('ADMIN');
+        $user->assignRole('SUPERADMIN');
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page

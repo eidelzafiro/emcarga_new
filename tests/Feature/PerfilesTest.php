@@ -23,7 +23,7 @@ class PerfilesTest extends TestCase
         $this->seed(PermissionSeeder::class);
 
         $this->admin = User::factory()->create();
-        $this->admin->assignRole('ADMIN');
+        $this->admin->assignRole('SUPERADMIN');
     }
 
     public function test_lista_perfiles_requiere_permiso(): void
@@ -78,9 +78,9 @@ class PerfilesTest extends TestCase
         $this->assertDatabaseHas('bitacora', ['accion' => 'editar_perfil']);
     }
 
-    public function test_no_se_puede_renombrar_admin(): void
+    public function test_no_se_puede_renombrar_superadmin(): void
     {
-        $perfil = Role::where('name', 'ADMIN')->first();
+        $perfil = Role::where('name', 'SUPERADMIN')->first();
 
         $response = $this->actingAs($this->admin)->put("/perfiles/{$perfil->id}", [
             'nombre' => 'ROOT',
@@ -88,12 +88,12 @@ class PerfilesTest extends TestCase
         ]);
 
         $response->assertSessionHas('error');
-        $this->assertEquals('ADMIN', $perfil->fresh()->name);
+        $this->assertEquals('SUPERADMIN', $perfil->fresh()->name);
     }
 
-    public function test_no_se_puede_eliminar_admin(): void
+    public function test_no_se_puede_eliminar_superadmin(): void
     {
-        $perfil = Role::where('name', 'ADMIN')->first();
+        $perfil = Role::where('name', 'SUPERADMIN')->first();
 
         $response = $this->actingAs($this->admin)->delete("/perfiles/{$perfil->id}");
 

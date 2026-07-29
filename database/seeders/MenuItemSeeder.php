@@ -349,6 +349,7 @@ class MenuItemSeeder extends Seeder
         );
 
         $catItems = [
+            ['catalogo.tipos', 'Tipos de Catálogo', 'pi pi-list', 'catalogo.ver', 0],
             ['marcas.index', 'Marcas', 'pi pi-tag', 'marcas.ver', 1],
             ['modelos.index', 'Modelos', 'pi pi-cog', 'modelos.ver', 2],
             ['grupos.index', 'Grupos', 'pi pi-bullseye', 'grupos.ver', 3],
@@ -373,6 +374,12 @@ class MenuItemSeeder extends Seeder
                 ['label' => $label, 'icon' => $icon, 'permission' => $perm, 'orden' => $orden, 'parent_id' => $catalogos->id]
             );
         }
+
+        // Gestión de tipos de catálogo (repara el ítem legacy "Tarjetero").
+        MenuItem::updateOrCreate(
+            ['route' => 'catalogo.gestionar'],
+            ['label' => 'Gestionar Catálogos', 'icon' => 'pi pi-cog', 'permission' => 'catalogo.editar', 'orden' => 27, 'parent_id' => $catalogos->id, 'activo' => true]
+        );
 
         $reportes = MenuItem::firstOrCreate(
             ['label' => 'Reportes', 'parent_id' => null],

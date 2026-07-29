@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\ManagesCatalog;
 use App\Models\Consecutivo;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ConsecutivosController extends Controller
 {
@@ -37,31 +39,109 @@ class ConsecutivosController extends Controller
     protected function getExtraFields(): array
     {
         return [
-            'descripcion' => ['label' => 'Descripción', 'type' => 'text'],
             'ultimo' => ['label' => 'Último Valor', 'type' => 'number'],
-            'formato' => ['label' => 'Formato', 'type' => 'text'],
         ];
     }
 
-    /**
-     * Los consecutivos son la excepción: el código ES el dato de negocio
-     * (identifica el formato de numeración), así que se edita a mano.
-     */
     protected function usaCodigoManual(): bool
     {
         return true;
     }
 
+    public function index(Request $request)
+    {
+        $entidadId = (int) session('entidad_activa_id');
+
+        $query = Consecutivo::where('id_entidad', $entidadId);
+        $search = $request->get('search');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                foreach ($this->getSearchFields() as $field) {
+                    $q->orWhere($field, 'like', "%{$search}%");
+                }
+            });
+        }
+
+        $items = $query->orderBy($this->getSortField())->paginate(20);
+
+        $items->getCollection()->transform(fn ($item) => [
+            'id' => $item->id,
+            'nombre' => $item->descripcion,
+            'valor' => $item->ultimo,
+            'id_entidad' => $item->id_entidad,
+        ]);
+
+        return Inertia::render('Catalogo/Index', [
+            'items' => $items,
+            'filters' => $request->only('search'),
+            'catalogConfig' => [
+                'route' => $this->getRouteName(),
+                'title' => $this->getTitle(),
+                'codigoManual' => false,
+                'fields' => [
+                    'nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true],
+                ],
+                'extra' => [
+                    'valor' => ['label' => 'Valor', 'type' => 'number'],
+                ],
+            ],
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate($this->getValidationRules());
+
+        $data['id_entidad'] = (int) session('entidad_activa_id');
+        $data['descripcion'] = $data['nombre'];
+        $data['ultimo'] = $data['valor'] ?? 0;
+        if (empty($data['codigo'])) {
+            $data['codigo'] = $this->generarCodigo();
+        }
+        unset($data['nombre'], $data['valor']);
+
+        Consecutivo::create($data);
+
+        return redirect()->back()->with('success', 'Creado correctamente');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $item = Consecutivo::findOrFail($id);
+        $data = $request->validate($this->getValidationRules($id));
+
+        $data['descripcion'] = $data['nombre'];
+        $data['ultimo'] = $data['valor'] ?? 0;
+        unset($data['nombre'], $data['valor']);
+
+        $item->update($data);
+
+        return redirect()->back()->with('success', 'Actualizado correctamente');
+    }
+
+    public function destroy($id)
+    {
+        $item = Consecutivo::findOrFail($id);
+        $item->delete();
+
+        return redirect()->back()->with('success', 'Eliminado correctamente');
+    }
+
     protected function getValidationRules($id = null): array
     {
+        $entidadId = (int) session('entidad_activa_id');
         $table = 'consecutivos';
-        $unique = $id ? "unique:{$table},codigo,{$id}" : "unique:{$table},codigo";
 
+        $codigoUnique = $id
+            ? "unique:{$table},codigo,{$id},id,id_entidad,{$entidadId}"
+            : "unique:{$table},codigo,NULL,id,id_entidad,{$entidadId}";
+
+        $requiredCodigo = $id ? 'nullable' : 'nullable';
         return [
-            'codigo' => "required|string|max:50|{$unique}",
-            'descripcion' => 'required|string|max:255',
-            'ultimo' => 'integer|min:0',
-            'formato' => 'nullable|string|max:50',
+            'codigo' => "nullable|string|max:50|{$codigoUnique}",
+            'nombre' => 'required|string|max:255',
+            'valor' => 'nullable|integer|min:0',
         ];
     }
 }

@@ -11,11 +11,18 @@ class ConfiguracionesModeloController extends Controller
 {
     public function index(Request $request)
     {
+        $entidadId = (int) session('entidad_activa_id');
+
         $items = ConfiguracioneModelo::with('tipoModelo')
+            ->where('id_entidad', $entidadId)
             ->orderBy('nombre')
             ->paginate(20);
 
-        $tiposModelo = TipoModelo::select('id', 'modelo')->orderBy('modelo')->get();
+        $tiposModelo = TipoModelo::where('id_entidad', $entidadId)
+            ->select('codigo', 'nombre')
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn ($t) => ['value' => $t->codigo, 'label' => $t->nombre]);
 
         return Inertia::render('ConfiguracionesModelo/Index', [
             'items' => $items,
@@ -28,12 +35,13 @@ class ConfiguracionesModeloController extends Controller
     {
         $validated = $request->validate([
             'nombre' => 'required|max:30',
-            'id_tipo_modelo' => 'nullable|exists:tipos_modelo,id',
+            'codigo_tipo_modelo' => 'nullable|exists:tipos_modelo,codigo',
             'set_x' => 'nullable|integer',
             'set_y' => 'nullable|integer',
             'letra' => 'nullable|integer',
         ]);
         $validated['id_user'] = auth()->id();
+        $validated['id_entidad'] = session('entidad_activa_id');
         ConfiguracioneModelo::create($validated);
 
         return redirect()->route('configuraciones-modelo.index')->with('success', 'Configuración creada correctamente.');
@@ -43,7 +51,7 @@ class ConfiguracionesModeloController extends Controller
     {
         $validated = $request->validate([
             'nombre' => 'required|max:30',
-            'id_tipo_modelo' => 'nullable|exists:tipos_modelo,id',
+            'codigo_tipo_modelo' => 'nullable|exists:tipos_modelo,codigo',
             'set_x' => 'nullable|integer',
             'set_y' => 'nullable|integer',
             'letra' => 'nullable|integer',

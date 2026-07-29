@@ -110,8 +110,10 @@ function submit() {
 
       <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total">
         <Column v-if="catalogConfig?.codigoManual !== false" field="codigo" header="Código" sortable />
-        <Column field="nombre" header="Nombre" sortable />
-        <Column v-for="(cfg, key) in gridFields" :key="key" v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :field="key" :header="cfg.label" />
+        <Column v-if="!catalogConfig?.hideNombre" field="nombre" header="Nombre" sortable />
+        <template v-for="(cfg, key) in gridFields" :key="key">
+          <Column v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :field="key" :header="cfg.label" />
+        </template>
         <Column field="activo" header="Activo" :style="{ width: '100px' }">
           <template #body="{ data }">
             <i v-if="data.activo !== undefined" :class="data.activo ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />

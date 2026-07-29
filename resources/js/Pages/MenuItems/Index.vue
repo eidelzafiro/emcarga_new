@@ -165,6 +165,7 @@
             placeholder="Sin padre (raíz)"
             class="w-full"
             :showClear="true"
+            @change="alCambiarPadre($event.value)"
           />
         </div>
 
@@ -322,6 +323,14 @@ const opcionesPadre = computed(() => {
   };
   return build(props.items);
 });
+
+function alCambiarPadre(id) {
+  if (!id) return;
+  const padre = itemsFlat.value.find((i) => i.id === id);
+  if (padre) {
+    form.orden = padre.orden;
+  }
+}
 
 const modalForm = ref(false);
 const modalEliminar = ref(false);

@@ -137,6 +137,49 @@ class EtlService
     }
 
     /**
+     * ETL de consecutivos: tec_consecutivos → consecutivos.
+     * Requiere mapeo especial porque nombconsecutivo va tanto a
+     * codigo como a descripcion (no soportado por columnas genéricas).
+     */
+    public function migrarConsecutivos(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        DB::connection('legacy')->table('tec_consecutivos')
+            ->orderBy('idconsecutivos')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos) {
+                foreach ($filas as $fila) {
+                    $codigo = trim($fila->nombconsecutivo);
+                    if ($codigo === '') {
+                        $avisos[] = "consecutivos#{$fila->idconsecutivos}: codigo vacío, omitido";
+                        continue;
+                    }
+
+                    DB::table('consecutivos')->updateOrInsert(
+                        ['id' => $fila->idconsecutivos],
+                        [
+                            'codigo' => $codigo,
+                            'descripcion' => $codigo,
+                            'ultimo' => $fila->valor ?? 0,
+                            'formato' => null,
+                            'id_entidad' => $fila->idunidad ?: null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                    $procesados++;
+                }
+            });
+
+        $this->reporte['consecutivos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('tec_consecutivos')->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
      * ETL genérico de una tabla definida en config/etl.php.
      * Preserva el id legacy como id nuevo (upsert repetible).
      */

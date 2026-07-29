@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             MenuItemSeeder::class,
             NotificacionSeeder::class,
+            CatalogoTipoSeeder::class,
         ]);
     }
 }

@@ -8,5 +8,5 @@ class Consecutivo extends Model
 {
     protected $table = 'consecutivos';
 
-    protected $fillable = ['codigo', 'descripcion', 'ultimo', 'formato'];
+    protected $fillable = ['codigo', 'descripcion', 'ultimo', 'formato', 'id_entidad'];
 }

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CatalogoItem;
+use App\Models\CatalogoTipo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CatalogoController extends Controller
@@ -24,129 +24,39 @@ class CatalogoController extends Controller
             'descripcion' => ['label' => 'Descripción', 'type' => 'textarea'],
             'clave' => ['label' => 'Clave', 'type' => 'number'],
         ],
-        'tipos_catalogo_lugares' => ['abreviatura' => ['label' => 'Abreviatura', 'type' => 'text']],
-        'tipos_articulos_bolsa' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
-        'tipos_calificadores' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
         'tipos_color_piel' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
-        'tipos_especialidad' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
         'tipos_integracion_politica' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
-        'tipos_jefe_grupo' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
         'tipos_nivel_educacion' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
-        'tipos_plantillas' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
-        'tipos_ramas' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
         'tipos_sexo' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
-        'tipos_tallas' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
         'tipos_ubicacion_defensa' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
-        'tipos_clasificacion_laboral' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
         'tipos_indicadores' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
-        'tipos_sistemas_cuc' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
-        'tipos_subcta_unidad' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
         'tipos_suspension' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
-        'tipos_medios_proteccion' => ['descripcion' => ['label' => 'Descripción', 'type' => 'text']],
         'tipos_arrastres' => [
             'descripcion' => ['label' => 'Descripción', 'type' => 'textarea'],
             'capacidad_toneladas' => ['label' => 'Capacidad (ton)', 'type' => 'number'],
         ],
         'tipos_causas_baja' => ['id_tipo_causa_laboral' => ['label' => 'Causa Laboral ID', 'type' => 'number']],
-        'tipos_causas_movimiento' => ['id_tipo_causa_laboral' => ['label' => 'Causa Laboral ID', 'type' => 'number']],
-        'tipos_clasificacion_laboral' => [
-            'designado' => ['label' => 'Designado', 'type' => 'boolean'],
-            'cuadro' => ['label' => 'Cuadro', 'type' => 'boolean'],
-        ],
         'tipos_indicadores' => ['unidad' => ['label' => 'Unidad', 'type' => 'text']],
         'tipos_integracion_politica' => [
             'politica' => ['label' => 'Política', 'type' => 'text'],
             'abreviatura' => ['label' => 'Abreviatura', 'type' => 'text'],
         ],
         'tipos_nivel_educacion' => ['abreviatura' => ['label' => 'Abreviatura', 'type' => 'text']],
-        'tipos_tasas' => [
-            'unidad' => ['label' => 'Unidad', 'type' => 'text'],
-            'valor' => ['label' => 'Valor', 'type' => 'number'],
-        ],
         'tipos_aceites' => [],
         'tipos_agregados' => [],
         'tipos_cargas' => [],
         'tipos_combustibles' => [],
-        'tipos_conceptos' => [],
-        'tipos_contratos' => [],
-        'tipos_neumaticos' => [],
-        'tipos_incidencias' => [],
         'tipos_equipos' => [],
+        'tipos_incidencias' => [],
+        'tipos_neumaticos' => [],
         'tipos_documentos' => [],
-        'tipos_entidad' => [],
         'tipos_estado_civil' => [],
         'tipos_grupo_horario' => [],
         'tipos_lubricantes' => [],
-        'tipos_medios_proteccion' => [],
         'tipos_pagos_adicionales' => [],
         'tipos_penalizaciones' => [],
         'tipos_roturas' => [],
         'tipos_servicios' => [],
-        'tipos_sexo' => [],
-        'tipos_sistemas' => [],
-        'tipos_sistemas_pago' => [],
-        'tipos_tallas' => [],
-        'tipos_causas_laborales' => [],
-    ];
-
-    private static array $titles = [
-        'tipos_aceites' => 'Tipos de Aceites',
-        'tipos_agregados' => 'Tipos de Agregados',
-        'tipos_arrastres' => 'Tipos de Arrastres',
-        'tipos_articulos_bolsa' => 'Artículos de Bolsa',
-        'tipos_calificadores' => 'Calificadores',
-        'tipos_cargas' => 'Tipos de Cargas',
-        'tipos_catalogo_lugares' => 'Catálogo de Lugares',
-        'tipos_causas' => 'Causas',
-        'tipos_causas_baja' => 'Causas de Baja',
-        'tipos_causas_laborales' => 'Causas Laborales',
-        'tipos_causas_movimiento' => 'Causas de Movimiento',
-        'tipos_clasificacion_laboral' => 'Clasificación Laboral',
-        'tipos_color_piel' => 'Color de Piel',
-        'tipos_combustibles' => 'Tipos de Combustibles',
-        'tipos_conceptos' => 'Conceptos',
-        'tipos_contratos' => 'Tipos de Contratos',
-        'tipos_deducciones' => 'Deducciones',
-        'tipos_documentos' => 'Tipos de Documentos',
-        'tipos_entidad' => 'Tipos de Entidad',
-        'tipos_equipos' => 'Tipos de Equipos',
-        'tipos_especialidad' => 'Especialidad',
-        'tipos_estado_civil' => 'Estado Civil',
-        'tipos_estados' => 'Estados',
-        'tipos_gastos' => 'Tipos de Gastos',
-        'tipos_grupo_horario' => 'Grupo Horario',
-        'tipos_incidencias' => 'Incidencias',
-        'tipos_indicadores' => 'Indicadores',
-        'tipos_integracion_politica' => 'Integración Política',
-        'tipos_jefe_grupo' => 'Jefe de Grupo',
-        'tipos_lubricantes' => 'Tipos de Lubricantes',
-        'tipos_mantenimiento' => 'Tipos de Mantenimiento',
-        'tipos_medios_proteccion' => 'Medios de Protección',
-        'tipos_neumaticos' => 'Tipos de Neumáticos',
-        'tipos_nivel_educacion' => 'Nivel de Educación',
-        'tipos_operaciones' => 'Tipos de Operaciones',
-        'tipos_pagos_adicionales' => 'Pagos Adicionales',
-        'tipos_penalizaciones' => 'Penalizaciones',
-        'tipos_plantillas' => 'Plantillas',
-        'tipos_ramas' => 'Ramas',
-        'tipos_roturas' => 'Tipos de Roturas',
-        'tipos_servicios' => 'Tipos de Servicios',
-        'tipos_sexo' => 'Sexo',
-        'tipos_sistemas' => 'Sistemas',
-        'tipos_sistemas_cuc' => 'Sistemas CUC',
-        'tipos_sistemas_pago' => 'Sistemas de Pago',
-        'tipos_subcta_unidad' => 'Subcuenta Unidad',
-        'tipos_suspension' => 'Suspensión',
-        'tipos_tallas' => 'Tallas',
-        'tipos_tasas' => 'Tasas',
-        'tipos_ubicacion_defensa' => 'Ubicación Defensa',
-        'tipos_vehiculos' => 'Tipos de Vehículos',
-        'tipo_ingresos' => 'Tipos de Ingresos',
-    ];
-
-    private static array $withSoftDelete = [
-        'tipos_operaciones',
-        'tipos_mantenimiento',
     ];
 
     protected function getExtraFields(string $tipo): array
@@ -156,7 +66,7 @@ class CatalogoController extends Controller
 
     protected function getTitle(string $tipo): string
     {
-        return self::$titles[$tipo] ?? $tipo;
+        return CatalogoTipo::where('tipo', $tipo)->value('titulo') ?? $tipo;
     }
 
     protected function usaCodigoManual(string $tipo): bool
@@ -206,20 +116,15 @@ class CatalogoController extends Controller
 
     public function tipos()
     {
-        $grupos = [
-            'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
-            'Comercial' => ['tipos_cargas', 'tipos_catalogo_lugares', 'tipos_servicios', 'tipos_gastos', 'tipos_contratos', 'tipos_conceptos', 'tipos_entidad'],
-            'RRHH' => ['tipos_calificadores', 'tipos_causas', 'tipos_causas_baja', 'tipos_causas_laborales', 'tipos_causas_movimiento', 'tipos_clasificacion_laboral', 'tipos_color_piel', 'tipos_deducciones', 'tipos_documentos', 'tipos_especialidad', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_jefe_grupo', 'tipos_medios_proteccion', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_plantillas', 'tipos_ramas', 'tipos_sexo', 'tipos_sistemas_cuc', 'tipos_sistemas_pago', 'tipos_subcta_unidad', 'tipos_suspension', 'tipos_tallas', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones'],
-            'Facturación' => ['tipos_tasas'],
-            'Sistemas' => ['tipos_sistemas', 'tipos_articulos_bolsa'],
-        ];
+        $tipos = CatalogoTipo::where('activo', true)->orderBy('orden')->get();
+        $grupos = $tipos->groupBy('agrupacion');
 
         $gruposConTitulos = [];
-        foreach ($grupos as $grupo => $tipos) {
-            $gruposConTitulos[$grupo] = array_map(fn($t) => [
-                'tipo' => $t,
-                'titulo' => self::$titles[$t] ?? $t,
-            ], $tipos);
+        foreach ($grupos as $agrupacion => $items) {
+            $gruposConTitulos[$agrupacion] = $items->map(fn($t) => [
+                'tipo' => $t->tipo,
+                'titulo' => $t->titulo,
+            ])->toArray();
         }
 
         return Inertia::render('Catalogo/Tipos', [
@@ -228,6 +133,39 @@ class CatalogoController extends Controller
                 'route' => 'catalogo',
             ],
         ]);
+    }
+
+    public function gestionar()
+    {
+        $this->authorize('catalogo.editar');
+
+        $tipos = CatalogoTipo::orderBy('orden')->get()->map(fn($t) => [
+            'id' => $t->id,
+            'tipo' => $t->tipo,
+            'titulo' => $t->titulo,
+            'agrupacion' => $t->agrupacion,
+            'activo' => $t->activo,
+            'orden' => $t->orden,
+            'items_count' => CatalogoItem::where('tipo', $t->tipo)->count(),
+        ]);
+
+        return Inertia::render('Catalogo/GestionarTipos', [
+            'tipos' => $tipos,
+        ]);
+    }
+
+    public function updateTipo(Request $request, string $tipo)
+    {
+        $this->authorize('catalogo.editar');
+
+        $data = $request->validate([
+            'agrupacion' => 'sometimes|string|max:100',
+            'activo' => 'sometimes|boolean',
+        ]);
+
+        CatalogoTipo::where('tipo', $tipo)->update($data);
+
+        return redirect()->back()->with('success', 'Tipo actualizado correctamente.');
     }
 
     public function index(Request $request, string $tipo)

@@ -238,8 +238,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('otros-agregados', OtrosAgregadosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('energia', EnergiaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         // Módulo Taller
         Route::resource('taller', TallerController::class)
@@ -280,13 +278,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-cargas-reporte', TiposCargasReporteController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('clientes-seleccion', ClientesSeleccionController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         Route::resource('turnos-comerciales', TurnosComercialesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('movil-web', MovilWebController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('alertas', AlertasController::class)
@@ -392,9 +384,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-causas-movimiento', TiposCausasMovimientoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('tipos-clasificacion-laboral', TiposClasificacionLaboralController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-color-piel', TiposColorPielController::class)
@@ -567,8 +556,6 @@ Route::middleware('auth')->group(function () {
         // Técnica - Tablas faltantes (Fase 5.8)
         Route::resource('arrastres', ArrastresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('balances-electricos', BalancesElectricosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('historial-tractivos', HistorialTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('motivos-baja-bateria', MotivosBajaBateriaController::class)
@@ -583,11 +570,9 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-suspension', TiposSuspensionController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('locales-electricos', LocalesElectricosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        // ATM - Inventario/Tarjetero (Fase 5.8)
-        Route::resource('tarjetero', TarjeteroController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+        
+
+        // ATM - Inventario (Fase 5.8)
         Route::resource('movimientos-inventario', MovimientosInventarioController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         // RRHH - Tablas faltantes (Fase 5.8)
@@ -648,6 +633,8 @@ Route::middleware('auth')->group(function () {
 
         // Catálogo unificado (Fase 6.1)
         Route::get('catalogo', [CatalogoController::class, 'tipos'])->name('catalogo.tipos');
+        Route::get('catalogo/gestionar', [CatalogoController::class, 'gestionar'])->name('catalogo.gestionar');
+        Route::put('catalogo/{tipo}', [CatalogoController::class, 'updateTipo'])->name('catalogo.update-tipo');
         Route::get('catalogo/{tipo}', [CatalogoController::class, 'index'])->name('catalogo.index');
         Route::post('catalogo/{tipo}', [CatalogoController::class, 'store'])->name('catalogo.store');
         Route::put('catalogo/{tipo}/{id}', [CatalogoController::class, 'update'])->name('catalogo.update');

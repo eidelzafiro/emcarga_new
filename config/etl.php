@@ -41,7 +41,7 @@ return [
      * Los datos faltantes se depuran sobre la BD nueva directamente.
      */
     'excluir_datos' => [
-        'clientes', 'configuraciones_modelo', 'demandas', 'distancias',
+        'clientes', 'demandas', 'distancias',
         'prefacturas', 'tarifas', 'tarifas_config_carga', 'tarifas_config_contenedor',
         'amortizaciones', 'combustibles_lubricantes',
         'balances_electricos', 'control_lubricantes',
@@ -102,6 +102,7 @@ return [
                 'setx' => 'set_x',
                 'sety' => 'set_y',
                 'letra' => 'letra',
+                'idunidad' => 'id_entidad',
             ],
         ],
 
@@ -282,6 +283,7 @@ return [
             'pk' => 'idtipomod',
             'columnas' => [
                 'modelo' => 'modelo',
+                'idunidad' => 'id_entidad',
             ],
             'defaults' => [
                 'activo' => true,
@@ -857,8 +859,13 @@ return [
         'consecutivos' => [
             'legacy' => 'tec_consecutivos',
             'pk' => 'idconsecutivos',
+            'columnas' => [
+                'nombconsecutivo' => 'codigo',
+                'valor' => 'ultimo',
+                'idunidad' => 'id_entidad',
+            ],
             'defaults' => [
-                'descripcion' => '',
+                'descripcion' => '',  // se sobreescribe en migrarConsecutivos
             ],
         ],
 

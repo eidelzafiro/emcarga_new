@@ -55,6 +55,9 @@ class EtlRun extends Command
             if (in_array($tabla, $excluirDatos) && ! $solo) {
                 continue;
             }
+            if ($tabla === 'consecutivos') {
+                continue;  // migración dedicada abajo
+            }
 
             $this->info("Migrando {$tabla}...");
             $etl->migrarTabla($tabla, $chunk);
@@ -62,6 +65,13 @@ class EtlRun extends Command
         }
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+        // Consecutivos: mapeo especial codigo/descripcion desde nombconsecutivo
+        if (! $solo || $solo === 'consecutivos') {
+            $this->info('Migrando consecutivos...');
+            $etl->migrarConsecutivos($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'consecutivos');
+        }
 
         // Pivote multi-entidad: requiere usuarios + entidades ya migrados
         if (! $solo) {

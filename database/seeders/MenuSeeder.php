@@ -17,13 +17,15 @@ class MenuSeeder extends Seeder
         $padres = [
             ['label' => 'Dashboard', 'icon' => 'pi pi-home', 'route' => 'dashboard', 'permission' => 'dashboard.ver', 'orden' => 1],
             ['label' => 'Técnica', 'icon' => 'pi pi-wrench', 'route' => null, 'permission' => null, 'orden' => 2],
-            ['label' => 'Taller', 'icon' => 'pi pi-cog', 'route' => 'taller.index', 'permission' => 'taller.ver', 'orden' => 3],
-            ['label' => 'Comercial', 'icon' => 'pi pi-briefcase', 'route' => null, 'permission' => null, 'orden' => 4],
-            ['label' => 'Facturación', 'icon' => 'pi pi-file-invoice', 'route' => null, 'permission' => null, 'orden' => 5],
-            ['label' => 'RRHH', 'icon' => 'pi pi-users', 'route' => null, 'permission' => null, 'orden' => 6],
-            ['label' => 'Contabilidad', 'icon' => 'pi pi-calculator', 'route' => null, 'permission' => null, 'orden' => 7],
-            ['label' => 'Administración', 'icon' => 'pi pi-shield', 'route' => null, 'permission' => null, 'orden' => 8],
-            ['label' => 'Reportes', 'icon' => 'pi pi-chart-bar', 'route' => null, 'permission' => null, 'orden' => 9],
+            ['label' => 'Flota', 'icon' => 'pi pi-truck', 'route' => null, 'permission' => null, 'orden' => 3],
+            ['label' => 'Taller', 'icon' => 'pi pi-cog', 'route' => 'taller.index', 'permission' => 'taller.ver', 'orden' => 4],
+            ['label' => 'Comercial', 'icon' => 'pi pi-briefcase', 'route' => null, 'permission' => null, 'orden' => 5],
+            ['label' => 'Facturación', 'icon' => 'pi pi-file-invoice', 'route' => null, 'permission' => null, 'orden' => 6],
+            ['label' => 'RRHH', 'icon' => 'pi pi-users', 'route' => null, 'permission' => null, 'orden' => 7],
+            ['label' => 'Contabilidad', 'icon' => 'pi pi-calculator', 'route' => null, 'permission' => null, 'orden' => 8],
+            ['label' => 'Administración', 'icon' => 'pi pi-shield', 'route' => null, 'permission' => null, 'orden' => 9],
+            ['label' => 'Catálogos', 'icon' => 'pi pi-book', 'route' => null, 'permission' => null, 'orden' => 10],
+            ['label' => 'Reportes', 'icon' => 'pi pi-chart-bar', 'route' => null, 'permission' => null, 'orden' => 11],
             // ['label' => 'Pizarra', 'icon' => 'pi pi-th-large', 'route' => 'pizarra.index', 'permission' => 'pizarra.ver', 'orden' => 10],
         ];
 
@@ -51,20 +53,40 @@ class MenuSeeder extends Seeder
 
         // Hijos por módulo
         $hijos = [
-            // Técnica (parent_id=2)
-            ['parent' => 'Técnica', 'label' => 'Tractivos', 'route' => 'tractivos.index', 'permission' => 'tractivos.ver', 'orden' => 1],
-            ['parent' => 'Técnica', 'label' => 'Motores', 'route' => 'motores.index', 'permission' => 'motores.ver', 'orden' => 2],
-            ['parent' => 'Técnica', 'label' => 'Cajas', 'route' => 'cajas.index', 'permission' => 'cajas.ver', 'orden' => 3],
-            ['parent' => 'Técnica', 'label' => 'Diferenciales', 'route' => 'diferenciales.index', 'permission' => 'diferenciales.ver', 'orden' => 4],
-            ['parent' => 'Técnica', 'label' => 'Baterías', 'route' => 'baterias.index', 'permission' => 'baterias.ver', 'orden' => 5],
-            ['parent' => 'Técnica', 'label' => 'Neumáticos', 'route' => 'neumaticos.index', 'permission' => 'neumaticos.ver', 'orden' => 6],
-            ['parent' => 'Técnica', 'label' => 'Lubricantes', 'route' => 'lubricantes.index', 'permission' => 'lubricantes.ver', 'orden' => 7],
-            ['parent' => 'Técnica', 'label' => 'Otros Agregados', 'route' => 'otros-agregados.index', 'permission' => 'otros-agregados.ver', 'orden' => 8],
-            ['parent' => 'Técnica', 'label' => 'Energía', 'route' => 'energia.index', 'permission' => 'energia.ver', 'orden' => 9],
-            ['parent' => 'Técnica', 'label' => 'Arrastres', 'route' => 'arrastres.index', 'permission' => 'arrastres.ver', 'orden' => 10],
-            ['parent' => 'Técnica', 'label' => 'Balances Eléctricos', 'route' => 'balances-electricos.index', 'permission' => 'balances-electricos.ver', 'orden' => 11],
-            ['parent' => 'Técnica', 'label' => 'Historial Tractivos', 'route' => 'historial-tractivos.index', 'permission' => 'historial-tractivos.ver', 'orden' => 12],
-            ['parent' => 'Técnica', 'label' => 'Tarjetero', 'route' => 'tarjetero.index', 'permission' => 'tarjetero.ver', 'orden' => 13],
+            // Flota
+            ['parent' => 'Flota', 'label' => 'Vehículos', 'route' => 'tractivos.index', 'permission' => 'tractivos.ver', 'orden' => 1],
+            ['parent' => 'Flota', 'label' => 'Motores', 'route' => 'motores.index', 'permission' => 'motores.ver', 'orden' => 2],
+            ['parent' => 'Flota', 'label' => 'Cajas', 'route' => 'cajas.index', 'permission' => 'cajas.ver', 'orden' => 3],
+            ['parent' => 'Flota', 'label' => 'Diferenciales', 'route' => 'diferenciales.index', 'permission' => 'diferenciales.ver', 'orden' => 4],
+            ['parent' => 'Flota', 'label' => 'Baterías', 'route' => 'baterias.index', 'permission' => 'baterias.ver', 'orden' => 5],
+            ['parent' => 'Flota', 'label' => 'Neumáticos', 'route' => 'neumaticos.index', 'permission' => 'neumaticos.ver', 'orden' => 6],
+            ['parent' => 'Flota', 'label' => 'Lubricantes', 'route' => 'lubricantes.index', 'permission' => 'lubricantes.ver', 'orden' => 7],
+            ['parent' => 'Flota', 'label' => 'Otros Agregados', 'route' => 'otros-agregados.index', 'permission' => 'otros-agregados.ver', 'orden' => 8],
+            ['parent' => 'Flota', 'label' => 'Arrastres', 'route' => 'arrastres.index', 'permission' => 'arrastres.ver', 'orden' => 9],
+            ['parent' => 'Flota', 'label' => 'Motivos Entrada Taller', 'route' => 'motivos-entrada-taller.index', 'permission' => 'motivos-entrada-taller.ver', 'orden' => 11],
+            ['parent' => 'Flota', 'label' => 'Clasif. OT', 'route' => 'clasificaciones-ordenes-taller.index', 'permission' => 'clasificaciones-ordenes-taller.ver', 'orden' => 12],
+            ['parent' => 'Flota', 'label' => 'Motivos Baja Batería', 'route' => 'motivos-baja-bateria.index', 'permission' => 'motivos-baja-bateria.ver', 'orden' => 13],
+            ['parent' => 'Flota', 'label' => 'Historial Tractivos', 'route' => 'historial-tractivos.index', 'permission' => 'historial-tractivos.ver', 'orden' => 14],
+            ['parent' => 'Flota', 'label' => 'Estad. Explotación', 'route' => 'estadisticas-explotacion.index', 'permission' => 'estadisticas-explotacion.ver', 'orden' => 15],
+
+            // Catálogos (root)
+            ['parent' => 'Catálogos', 'label' => 'Marcas', 'route' => 'marcas.index', 'permission' => 'marcas.ver', 'orden' => 1],
+            ['parent' => 'Catálogos', 'label' => 'Modelos', 'route' => 'modelos.index', 'permission' => 'modelos.ver', 'orden' => 2],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Modelo', 'route' => 'tipos-modelo.index', 'permission' => 'tipos-modelo.ver', 'orden' => 3],
+            ['parent' => 'Catálogos', 'label' => 'Grupos', 'route' => 'grupos.index', 'permission' => 'grupos.ver', 'orden' => 3],
+            ['parent' => 'Catálogos', 'label' => 'Talleres', 'route' => 'talleres.index', 'permission' => 'talleres.ver', 'orden' => 6],
+            ['parent' => 'Catálogos', 'label' => 'Naves', 'route' => 'naves.index', 'permission' => 'naves.ver', 'orden' => 7],
+            ['parent' => 'Catálogos', 'label' => 'Vallas', 'route' => 'vallas.index', 'permission' => 'vallas.ver', 'orden' => 8],
+            ['parent' => 'Catálogos', 'label' => 'Destinos Agregados', 'route' => 'destinos-agregados.index', 'permission' => 'destinos-agregados.ver', 'orden' => 9],
+            ['parent' => 'Catálogos', 'label' => 'Medidas Neumáticos', 'route' => 'medidas-neumaticos.index', 'permission' => 'medidas-neumaticos.ver', 'orden' => 10],
+            ['parent' => 'Catálogos', 'label' => 'Posiciones Neumáticos', 'route' => 'posiciones-neumaticos.index', 'permission' => 'posiciones-neumaticos.ver', 'orden' => 11],
+            ['parent' => 'Catálogos', 'label' => 'Consecutivos', 'route' => 'consecutivos.index', 'permission' => 'consecutivos.ver', 'orden' => 12],
+            ['parent' => 'Catálogos', 'label' => 'Embalajes', 'route' => 'embalajes.index', 'permission' => 'embalajes.ver', 'orden' => 13],
+            ['parent' => 'Catálogos', 'label' => 'Navieras', 'route' => 'navieras.index', 'permission' => 'navieras.ver', 'orden' => 14],
+            ['parent' => 'Catálogos', 'label' => 'Organismos', 'route' => 'organismos.index', 'permission' => 'organismos.ver', 'orden' => 15],
+            ['parent' => 'Catálogos', 'label' => 'Categorías Cargo', 'route' => 'categorias-cargo.index', 'permission' => 'categorias-cargo.ver', 'orden' => 16],
+            ['parent' => 'Catálogos', 'label' => 'Grupos Escala', 'route' => 'grupos-escala.index', 'permission' => 'grupos-escala.ver', 'orden' => 17],
+            ['parent' => 'Catálogos', 'label' => 'Entidades', 'route' => 'entidades.index', 'permission' => 'entidades.ver', 'orden' => 18],
 
             // Comercial (parent_id=4)
             ['parent' => 'Comercial', 'label' => 'Clientes', 'route' => 'clientes.index', 'permission' => 'clientes.ver', 'orden' => 1],
@@ -78,6 +100,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Comercial', 'label' => 'Alertas', 'route' => 'alertas.index', 'permission' => 'alertas.ver', 'orden' => 9],
             ['parent' => 'Comercial', 'label' => 'Indicadores', 'route' => 'indicadores.index', 'permission' => 'indicadores.ver', 'orden' => 10],
             ['parent' => 'Comercial', 'label' => 'Demandas', 'route' => 'demandas.index', 'permission' => 'demandas.ver', 'orden' => 11],
+            ['parent' => 'Comercial', 'label' => 'Config. Modelo', 'route' => 'configuraciones-modelo.index', 'permission' => 'configuraciones-modelo.ver', 'orden' => 12],
 
             // Facturación (parent_id=5)
             ['parent' => 'Facturación', 'label' => 'Facturas', 'route' => 'facturas.index', 'permission' => 'facturas.ver', 'orden' => 1],
@@ -113,7 +136,9 @@ class MenuSeeder extends Seeder
             // Administración (parent_id=8)
             ['parent' => 'Administración', 'label' => 'Usuarios', 'route' => 'usuarios.index', 'permission' => 'usuarios.ver', 'orden' => 1],
             ['parent' => 'Administración', 'label' => 'Perfiles', 'route' => 'perfiles.index', 'permission' => 'perfiles.ver', 'orden' => 2],
-            ['parent' => 'Administración', 'label' => 'Catálogos', 'route' => 'catalogo.tipos', 'permission' => 'catalogo.ver', 'orden' => 3],
+            ['parent' => 'Administración', 'label' => 'Entidades', 'route' => 'entidades.index', 'permission' => 'entidades.ver', 'orden' => 3],
+            ['parent' => 'Administración', 'label' => 'Tarjetero', 'route' => 'catalogo.gestionar', 'permission' => 'catalogo.editar', 'orden' => 4],
+            ['parent' => 'Administración', 'label' => 'Menú', 'route' => 'menu-items.index', 'permission' => 'menus.ver', 'orden' => 5],
 
             // Reportes (parent_id=9)
             ['parent' => 'Reportes', 'label' => 'Marcas', 'route' => 'reportes.marcas', 'permission' => 'reportes.generar', 'orden' => 1],

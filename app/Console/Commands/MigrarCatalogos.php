@@ -12,6 +12,7 @@ class MigrarCatalogos extends Command
     protected $signature = 'zafiro:migrar-catalogos
         {--tipo= : Migrar solo un tipo específico (ej: tipos_cargas)}
         {--dry-run : Solo mostrar qué se migraría sin insertar}
+        {--fresh : Vacía catalogo_items antes de migrar (re-sincronización total)}
         {--force : Migrar también tablas atípicas (tipos_cargas_reporte, tipos_medios_cargo, tipos_modelo, tipos_tractivos)}';
 
     protected $description = 'Migra datos de tablas tipos_* y tipo_* a catalogo_items';
@@ -35,6 +36,18 @@ class MigrarCatalogos extends Command
         $tipoFilter = $this->option('tipo');
         $dryRun = $this->option('dry-run');
         $force = $this->option('force');
+        $fresh = $this->option('fresh');
+
+        if ($fresh && ! $dryRun) {
+            if ($tipoFilter) {
+                CatalogoItem::where('tipo', $tipoFilter)->forceDelete();
+                $this->warn("Ítems de '{$tipoFilter}' eliminados (--fresh).");
+            } else {
+                CatalogoItem::withTrashed()->forceDelete();
+                DB::statement('ALTER TABLE catalogo_items AUTO_INCREMENT = 1');
+                $this->warn('catalogo_items vaciada (--fresh).');
+            }
+        }
 
         $tablas = $this->getTablasTipos();
 
@@ -93,16 +106,21 @@ class MigrarCatalogos extends Command
                     }
                 }
 
-                CatalogoItem::create([
-                    'tipo' => $tabla,
-                    'codigo' => $row->codigo ?? null,
-                    'nombre' => $row->nombre,
-                    'activo' => $row->activo ?? true,
-                    'extra' => empty($extra) ? null : $extra,
-                    'deleted_at' => in_array($tabla, $this->withDeletedAt) ? ($row->deleted_at ?? null) : null,
-                    'created_at' => $row->created_at ?? now(),
-                    'updated_at' => $row->updated_at ?? now(),
-                ]);
+                // Upsert idempotente por tipo + origen_id: re-ejecutar
+                // actualiza en vez de duplicar, y conserva la trazabilidad
+                // con la tabla tipos_* de origen.
+                CatalogoItem::withTrashed()->updateOrCreate(
+                    ['tipo' => $tabla, 'origen_id' => $row->id],
+                    [
+                        'codigo' => $row->codigo ?? null,
+                        'nombre' => $row->nombre ?? '',
+                        'activo' => $row->activo ?? true,
+                        'extra' => empty($extra) ? null : $extra,
+                        'deleted_at' => in_array($tabla, $this->withDeletedAt) ? ($row->deleted_at ?? null) : null,
+                        'created_at' => $row->created_at ?? now(),
+                        'updated_at' => $row->updated_at ?? now(),
+                    ]
+                );
 
                 $bar->advance();
             }

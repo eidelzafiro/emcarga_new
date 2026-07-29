@@ -231,6 +231,10 @@ return [
         'tipo_ingresos' => [
             'legacy' => 'com_tipoingresos',
             'pk' => 'idtipoingresos',
+            'columnas' => [
+                'tipoingresos' => 'nombre',
+                'siglas' => 'siglas',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -240,6 +244,9 @@ return [
         'tipos_cargas' => [
             'legacy' => 'com_tipocargas',
             'pk' => 'idtipocargas',
+            'columnas' => [
+                'tipocargas' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -254,6 +261,10 @@ return [
         'tipos_catalogo_lugares' => [
             'legacy' => 'com_tipocatlugares',
             'pk' => 'idtipocatlugares',
+            'columnas' => [
+                'tipocatlugares' => 'nombre',
+                'abreviatura' => 'abreviatura',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -263,6 +274,11 @@ return [
         'tipos_estados' => [
             'legacy' => 'com_tipoestados',
             'pk' => 'idtipoestados',
+            'columnas' => [
+                'tipoestados' => 'nombre',
+                'imgtipoestados' => 'imagen',
+                'siglas' => 'siglas',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -272,6 +288,10 @@ return [
         'tipos_indicadores' => [
             'legacy' => 'com_tipoindicadores',
             'pk' => 'idtipoindicadores',
+            'columnas' => [
+                'tipoindicadores' => 'nombre',
+                'um' => 'unidad',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -293,6 +313,9 @@ return [
         'tipos_servicios' => [
             'legacy' => 'com_tiposervicios',
             'pk' => 'idtiposervicios',
+            'columnas' => [
+                'tiposervicios' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -358,6 +381,9 @@ return [
         'servicentros' => [
             'legacy' => 'cont_servicentros',
             'pk' => 'idservicentros',
+            'columnas' => [
+                'servicentros' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -367,6 +393,9 @@ return [
         'tipos_conceptos' => [
             'legacy' => 'cont_tipoconceptos',
             'pk' => 'idtipoconcepto',
+            'columnas' => [
+                'tipoconcepto' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -376,6 +405,9 @@ return [
         'tipos_documentos' => [
             'legacy' => 'cont_tipodocumentos',
             'pk' => 'idtipodoc',
+            'columnas' => [
+                'tipodocumentos' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -385,6 +417,9 @@ return [
         'tipos_gastos' => [
             'legacy' => 'cont_tipogastos',
             'pk' => 'idtipogastos',
+            'columnas' => [
+                'tipogastos' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -841,6 +876,9 @@ return [
         'clasificaciones_ordenes_taller' => [
             'legacy' => 'tec_tipoclasificacion',
             'pk' => 'idtipoclasificacion',
+            'columnas' => [
+                'tipoclasificacion' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -850,6 +888,9 @@ return [
         'colores' => [
             'legacy' => 'tec_colores',
             'pk' => 'idcolores',
+            'columnas' => [
+                'colores' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -886,6 +927,9 @@ return [
         'destinos_agregados' => [
             'legacy' => 'tec_destagregados',
             'pk' => 'iddestagregados',
+            'columnas' => [
+                'destagregados' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -908,6 +952,9 @@ return [
         'equipos_electricos' => [
             'legacy' => 'tec_electequipos',
             'pk' => 'idelectequipos',
+            'columnas' => [
+                'electequipos' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -917,6 +964,9 @@ return [
         'equipos_garaje' => [
             'legacy' => 'tec_equiposgaraje',
             'pk' => 'idequiposgaraje',
+            'columnas' => [
+                'equiposgaraje' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -926,6 +976,9 @@ return [
         'estados_componentes' => [
             'legacy' => 'tec_tipoestados',
             'pk' => 'idtipoestados',
+            'columnas' => [
+                'tipoestados' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -947,6 +1000,9 @@ return [
         'grupos' => [
             'legacy' => 'tec_grupo',
             'pk' => 'idgrupo',
+            'columnas' => [
+                'grupo' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1000,6 +1056,9 @@ return [
         'locales_electricos' => [
             'legacy' => 'tec_electlocales',
             'pk' => 'idelectlocales',
+            'columnas' => [
+                'electlocales' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1009,6 +1068,9 @@ return [
         'lubricantes' => [
             'legacy' => 'tec_lubricantes',
             'pk' => 'idlubricantes',
+            'columnas' => [
+                'lubricantes' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1018,6 +1080,9 @@ return [
         'marcas' => [
             'legacy' => 'tec_marca',
             'pk' => 'idmarca',
+            'columnas' => [
+                'marca' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1027,6 +1092,9 @@ return [
         'medidas_neumaticos' => [
             'legacy' => 'tec_neumaticosmedidas',
             'pk' => 'idneumaticosmedidas',
+            'columnas' => [
+                'neumaticosmedidas' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1050,6 +1118,9 @@ return [
         'modelos' => [
             'legacy' => 'tec_modelo',
             'pk' => 'idmodelo',
+            'columnas' => [
+                'modelo' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1060,6 +1131,9 @@ return [
         'motivos_baja_bateria' => [
             'legacy' => 'tec_motbajabat',
             'pk' => 'idmotbajabat',
+            'columnas' => [
+                'motbajabat' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1069,6 +1143,9 @@ return [
         'motivos_entrada_taller' => [
             'legacy' => 'tec_motentrada',
             'pk' => 'idmotentrada',
+            'columnas' => [
+                'motentrada' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1186,6 +1263,9 @@ return [
         'paises' => [
             'legacy' => 'tec_paises',
             'pk' => 'idpaises',
+            'columnas' => [
+                'paises' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1230,6 +1310,7 @@ return [
             'legacy' => 'tec_tipoagregados',
             'pk' => 'idtipoagregados',
             'columnas' => [
+                'tipoagregados' => 'nombre',
                 'codigo' => 'codigo',
             ],
             'defaults' => [
@@ -1250,6 +1331,9 @@ return [
         'tipos_causas' => [
             'legacy' => 'tec_motbajaneum',
             'pk' => 'idmotbajaneum',
+            'columnas' => [
+                'motbajaneum' => 'nombre',
+            ],
             'defaults' => [
                 'tipo' => 'baja',
                 'activo' => true,
@@ -1260,6 +1344,9 @@ return [
         'tipos_combustibles' => [
             'legacy' => 'tec_tipocombustibles',
             'pk' => 'idtipocombustibles',
+            'columnas' => [
+                'tipocombustibles' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1269,6 +1356,9 @@ return [
         'tipos_equipos' => [
             'legacy' => 'tec_tipoequipos',
             'pk' => 'idtipoequipos',
+            'columnas' => [
+                'tipoequipos' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1278,6 +1368,9 @@ return [
         'tipos_lubricantes' => [
             'legacy' => 'tec_tipolubricantes',
             'pk' => 'idtipolubricantes',
+            'columnas' => [
+                'tipolubricantes' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1287,6 +1380,9 @@ return [
         'tipos_mantenimiento' => [
             'legacy' => 'tec_tipomtto',
             'pk' => 'idtipomtto',
+            'columnas' => [
+                'tipomtto' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1296,6 +1392,9 @@ return [
         'tipos_neumaticos' => [
             'legacy' => 'tec_tiponeumaticos',
             'pk' => 'idtiponeumaticos',
+            'columnas' => [
+                'tiponeumaticos' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
@@ -1306,6 +1405,7 @@ return [
             'legacy' => 'tec_tipooperaciones',
             'pk' => 'idtipooperaciones',
             'columnas' => [
+                'tipooperaciones' => 'nombre',
                 'codigo' => 'codigo',
             ],
             'defaults' => [
@@ -1317,6 +1417,9 @@ return [
         'tipos_roturas' => [
             'legacy' => 'tec_neumaticostiporoturas',
             'pk' => 'idneumtiporoturas',
+            'columnas' => [
+                'tiporoturas' => 'nombre',
+            ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',

@@ -12,6 +12,7 @@ class CatalogoItem extends Model
 
     protected $fillable = [
         'tipo',
+        'origen_id',
         'codigo',
         'nombre',
         'activo',

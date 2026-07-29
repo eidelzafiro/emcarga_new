@@ -52,9 +52,10 @@ class MigrarCatalogos extends Command
         $tablas = $this->getTablasTipos();
 
         if ($tipoFilter) {
-            $tablas = array_filter($tablas, fn($t) => $t === $tipoFilter);
+            $tablas = array_filter($tablas, fn ($t) => $t === $tipoFilter);
             if (empty($tablas)) {
                 $this->error("No se encontró la tabla '{$tipoFilter}'");
+
                 return Command::FAILURE;
             }
         }
@@ -63,14 +64,16 @@ class MigrarCatalogos extends Command
         $totalOmitidos = 0;
 
         foreach ($tablas as $tabla) {
-            if (in_array($tabla, $this->excluidas) && !$force) {
+            if (in_array($tabla, $this->excluidas) && ! $force) {
                 $this->warn("  [OMITIDA] {$tabla} (excluida del catálogo unificado)");
                 $totalOmitidos++;
+
                 continue;
             }
 
-            if (!Schema::hasTable($tabla)) {
+            if (! Schema::hasTable($tabla)) {
                 $this->warn("  [SALTADA] {$tabla} (no existe)");
+
                 continue;
             }
 
@@ -82,13 +85,15 @@ class MigrarCatalogos extends Command
 
             if ($count === 0) {
                 $this->line("  [VACÍA] {$tabla}");
+
                 continue;
             }
 
-            $this->line("  [MIGRANDO] {$tabla} ({$count} registros, extras: " . implode(', ', $columnasExtra ?: ['ninguna']) . ")");
+            $this->line("  [MIGRANDO] {$tabla} ({$count} registros, extras: ".implode(', ', $columnasExtra ?: ['ninguna']).')');
 
             if ($dryRun) {
                 $totalMigrados += $count;
+
                 continue;
             }
 
@@ -151,7 +156,7 @@ class MigrarCatalogos extends Command
             ORDER BY TABLE_NAME
         ", [$dbName]);
 
-        return array_map(fn($t) => $t->TABLE_NAME, $tablas);
+        return array_map(fn ($t) => $t->TABLE_NAME, $tablas);
     }
 
     private function castExtra(mixed $value): mixed
@@ -159,10 +164,12 @@ class MigrarCatalogos extends Command
         if (is_numeric($value) && str_contains((string) $value, '.')) {
             return (float) $value;
         }
-        if (is_numeric($value) && !str_contains((string) $value, '.')) {
+        if (is_numeric($value) && ! str_contains((string) $value, '.')) {
             $int = (int) $value;
+
             return (string) $int === (string) $value ? $int : $value;
         }
+
         return $value;
     }
 }

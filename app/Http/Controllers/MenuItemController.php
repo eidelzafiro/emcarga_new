@@ -90,17 +90,19 @@ class MenuItemController extends Controller
         $this->authorize('update', $menuItem);
 
         $permiso = $menuItem->permission;
-        if (!$permiso) {
+        if (! $permiso) {
             return back()->with('warning', 'Este ítem no tiene permiso asociado. Asígnese un permiso para controlar su visibilidad.');
         }
 
         if ($role->hasPermissionTo($permiso)) {
             $role->revokePermissionTo($permiso);
             Bitacora::registrar('ocultar_menu', "Ítem {$menuItem->label} ocultado del rol {$role->name}.");
+
             return back()->with('success', "Ítem ocultado del rol {$role->name}.");
         } else {
             $role->givePermissionTo($permiso);
             Bitacora::registrar('mostrar_menu', "Ítem {$menuItem->label} mostrado al rol {$role->name}.");
+
             return back()->with('success', "Ítem mostrado al rol {$role->name}.");
         }
     }

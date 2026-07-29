@@ -153,6 +153,7 @@ class EtlService
                     $codigo = trim($fila->nombconsecutivo);
                     if ($codigo === '') {
                         $avisos[] = "consecutivos#{$fila->idconsecutivos}: codigo vacío, omitido";
+
                         continue;
                     }
 

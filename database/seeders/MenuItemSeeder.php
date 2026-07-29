@@ -80,7 +80,7 @@ class MenuItemSeeder extends Seeder
             ['route' => 'historial-tractivos.index'],
             ['label' => 'Historial Tractivos', 'icon' => 'pi pi-history', 'permission' => 'historial-tractivos.ver', 'orden' => 21, 'parent_id' => $flota->id]
         );
-        
+
         MenuItem::firstOrCreate(
             ['route' => 'choferes.index'],
             ['label' => 'Choferes', 'icon' => 'pi pi-user', 'permission' => 'choferes.ver', 'orden' => 32, 'parent_id' => $flota->id]
@@ -89,7 +89,7 @@ class MenuItemSeeder extends Seeder
             ['route' => 'estadisticas-explotacion.index'],
             ['label' => 'Estad. Explotación', 'icon' => 'pi pi-chart-line', 'permission' => 'estadisticas-explotacion.ver', 'orden' => 33, 'parent_id' => $flota->id]
         );
-        
+
         MenuItem::firstOrCreate(
             ['route' => 'taller.index'],
             ['label' => 'Taller', 'icon' => 'pi pi-wrench', 'permission' => 'taller.ver', 'orden' => 4]
@@ -170,7 +170,6 @@ class MenuItemSeeder extends Seeder
             ['route' => 'configuraciones-modelo.index'],
             ['label' => 'Config. Modelo', 'icon' => 'pi pi-sliders-h', 'permission' => 'configuraciones-modelo.ver', 'orden' => 18, 'parent_id' => $comercial->id]
         );
-
 
         // Comercial - Tablas faltantes parte 2
         MenuItem::firstOrCreate(

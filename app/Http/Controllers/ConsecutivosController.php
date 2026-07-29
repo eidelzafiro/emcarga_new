@@ -138,6 +138,7 @@ class ConsecutivosController extends Controller
             : "unique:{$table},codigo,NULL,id,id_entidad,{$entidadId}";
 
         $requiredCodigo = $id ? 'nullable' : 'nullable';
+
         return [
             'codigo' => "nullable|string|max:50|{$codigoUnique}",
             'nombre' => 'required|string|max:255',

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,7 +12,7 @@ return new class extends Migration
                 Schema::table('configuraciones_modelo', function ($table) {
                     $table->dropForeign(['id_tipo_modelo']);
                 });
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // FK might not exist
             }
 

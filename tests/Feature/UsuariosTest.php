@@ -14,6 +14,7 @@ class UsuariosTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private Entidad $entidad;
 
     protected function setUp(): void

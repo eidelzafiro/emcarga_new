@@ -36,10 +36,10 @@ class MigrarUserPassword extends Command
 
         if ($plain === null || $plain === '') {
             $this->warn('No se pudo descifrar el password, se genera uno temporal.');
-            $plain = 'Zafiro*' . bin2hex(random_bytes(4));
+            $plain = 'Zafiro*'.bin2hex(random_bytes(4));
         }
 
-        $this->line("Password descifrado correctamente.");
+        $this->line('Password descifrado correctamente.');
 
         $user = User::withTrashed()->find($legacy->iduser);
 

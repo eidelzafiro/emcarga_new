@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class EliminarTiposCatalogo extends Command
 {
     protected $signature = 'zafiro:eliminar-tipos-catalogo {--force : Ejecutar sin confirmación}';
+
     protected $description = 'Elimina tipos de catálogo obsoletos y sus items';
 
     private array $aEliminar = [
@@ -36,7 +37,7 @@ class EliminarTiposCatalogo extends Command
         $totalItems = CatalogoItem::whereIn('tipo', $this->aEliminar)->count();
         $totalTipos = CatalogoTipo::whereIn('tipo', $this->aEliminar)->count();
 
-        $this->warn("Se eliminarán:");
+        $this->warn('Se eliminarán:');
         $this->line("  - {$totalTipos} tipos de catálogo");
         $this->line("  - {$totalItems} registros en catalogo_items");
 
@@ -56,7 +57,8 @@ class EliminarTiposCatalogo extends Command
             CatalogoTipo::where('tipo', $tipo)->delete();
         }
 
-        $this->info("=== Eliminación completada ===");
+        $this->info('=== Eliminación completada ===');
+
         return Command::SUCCESS;
     }
 }

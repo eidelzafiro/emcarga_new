@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -78,7 +81,7 @@ class User extends Authenticatable
     /**
      * Entidad principal del usuario (su "unidad" en el legacy).
      */
-    public function entidad(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function entidad(): BelongsTo
     {
         return $this->belongsTo(Entidad::class, 'id_entidad');
     }
@@ -86,7 +89,7 @@ class User extends Authenticatable
     /**
      * Entidades a las que el usuario tiene acceso (pivote multi-entidad).
      */
-    public function entidades(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function entidades(): BelongsToMany
     {
         return $this->belongsToMany(Entidad::class, 'entidad_user')->withTimestamps();
     }
@@ -96,9 +99,9 @@ class User extends Authenticatable
      * su propia entidad + las subordinadas en la jerarquía (para ADMIN
      * también). La entidad principal siempre se incluye.
      *
-     * @return \Illuminate\Support\Collection<int, Entidad>
+     * @return Collection<int, Entidad>
      */
-    public function entidadesAcceso(): \Illuminate\Support\Collection
+    public function entidadesAcceso(): Collection
     {
         if (! $this->id_entidad) {
             return collect();

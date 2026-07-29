@@ -14,7 +14,7 @@ class HistorialMovimientosController extends Controller
             ->when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%"))
             ->when($entidadId = session('entidad_activa_id'), fn ($q) => $q->where(function ($q) use ($entidadId) {
                 $q->where('id_entidad_origen', $entidadId)
-                  ->orWhere('id_entidad_destino', $entidadId);
+                    ->orWhere('id_entidad_destino', $entidadId);
             }))
             ->orderBy('id')
             ->paginate(20);

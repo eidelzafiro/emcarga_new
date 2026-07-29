@@ -193,14 +193,12 @@ class PermissionSeeder extends Seeder
 
             'movimientos-inventario.ver', 'movimientos-inventario.crear', 'movimientos-inventario.editar', 'movimientos-inventario.eliminar',
 
-
             // RRHH - Tablas faltantes
             'centros-costos.ver', 'centros-costos.crear', 'centros-costos.editar', 'centros-costos.eliminar',
             'tipos-articulos-bolsa.ver', 'tipos-articulos-bolsa.crear', 'tipos-articulos-bolsa.editar', 'tipos-articulos-bolsa.eliminar',
 
             'tipos-jefe-grupo.ver', 'tipos-jefe-grupo.crear', 'tipos-jefe-grupo.editar', 'tipos-jefe-grupo.eliminar',
             'pagos-adicionales-cargo.ver', 'pagos-adicionales-cargo.crear', 'pagos-adicionales-cargo.editar', 'pagos-adicionales-cargo.eliminar',
-
 
             // Comercial - Tablas faltantes
             'contenedores.ver', 'contenedores.crear', 'contenedores.editar', 'contenedores.eliminar',
@@ -313,7 +311,6 @@ class PermissionSeeder extends Seeder
 
                 'contenedores.ver', 'contenedores.crear', 'contenedores.editar', 'contenedores.eliminar',
                 'categorias-productos.ver', 'categorias-productos.crear', 'categorias-productos.editar', 'categorias-productos.eliminar',
-
 
                 'devoluciones.ver', 'devoluciones.crear', 'devoluciones.editar', 'devoluciones.eliminar',
 

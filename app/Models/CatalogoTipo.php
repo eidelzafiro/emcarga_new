@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CatalogoTipo extends Model
 {
@@ -22,7 +23,7 @@ class CatalogoTipo extends Model
         ];
     }
 
-    public function items(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function items(): HasMany
     {
         return $this->hasMany(CatalogoItem::class, 'tipo', 'tipo');
     }

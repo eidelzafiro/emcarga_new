@@ -32,7 +32,7 @@ class CatalogoController extends Controller
 
         $gruposConTitulos = [];
         foreach ($grupos as $agrupacion => $items) {
-            $gruposConTitulos[$agrupacion] = $items->map(fn($t) => [
+            $gruposConTitulos[$agrupacion] = $items->map(fn ($t) => [
                 'tipo' => $t->tipo,
                 'titulo' => $t->titulo,
             ])->toArray();
@@ -50,7 +50,7 @@ class CatalogoController extends Controller
     {
         $this->authorize('catalogo.editar');
 
-        $tipos = CatalogoTipo::orderBy('orden')->get()->map(fn($t) => [
+        $tipos = CatalogoTipo::orderBy('orden')->get()->map(fn ($t) => [
             'id' => $t->id,
             'tipo' => $t->tipo,
             'titulo' => $t->titulo,
@@ -99,13 +99,14 @@ class CatalogoController extends Controller
         $gridFields = CatalogoSchema::extraFields($tipo);
 
         return Inertia::render('Catalogo/Index', [
-            'items' => $query->orderBy('nombre')->paginate(20)->through(function ($item) use ($gridFields) {
+            'items' => $query->orderBy('nombre')->paginate(20)->through(function ($item) {
                 $row = $item->toArray();
                 if ($item->extra && is_array($item->extra)) {
                     foreach ($item->extra as $k => $v) {
                         $row[$k] = $v;
                     }
                 }
+
                 return $row;
             }),
             'filters' => $request->only('search'),

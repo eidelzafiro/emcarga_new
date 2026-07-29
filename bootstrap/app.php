@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureModulePermission;
 use App\Http\Middleware\EstablecerContextoTrabajo;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\LicenciaMiddleware;
 use App\Http\Middleware\RedirectIfPasswordTemporal;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             EstablecerContextoTrabajo::class,
-            \App\Http\Middleware\LicenciaMiddleware::class,
+            LicenciaMiddleware::class,
         ]);
 
         $middleware->alias([

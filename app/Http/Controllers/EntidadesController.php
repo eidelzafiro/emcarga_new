@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Entidad;
-use App\Models\Provincia;
 use App\Models\Municipio;
+use App\Models\Provincia;
 use App\Models\TipoSistema;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,10 +18,10 @@ class EntidadesController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('codigo', 'like', "%{$search}%")
-                  ->orWhere('nombre', 'like', "%{$search}%")
-                  ->orWhere('abreviatura', 'like', "%{$search}%")
-                  ->orWhere('direccion', 'like', "%{$search}%")
-                  ->orWhere('nit', 'like', "%{$search}%");
+                    ->orWhere('nombre', 'like', "%{$search}%")
+                    ->orWhere('abreviatura', 'like', "%{$search}%")
+                    ->orWhere('direccion', 'like', "%{$search}%")
+                    ->orWhere('nit', 'like', "%{$search}%");
             });
         }
 
@@ -106,5 +106,4 @@ class EntidadesController extends Controller
             'licencia_activa' => 'boolean',
         ];
     }
-
 }

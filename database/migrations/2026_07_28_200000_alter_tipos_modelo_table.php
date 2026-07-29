@@ -14,13 +14,13 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasColumn('tipos_modelo', 'modelo') && !Schema::hasColumn('tipos_modelo', 'nombre')) {
+        if (Schema::hasColumn('tipos_modelo', 'modelo') && ! Schema::hasColumn('tipos_modelo', 'nombre')) {
             Schema::table('tipos_modelo', function ($table) {
                 $table->renameColumn('modelo', 'nombre');
             });
         }
 
-        if (!Schema::hasColumn('tipos_modelo', 'codigo')) {
+        if (! Schema::hasColumn('tipos_modelo', 'codigo')) {
             Schema::table('tipos_modelo', function ($table) {
                 $table->unsignedBigInteger('codigo')->nullable()->after('id');
             });

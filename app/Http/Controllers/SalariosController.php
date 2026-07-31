@@ -17,6 +17,13 @@ class SalariosController extends Controller
             ->when($request->search, fn ($q, $s) => $q->where('numero_nomina', 'like', "%{$s}%"))
             ->when($request->mes, fn ($q, $v) => $q->where('mes', $v))
             ->when($request->ano, fn ($q, $v) => $q->where('ano', $v))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->orderBy('ano', 'desc')
             ->orderBy('mes', 'desc')
             ->paginate(20);
@@ -26,6 +33,7 @@ class SalariosController extends Controller
         $cargos = Cargo::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('Salarios/Index', [
+            'title' => 'Salarios',
             'salarios' => $salarios,
             'bolsas' => $bolsas,
             'areas' => $areas,
@@ -45,6 +53,7 @@ class SalariosController extends Controller
             'observaciones' => 'nullable|string',
             'estado' => 'required|in:borrador,aprobado,cerrado',
         ]);
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         $validated['id_user'] = auth()->id();
         Salario::create($validated);
 

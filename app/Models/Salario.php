@@ -11,7 +11,7 @@ class Salario extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'mes', 'ano', 'id_bolsa', 'id_movimiento', 'numero_nomina',
+        'id_entidad', 'mes', 'ano', 'id_bolsa', 'id_movimiento', 'numero_nomina',
         'id_area', 'id_sexo', 'id_categoria_cargo', 'id_cargo',
         'id_tipo_sistema_pago', 'id_grupo_escala', 'id_nivel_educacion',
         'id_integracion_politica', 'id_color_piel',
@@ -55,5 +55,10 @@ class Salario extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

@@ -12,6 +12,13 @@ class BateriasController extends Controller
     {
         $baterias = Bateria::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%"))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->paginate(20);
 
         return Inertia::render('Baterias/Index', [
@@ -32,6 +39,8 @@ class BateriasController extends Controller
             'fecha_retiro' => 'nullable|date',
             'estado' => 'nullable|string|max:50',
         ]);
+
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
 
         Bateria::create($validated);
 

@@ -16,7 +16,7 @@ class TiposSexoController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-sexo.index';
+        return 'tipos-sexo';
     }
 
     protected function getTitle(): string

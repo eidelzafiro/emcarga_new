@@ -14,7 +14,6 @@ class HistorialMovimiento extends Model
         'id_bolsa',
         'tipo',
         'fecha',
-        'id_plantilla',
         'numero_nomina',
         'id_user',
         'observaciones',
@@ -30,11 +29,6 @@ class HistorialMovimiento extends Model
     public function bolsa(): BelongsTo
     {
         return $this->belongsTo(Bolsa::class, 'id_bolsa');
-    }
-
-    public function plantilla(): BelongsTo
-    {
-        return $this->belongsTo(Plantilla::class, 'id_plantilla');
     }
 
     public function user(): BelongsTo

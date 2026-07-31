@@ -16,7 +16,7 @@ class ServicentrosController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'servicentros.index';
+        return 'servicentros';
     }
 
     protected function getTitle(): string

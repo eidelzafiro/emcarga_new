@@ -9,7 +9,7 @@ class SolicitudesServicio extends Model
 {
     protected $table = 'solicitudes_servicio';
 
-    protected $fillable = ['numero', 'id_cliente', 'id_lugar_origen', 'id_lugar_destino', 'id_producto', 'id_producto2', 'id_tipo_carga', 'id_tipo_carga2', 'id_moneda', 'id_user', 'fecha_solicitud', 'fecha_planificada', 'fecha_ejecutada', 'valor_mt', 'valor_total', 'estado'];
+    protected $fillable = ['id_entidad', 'numero', 'id_cliente', 'id_lugar_origen', 'id_lugar_destino', 'id_producto', 'id_producto2', 'id_tipo_carga', 'id_tipo_carga2', 'id_moneda', 'id_user', 'fecha_solicitud', 'fecha_planificada', 'fecha_ejecutada', 'valor_mt', 'valor_total', 'estado'];
 
     protected function casts(): array
     {
@@ -19,5 +19,10 @@ class SolicitudesServicio extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'id_cliente');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

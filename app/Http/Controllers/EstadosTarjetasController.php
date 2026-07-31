@@ -19,6 +19,7 @@ class EstadosTarjetasController extends Controller
         $tarjetas = Tarjeta::select('id', 'numero', 'descripcion')->orderBy('numero')->get();
 
         return Inertia::render('EstadosTarjetas/Index', [
+            'title' => 'Estados Tarjetas',
             'estados' => $estados,
             'tarjetas' => $tarjetas,
             'filters' => $request->only(['id_tarjeta']),

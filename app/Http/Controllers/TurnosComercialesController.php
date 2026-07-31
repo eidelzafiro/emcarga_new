@@ -16,12 +16,12 @@ class TurnosComercialesController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'turnos-comerciales.index';
+        return 'turnos-comerciales';
     }
 
     protected function getTitle(): string
     {
-        return 'Turnos Comerciales';
+        return 'Turnos';
     }
 
     protected function getSearchFields(): array

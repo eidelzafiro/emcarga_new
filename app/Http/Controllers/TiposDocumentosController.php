@@ -16,7 +16,7 @@ class TiposDocumentosController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-documentos.index';
+        return 'tipos-documentos';
     }
 
     protected function getTitle(): string

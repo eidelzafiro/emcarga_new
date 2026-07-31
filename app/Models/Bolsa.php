@@ -41,6 +41,6 @@ class Bolsa extends Model
 
     public function entidad(): BelongsTo
     {
-        return $this->belongsTo(Entidade::class, 'id_entidad');
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

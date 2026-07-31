@@ -15,7 +15,7 @@ class HistorialTractivosController extends Controller
 
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
-            'title' => 'Historial de Tractivos',
+            'title' => 'Historial Tractivos',
             'route' => 'historial-tractivos',
         ]);
     }

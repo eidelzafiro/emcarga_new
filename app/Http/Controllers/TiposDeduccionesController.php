@@ -16,7 +16,7 @@ class TiposDeduccionesController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-deducciones.index';
+        return 'tipos-deducciones';
     }
 
     protected function getTitle(): string

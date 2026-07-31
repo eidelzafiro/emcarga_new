@@ -16,7 +16,7 @@ class TiposCatalogoLugaresController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-catalogo-lugares.index';
+        return 'tipos-catalogo-lugares';
     }
 
     protected function getTitle(): string

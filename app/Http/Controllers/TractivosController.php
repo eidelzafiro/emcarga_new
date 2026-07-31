@@ -16,10 +16,18 @@ class TractivosController extends Controller
         $tractivos = Tractivo::when($request->search, function ($query, $search) {
             $query->where('descripcion', 'like', "%{$search}%")
                 ->orWhere('placa', 'like', "%{$search}%");
-        })->paginate(20);
+        })
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
+            ->paginate(20);
 
         return Inertia::render('Tractivos/Index', [
-            'title' => 'Flota de Vehículos',
+            'title' => 'Vehículos',
             'tractivos' => $tractivos,
             'filters' => $request->only(['search']),
         ]);
@@ -38,6 +46,7 @@ class TractivosController extends Controller
             'anno' => 'nullable|integer|min:1900|max:'.(date('Y') + 1),
         ]);
 
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         Tractivo::create($validated);
 
         return redirect()->route('tractivos.index')

@@ -6,6 +6,7 @@ use App\Http\Requests\StoreMenuItemRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\Bitacora;
 use App\Models\MenuItem;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -16,15 +17,8 @@ class MenuItemController extends Controller
     {
         $this->authorize('viewAny', MenuItem::class);
 
-        $items = MenuItem::with('children')
-            ->whereNull('parent_id')
-            ->orderBy('orden')
-            ->get()
-            ->map(fn (MenuItem $item) => $this->mapNode($item));
-
-        $permisos = Permission::orderBy('name')->pluck('name');
-
         $roles = Role::with('permissions:id,name')
+            ->where('name', '!=', 'SUPERADMIN')
             ->orderBy('name')
             ->get()
             ->map(fn (Role $role) => [
@@ -33,8 +27,23 @@ class MenuItemController extends Controller
                 'permissions' => $role->permissions->pluck('name'),
             ]);
 
+        $permisoRoles = [];
+        foreach ($roles as $role) {
+            foreach ($role['permissions'] as $perm) {
+                $permisoRoles[$perm][] = $role['name'];
+            }
+        }
+
+        $items = MenuItem::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('orden')
+            ->get()
+            ->map(fn (MenuItem $item) => $this->mapNode($item, $permisoRoles));
+
+        $permisos = Permission::orderBy('name')->pluck('name');
+
         return Inertia::render('MenuItems/Index', [
-            'title' => 'Gestión del menú',
+            'title' => 'Menús',
             'items' => $items,
             'permisos' => $permisos,
             'roles' => $roles,
@@ -59,6 +68,16 @@ class MenuItemController extends Controller
     {
         $this->authorize('update', $menuItem);
         $datos = $request->validated();
+
+        $nuevoOrden = isset($datos['orden']) ? (int) $datos['orden'] : null;
+        $parentId = $datos['parent_id'] ?? $menuItem->parent_id;
+
+        if ($nuevoOrden !== null && $nuevoOrden !== $menuItem->orden) {
+            MenuItem::where('parent_id', $parentId)
+                ->where('id', '!=', $menuItem->id)
+                ->where('orden', '>=', $nuevoOrden)
+                ->increment('orden');
+        }
 
         $menuItem->update($datos);
 
@@ -87,6 +106,14 @@ class MenuItemController extends Controller
 
     public function toggleVisibility(MenuItem $menuItem, Role $role)
     {
+        Log::info('toggleVisibility called', [
+            'menuItemId' => $menuItem->id,
+            'label' => $menuItem->label,
+            'permission' => $menuItem->permission,
+            'roleId' => $role->id,
+            'roleName' => $role->name,
+        ]);
+
         $this->authorize('update', $menuItem);
 
         $permiso = $menuItem->permission;
@@ -107,13 +134,13 @@ class MenuItemController extends Controller
         }
     }
 
-    private function mapNode(MenuItem $item): array
+    private function mapNode(MenuItem $item, array $permisoRoles = []): array
     {
         $hijos = $item->children
             ->where('activo', true)
             ->sortBy('orden')
             ->values()
-            ->map(fn (MenuItem $hijo) => $this->mapNode($hijo));
+            ->map(fn (MenuItem $hijo) => $this->mapNode($hijo, $permisoRoles));
 
         return [
             'id' => $item->id,
@@ -121,6 +148,7 @@ class MenuItemController extends Controller
             'icon' => $item->icon,
             'route' => $item->route,
             'permission' => $item->permission,
+            'roles' => $item->permission ? ($permisoRoles[$item->permission] ?? []) : [],
             'orden' => $item->orden,
             'activo' => $item->activo,
             'parent_id' => $item->parent_id,

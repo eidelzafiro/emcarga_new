@@ -15,7 +15,7 @@ class LubricantesController extends Controller
             ->paginate(20);
 
         return Inertia::render('Lubricantes/Index', [
-            'title' => 'Control de Lubricantes',
+            'title' => 'Lubricantes',
             'lubricantes' => $lubricantes,
             'filters' => $request->only(['search']),
         ]);

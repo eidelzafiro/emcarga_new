@@ -27,7 +27,7 @@
       </div>
 
       <nav class="flex-1 overflow-y-auto py-2 px-2">
-        <PanelMenu :model="menuItems" class="border-0 !bg-transparent" />
+        <PanelMenu :model="menuItems" v-model:expandedKeys="menuExpandedKeys" :multiple="true" class="border-0 !bg-transparent" />
       </nav>
 
       <div class="hidden lg:flex items-center justify-center h-12 border-t border-gray-100 dark:border-gray-800 shrink-0">
@@ -216,7 +216,7 @@
 
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 
 const appName = computed(() => usePage().props.appName || 'Zafiro');
 import { route } from 'ziggy-js';
@@ -265,7 +265,7 @@ const cambiarFechaOperaciones = (valor) => {
   router.post(route('contexto.fecha-operaciones'), { fecha: iso }, { preserveScroll: true });
 };
 
-const sidebarOpen = ref(true);
+const sidebarOpen = ref((() => { try { return localStorage.getItem('sidebarOpen') !== 'false' } catch { return true } })());
 const userMenuOpen = ref(false);
 const userMenuRef = ref(null);
 const notificacionesRef = ref(null);
@@ -273,6 +273,7 @@ const isDark = ref(false);
 const notificaciones = ref([]);
 const pendientes = ref(0);
 const notificacionesAbiertas = ref(false);
+const menuExpandedKeys = ref((() => { try { return JSON.parse(localStorage.getItem('menuExpandedKeys') || '{}') } catch { return {} } })());
 
 const isMobile = ref(false);
 const checkMobile = () => {
@@ -391,6 +392,19 @@ watch(isDark, (val) => {
   }
 });
 
+const menuItems = computed(() => transformarMenu(menu.value));
+
+watch(menuItems, (items) => {
+  nextTick(() => {
+    const active = expandActivePath(items);
+    menuExpandedKeys.value = { ...menuExpandedKeys.value, ...active };
+  });
+}, { immediate: true });
+
+watch(menuExpandedKeys, (val) => {
+  try { localStorage.setItem('menuExpandedKeys', JSON.stringify(val)) } catch {}
+}, { deep: true });
+
 watch(flash, (val) => {
   if (val.success) toast.add({ severity: 'success', summary: 'Éxito', detail: val.success, life: 3000 });
   if (val.error) toast.add({ severity: 'error', summary: 'Error', detail: val.error, life: 5000 });
@@ -401,7 +415,10 @@ watch(flash, (val) => {
 }, { deep: true, immediate: true });
 
 const toggleDarkMode = () => { isDark.value = !isDark.value; };
-const toggleSidebar = () => { sidebarOpen.value = !sidebarOpen.value; };
+const toggleSidebar = () => {
+  sidebarOpen.value = !sidebarOpen.value;
+  try { localStorage.setItem('sidebarOpen', sidebarOpen.value) } catch {}
+};
 
 const iniciales = computed(() => {
   if (!user.value?.name) return 'U';
@@ -414,12 +431,14 @@ function transformarMenu(items, parentLabel = '') {
   return items.map((item) => {
     const icono = item.icon || 'pi pi-circle';
     const label = item.label;
+    const disabled = item.disabled;
 
     if (item.children && item.children.length > 0) {
       return {
         key: `${parentLabel}/${label}`,
         label,
         icon: icono,
+        disabled,
         items: transformarMenu(item.children, `${parentLabel}/${label}`),
       };
     }
@@ -428,12 +447,36 @@ function transformarMenu(items, parentLabel = '') {
       key: `${parentLabel}/${label}`,
       label,
       icon: icono,
+      url: item.url,
+      disabled,
       command: () => {
-        if (item.url) router.visit(item.url);
+        if (item.url && !disabled) router.visit(item.url);
       },
     };
   });
 }
 
-const menuItems = computed(() => transformarMenu(menu.value));
+function expandActivePath(items, parentKey = '') {
+  const keys = {};
+  function walk(list, prefix) {
+    for (const item of list) {
+      const key = `${prefix}/${item.label}`;
+      if (item.items) {
+        const childKeys = walk(item.items, key);
+        if (childKeys) {
+          keys[key] = true;
+          Object.assign(keys, childKeys);
+          return keys;
+        }
+      } else if (item.url && window.location.href.includes(item.url)) {
+        if (prefix) keys[prefix] = true;
+        return keys;
+      }
+    }
+    return null;
+  }
+  walk(items, parentKey);
+  return keys;
+}
+
 </script>

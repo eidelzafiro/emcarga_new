@@ -39,6 +39,7 @@ class CatalogoController extends Controller
         }
 
         return Inertia::render('Catalogo/Tipos', [
+            'title' => 'Catálogo',
             'grupos' => $gruposConTitulos,
             'catalogConfig' => [
                 'route' => 'catalogo',
@@ -61,6 +62,7 @@ class CatalogoController extends Controller
         ]);
 
         return Inertia::render('Catalogo/GestionarTipos', [
+            'title' => 'Gestionar Tipos',
             'tipos' => $tipos,
         ]);
     }
@@ -87,6 +89,13 @@ class CatalogoController extends Controller
             $query->withTrashed();
         }
 
+        if (in_array($tipo, ['areas', 'cargos'])) {
+            $entidadId = (int) session('entidad_activa_id');
+            if ($entidadId) {
+                $query->where('id_entidad', $entidadId);
+            }
+        }
+
         $search = $request->get('search');
         if ($search) {
             $query->where(function ($q) use ($search, $tipo) {
@@ -99,6 +108,7 @@ class CatalogoController extends Controller
         $gridFields = CatalogoSchema::extraFields($tipo);
 
         return Inertia::render('Catalogo/Index', [
+            'title' => $this->getTitle($tipo),
             'items' => $query->orderBy('nombre')->paginate(20)->through(function ($item) {
                 $row = $item->toArray();
                 if ($item->extra && is_array($item->extra)) {
@@ -128,6 +138,10 @@ class CatalogoController extends Controller
     {
         $itemData = $request->itemData();
         $itemData['tipo'] = $tipo;
+
+        if (in_array($tipo, ['areas', 'cargos'])) {
+            $itemData['id_entidad'] = (int) session('entidad_activa_id');
+        }
 
         if (! isset($itemData['codigo']) && ! CatalogoSchema::usaCodigoManual($tipo)) {
             $itemData['codigo'] = $this->generarCodigo($tipo);

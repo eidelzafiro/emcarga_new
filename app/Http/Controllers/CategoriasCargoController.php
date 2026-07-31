@@ -21,7 +21,7 @@ class CategoriasCargoController extends Controller
 
     protected function getTitle(): string
     {
-        return 'Categorías de Cargo';
+        return 'Categorías Cargo';
     }
 
     protected function getExtraFields(): array

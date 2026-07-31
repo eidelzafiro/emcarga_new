@@ -4,15 +4,46 @@
       <template #title>Gestión de usuarios</template>
       <template #content>
         <!-- Barra de herramientas -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <div class="relative w-full sm:w-72">
-            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm" />
-            <InputText
-              v-model="search"
-              placeholder="Buscar por nombre o usuario…"
-              class="w-full pl-9"
-              @input="buscar"
-            />
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 mb-4 items-center">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <span class="p-input-icon-left">
+              <i class="pi pi-search" />
+              <InputText
+                v-model="search"
+                placeholder="Buscar por nombre o usuario…"
+                class="w-full"
+                @input="buscar"
+              />
+            </span>
+            <Select
+              v-model="perfilFiltro"
+              :options="['', ...roles]"
+              placeholder="Filtrar por perfil"
+              @change="aplicarFiltros"
+              :showClear="true"
+            >
+              <template #value="{ value }">
+                <span v-if="value" class="text-sm">{{ value }}</span>
+                <span v-else class="text-surface-400 text-sm">Filtrar por perfil</span>
+              </template>
+            </Select>
+            <Select
+              v-model="estadoFiltro"
+              :options="[
+                { value: '', label: 'Todos los estados' },
+                { value: 'activo', label: 'Activo' },
+                { value: 'bloqueado', label: 'Bloqueado' },
+                { value: 'temporal', label: 'Contraseña temporal' },
+              ]"
+              optionLabel="label"
+              optionValue="value"
+              @change="aplicarFiltros"
+            >
+              <template #value="{ value }">
+                <span v-if="value" class="text-sm">{{ value === 'activo' ? 'Activo' : value === 'bloqueado' ? 'Bloqueado' : value === 'temporal' ? 'Contraseña temporal' : 'Todos los estados' }}</span>
+                <span v-else class="text-surface-400 text-sm">Todos los estados</span>
+              </template>
+            </Select>
           </div>
           <Button
             v-if="can('usuarios.crear')"
@@ -53,7 +84,12 @@
           <Column header="Estado">
             <template #body="{ data }">
               <Tag
-                v-if="data.bloqueado || data.intentos_fallidos >= 5"
+                v-if="data.activo === false"
+                value="Inactivo"
+                severity="secondary"
+              />
+              <Tag
+                v-else-if="data.bloqueado || data.intentos_fallidos >= 5"
                 value="Bloqueado"
                 severity="danger"
               />
@@ -78,6 +114,26 @@
             <template #body="{ data }">
               <div class="flex gap-1">
                 <Button
+                  v-if="can('usuarios.desbloquear')"
+                  :icon="data.activo !== false ? 'pi pi-eye' : 'pi pi-eye-slash'"
+                  :severity="data.activo !== false ? 'success' : 'secondary'"
+                  text
+                  rounded
+                  size="small"
+                  @click="toggleActivo(data)"
+                  v-tooltip.left="(data.activo !== false ? 'Desactivar' : 'Activar') + ' usuario'"
+                />
+                <Button
+                  v-if="can('usuarios.desbloquear')"
+                  :icon="data.bloqueado ? 'pi pi-lock-open' : 'pi pi-lock'"
+                  :severity="data.bloqueado ? 'warn' : 'secondary'"
+                  text
+                  rounded
+                  size="small"
+                  @click="toggleBloqueado(data)"
+                  v-tooltip.left="data.bloqueado ? 'Desbloquear' : 'Bloquear'"
+                />
+                <Button
                   v-if="can('usuarios.editar')"
                   icon="pi pi-pencil"
                   severity="secondary"
@@ -86,16 +142,6 @@
                   size="small"
                   @click="abrirEditar(data)"
                   v-tooltip.left="'Editar'"
-                />
-                <Button
-                  v-if="can('usuarios.desbloquear') && (data.bloqueado || data.intentos_fallidos >= 5)"
-                  icon="pi pi-lock-open"
-                  severity="warn"
-                  text
-                  rounded
-                  size="small"
-                  @click="desbloquear(data)"
-                  v-tooltip.left="'Desbloquear'"
                 />
                 <Button
                   v-if="can('usuarios.restablecer')"
@@ -287,16 +333,30 @@ const entidadesAccesoOptions = computed(() => {
 });
 
 const search = ref(props.filters?.search ?? '');
+const perfilFiltro = ref(props.filters?.perfil ?? '');
+const estadoFiltro = ref(props.filters?.estado ?? '');
+
+const paramsFiltro = () => {
+  const p = { search: search.value };
+  if (perfilFiltro.value) p.perfil = perfilFiltro.value;
+  if (estadoFiltro.value) p.estado = estadoFiltro.value;
+  return p;
+};
+
 let timer = null;
 const buscar = () => {
   clearTimeout(timer);
   timer = setTimeout(() => {
-    router.get(route('usuarios.index'), { search: search.value }, { preserveState: true, replace: true });
+    router.get(route('usuarios.index'), paramsFiltro(), { preserveState: true, replace: true });
   }, 300);
 };
 
+const aplicarFiltros = () => {
+  router.get(route('usuarios.index'), paramsFiltro(), { preserveState: true, replace: true });
+};
+
 const onPage = (event) => {
-  router.get(route('usuarios.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true });
+  router.get(route('usuarios.index'), { ...paramsFiltro(), page: event.page + 1 }, { preserveState: true, replace: true });
 };
 
 const modalForm = ref(false);
@@ -324,7 +384,7 @@ const abrirCrear = () => {
   seleccionado.value = null;
   form.reset();
   form.clearErrors();
-  form.id_entidad = miEntidadId;
+  form.id_entidad = props.miEntidadId;
   modalForm.value = true;
 };
 
@@ -336,7 +396,7 @@ const abrirEditar = (usuario) => {
   form.email = usuario.email ?? '';
   form.password = '';
   form.role = usuario.roles[0]?.name ?? '';
-  form.id_entidad = usuario.id_entidad ?? miEntidadId;
+  form.id_entidad = usuario.id_entidad ?? props.miEntidadId;
   form.entidades = usuario.entidades?.map((e) => e.id) ?? [];
   form.idgrupo = usuario.idgrupo;
   form.clearErrors();
@@ -381,6 +441,14 @@ const eliminar = () => {
 
 const desbloquear = (usuario) => {
   router.post(route('usuarios.desbloquear', usuario.id));
+};
+
+const toggleActivo = (usuario) => {
+  router.post(route('usuarios.toggle-activo', usuario.id));
+};
+
+const toggleBloqueado = (usuario) => {
+  router.post(route('usuarios.toggle-bloqueado', usuario.id));
 };
 
 const cerrarModales = () => {

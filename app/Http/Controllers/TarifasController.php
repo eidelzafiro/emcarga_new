@@ -20,6 +20,7 @@ class TarifasController extends Controller
         $tiposCarga = TipoCarga::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('Tarifas/Index', [
+            'title' => 'Tarifas',
             'items' => $items,
             'tiposCarga' => $tiposCarga,
             'filters' => $request->only(['id_tipo_carga', 'version']),

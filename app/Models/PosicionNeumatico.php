@@ -8,7 +8,7 @@ class PosicionNeumatico extends Model
 {
     protected $table = 'posiciones_neumaticos';
 
-    protected $fillable = ['codigo', 'nombre', 'descripcion', 'activo'];
+    protected $fillable = ['codigo', 'nombre', 'activo'];
 
     protected function casts(): array
     {

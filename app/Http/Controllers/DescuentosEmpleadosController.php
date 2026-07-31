@@ -14,7 +14,7 @@ class DescuentosEmpleadosController extends Controller
 
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
-            'title' => 'Descuentos de Empleados',
+            'title' => 'Desc. Empleados',
             'route' => 'descuentos-empleados',
         ]);
     }

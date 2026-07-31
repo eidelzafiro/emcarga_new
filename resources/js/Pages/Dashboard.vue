@@ -1,136 +1,136 @@
 <template>
-  <AppLayout>
-    <div class="space-y-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Panel de control</h1>
-          <p class="text-gray-500 text-sm mt-1">
-            Bienvenido, {{ user?.name }} — {{ new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="flex items-center gap-1.5 text-xs text-gray-500">
-            <span class="w-2 h-2 rounded-full" :class="conectado ? 'bg-emerald-500' : 'bg-red-500'" />
-            {{ conectado ? 'En vivo' : 'Desconectado' }}
-          </span>
-          <span v-if="ultimaActualizacion" class="text-xs text-gray-400">· {{ ultimaActualizacion }}</span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div v-for="kpi in kpis" :key="kpi.label" class="kpi-card">
-          <div class="flex items-start justify-between">
-            <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ kpi.label }}</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1.5">{{ kpi.valor }}</p>
-              <p v-if="kpi.subtexto" class="text-xs text-gray-400 mt-1">{{ kpi.subtexto }}</p>
-            </div>
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ml-3"
-              :class="kpi.color"
-            >
-              <i :class="kpi.icono" class="text-white text-lg" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-semibold text-gray-900">Resumen de actividad</h3>
-            <div class="flex items-center gap-2">
-              <button
-                v-for="r in periodos"
-                :key="r.value"
-                @click="periodoActivo = r.value"
-                class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors"
-                :class="periodoActivo === r.value ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'"
-              >
-                {{ r.label }}
-              </button>
-            </div>
-          </div>
-          <div class="relative" style="height: 280px">
-            <canvas ref="chartCanvas" />
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Actividad reciente</h3>
-          <div class="space-y-4">
-            <div v-for="(act, i) in actividadReciente" :key="i" class="flex items-start gap-3">
-              <div
-                class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                :class="act.color"
-              >
-                <i :class="act.icono" class="text-white text-xs" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ act.titulo }}</p>
-                <p class="text-xs text-gray-500 truncate">{{ act.descripcion }}</p>
-                <p class="text-xs text-gray-400 mt-0.5">{{ act.hace }}</p>
-              </div>
-            </div>
-            <div v-if="actividadReciente.length === 0" class="text-center py-6">
-              <i class="pi pi-inbox text-2xl text-gray-300 block mb-2" />
-              <p class="text-sm text-gray-400">Sin actividad reciente</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <AppLayout>
+      <div class="space-y-6">
+        <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-semibold text-gray-900">Últimos movimientos</h3>
-            <p class="text-xs text-gray-500 mt-0.5">Listado de las últimas operaciones registradas</p>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Panel de control</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              Bienvenido, {{ user?.name }} — {{ new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+            </p>
           </div>
-          <button class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
-            Ver todos
-            <i class="pi pi-arrow-right ml-1 text-xs" />
-          </button>
+          <div class="flex items-center gap-2">
+            <span class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+              <span class="w-2 h-2 rounded-full" :class="conectado ? 'bg-emerald-500' : 'bg-red-500'" />
+              {{ conectado ? 'En vivo' : 'Desconectado' }}
+            </span>
+            <span v-if="ultimaActualizacion" class="text-xs text-gray-400 dark:text-gray-500">· {{ ultimaActualizacion }}</span>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr>
-                <th class="table-header">ID</th>
-                <th class="table-header">Tipo</th>
-                <th class="table-header">Descripción</th>
-                <th class="table-header">Monto</th>
-                <th class="table-header">Estado</th>
-                <th class="table-header">Fecha</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="row in movimientos" :key="row.id" class="hover:bg-gray-50 transition-colors">
-                <td class="table-cell font-mono text-xs text-gray-400">#{{ row.id }}</td>
-                <td class="table-cell">
-                  <span class="inline-flex items-center gap-1.5">
-                    <i :class="row.icono" :style="{ color: row.color }" class="text-sm" />
-                    {{ row.tipo }}
-                  </span>
-                </td>
-                <td class="table-cell font-medium">{{ row.descripcion }}</td>
-                <td class="table-cell font-medium" :class="row.monto >= 0 ? 'text-emerald-600' : 'text-red-600'">
-                  {{ row.monto >= 0 ? '+' : '' }}${{ Math.abs(row.monto).toLocaleString() }}
-                </td>
-                <td class="table-cell">
-                  <span :class="row.claseBadge">{{ row.estado }}</span>
-                </td>
-                <td class="table-cell text-gray-400">{{ row.fecha }}</td>
-              </tr>
-            </tbody>
-          </table>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div v-for="kpi in kpis" :key="kpi.label" class="kpi-card dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex items-start justify-between">
+              <div class="min-w-0">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ kpi.label }}</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ kpi.valor }}</p>
+                <p v-if="kpi.subtexto" class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ kpi.subtexto }}</p>
+              </div>
+              <div
+                class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ml-3"
+                :class="kpi.color"
+              >
+                <i :class="kpi.icono" class="text-white text-lg" />
+              </div>
+            </div>
+          </div>
         </div>
-        <div v-if="movimientos.length === 0" class="text-center py-12">
-          <i class="pi pi-inbox text-3xl text-gray-300 block mb-2" />
-          <p class="text-sm text-gray-400">No hay movimientos registrados</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen de actividad</h3>
+              <div class="flex items-center gap-2">
+                <button
+                  v-for="r in periodos"
+                  :key="r.value"
+                  @click="periodoActivo = r.value"
+                  class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors"
+                  :class="periodoActivo === r.value ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                >
+                  {{ r.label }}
+                </button>
+              </div>
+            </div>
+            <div class="relative" style="height: 280px">
+              <canvas ref="chartCanvas" />
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Actividad reciente</h3>
+            <div class="space-y-4">
+              <div v-for="(act, i) in actividadReciente" :key="i" class="flex items-start gap-3">
+                <div
+                  class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                  :class="act.color"
+                >
+                  <i :class="act.icono" class="text-white text-xs" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ act.titulo }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ act.descripcion }}</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ act.hace }}</p>
+                </div>
+              </div>
+              <div v-if="actividadReciente.length === 0" class="text-center py-6">
+                <i class="pi pi-inbox text-2xl text-gray-300 dark:text-gray-600 block mb-2" />
+                <p class="text-sm text-gray-400 dark:text-gray-500">Sin actividad reciente</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Últimos movimientos</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Listado de las últimas operaciones registradas</p>
+            </div>
+            <button class="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+              Ver todos
+              <i class="pi pi-arrow-right ml-1 text-xs" />
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr>
+                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">ID</th>
+                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">Tipo</th>
+                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">Descripción</th>
+                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">Monto</th>
+                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">Estado</th>
+                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">Fecha</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tr v-for="row in movimientos" :key="row.id" class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                  <td class="table-cell dark:text-gray-400 font-mono text-xs text-gray-400">#{{ row.id }}</td>
+                  <td class="table-cell dark:text-gray-300">
+                    <span class="inline-flex items-center gap-1.5">
+                      <i :class="row.icono" :style="{ color: row.color }" class="text-sm" />
+                      {{ row.tipo }}
+                    </span>
+                  </td>
+                  <td class="table-cell font-medium dark:text-gray-200">{{ row.descripcion }}</td>
+                  <td class="table-cell font-medium dark:text-gray-200" :class="row.monto >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+                    {{ row.monto >= 0 ? '+' : '' }}${{ Math.abs(row.monto).toLocaleString() }}
+                  </td>
+                  <td class="table-cell">
+                    <span :class="row.claseBadge">{{ row.estado }}</span>
+                  </td>
+                  <td class="table-cell text-gray-400 dark:text-gray-500">{{ row.fecha }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="movimientos.length === 0" class="text-center py-12">
+            <i class="pi pi-inbox text-3xl text-gray-300 dark:text-gray-600 block mb-2" />
+            <p class="text-sm text-gray-400 dark:text-gray-500">No hay movimientos registrados</p>
+          </div>
         </div>
       </div>
-    </div>
-  </AppLayout>
+    </AppLayout>
 </template>
 
 <script setup>

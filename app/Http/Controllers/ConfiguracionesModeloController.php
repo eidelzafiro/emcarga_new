@@ -11,23 +11,40 @@ class ConfiguracionesModeloController extends Controller
 {
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $user = $request->user();
+        $entidadId = session('entidad_activa_id', $user->id_entidad);
 
-        $items = ConfiguracioneModelo::with('tipoModelo')
-            ->where('id_entidad', $entidadId)
-            ->orderBy('nombre')
-            ->paginate(20);
+        $query = ConfiguracioneModelo::with('tipoModelo');
 
-        $tiposModelo = TipoModelo::where('id_entidad', $entidadId)
-            ->select('codigo', 'nombre')
-            ->orderBy('nombre')
-            ->get()
+        if ($user->hasRole('SUPERADMIN')) {
+            $query->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId)
+                ->orWhereNull('id_entidad'));
+        } else {
+            $query->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId));
+        }
+
+        $query->when($request->search, function ($q, $search) {
+            $q->where('nombre', 'like', "%{$search}%");
+        });
+
+        $query->when($request->codigo_tipo_modelo, function ($q, $tipo) {
+            $q->where('codigo_tipo_modelo', $tipo);
+        });
+
+        $items = $query->orderBy('nombre')->paginate(20);
+
+        $tiposQuery = TipoModelo::select('codigo', 'nombre')->orderBy('nombre');
+        if ($entidadId) {
+            $tiposQuery->where('id_entidad', $entidadId);
+        }
+        $tiposModelo = $tiposQuery->get()
             ->map(fn ($t) => ['value' => $t->codigo, 'label' => $t->nombre]);
 
         return Inertia::render('ConfiguracionesModelo/Index', [
+            'title' => 'Configuraciones de Modelo',
             'items' => $items,
             'tiposModelo' => $tiposModelo,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'codigo_tipo_modelo']),
         ]);
     }
 
@@ -41,7 +58,7 @@ class ConfiguracionesModeloController extends Controller
             'letra' => 'nullable|integer',
         ]);
         $validated['id_user'] = auth()->id();
-        $validated['id_entidad'] = session('entidad_activa_id');
+        $validated['id_entidad'] = session('entidad_activa_id', auth()->user()->id_entidad);
         ConfiguracioneModelo::create($validated);
 
         return redirect()->route('configuraciones-modelo.index')->with('success', 'Configuración creada correctamente.');

@@ -21,7 +21,7 @@ class CombustibleCargasController extends Controller
         $tractivos = Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
 
         return Inertia::render('CombustibleCargas/Index', [
-            'title' => 'Cargas de Combustible',
+            'title' => 'Carga Combustible',
             'cargas' => $cargas,
             'tarjetas' => $tarjetas,
             'tractivos' => $tractivos,

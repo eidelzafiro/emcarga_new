@@ -15,6 +15,7 @@ class IndicadoresController extends Controller
             ->paginate(20);
 
         return Inertia::render('Indicadores/Index', [
+            'title' => 'Indicadores',
             'items' => $items,
             'filters' => $request->only(['search']),
         ]);

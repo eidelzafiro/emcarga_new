@@ -30,3 +30,6 @@ Thumbs.db
 docker/mysql/dump.sql
 docker/mysql/emcarga-dump.data
 docker/mysql/*.data
+
+# Salvas de la BD nueva (datos de produccion, no versionar)
+/database/backups/

@@ -10,17 +10,23 @@ class HistorialMovimientosController extends Controller
 {
     public function index(Request $request)
     {
-        $items = HistorialMovimiento::with([])
-            ->when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%"))
-            ->when($entidadId = session('entidad_activa_id'), fn ($q) => $q->where(function ($q) use ($entidadId) {
-                $q->where('id_entidad_origen', $entidadId)
-                    ->orWhere('id_entidad_destino', $entidadId);
-            }))
-            ->orderBy('id')
-            ->paginate(20);
+        $items = HistorialMovimiento::with(['bolsa', 'movimiento'])
+            ->when($entidadId = session('entidad_activa_id'), fn ($q) => $q->whereHas('bolsa', fn ($b) => $b->where('id_entidad', $entidadId)))
+            ->orderBy('id', 'desc')
+            ->paginate(20)
+            ->through(function (HistorialMovimiento $h) {
+                return [
+                    'id' => $h->id,
+                    'fecha' => $h->fecha?->toDateString(),
+                    'tipo_movimiento' => $h->tipo,
+                    'bolsa_nombre' => $h->bolsa?->nombre,
+                    'ci' => $h->bolsa?->ci,
+                    'descripcion' => $h->observaciones,
+                ];
+            });
 
         return Inertia::render('HistorialMovimientos/Index', [
-            'title' => 'Historial de Movimientos',
+            'title' => 'Historial',
             'historial' => $items,
             'filters' => $request->only(['search']),
         ]);

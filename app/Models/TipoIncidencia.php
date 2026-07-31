@@ -12,12 +12,20 @@ class TipoIncidencia extends Model
         'codigo',
         'nombre',
         'activo',
+        'id_tipo_deducciones',
+        'tsuma',
+        'impsuma',
+        'penalizacuc',
     ];
 
     protected function casts(): array
     {
         return [
             'activo' => 'boolean',
+            'id_tipo_deducciones' => 'integer',
+            'tsuma' => 'boolean',
+            'impsuma' => 'boolean',
+            'penalizacuc' => 'boolean',
         ];
     }
 }

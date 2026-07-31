@@ -21,6 +21,6 @@ class MotivosBajaBateriaController extends Controller
 
     protected function getTitle(): string
     {
-        return 'Motivos de Baja de Bater\xc3\xada';
+        return 'Motivos Baja Batería';
     }
 }

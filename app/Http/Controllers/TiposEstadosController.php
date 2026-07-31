@@ -16,7 +16,7 @@ class TiposEstadosController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-estados.index';
+        return 'tipos-estados';
     }
 
     protected function getTitle(): string

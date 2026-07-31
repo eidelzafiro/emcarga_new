@@ -13,12 +13,17 @@ class Diferenciale extends Model
     protected $table = 'diferenciales';
 
     protected $fillable = [
-        'codigo', 'descripcion', 'marca', 'modelo', 'numero_serie',
+        'id_entidad', 'codigo', 'descripcion', 'marca', 'modelo', 'numero_serie',
         'id_tractivo', 'estado',
     ];
 
     public function tractivo(): BelongsTo
     {
         return $this->belongsTo(Tractivo::class, 'id_tractivo');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

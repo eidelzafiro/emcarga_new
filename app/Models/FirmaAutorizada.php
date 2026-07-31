@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Entidad;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FirmaAutorizada extends Model
@@ -12,6 +14,7 @@ class FirmaAutorizada extends Model
     protected $table = 'firmas_autorizadas';
 
     protected $fillable = [
+        'id_entidad',
         'nombre',
         'cargo',
         'activo',
@@ -22,5 +25,10 @@ class FirmaAutorizada extends Model
         return [
             'activo' => 'boolean',
         ];
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

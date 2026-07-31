@@ -16,7 +16,7 @@ class ProvinciasController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'provincias.index';
+        return 'provincias';
     }
 
     protected function getTitle(): string

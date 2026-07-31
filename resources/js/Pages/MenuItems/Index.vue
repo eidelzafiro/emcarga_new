@@ -3,32 +3,13 @@
     <Card>
       <template #title>Gestión del menú</template>
       <template #content>
-        <p class="text-sm text-surface-500 mb-2">
-          Selecciona un perfil para ver y controlar qué ítems del menú le aparecen.
-          El orden es global (aplica a todos los perfiles).
-        </p>
-
         <div class="flex flex-wrap items-center gap-3 mb-4">
-          <div class="w-64">
-            <Select
-              v-model="rolSeleccionado"
-              :options="roles"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Ver menú por perfil…"
-              class="w-full"
-              :showClear="true"
-            />
-          </div>
           <IconField>
             <InputIcon>
               <i class="pi pi-search" />
             </InputIcon>
             <InputText v-model="busqueda" placeholder="Buscar ítem…" class="w-48" />
           </IconField>
-          <span v-if="rolSeleccionado" class="text-sm text-surface-500">
-            {{ itemsVisibles }} de {{ itemsFlatSinFiltro.length }} ítems visibles
-          </span>
           <div class="ml-auto flex gap-2">
             <Button
               v-if="can('menus.crear')"
@@ -65,12 +46,7 @@
               <span v-else class="text-xs text-surface-400">—</span>
             </template>
           </Column>
-          <Column v-if="rolSeleccionado" header="Visible" style="width:90px">
-            <template #body="{ data }">
-              <i v-if="esVisible(data)" class="pi pi-check-circle text-green-500 text-lg" />
-              <i v-else class="pi pi-minus-circle text-surface-300 text-lg" />
-            </template>
-          </Column>
+
           <Column field="orden" header="Orden" style="width:80px" />
           <Column header="Activo" style="width:80px">
             <template #body="{ data }">
@@ -78,19 +54,9 @@
               <i v-else class="pi pi-times-circle text-red-400" />
             </template>
           </Column>
-          <Column header="Acciones" :exportable="false" style="width:160px">
+          <Column header="Acciones" :exportable="false" style="width:100px">
             <template #body="{ data }">
               <div class="flex gap-1">
-                <Button
-                  v-if="can('menus.editar') && rolSeleccionado && data.permission"
-                  :icon="esVisible(data) ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                  severity="secondary"
-                  text
-                  rounded
-                  size="small"
-                  :v-tooltip.left="esVisible(data) ? 'Ocultar del perfil' : 'Mostrar al perfil'"
-                  @click="toggleVisibilidad(data)"
-                />
                 <Button
                   v-if="can('menus.editar')"
                   icon="pi pi-pencil"
@@ -186,6 +152,22 @@
           <ToggleSwitch v-model="form.activo" inputId="activo" />
           <label for="activo" class="text-sm text-surface-700">Ítem activo</label>
         </div>
+
+        <div v-if="editando && form.permission" class="border-t pt-4 mt-4">
+          <label class="block text-sm font-medium text-surface-700 mb-2">Visibilidad por perfil</label>
+          <p class="text-xs text-surface-400 mb-3">Seleccione qué perfiles pueden ver este ítem.</p>
+          <div class="flex flex-wrap gap-3">
+            <div v-for="rol in rolesExcluyendoSuperadmin" :key="rol.id" class="flex items-center gap-2">
+              <ToggleSwitch
+                :modelValue="rol.tienePermiso"
+                @update:modelValue="toggleRolEnForm(rol)"
+                :inputId="'rol-' + rol.id"
+                :disabled="!can('menus.editar')"
+              />
+              <label :for="'rol-' + rol.id" class="text-sm cursor-pointer">{{ rol.name }}</label>
+            </div>
+          </div>
+        </div>
       </form>
       <template #footer>
         <Button label="Cancelar" severity="secondary" @click="cerrarModales" />
@@ -251,8 +233,18 @@ const toast = useToast();
 const permissions = computed(() => page.props.auth?.permissions ?? []);
 const can = (permiso) => permissions.value.includes(permiso);
 
-const rolSeleccionado = ref(null);
 const busqueda = ref('');
+
+const rolesExcluyendoSuperadmin = computed(() =>
+  props.roles
+    .filter((r) => r.name !== 'SUPERADMIN')
+    .map((r) => ({
+      ...r,
+      get tienePermiso() {
+        return seleccionado.value?.roles?.includes(r.name) ?? false;
+      },
+    }))
+);
 
 function aplanar(nodos, depth = 0) {
   const result = [];
@@ -267,24 +259,6 @@ function aplanar(nodos, depth = 0) {
 
 const itemsFlat = computed(() => aplanar(props.items));
 
-const itemsFlatSinFiltro = computed(() => {
-  if (!rolSeleccionado.value) return itemsFlat.value;
-  return itemsFlat.value.filter((i) => esVisible(i));
-});
-
-const rolActual = computed(() =>
-  props.roles.find((r) => r.id === rolSeleccionado.value)
-);
-
-function esVisible(item) {
-  if (!rolActual.value || !item.permission) return true;
-  return rolActual.value.permissions.includes(item.permission);
-}
-
-const itemsVisibles = computed(() =>
-  itemsFlatSinFiltro.value.filter((i) => coincideBusqueda(i)).length
-);
-
 function coincideBusqueda(item) {
   if (!busqueda.value) return true;
   const q = busqueda.value.toLowerCase();
@@ -296,14 +270,31 @@ function coincideBusqueda(item) {
 }
 
 const itemsFiltrados = computed(() => {
-  let base = rolSeleccionado.value
-    ? itemsFlat.value.filter((i) => esVisible(i))
-    : itemsFlat.value;
+  let base = itemsFlat.value;
   if (busqueda.value) {
     base = base.filter((i) => coincideBusqueda(i));
   }
   return base;
 });
+
+function toggleRolEnForm(rol) {
+  if (!seleccionado.value?.permission || !can('menus.editar')) return;
+  router.visit(route('menu-items.toggle-visibility', [seleccionado.value.id, rol.id]), {
+    method: 'post',
+    preserveScroll: true,
+    preserveState: false,
+    onSuccess: () => {
+      const tieneAhora = seleccionado.value.roles.includes(rol.name);
+      toast.add({
+        severity: 'success',
+        summary: tieneAhora
+          ? `Acceso quitado a ${rol.name}`
+          : `Acceso concedido a ${rol.name}`,
+        life: 3000,
+      });
+    },
+  });
+}
 
 const opcionesPadre = computed(() => {
   const build = (nodos, depth = 0) => {
@@ -348,21 +339,6 @@ const form = useForm({
 });
 
 const formEliminar = useForm({});
-
-const formToggle = useForm({});
-
-function toggleVisibilidad(item) {
-  if (!rolSeleccionado.value || !item.permission) return;
-  formToggle.post(route('menu-items.toggle-visibility', [item.id, rolSeleccionado.value]), {
-    preserveScroll: true,
-    onSuccess: () => {
-      const msg = esVisible(item)
-        ? `Ítem ocultado del perfil ${rolActual.value?.name}`
-        : `Ítem mostrado al perfil ${rolActual.value?.name}`;
-      toast.add({ severity: 'success', summary: msg, life: 3000 });
-    },
-  });
-}
 
 const abrirCrear = () => {
   editando.value = false;

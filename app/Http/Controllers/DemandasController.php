@@ -26,6 +26,7 @@ class DemandasController extends Controller
         $embalajes = Embalaje::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('Demandas/Index', [
+            'title' => 'Demandas',
             'items' => $items,
             'clientes' => $clientes,
             'productos' => $productos,

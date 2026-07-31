@@ -16,7 +16,7 @@ class TiposMediosProteccionController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-medios-proteccion.index';
+        return 'tipos-medios-proteccion';
     }
 
     protected function getTitle(): string

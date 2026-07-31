@@ -16,7 +16,7 @@ class TiposIntegracionPoliticaController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-integracion-politica.index';
+        return 'tipos-integracion-politica';
     }
 
     protected function getTitle(): string

@@ -16,6 +16,7 @@ class AlertasController extends Controller
             ->paginate(20);
 
         return Inertia::render('Alertas/Index', [
+            'title' => 'Alertas',
             'items' => $items,
             'filters' => $request->only(['vencida']),
         ]);

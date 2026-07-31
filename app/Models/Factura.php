@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Factura extends Model
 {
     protected $fillable = [
-        'numero',
+        'id_entidad', 'numero',
         'fecha_emision',
         'id_cliente',
         'id_unidad',
@@ -70,5 +70,10 @@ class Factura extends Model
     public function aforos(): HasMany
     {
         return $this->hasMany(Aforo::class, 'id_factura');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

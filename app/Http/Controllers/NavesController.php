@@ -24,6 +24,11 @@ class NavesController extends Controller
         return 'Naves';
     }
 
+    protected function isEntityScoped(): bool
+    {
+        return true;
+    }
+
     protected function getExtraFields(): array
     {
         return [

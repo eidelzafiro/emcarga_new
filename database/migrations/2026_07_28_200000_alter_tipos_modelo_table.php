@@ -10,6 +10,9 @@ return new class extends Migration
     {
         if (Schema::hasColumn('tipos_modelo', 'id_tipo_modelo')) {
             Schema::table('tipos_modelo', function ($table) {
+                $table->dropForeign(['id_tipo_modelo']);
+            });
+            Schema::table('tipos_modelo', function ($table) {
                 $table->dropColumn('id_tipo_modelo');
             });
         }

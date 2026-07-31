@@ -20,21 +20,41 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
+        $user = $request->user();
+
         $usuarios = User::with('roles:id,name', 'entidades:id,nombre', 'entidad:id,nombre,abreviatura')
+            ->when(! $user->hasRole('SUPERADMIN'), function ($query) use ($user) {
+                $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
+                    ->push($user->id_entidad)
+                    ->unique()
+                    ->values()
+                    ->all();
+                $query->whereIn('id_entidad', $ids);
+            })
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('username', 'like', "%{$search}%");
                 });
             })
+            ->when($request->perfil, function ($query, $perfil) {
+                $query->whereHas('roles', fn ($q) => $q->where('name', $perfil));
+            })
+            ->when($request->estado, function ($query, $estado) {
+                match ($estado) {
+                    'activo' => $query->where('bloqueado', false)->where('intentos_fallidos', '<', 5)->where('password_temporal', false),
+                    'bloqueado' => $query->where(fn ($q) => $q->where('bloqueado', true)->orWhere('intentos_fallidos', '>=', 5)),
+                    'temporal' => $query->where('password_temporal', true),
+                    default => null,
+                };
+            })
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
 
-        $user = $request->user();
         $entidadesQuery = Entidad::where('activo', true);
 
-        if (! $user->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES'])) {
+        if (! $user->hasRole('SUPERADMIN')) {
             $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
                 ->push($user->id_entidad)
                 ->unique()
@@ -46,13 +66,13 @@ class UserController extends Controller
         }
 
         return Inertia::render('Usuarios/Index', [
-            'title' => 'Gestión de usuarios',
+            'title' => 'Usuarios',
             'usuarios' => $usuarios,
             'roles' => Role::orderBy('name')->pluck('name'),
             'entidades' => $entidadesQuery->orderBy('nombre')->get(['id', 'nombre', 'parent_id']),
             'esAdmin' => $user->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES']),
             'miEntidadId' => $user->id_entidad,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'perfil', 'estado']),
         ]);
     }
 
@@ -146,6 +166,32 @@ class UserController extends Controller
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario desbloqueado correctamente.');
+    }
+
+    public function toggleActivo(User $user)
+    {
+        $this->authorize('desbloquear', $user);
+
+        $user->update(['activo' => ! $user->activo]);
+
+        return redirect()->route('usuarios.index')
+            ->with('success', $user->activo ? 'Usuario activado.' : 'Usuario desactivado.');
+    }
+
+    public function toggleBloqueado(User $user)
+    {
+        $this->authorize('desbloquear', $user);
+
+        $nuevoEstado = ! $user->bloqueado;
+        $user->update(['bloqueado' => $nuevoEstado]);
+
+        Bitacora::registrar(
+            $nuevoEstado ? 'bloquear_usuario' : 'desbloquear_usuario',
+            "Usuario {$user->username} " . ($nuevoEstado ? 'bloqueado' : 'desbloqueado') . "."
+        );
+
+        return redirect()->route('usuarios.index')
+            ->with('success', $nuevoEstado ? 'Usuario bloqueado.' : 'Usuario desbloqueado.');
     }
 
     /**

@@ -8,7 +8,7 @@ class MedidaNeumatico extends Model
 {
     protected $table = 'medidas_neumaticos';
 
-    protected $fillable = ['codigo', 'nombre', 'medida', 'activo'];
+    protected $fillable = ['codigo', 'nombre', 'activo'];
 
     protected function casts(): array
     {

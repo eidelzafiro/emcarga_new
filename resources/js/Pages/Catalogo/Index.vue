@@ -21,6 +21,7 @@ const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
+const continuar = ref(false)
 
 const baseForm = () => ({
   codigo: props.catalogConfig?.codigoManual !== false ? '' : undefined,
@@ -33,6 +34,13 @@ const form = ref(baseForm())
 watch(search, () => {
   router.get(route(`${props.catalogConfig.route}.index`, { tipo: props.catalogConfig.tipo }), { search: search.value }, { preserveState: true, replace: true })
 })
+
+const onPage = (event) => {
+  router.get(route(`${props.catalogConfig.route}.index`, { tipo: props.catalogConfig.tipo }), {
+    page: event.page + 1,
+    search: search.value,
+  }, { preserveState: true, replace: true })
+}
 
 const allFields = computed(() => {
   const base = props.catalogConfig?.fields || {}
@@ -58,10 +66,25 @@ function typeToComponent(type) {
   return type
 }
 
+function getSelectLabel(options, value) {
+  if (!options || value === null || value === undefined) return ''
+  const opt = options.find(o => o.value === value)
+  return opt ? opt.label : value
+}
+
+function getFormFields() {
+  const fields = { ...(props.catalogConfig?.extra || {}) }
+  Object.entries(props.catalogConfig?.fields || {}).forEach(([k, v]) => {
+    if (k !== 'nombre' && k !== 'codigo') fields[k] = v
+  })
+  return fields
+}
+
 function openCreate() {
   editing.value = null
+  continuar.value = false
   const f = { ...baseForm() }
-  Object.entries(props.catalogConfig?.extra || {}).forEach(([k, v]) => {
+  Object.entries(getFormFields()).forEach(([k, v]) => {
     if (v.type === 'number') f[k] = null
     else if (v.type === 'boolean') f[k] = false
     else f[k] = ''
@@ -72,11 +95,12 @@ function openCreate() {
 
 function openEdit(item) {
   editing.value = item
+  continuar.value = false
   const f = { ...baseForm() }
   if (props.catalogConfig?.codigoManual !== false) f.codigo = item.codigo
   f.nombre = item.nombre
   f.activo = Boolean(item.activo)
-  Object.entries(props.catalogConfig?.extra || {}).forEach(([k, v]) => {
+  Object.entries(getFormFields()).forEach(([k, v]) => {
     if (v.type === 'boolean') f[k] = Boolean(item[k])
     else if (v.type === 'number') f[k] = item[k] ?? null
     else f[k] = item[k] ?? ''
@@ -85,12 +109,28 @@ function openEdit(item) {
   showForm.value = true
 }
 
-function submit() {
+function submit(continuarActivo = false) {
   const rt = props.catalogConfig.route
+  const payload = { ...form.value, _continuar: continuarActivo }
   const url = editing.value ? route(`${rt}.update`, { tipo: tipo.value, id: editing.value.id }) : route(`${rt}.store`, { tipo: tipo.value })
   const method = editing.value ? 'put' : 'post'
-  router[method](url, form.value, {
-    onSuccess: () => { showForm.value = false; toast.add({ severity: 'success', summary: editing.value ? 'Actualizado' : 'Creado', life: 3000 }) },
+  router[method](url, payload, {
+    onSuccess: () => {
+      toast.add({ severity: 'success', summary: editing.value ? 'Actualizado' : 'Creado', life: 3000 })
+      if (continuarActivo && !editing.value) {
+        const f = { ...baseForm() }
+        Object.entries(getFormFields()).forEach(([k, v]) => {
+          if (v.type === 'number') f[k] = null
+          else if (v.type === 'boolean') f[k] = false
+          else f[k] = ''
+        })
+        form.value = f
+        continuar.value = true
+      } else {
+        showForm.value = false
+        continuar.value = false
+      }
+    },
     onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
   })
 }
@@ -101,6 +141,7 @@ function submit() {
     <div class="card">
       <Toolbar class="mb-4">
         <template #start>
+          <Button icon="pi pi-arrow-left" severity="secondary" text rounded class="mr-2" @click="router.visit(route('catalogo.gestionar'))" v-tooltip="'Volver a catálogos'" />
           <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
         </template>
         <template #end>
@@ -108,11 +149,20 @@ function submit() {
         </template>
       </Toolbar>
 
-      <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total">
+      <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total"
+                 :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage">
         <Column v-if="catalogConfig?.codigoManual !== false" field="codigo" header="Código" sortable />
         <Column v-if="!catalogConfig?.hideNombre" field="nombre" header="Nombre" sortable />
         <template v-for="(cfg, key) in gridFields" :key="key">
-          <Column v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :field="key" :header="cfg.label" />
+          <Column v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :field="key" :header="cfg.label">
+            <template #body="{ data }">
+              <span v-if="cfg.type === 'select' && cfg.options">{{ getSelectLabel(cfg.options, data[key]) }}</span>
+              <span v-else-if="cfg.type === 'boolean'">
+                <i :class="data[key] ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />
+              </span>
+              <span v-else>{{ data[key] }}</span>
+            </template>
+          </Column>
         </template>
         <Column field="activo" header="Activo" :style="{ width: '100px' }">
           <template #body="{ data }">
@@ -132,7 +182,7 @@ function submit() {
     </div>
 
     <Dialog v-model:visible="showForm" :header="editing ? `Editar ${catalogConfig?.title}` : `Nuevo ${catalogConfig?.title}`" modal :style="{ width: catalogConfig?.extra && Object.keys(catalogConfig.extra).length > 6 ? '800px' : '550px' }">
-      <form @submit.prevent="submit" class="space-y-4 overflow-y-auto max-h-[70vh]">
+      <form @submit.prevent="submit(false)" class="space-y-4 overflow-y-auto max-h-[70vh]">
         <div class="grid grid-cols-2 gap-4">
           <div v-if="catalogConfig?.codigoManual !== false">
             <label class="block mb-1 font-medium">Código</label>
@@ -160,6 +210,10 @@ function submit() {
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Select v-else-if="cfg.type === 'select' && cfg.options" v-model="form[key]" :options="cfg.options" optionLabel="label" optionValue="value" placeholder="Seleccionar..." class="w-full" :showClear="true" />
+              <div v-else-if="cfg.type === 'boolean'" class="flex items-center gap-2 pt-2">
+                <ToggleSwitch v-model="form[key]" :inputId="'x-fld-' + key" />
+                <label :for="'x-fld-' + key" class="text-sm">{{ cfg.label }}</label>
+              </div>
               <InputText v-else v-model="form[key]" class="w-full" :type="cfg.type === 'email' ? 'email' : 'text'" />
             </div>
           </template>
@@ -170,6 +224,7 @@ function submit() {
         </div>
         <div class="flex gap-2 justify-end">
           <Button label="Cancelar" severity="secondary" @click="showForm = false" />
+          <Button v-if="!editing" label="Guardar y continuar" type="button" icon="pi pi-save" @click="submit(true)" />
           <Button label="Guardar" type="submit" icon="pi pi-save" />
         </div>
       </form>

@@ -16,7 +16,7 @@ class TiposColorPielController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-color-piel.index';
+        return 'tipos-color-piel';
     }
 
     protected function getTitle(): string

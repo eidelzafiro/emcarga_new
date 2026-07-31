@@ -16,7 +16,7 @@ class PerfilesRhController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'perfiles-rh.index';
+        return 'perfiles-rh';
     }
 
     protected function getTitle(): string

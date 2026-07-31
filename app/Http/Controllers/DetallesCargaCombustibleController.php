@@ -23,6 +23,7 @@ class DetallesCargaCombustibleController extends Controller
         $bolsas = Bolsa::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('DetallesCargaCombustible/Index', [
+            'title' => 'Detalles Carga Combustible',
             'detalles' => $detalles,
             'cargas' => $cargas,
             'tractivos' => $tractivos,

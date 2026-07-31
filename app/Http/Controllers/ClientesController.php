@@ -11,6 +11,13 @@ class ClientesController extends Controller
     public function index(Request $request)
     {
         $clientes = Cliente::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%"))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->paginate(20);
 
         return Inertia::render('Clientes/Index', ['title' => 'Clientes', 'clientes' => $clientes, 'filters' => $request->only(['search'])]);
@@ -28,6 +35,7 @@ class ClientesController extends Controller
             'email' => 'nullable|email|max:255',
             'contacto' => 'nullable|max:255',
         ]);
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         Cliente::create($validated);
 
         return redirect()->route('clientes.index')->with('success', 'Cliente creado correctamente.');

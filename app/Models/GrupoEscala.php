@@ -8,7 +8,7 @@ class GrupoEscala extends Model
 {
     protected $table = 'grupos_escala';
 
-    protected $fillable = ['codigo', 'nombre', 'activo'];
+    protected $fillable = ['codigo', 'nombre', 'tarifa', 'salario', 'id_entidad', 'activo'];
 
     protected function casts(): array
     {

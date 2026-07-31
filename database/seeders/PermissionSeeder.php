@@ -62,13 +62,13 @@ class PermissionSeeder extends Seeder
 
             'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
 
-            'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
-
             'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
 
             'tipos-incidencias.ver', 'tipos-incidencias.crear', 'tipos-incidencias.editar', 'tipos-incidencias.eliminar',
 
             'tipos-penalizaciones.ver', 'tipos-penalizaciones.crear', 'tipos-penalizaciones.editar', 'tipos-penalizaciones.eliminar',
+
+            'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
 
             'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
 
@@ -113,8 +113,10 @@ class PermissionSeeder extends Seeder
             'embalajes.ver', 'embalajes.crear', 'embalajes.editar', 'embalajes.eliminar',
             'navieras.ver', 'navieras.crear', 'navieras.editar', 'navieras.eliminar',
             'organismos.ver', 'organismos.crear', 'organismos.editar', 'organismos.eliminar',
-            'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
+                'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
             'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
+            'cargos.ver', 'cargos.crear', 'cargos.editar', 'cargos.eliminar',
+            'areas.ver', 'areas.crear', 'areas.editar', 'areas.eliminar',
             'entidades.ver', 'entidades.crear', 'entidades.editar', 'entidades.eliminar',
 
             'reportes.ver', 'reportes.generar',
@@ -124,7 +126,7 @@ class PermissionSeeder extends Seeder
 
             'perfiles.ver', 'perfiles.editar',
 
-            'menus.ver', 'menus.crear', 'menus.editar', 'menus.eliminar',
+            'menus.ver', 'menus.crear', 'menus.editar', 'menus.eliminar', 'menus.admin',
 
             'catalogo.ver', 'catalogo.crear', 'catalogo.editar', 'catalogo.eliminar',
 
@@ -144,22 +146,15 @@ class PermissionSeeder extends Seeder
             'tipos-medios-cargo.ver', 'tipos-medios-cargo.crear', 'tipos-medios-cargo.editar', 'tipos-medios-cargo.eliminar',
             'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
             'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
-            'tipos-calificadores.ver', 'tipos-calificadores.crear', 'tipos-calificadores.editar', 'tipos-calificadores.eliminar',
-            'tipos-causas-laborales.ver', 'tipos-causas-laborales.crear', 'tipos-causas-laborales.editar', 'tipos-causas-laborales.eliminar',
-            'tipos-causas-baja.ver', 'tipos-causas-baja.crear', 'tipos-causas-baja.editar', 'tipos-causas-baja.eliminar',
-            'tipos-causas-movimiento.ver', 'tipos-causas-movimiento.crear', 'tipos-causas-movimiento.editar', 'tipos-causas-movimiento.eliminar',
             'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
             'tipos-color-piel.ver', 'tipos-color-piel.crear', 'tipos-color-piel.editar', 'tipos-color-piel.eliminar',
             'tipos-deducciones.ver', 'tipos-deducciones.crear', 'tipos-deducciones.editar', 'tipos-deducciones.eliminar',
-            'tipos-especialidad.ver', 'tipos-especialidad.crear', 'tipos-especialidad.editar', 'tipos-especialidad.eliminar',
             'tipos-estado-civil.ver', 'tipos-estado-civil.crear', 'tipos-estado-civil.editar', 'tipos-estado-civil.eliminar',
             'tipos-grupo-horario.ver', 'tipos-grupo-horario.crear', 'tipos-grupo-horario.editar', 'tipos-grupo-horario.eliminar',
             'tipos-integracion-politica.ver', 'tipos-integracion-politica.crear', 'tipos-integracion-politica.editar', 'tipos-integracion-politica.eliminar',
             'tipos-medios-proteccion.ver', 'tipos-medios-proteccion.crear', 'tipos-medios-proteccion.editar', 'tipos-medios-proteccion.eliminar',
             'tipos-nivel-educacion.ver', 'tipos-nivel-educacion.crear', 'tipos-nivel-educacion.editar', 'tipos-nivel-educacion.eliminar',
-            'tipos-plantillas.ver', 'tipos-plantillas.crear', 'tipos-plantillas.editar', 'tipos-plantillas.eliminar',
             'tipos-sexo.ver', 'tipos-sexo.crear', 'tipos-sexo.editar', 'tipos-sexo.eliminar',
-            'tipos-tallas.ver', 'tipos-tallas.crear', 'tipos-tallas.editar', 'tipos-tallas.eliminar',
             'tipos-ubicacion-defensa.ver', 'tipos-ubicacion-defensa.crear', 'tipos-ubicacion-defensa.editar', 'tipos-ubicacion-defensa.eliminar',
 
             // Comercial - Tablas faltantes
@@ -195,9 +190,6 @@ class PermissionSeeder extends Seeder
 
             // RRHH - Tablas faltantes
             'centros-costos.ver', 'centros-costos.crear', 'centros-costos.editar', 'centros-costos.eliminar',
-            'tipos-articulos-bolsa.ver', 'tipos-articulos-bolsa.crear', 'tipos-articulos-bolsa.editar', 'tipos-articulos-bolsa.eliminar',
-
-            'tipos-jefe-grupo.ver', 'tipos-jefe-grupo.crear', 'tipos-jefe-grupo.editar', 'tipos-jefe-grupo.eliminar',
             'pagos-adicionales-cargo.ver', 'pagos-adicionales-cargo.crear', 'pagos-adicionales-cargo.editar', 'pagos-adicionales-cargo.eliminar',
 
             // Comercial - Tablas faltantes
@@ -206,7 +198,6 @@ class PermissionSeeder extends Seeder
 
             // Misc
             'tipos-aceites.ver', 'tipos-aceites.crear', 'tipos-aceites.editar', 'tipos-aceites.eliminar',
-            'tipos-entidad.ver', 'tipos-entidad.crear', 'tipos-entidad.editar', 'tipos-entidad.eliminar',
             'elementos-gasto.ver', 'elementos-gasto.crear', 'elementos-gasto.editar', 'elementos-gasto.eliminar',
             'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
             'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
@@ -318,7 +309,6 @@ class PermissionSeeder extends Seeder
             'RECHUM' => [
                 'dashboard.ver',
                 'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
-                'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
                 'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
                 'tipos-incidencias.ver', 'tipos-incidencias.crear', 'tipos-incidencias.editar', 'tipos-incidencias.eliminar',
                 'tipos-penalizaciones.ver', 'tipos-penalizaciones.crear', 'tipos-penalizaciones.editar', 'tipos-penalizaciones.eliminar',
@@ -330,6 +320,8 @@ class PermissionSeeder extends Seeder
                 'organismos.ver', 'organismos.crear', 'organismos.editar', 'organismos.eliminar',
                 'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
                 'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
+                'cargos.ver', 'cargos.crear', 'cargos.editar', 'cargos.eliminar',
+                'areas.ver', 'areas.crear', 'areas.editar', 'areas.eliminar',
                 // RRHH - Tablas faltantes
                 'osdes.ver', 'osdes.crear', 'osdes.editar', 'osdes.eliminar',
                 'firmas.ver', 'firmas.crear', 'firmas.editar', 'firmas.eliminar',
@@ -338,32 +330,21 @@ class PermissionSeeder extends Seeder
                 'tipos-medios-cargo.ver', 'tipos-medios-cargo.crear', 'tipos-medios-cargo.editar', 'tipos-medios-cargo.eliminar',
                 'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
                 'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
-                'tipos-calificadores.ver', 'tipos-calificadores.crear', 'tipos-calificadores.editar', 'tipos-calificadores.eliminar',
-                'tipos-causas-laborales.ver', 'tipos-causas-laborales.crear', 'tipos-causas-laborales.editar', 'tipos-causas-laborales.eliminar',
-                'tipos-causas-baja.ver', 'tipos-causas-baja.crear', 'tipos-causas-baja.editar', 'tipos-causas-baja.eliminar',
-                'tipos-causas-movimiento.ver', 'tipos-causas-movimiento.crear', 'tipos-causas-movimiento.editar', 'tipos-causas-movimiento.eliminar',
+                'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
                 'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
                 'tipos-color-piel.ver', 'tipos-color-piel.crear', 'tipos-color-piel.editar', 'tipos-color-piel.eliminar',
                 'tipos-deducciones.ver', 'tipos-deducciones.crear', 'tipos-deducciones.editar', 'tipos-deducciones.eliminar',
-                'tipos-especialidad.ver', 'tipos-especialidad.crear', 'tipos-especialidad.editar', 'tipos-especialidad.eliminar',
                 'tipos-estado-civil.ver', 'tipos-estado-civil.crear', 'tipos-estado-civil.editar', 'tipos-estado-civil.eliminar',
                 'tipos-grupo-horario.ver', 'tipos-grupo-horario.crear', 'tipos-grupo-horario.editar', 'tipos-grupo-horario.eliminar',
                 'tipos-integracion-politica.ver', 'tipos-integracion-politica.crear', 'tipos-integracion-politica.editar', 'tipos-integracion-politica.eliminar',
                 'tipos-medios-proteccion.ver', 'tipos-medios-proteccion.crear', 'tipos-medios-proteccion.editar', 'tipos-medios-proteccion.eliminar',
                 'tipos-nivel-educacion.ver', 'tipos-nivel-educacion.crear', 'tipos-nivel-educacion.editar', 'tipos-nivel-educacion.eliminar',
-                'tipos-plantillas.ver', 'tipos-plantillas.crear', 'tipos-plantillas.editar', 'tipos-plantillas.eliminar',
                 'tipos-sexo.ver', 'tipos-sexo.crear', 'tipos-sexo.editar', 'tipos-sexo.eliminar',
-                'tipos-tallas.ver', 'tipos-tallas.crear', 'tipos-tallas.editar', 'tipos-tallas.eliminar',
                 'tipos-ubicacion-defensa.ver', 'tipos-ubicacion-defensa.crear', 'tipos-ubicacion-defensa.editar', 'tipos-ubicacion-defensa.eliminar',
 
                 // RRHH - Tablas faltantes parte 2
                 'centros-costos.ver', 'centros-costos.crear', 'centros-costos.editar', 'centros-costos.eliminar',
-                'tipos-articulos-bolsa.ver', 'tipos-articulos-bolsa.crear', 'tipos-articulos-bolsa.editar', 'tipos-articulos-bolsa.eliminar',
-
-                'tipos-jefe-grupo.ver', 'tipos-jefe-grupo.crear', 'tipos-jefe-grupo.editar', 'tipos-jefe-grupo.eliminar',
                 'pagos-adicionales-cargo.ver', 'pagos-adicionales-cargo.crear', 'pagos-adicionales-cargo.editar', 'pagos-adicionales-cargo.eliminar',
-
-                'tipos-entidad.ver', 'tipos-entidad.crear', 'tipos-entidad.editar', 'tipos-entidad.eliminar',
                 'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
                 'descuentos-empleados.ver', 'descuentos-empleados.crear', 'descuentos-empleados.editar', 'descuentos-empleados.eliminar',
                 'vacaciones.ver', 'vacaciones.crear', 'vacaciones.editar', 'vacaciones.eliminar',

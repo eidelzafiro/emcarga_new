@@ -25,6 +25,7 @@ class CombustiblesLubricantesController extends Controller
         $causas = TipoCausa::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('CombustiblesLubricantes/Index', [
+            'title' => 'Comb. Lubricantes',
             'items' => $items,
             'cargas' => $cargas,
             'tractivos' => $tractivos,

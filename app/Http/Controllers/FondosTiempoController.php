@@ -16,7 +16,7 @@ class FondosTiempoController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'fondos-tiempo.index';
+        return 'fondos-tiempo';
     }
 
     protected function getTitle(): string

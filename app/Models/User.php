@@ -39,6 +39,7 @@ class User extends Authenticatable
         'ultimo_login',
         'fecha_cambio_password',
         'password_temporal',
+        'activo',
     ];
 
     /**
@@ -62,6 +63,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'bloqueado' => 'boolean',
             'password_temporal' => 'boolean',
+            'activo' => 'boolean',
             'intentos_fallidos' => 'integer',
             'ultimo_login' => 'datetime',
             'fecha_cambio_password' => 'datetime',

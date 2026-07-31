@@ -15,6 +15,13 @@ class PrefacturasController extends Controller
         $prefacturas = Prefactura::with('cliente:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%")))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->orderBy('fecha', 'desc')
             ->paginate(20);
 
@@ -54,6 +61,7 @@ class PrefacturasController extends Controller
             'aforos_ids.*' => 'exists:aforos,id',
         ]);
 
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         $validated['id_user'] = auth()->id();
         $validated['estado'] = 'pendiente';
 

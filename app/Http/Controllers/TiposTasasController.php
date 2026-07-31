@@ -11,6 +11,13 @@ class TiposTasasController extends Controller
     public function index(Request $request)
     {
         $tipos = TipoTasa::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%"))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->orderBy('nombre')
             ->paginate(20);
 
@@ -29,6 +36,7 @@ class TiposTasasController extends Controller
             'unidad' => 'nullable|max:100',
             'valor' => 'nullable|numeric|min:0',
         ]);
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         TipoTasa::create($validated);
 
         return redirect()->route('tipos-tasas.index')->with('success', 'Tipo de tasa creado correctamente.');

@@ -9,12 +9,6 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('password.temporal');
-    }
-
     // === Catálogos PDF ===
 
     public function pdfMarcas()

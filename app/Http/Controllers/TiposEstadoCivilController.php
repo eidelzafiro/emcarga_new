@@ -16,7 +16,7 @@ class TiposEstadoCivilController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-estado-civil.index';
+        return 'tipos-estado-civil';
     }
 
     protected function getTitle(): string

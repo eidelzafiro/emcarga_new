@@ -38,13 +38,6 @@ class RrhhTest extends TestCase
             ->assertOk();
     }
 
-    public function test_plantilla_index(): void
-    {
-        $this->actingAs($this->usuarioRechum())
-            ->get(route('plantilla.index'))
-            ->assertOk();
-    }
-
     public function test_historial_movimientos_index(): void
     {
         $this->actingAs($this->usuarioRechum())
@@ -130,6 +123,5 @@ class RrhhTest extends TestCase
         $user->save();
 
         $this->actingAs($user)->get(route('bolsa.index'))->assertForbidden();
-        $this->actingAs($user)->get(route('plantilla.index'))->assertForbidden();
     }
 }

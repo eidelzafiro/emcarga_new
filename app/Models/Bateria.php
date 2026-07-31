@@ -14,7 +14,7 @@ class Bateria extends Model
     protected $table = 'baterias';
 
     protected $fillable = [
-        'folio', 'marca', 'modelo', 'id_tractivo',
+        'id_entidad', 'folio', 'marca', 'modelo', 'id_tractivo',
         'fecha_instalacion', 'fecha_retiro', 'estado',
     ];
 
@@ -34,5 +34,10 @@ class Bateria extends Model
     public function movimientos(): HasMany
     {
         return $this->hasMany(BateriasMovimiento::class, 'id_bateria');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

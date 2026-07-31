@@ -69,10 +69,12 @@ class ConsecutivosController extends Controller
             'id' => $item->id,
             'nombre' => $item->descripcion,
             'valor' => $item->ultimo,
+            'activo' => $item->activo,
             'id_entidad' => $item->id_entidad,
         ]);
 
         return Inertia::render('Catalogo/Index', [
+            'title' => $this->getTitle(),
             'items' => $items,
             'filters' => $request->only('search'),
             'catalogConfig' => [
@@ -143,6 +145,7 @@ class ConsecutivosController extends Controller
             'codigo' => "nullable|string|max:50|{$codigoUnique}",
             'nombre' => 'required|string|max:255',
             'valor' => 'nullable|integer|min:0',
+            'activo' => 'boolean',
         ];
     }
 }

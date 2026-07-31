@@ -31,6 +31,7 @@ class EntidadesController extends Controller
         $entidadesPadre = Entidad::orderBy('nombre')->get(['id', 'codigo', 'nombre', 'abreviatura']);
 
         return Inertia::render('Entidades/Index', [
+            'title' => 'Entidades',
             'items' => $query->orderBy('nombre')->paginate(20),
             'filters' => $request->only('search'),
             'provincias' => $provincias,

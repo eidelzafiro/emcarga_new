@@ -13,7 +13,7 @@ class Motore extends Model
     protected $table = 'motores';
 
     protected $fillable = [
-        'codigo', 'descripcion', 'marca', 'modelo', 'numero_serie',
+        'id_entidad', 'codigo', 'descripcion', 'marca', 'modelo', 'numero_serie',
         'id_tractivo', 'estado',
     ];
 
@@ -25,5 +25,10 @@ class Motore extends Model
     public function movimientos(): HasMany
     {
         return $this->hasMany(MotoresMovimiento::class, 'id_motor');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

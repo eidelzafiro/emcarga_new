@@ -21,6 +21,6 @@ class MotivosEntradaTallerController extends Controller
 
     protected function getTitle(): string
     {
-        return 'Motivos de Entrada a Taller';
+        return 'Motivos Entrada Taller';
     }
 }

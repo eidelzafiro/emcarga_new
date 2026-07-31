@@ -302,8 +302,10 @@ return [
             'legacy' => 'com_tipomodelo',
             'pk' => 'idtipomod',
             'columnas' => [
-                'modelo' => 'modelo',
+                'modelo' => 'nombre',
                 'idunidad' => 'id_entidad',
+                'ancho' => 'ancho',
+                'alto' => 'alto',
             ],
             'defaults' => [
                 'activo' => true,
@@ -450,6 +452,18 @@ return [
             ],
         ],
 
+        'cargos' => [
+            'legacy' => 'rh_cargos',
+            'pk' => 'idcargos',
+            'columnas' => [
+                'nombcargo' => 'nombre',
+                'idcargos' => 'codigo',
+            ],
+            'defaults' => [
+                'activo' => true,
+            ],
+        ],
+
         'categorias_cargo' => [
             'legacy' => 'rh_tipocatcargos',
             'pk' => 'idtipocatcargos',
@@ -468,6 +482,12 @@ return [
             'pk' => 'idfirmas',
             'columnas' => [
                 'nombfirma' => 'nombre',
+                'confnombre' => 'confecciona_nombre',
+                'confcargo' => 'confecciona_cargo',
+                'revnombre' => 'revisa_nombre',
+                'revcargo' => 'revisa_cargo',
+                'aprobnombre' => 'aprueba_nombre',
+                'aprobcargo' => 'aprueba_cargo',
             ],
             'defaults' => [
                 'activo' => true,
@@ -512,6 +532,9 @@ return [
             'columnas' => [
                 'nombmes' => 'nombre',
                 'codigo' => 'codigo',
+                'dias' => 'dias',
+                'dlaborables' => 'dias_laborables',
+                'dlab2' => 'dias_laborables_sin_sabado',
             ],
         ],
 
@@ -701,9 +724,16 @@ return [
             'pk' => 'idtipoincidencias',
             'columnas' => [
                 'nombincidencias' => 'nombre',
+                'idtipodeducciones' => 'id_tipo_deducciones',
+                'tsuma' => 'tsuma',
+                'impsuma' => 'impsuma',
+                'penalizacuc' => 'penalizacuc',
             ],
             'defaults' => [
                 'activo' => true,
+            ],
+            'cero_a_null' => [
+                'id_tipo_deducciones',
             ],
         ],
 
@@ -768,6 +798,9 @@ return [
             'pk' => 'idtipopenalizaciones',
             'columnas' => [
                 'nombpenalizacion' => 'nombre',
+                'idareas' => 'area_id',
+                'idtipopagosadicionales' => 'tipo_pago_adicional_id',
+                'importe' => 'porcentaje',
             ],
             'defaults' => [
                 'activo' => true,

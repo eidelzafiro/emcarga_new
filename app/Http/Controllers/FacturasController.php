@@ -16,6 +16,13 @@ class FacturasController extends Controller
         $facturas = Factura::with('cliente:id,nombre', 'tipoIngreso:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%"))->orWhere('numero', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->orderBy('fecha_emision', 'desc')
             ->orderBy('numero', 'desc')
             ->paginate(20);
@@ -59,6 +66,7 @@ class FacturasController extends Controller
             'aforos_ids.*' => 'exists:aforos,id',
         ]);
 
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         $validated['id_user'] = auth()->id();
         $validated['id_unidad'] = auth()->user()->id_unidad ?? null;
         $validated['cancelada'] = false;

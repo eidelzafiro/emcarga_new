@@ -16,7 +16,7 @@ class TiposUbicacionDefensaController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-ubicacion-defensa.index';
+        return 'tipos-ubicacion-defensa';
     }
 
     protected function getTitle(): string

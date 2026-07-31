@@ -59,7 +59,6 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Otros Agregados', 'icon' => 'pi pi-cog', 'permission' => 'otros-agregados.ver', 'orden' => 8, 'parent_id' => $flota->id]
         );
 
-        // Flota - Tablas faltantes
         MenuItem::firstOrCreate(
             ['route' => 'arrastres.index'],
             ['label' => 'Arrastres', 'icon' => 'pi pi-truck', 'permission' => 'arrastres.ver', 'orden' => 10, 'parent_id' => $flota->id]
@@ -130,7 +129,6 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Cartas Porte', 'icon' => 'pi pi-file', 'permission' => 'giros.ver', 'orden' => 6, 'parent_id' => $comercial->id]
         );
 
-        // Comercial - Tablas faltantes
         MenuItem::firstOrCreate(
             ['route' => 'alertas.index'],
             ['label' => 'Alertas', 'icon' => 'pi pi-bell', 'permission' => 'alertas.ver', 'orden' => 7, 'parent_id' => $comercial->id]
@@ -171,7 +169,6 @@ class MenuItemSeeder extends Seeder
             ['label' => 'Config. Modelo', 'icon' => 'pi pi-sliders-h', 'permission' => 'configuraciones-modelo.ver', 'orden' => 18, 'parent_id' => $comercial->id]
         );
 
-        // Comercial - Tablas faltantes parte 2
         MenuItem::firstOrCreate(
             ['route' => 'contenedores.index'],
             ['label' => 'Contenedores', 'icon' => 'pi pi-box', 'permission' => 'contenedores.ver', 'orden' => 22, 'parent_id' => $comercial->id]
@@ -211,16 +208,10 @@ class MenuItemSeeder extends Seeder
         );
 
         MenuItem::firstOrCreate(
-            ['route' => 'plantilla.index'],
-            ['label' => 'Plantilla', 'icon' => 'pi pi-table', 'permission' => 'plantilla.ver', 'orden' => 2, 'parent_id' => $rrhh->id]
-        );
-
-        MenuItem::firstOrCreate(
             ['route' => 'historial-movimientos.index'],
             ['label' => 'Historial', 'icon' => 'pi pi-history', 'permission' => 'historial-movimientos.ver', 'orden' => 3, 'parent_id' => $rrhh->id]
         );
 
-        // RRHH - Tablas faltantes (Fase 5.5 parte 3)
         MenuItem::firstOrCreate(
             ['route' => 'salarios.index'],
             ['label' => 'Salarios', 'icon' => 'pi pi-dollar', 'permission' => 'salarios.ver', 'orden' => 10, 'parent_id' => $rrhh->id]
@@ -233,7 +224,7 @@ class MenuItemSeeder extends Seeder
 
         MenuItem::firstOrCreate(
             ['route' => 'osdes.index'],
-            ['label' => 'OSDEs', 'icon' => 'pi pi-building', 'permission' => 'osdes.ver', 'orden' => 14, 'parent_id' => $rrhh->id]
+            ['label' => 'OSDES', 'icon' => 'pi pi-building', 'permission' => 'osdes.ver', 'orden' => 14, 'parent_id' => $rrhh->id]
         );
 
         MenuItem::firstOrCreate(
@@ -242,16 +233,10 @@ class MenuItemSeeder extends Seeder
         );
 
         MenuItem::firstOrCreate(
-            ['route' => 'fondos-tiempo.index'],
-            ['label' => 'Fondos Tiempo', 'icon' => 'pi pi-clock', 'permission' => 'fondos-tiempo.ver', 'orden' => 17, 'parent_id' => $rrhh->id]
-        );
-
-        MenuItem::firstOrCreate(
             ['route' => 'medios-proteccion.index'],
             ['label' => 'Medios Protección', 'icon' => 'pi pi-shield', 'permission' => 'medios-proteccion.ver', 'orden' => 18, 'parent_id' => $rrhh->id]
         );
 
-        // RRHH - Tablas faltantes parte 2
         MenuItem::firstOrCreate(
             ['route' => 'centros-costos.index'],
             ['label' => 'Centros Costo', 'icon' => 'pi pi-dollar', 'permission' => 'centros-costos.ver', 'orden' => 38, 'parent_id' => $rrhh->id]
@@ -348,7 +333,7 @@ class MenuItemSeeder extends Seeder
         );
 
         $catItems = [
-            ['catalogo.tipos', 'Tipos de Catálogo', 'pi pi-list', 'catalogo.ver', 0],
+            ['catalogo.gestionar', 'Catálogos', 'pi pi-book', 'catalogo.editar', 0],
             ['marcas.index', 'Marcas', 'pi pi-tag', 'marcas.ver', 1],
             ['modelos.index', 'Modelos', 'pi pi-cog', 'modelos.ver', 2],
             ['grupos.index', 'Grupos', 'pi pi-bullseye', 'grupos.ver', 3],
@@ -360,11 +345,15 @@ class MenuItemSeeder extends Seeder
             ['posiciones-neumaticos.index', 'Posiciones Neumáticos', 'pi pi-arrows-alt', 'posiciones-neumaticos.ver', 15],
             ['consecutivos.index', 'Consecutivos', 'pi pi-list', 'consecutivos.ver', 16],
             ['embalajes.index', 'Embalajes', 'pi pi-box', 'embalajes.ver', 19],
-            ['navieras.index', 'Navieras', 'pi pi-globe', 'navieras.ver', 21],
+            ['tipos-incidencias.index', 'Incidencias', 'pi pi-exclamation-circle', 'tipos-incidencias.ver', 20],
+            ['tipos-penalizaciones.index', 'Penalizaciones', 'pi pi-ban', 'tipos-penalizaciones.ver', 21],
+            ['navieras.index', 'Navieras', 'pi pi-globe', 'navieras.ver', 22],
             ['organismos.index', 'Organismos', 'pi pi-building', 'organismos.ver', 22],
             ['categorias-cargo.index', 'Categorías Cargo', 'pi pi-tags', 'categorias-cargo.ver', 23],
             ['grupos-escala.index', 'Grupos Escala', 'pi pi-chart-bar', 'grupos-escala.ver', 24],
-            ['entidades.index', 'Entidades', 'pi pi-building', 'entidades.ver', 25],
+            ['areas.index', 'Áreas', 'pi pi-building', 'areas.ver', 24],
+            ['cargos.index', 'Cargos', 'pi pi-briefcase', 'cargos.ver', 25],
+            ['meses.index', 'Meses', 'pi pi-calendar', 'meses.ver', 30],
         ];
 
         foreach ($catItems as [$route, $label, $icon, $perm, $orden]) {
@@ -374,8 +363,7 @@ class MenuItemSeeder extends Seeder
             );
         }
 
-        // Gestión de tipos de catálogo (repara el ítem legacy "Tarjetero").
-        MenuItem::updateOrCreate(
+        MenuItem::firstOrCreate(
             ['route' => 'catalogo.gestionar'],
             ['label' => 'Gestionar Catálogos', 'icon' => 'pi pi-cog', 'permission' => 'catalogo.editar', 'orden' => 27, 'parent_id' => $catalogos->id, 'activo' => true]
         );
@@ -417,7 +405,7 @@ class MenuItemSeeder extends Seeder
 
         MenuItem::firstOrCreate(
             ['route' => 'menu-items.index'],
-            ['label' => 'Menús', 'icon' => 'pi pi-bars', 'permission' => 'menus.ver', 'orden' => 3, 'parent_id' => $administracion->id]
+            ['label' => 'Menús', 'icon' => 'pi pi-bars', 'permission' => 'menus.admin', 'orden' => 3, 'parent_id' => $administracion->id]
         );
     }
 }

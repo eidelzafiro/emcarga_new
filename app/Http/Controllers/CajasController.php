@@ -12,10 +12,17 @@ class CajasController extends Controller
     {
         $cajas = Caja::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%"))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->paginate(20);
 
         return Inertia::render('Cajas/Index', [
-            'title' => 'Cajas de Transmisión',
+            'title' => 'Cajas',
             'cajas' => $cajas,
             'filters' => $request->only(['search']),
         ]);
@@ -32,6 +39,8 @@ class CajasController extends Controller
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'estado' => 'nullable|string|max:50',
         ]);
+
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
 
         Caja::create($validated);
 

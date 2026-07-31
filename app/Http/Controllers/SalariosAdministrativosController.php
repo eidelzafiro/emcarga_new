@@ -15,6 +15,7 @@ class SalariosAdministrativosController extends Controller
             ->paginate(20);
 
         return Inertia::render('SalariosAdministrativos/Index', [
+            'title' => 'Salarios Administrativos',
             'items' => $items,
             'filters' => $request->only(['search']),
         ]);

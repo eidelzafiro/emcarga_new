@@ -16,7 +16,7 @@ class TiposNivelEducacionController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-nivel-educacion.index';
+        return 'tipos-nivel-educacion';
     }
 
     protected function getTitle(): string

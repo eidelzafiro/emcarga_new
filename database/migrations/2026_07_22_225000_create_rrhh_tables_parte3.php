@@ -37,7 +37,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 100);
             $table->string('codigo', 2)->nullable();
-            $table->integer('dias')->nullable();
+            $table->string('dias', 50)->nullable();
             $table->decimal('dias_laborables', 6, 2)->nullable();
             $table->timestamps();
         });

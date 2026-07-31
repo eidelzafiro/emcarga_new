@@ -15,6 +15,7 @@ class FirmasController extends Controller
             ->paginate(20);
 
         return Inertia::render('Firmas/Index', [
+            'title' => 'Firmas Autorizadas',
             'items' => $items,
             'filters' => $request->only(['search']),
         ]);

@@ -16,7 +16,7 @@ class TiposGrupoHorarioController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-grupo-horario.index';
+        return 'tipos-grupo-horario';
     }
 
     protected function getTitle(): string

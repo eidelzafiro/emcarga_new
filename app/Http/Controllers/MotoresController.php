@@ -13,6 +13,13 @@ class MotoresController extends Controller
         $motores = Motore::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%")
                 ->orWhere('codigo', 'like', "%{$s}%"))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->paginate(20);
 
         return Inertia::render('Motores/Index', [
@@ -33,6 +40,8 @@ class MotoresController extends Controller
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'estado' => 'nullable|string|max:50',
         ]);
+
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
 
         Motore::create($validated);
 

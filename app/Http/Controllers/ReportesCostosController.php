@@ -20,6 +20,7 @@ class ReportesCostosController extends Controller
         $tractivos = Tractivo::select('id', 'codigo', 'descripcion')->orderBy('codigo')->get();
 
         return Inertia::render('ReportesCostos/Index', [
+            'title' => 'Reportes Costos',
             'reportes' => $reportes,
             'tractivos' => $tractivos,
             'filters' => $request->only(['search', 'id_tractivo']),

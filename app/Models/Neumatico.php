@@ -14,7 +14,7 @@ class Neumatico extends Model
     protected $table = 'neumaticos';
 
     protected $fillable = [
-        'folio', 'marca', 'modelo', 'medida', 'id_tractivo',
+        'id_entidad', 'folio', 'marca', 'modelo', 'medida', 'id_tractivo',
         'fecha_instalacion', 'fecha_retiro', 'kilometraje', 'estado',
     ];
 
@@ -40,5 +40,10 @@ class Neumatico extends Model
     public function roturas(): HasMany
     {
         return $this->hasMany(NeumaticosRotura::class, 'id_neumatico');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

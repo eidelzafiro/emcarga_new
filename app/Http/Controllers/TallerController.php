@@ -17,7 +17,7 @@ class TallerController extends Controller
             ->paginate(20);
 
         return Inertia::render('Taller/Index', [
-            'title' => 'Órdenes de Taller',
+            'title' => 'Taller',
             'ordenes' => $ordenes,
             'filters' => $request->only(['search']),
         ]);

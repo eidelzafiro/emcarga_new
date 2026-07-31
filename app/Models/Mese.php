@@ -13,5 +13,7 @@ class Mese extends Model
         'codigo',
         'dias',
         'dias_laborables',
+        'dias_laborables_sin_sabado',
+        'activo',
     ];
 }

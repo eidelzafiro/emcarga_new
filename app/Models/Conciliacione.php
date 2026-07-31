@@ -13,7 +13,7 @@ class Conciliacione extends Model
     protected $table = 'conciliaciones';
 
     protected $fillable = [
-        'numero',
+        'id_entidad', 'numero',
         'id_factura',
         'fecha_conciliacion',
         'monto',
@@ -39,5 +39,10 @@ class Conciliacione extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

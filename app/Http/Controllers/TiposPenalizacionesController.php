@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Entidad;
 use App\Models\TipoPenalizacione;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,7 +11,15 @@ class TiposPenalizacionesController extends Controller
 {
     public function index(Request $request)
     {
-        $tipos = TipoPenalizacione::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%"))
+        $entidadId = (int) session('entidad_activa_id');
+
+        $tipos = TipoPenalizacione::with(['area', 'tipoPagoAdicional'])
+            ->where(function ($q) use ($entidadId) {
+                $q->where('id_entidad', $entidadId)->orWhereNull('id_entidad');
+            })
+            ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
+                $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%");
+            }))
             ->orderBy('nombre')
             ->paginate(20);
 
@@ -18,6 +27,8 @@ class TiposPenalizacionesController extends Controller
             'title' => 'Tipos de Penalizaciones',
             'tipos' => $tipos,
             'filters' => $request->only(['search']),
+            'areas' => \App\Models\Area::select('id', 'nombre')->orderBy('nombre')->get(),
+            'sistemasPago' => \App\Models\TipoPagoAdicionale::select('id', 'nombre')->orderBy('nombre')->get(),
         ]);
     }
 
@@ -26,7 +37,11 @@ class TiposPenalizacionesController extends Controller
         $validated = $request->validate([
             'codigo' => 'required|unique:tipos_penalizaciones,codigo|max:50',
             'nombre' => 'required|max:255',
+            'area_id' => 'nullable|exists:areas,id',
+            'tipo_pago_adicional_id' => 'nullable|exists:tipos_pagos_adicionales,id',
+            'porcentaje' => 'nullable|numeric|min:0|max:100',
         ]);
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         TipoPenalizacione::create($validated);
 
         return redirect()->route('tipos-penalizaciones.index')->with('success', 'Tipo de penalización creado correctamente.');
@@ -37,6 +52,9 @@ class TiposPenalizacionesController extends Controller
         $validated = $request->validate([
             'codigo' => 'required|unique:tipos_penalizaciones,codigo,'.$tiposPenalizacione->id.'|max:50',
             'nombre' => 'required|max:255',
+            'area_id' => 'nullable|exists:areas,id',
+            'tipo_pago_adicional_id' => 'nullable|exists:tipos_pagos_adicionales,id',
+            'porcentaje' => 'nullable|numeric|min:0|max:100',
         ]);
         $tiposPenalizacione->update($validated);
 

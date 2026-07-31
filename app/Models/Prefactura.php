@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Prefactura extends Model
 {
     protected $fillable = [
-        'numero',
+        'id_entidad', 'numero',
         'id_cliente',
         'fecha',
         'flete_mt',
@@ -47,5 +47,10 @@ class Prefactura extends Model
     public function aforos(): HasMany
     {
         return $this->hasMany(Aforo::class, 'id_prefactura');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

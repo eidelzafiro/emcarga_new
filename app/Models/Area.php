@@ -13,7 +13,7 @@ class Area extends Model
     protected $table = 'areas';
 
     protected $fillable = [
-        'codigo',
+        'id_entidad', 'codigo',
         'nombre',
         'id_area_padre',
         'activo',
@@ -29,5 +29,10 @@ class Area extends Model
     public function areaPadre(): BelongsTo
     {
         return $this->belongsTo(Area::class, 'id_area_padre');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 }

@@ -145,10 +145,11 @@ class EtlService
     {
         $avisos = [];
         $procesados = 0;
+        $vistos = [];
 
         DB::connection('legacy')->table('tec_consecutivos')
             ->orderBy('idconsecutivos')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, &$vistos) {
                 foreach ($filas as $fila) {
                     $codigo = trim($fila->nombconsecutivo);
                     if ($codigo === '') {
@@ -156,6 +157,14 @@ class EtlService
 
                         continue;
                     }
+
+                    $clave = $codigo.'|'.($fila->idunidad ?: '');
+                    if (isset($vistos[$clave])) {
+                        $avisos[] = "consecutivos#{$fila->idconsecutivos}: duplicado '{$codigo}' (entidad ".($fila->idunidad ?: '-')."), omitido";
+
+                        continue;
+                    }
+                    $vistos[$clave] = true;
 
                     DB::table('consecutivos')->updateOrInsert(
                         ['id' => $fila->idconsecutivos],
@@ -245,6 +254,12 @@ class EtlService
         foreach ($config['defaults'] ?? [] as $col => $valor) {
             if (! array_key_exists($col, $datos)) {
                 $datos[$col] = $valor;
+            }
+        }
+
+        foreach ($config['cero_a_null'] ?? [] as $col) {
+            if (array_key_exists($col, $datos) && (int) $datos[$col] === 0) {
+                $datos[$col] = null;
             }
         }
 

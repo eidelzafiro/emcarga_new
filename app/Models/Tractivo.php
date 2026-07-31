@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Entidad;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Tractivo extends Model
 {
@@ -18,7 +20,7 @@ class Tractivo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'codigo', 'descripcion', 'placa', 'id_tipo_vehiculo',
+        'id_entidad', 'codigo', 'descripcion', 'placa', 'id_tipo_vehiculo',
         'marca', 'modelo', 'anno', 'color',
         'numero_motor', 'numero_chasis', 'numero_caja',
         'capacidad_toneladas', 'capacidad_m3',
@@ -33,4 +35,9 @@ class Tractivo extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
+    }
 }

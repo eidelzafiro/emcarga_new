@@ -13,6 +13,13 @@ class ConciliacionesController extends Controller
         $conciliaciones = Conciliacione::with('factura')
             ->when($request->search, fn ($q, $s) => $q->where('concepto', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $e) => $q->where('estado', $e))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->orderBy('fecha', 'desc')
             ->paginate(20);
 
@@ -32,6 +39,7 @@ class ConciliacionesController extends Controller
             'estado' => 'required|in:pendiente,conciliado,pendiente',
             'descripcion' => 'nullable|max:500',
         ]);
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         Conciliacione::create($validated);
 
         return redirect()->route('conciliaciones.index')->with('success', 'Conciliación creada correctamente.');

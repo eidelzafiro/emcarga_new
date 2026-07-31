@@ -18,7 +18,7 @@ class TiposModeloController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'tipos-modelo.index';
+        return 'tipos-modelo';
     }
 
     protected function getTitle(): string
@@ -70,6 +70,7 @@ class TiposModeloController extends Controller
         }
 
         return Inertia::render('Catalogo/Index', [
+            'title' => $this->getTitle(),
             'items' => $query->orderBy($this->getSortField())->paginate(20),
             'filters' => $request->only('search'),
             'catalogConfig' => [

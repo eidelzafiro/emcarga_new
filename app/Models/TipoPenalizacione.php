@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+use App\Models\TipoPagoAdicionale;
 
 class TipoPenalizacione extends Model
 {
@@ -12,12 +15,26 @@ class TipoPenalizacione extends Model
         'codigo',
         'nombre',
         'activo',
+        'area_id',
+        'tipo_pago_adicional_id',
+        'porcentaje',
     ];
 
     protected function casts(): array
     {
         return [
             'activo' => 'boolean',
+            'porcentaje' => 'decimal:2',
         ];
+    }
+
+    public function area(): BelongsTo
+    {
+        return $this->belongsTo(Area::class);
+    }
+
+    public function tipoPagoAdicional(): BelongsTo
+    {
+        return $this->belongsTo(TipoPagoAdicionale::class, 'tipo_pago_adicional_id');
     }
 }

@@ -12,6 +12,13 @@ class SolicitudesController extends Controller
     {
         $solicitudes = SolicitudesServicio::with('cliente:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%"))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
             ->orderBy('fecha_solicitud', 'desc')
             ->paginate(20);
 

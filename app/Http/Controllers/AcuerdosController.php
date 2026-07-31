@@ -14,6 +14,6 @@ class AcuerdosController extends Controller
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%"))
             ->paginate(20);
 
-        return Inertia::render('Acuerdos/Index', ['title' => 'Acuerdos Tarifarios', 'acuerdos' => $acuerdos, 'filters' => $request->only(['search'])]);
+        return Inertia::render('Acuerdos/Index', ['title' => 'Acuerdos', 'acuerdos' => $acuerdos, 'filters' => $request->only(['search'])]);
     }
 }

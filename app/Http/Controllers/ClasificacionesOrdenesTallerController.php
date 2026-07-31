@@ -26,6 +26,6 @@ class ClasificacionesOrdenesTallerController extends Controller
 
     protected function getTitle(): string
     {
-        return 'Clasificaciones de \xd3rdenes de Taller';
+        return 'Clasif. OT';
     }
 }

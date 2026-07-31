@@ -26,7 +26,7 @@ class BolsaController extends Controller
         $entidades = Entidad::orderBy('nombre')->get(['id', 'nombre']);
 
         return Inertia::render('Bolsa/Index', [
-            'title' => 'Bolsa de Trabajo',
+            'title' => 'Bolsa',
             'bolsa' => $items,
             'cargos' => $cargos,
             'entidades' => $entidades,
@@ -36,6 +36,10 @@ class BolsaController extends Controller
 
     public function store(Request $request)
     {
+        if (! $request->user()->hasRole('SUPERADMIN')) {
+            abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
+        }
+
         $validated = $request->validate([
             'ci' => 'required|unique:bolsa,ci|max:20',
             'nombre' => 'required|max:255',
@@ -48,6 +52,9 @@ class BolsaController extends Controller
             'id_cargo' => 'nullable|exists:cargos,id',
             'id_entidad' => 'nullable|exists:entidades,id',
         ]);
+
+        $validated['id_entidad'] ??= session('entidad_activa_id');
+
         Bolsa::create($validated);
 
         return redirect()->route('bolsa.index')->with('success', 'Registro creado correctamente.');
@@ -55,6 +62,10 @@ class BolsaController extends Controller
 
     public function update(Request $request, Bolsa $bolsa)
     {
+        if (! $request->user()->hasRole('SUPERADMIN')) {
+            abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
+        }
+
         $validated = $request->validate([
             'ci' => 'required|unique:bolsa,ci,'.$bolsa->id.'|max:20',
             'nombre' => 'required|max:255',
@@ -67,13 +78,20 @@ class BolsaController extends Controller
             'id_cargo' => 'nullable|exists:cargos,id',
             'id_entidad' => 'nullable|exists:entidades,id',
         ]);
+
+        $validated['id_entidad'] ??= session('entidad_activa_id');
+
         $bolsa->update($validated);
 
         return redirect()->route('bolsa.index')->with('success', 'Registro actualizado correctamente.');
     }
 
-    public function destroy(Bolsa $bolsa)
+    public function destroy(Request $request, Bolsa $bolsa)
     {
+        if (! $request->user()->hasRole('SUPERADMIN')) {
+            abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
+        }
+
         $bolsa->delete();
 
         return redirect()->route('bolsa.index')->with('success', 'Registro eliminado correctamente.');

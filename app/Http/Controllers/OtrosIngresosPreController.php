@@ -21,6 +21,7 @@ class OtrosIngresosPreController extends Controller
         $tiposIngreso = TipoIngreso::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('OtrosIngresosPre/Index', [
+            'title' => 'Otros Ingresos',
             'items' => $items,
             'cartasPorte' => $cartasPorte,
             'tiposIngreso' => $tiposIngreso,

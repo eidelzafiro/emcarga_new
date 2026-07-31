@@ -14,7 +14,7 @@ class EstadisticasExplotacionController extends Controller
 
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
-            'title' => 'Estadísticas de Explotación',
+            'title' => 'Estad. Explotación',
             'route' => 'estadisticas-explotacion',
         ]);
     }

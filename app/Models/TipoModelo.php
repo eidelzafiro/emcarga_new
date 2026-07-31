@@ -8,5 +8,5 @@ class TipoModelo extends Model
 {
     protected $table = 'tipos_modelo';
 
-    protected $fillable = ['nombre', 'ancho', 'alto', 'activo', 'id_entidad'];
+    protected $fillable = ['codigo', 'nombre', 'ancho', 'alto', 'activo', 'id_entidad'];
 }

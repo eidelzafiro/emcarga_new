@@ -20,6 +20,11 @@ trait ManagesCatalog
         return [];
     }
 
+    protected function isEntityScoped(): bool
+    {
+        return false;
+    }
+
     protected function getSortField(): string
     {
         return 'nombre';
@@ -30,11 +35,6 @@ trait ManagesCatalog
         return ['codigo', 'nombre'];
     }
 
-    /**
-     * Si el catálogo maneja el código manualmente (p.ej. Consecutivos,
-     * donde el código ES el dato de negocio), se mantiene como input
-     * del usuario. Por defecto el código es automático y correlativo.
-     */
     protected function usaCodigoManual(): bool
     {
         return false;
@@ -42,17 +42,27 @@ trait ManagesCatalog
 
     protected function getValidationRules($id = null): array
     {
-        return [
+        $rules = [
             'nombre' => 'required|string|max:255',
             'activo' => 'boolean',
         ];
+
+        foreach ($this->getExtraFields() as $key => $config) {
+            $type = $config['type'] ?? 'text';
+            if ($type === 'boolean') {
+                $rules[$key] = 'boolean';
+            } elseif ($type === 'number') {
+                $rules[$key] = 'nullable|numeric';
+            } elseif ($type === 'select') {
+                $rules[$key] = 'nullable';
+            } else {
+                $rules[$key] = 'nullable|string';
+            }
+        }
+
+        return $rules;
     }
 
-    /**
-     * Código correlativo automático por tabla:
-     * max valor numérico existente + 1, con padding de 2 dígitos.
-     * La unique de la columna protege ante creaciones concurrentes.
-     */
     protected function generarCodigo(): string
     {
         $model = $this->getModelClass();
@@ -70,6 +80,14 @@ trait ManagesCatalog
         $model = $this->getModelClass();
 
         $query = $model::query();
+
+        if ($this->isEntityScoped()) {
+            $entidadId = (int) session('entidad_activa_id');
+            if ($entidadId) {
+                $query->where('id_entidad', $entidadId);
+            }
+        }
+
         $search = $request->get('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -80,6 +98,7 @@ trait ManagesCatalog
         }
 
         return Inertia::render('Catalogo/Index', [
+            'title' => $this->getTitle(),
             'items' => $query->orderBy($this->getSortField())->paginate(20),
             'filters' => $request->only('search'),
             'catalogConfig' => [
@@ -100,11 +119,19 @@ trait ManagesCatalog
         $model = $this->getModelClass();
         $data = $request->validate($this->getValidationRules());
 
+        if ($this->isEntityScoped()) {
+            $data['id_entidad'] = (int) session('entidad_activa_id');
+        }
+
         if (! $this->usaCodigoManual() && Schema::hasColumn((new $model)->getTable(), 'codigo')) {
             $data['codigo'] = $this->generarCodigo();
         }
 
         $model::create($data);
+
+        if ($request->boolean('_continuar')) {
+            return redirect()->back()->with('success', 'Creado correctamente. Puede continuar añadiendo.');
+        }
 
         return redirect()->back()->with('success', 'Creado correctamente');
     }

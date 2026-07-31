@@ -16,14 +16,18 @@ import { useToast } from 'primevue/usetoast'
 const props = defineProps({ items: Object, tiposModelo: Array, filters: Object })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
+const tipoModeloFiltro = ref(props.filters?.codigo_tipo_modelo || null)
 const showForm = ref(false)
 const editing = ref(null)
 const form = ref({ nombre: '', codigo_tipo_modelo: null, set_x: null, set_y: null, letra: null })
 const title = 'Configuraciones de Modelo'
 
-watch(search, () => {
-    router.get(route('configuraciones-modelo.index'), { search: search.value }, { preserveState: true, replace: true })
-})
+function filtrar() {
+    router.get(route('configuraciones-modelo.index'), { search: search.value, codigo_tipo_modelo: tipoModeloFiltro.value }, { preserveState: true, replace: true })
+}
+
+watch(search, filtrar)
+watch(tipoModeloFiltro, filtrar)
 
 function openCreate() {
     editing.value = null
@@ -61,7 +65,10 @@ function submit() {
                     <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
                 </template>
                 <template #end>
-                    <InputText v-model="search" placeholder="Buscar..." />
+                    <div class="flex gap-2">
+                        <Select v-model="tipoModeloFiltro" :options="tiposModelo" optionLabel="label" optionValue="value" placeholder="Tipo Modelo..." :showClear="true" class="w-48" />
+                        <InputText v-model="search" placeholder="Buscar..." />
+                    </div>
                 </template>
             </Toolbar>
 

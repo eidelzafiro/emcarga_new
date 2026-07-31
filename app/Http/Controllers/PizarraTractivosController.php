@@ -21,6 +21,7 @@ class PizarraTractivosController extends Controller
         $tractivos = Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
 
         return Inertia::render('PizarraTractivos/Index', [
+            'title' => 'Pizarra de Tractivos',
             'items' => $items,
             'tractivos' => $tractivos,
             'filters' => $request->only(['mes', 'ano']),

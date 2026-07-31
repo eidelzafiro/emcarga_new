@@ -19,6 +19,7 @@ class MediosProteccionController extends Controller
         $tipos = TipoMedioProteccion::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('MediosProteccion/Index', [
+            'title' => 'Medios de Protección',
             'items' => $items,
             'tipos' => $tipos,
             'filters' => $request->only(['search']),

@@ -20,6 +20,7 @@ class TiposMediosCargoController extends Controller
         $cargos = Cargo::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('TiposMediosCargo/Index', [
+            'title' => 'Tipos de Medios por Cargo',
             'items' => $items,
             'medios' => $medios,
             'cargos' => $cargos,

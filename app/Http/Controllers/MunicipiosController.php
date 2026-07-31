@@ -20,6 +20,7 @@ class MunicipiosController extends Controller
         $provincias = Provincia::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('Municipios/Index', [
+            'title' => 'Municipios',
             'items' => $items,
             'provincias' => $provincias,
             'filters' => $request->only(['search', 'id_provincia']),

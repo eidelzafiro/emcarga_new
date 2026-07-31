@@ -16,7 +16,7 @@ class MesesController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'meses.index';
+        return 'meses';
     }
 
     protected function getTitle(): string
@@ -29,11 +29,17 @@ class MesesController extends Controller
         return ['nombre', 'codigo'];
     }
 
+    protected function getSortField(): string
+    {
+        return 'codigo';
+    }
+
     protected function getExtraFields(): array
     {
         return [
-            'dias' => ['label' => 'Días', 'type' => 'number', 'required' => false],
+            'dias' => ['label' => 'Días', 'type' => 'text', 'required' => false],
             'dias_laborables' => ['label' => 'Días Laborables', 'type' => 'number', 'required' => false, 'step' => '0.01'],
+            'dias_laborables_sin_sabado' => ['label' => 'Días Lab. sin Sábado', 'type' => 'number', 'required' => false, 'step' => '0.01'],
         ];
     }
 }

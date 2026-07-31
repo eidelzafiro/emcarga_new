@@ -8,12 +8,14 @@ use Illuminate\Database\Seeder;
 class CatalogoTipoSeeder extends Seeder
 {
     private array $titles = [
+        'areas' => 'Áreas',
+        'cargos' => 'Cargos',
+        'tipos_sistemas' => 'Tipos de Sistemas',
         'tipos_aceites' => 'Tipos de Aceites',
         'tipos_agregados' => 'Tipos de Agregados',
         'tipos_arrastres' => 'Tipos de Arrastres',
         'tipos_cargas' => 'Tipos de Cargas',
         'tipos_causas' => 'Causas',
-        'tipos_causas_baja' => 'Causas de Baja',
         'tipos_color_piel' => 'Color de Piel',
         'tipos_combustibles' => 'Tipos de Combustibles',
         'tipos_deducciones' => 'Deducciones',
@@ -39,6 +41,7 @@ class CatalogoTipoSeeder extends Seeder
         'tipos_suspension' => 'Suspensión',
         'tipos_ubicacion_defensa' => 'Ubicación Defensa',
         'tipos_vehiculos' => 'Tipos de Vehículos',
+        'tipos_sistemas_pago' => 'Tipos de Sistemas de Pago',
         'tipo_ingresos' => 'Tipos de Ingresos',
         'tipos_tractivos_alternativo' => 'Tipos de Tractivos Alternativo',
     ];
@@ -48,7 +51,8 @@ class CatalogoTipoSeeder extends Seeder
         $grupos = [
             'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
             'Comercial' => ['tipos_cargas', 'tipos_servicios', 'tipos_gastos'],
-            'RRHH' => ['tipos_causas', 'tipos_causas_baja', 'tipos_color_piel', 'tipos_deducciones', 'tipos_documentos', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_sexo', 'tipos_suspension', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones'],
+            'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_sistemas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
+            'RRHH' => ['areas', 'cargos', 'tipos_causas', 'tipos_color_piel', 'tipos_deducciones', 'tipos_documentos', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_sistemas_pago', 'tipos_sexo', 'tipos_suspension', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones'],
         ];
 
         $all = [];

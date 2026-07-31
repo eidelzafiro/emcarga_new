@@ -16,12 +16,17 @@ class FirmasAutorizadasController extends Controller
 
     protected function getRouteName(): string
     {
-        return 'firmas-autorizadas.index';
+        return 'firmas-autorizadas';
     }
 
     protected function getTitle(): string
     {
         return 'Firmas Autorizadas';
+    }
+
+    protected function isEntityScoped(): bool
+    {
+        return true;
     }
 
     protected function getSearchFields(): array

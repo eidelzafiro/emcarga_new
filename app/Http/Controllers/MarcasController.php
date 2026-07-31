@@ -24,10 +24,4 @@ class MarcasController extends Controller
         return 'Marcas';
     }
 
-    protected function getExtraFields(): array
-    {
-        return [
-            'tipo' => ['label' => 'Tipo', 'type' => 'text'],
-        ];
-    }
 }

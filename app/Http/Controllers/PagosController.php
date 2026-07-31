@@ -22,6 +22,7 @@ class PagosController extends Controller
         $monedas = Moneda::select('id', 'codigo', 'nombre')->orderBy('codigo')->get();
 
         return Inertia::render('Pagos/Index', [
+            'title' => 'Pagos',
             'pagos' => $pagos,
             'tiposDocumento' => $tiposDocumento,
             'monedas' => $monedas,

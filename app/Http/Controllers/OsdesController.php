@@ -89,8 +89,11 @@ class OsdesController extends Controller
 
     protected function getValidationRules($id = null): array
     {
-        $rules = parent::getValidationRules($id);
-        $rules['id_organismo'] = 'nullable|exists:organismos,id';
-        return $rules;
+        return [
+            'nombre' => 'required|string|max:255',
+            'siglas' => 'nullable|string|max:50',
+            'id_organismo' => 'nullable|exists:organismos,id',
+            'activo' => 'boolean',
+        ];
     }
 }

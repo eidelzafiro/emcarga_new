@@ -67,6 +67,10 @@ return [
          * ================================================================
          */
 
+        // NOTA: clientes se migra con EtlService::migrarClientes() (dedicado):
+        // campos legacy completos, idunidad→id_entidad, activo desde cancelado
+        // y sufijo '-{idunidad}' en codigos duplicados. Esta entrada queda
+        // solo para los conteos de --validar.
         'clientes' => [
             'legacy' => 'com_clientes',
             'pk' => 'idcliente',
@@ -98,7 +102,7 @@ return [
             'pk' => 'idptomodelo',
             'columnas' => [
                 'nombpto' => 'nombre',
-                'idtipomodelo' => 'id_tipo_modelo',
+                'idtipomodelo' => 'codigo_tipo_modelo',
                 'setx' => 'set_x',
                 'sety' => 'set_y',
                 'letra' => 'letra',
@@ -206,27 +210,16 @@ return [
             'columnas' => [
                 'idtipocargas' => 'id_tipo_carga',
                 'kms' => 'kms',
+                'tarmt' => 'tarifa_mt',
             ],
             'defaults' => [
                 'version' => 'normal',
             ],
         ],
 
-        'tarifas_config_carga' => [
-            'legacy' => 'com_tarconfigcarga',
-            'pk' => 'idtarconfigcarga',
-            'defaults' => [
-                'version' => 'carga',
-            ],
-        ],
-
-        'tarifas_config_contenedor' => [
-            'legacy' => 'com_tarconfigcont',
-            'pk' => 'idtarconfigcont',
-            'defaults' => [
-                'version' => 'contenedor',
-            ],
-        ],
+        // NOTA: com_tarconfigcarga y com_tarconfigcont ya migraron fusionadas
+        // en la migración 2026_07_29_224241_create_configuraciones_tarifa_table
+        // (una sola fila en configuraciones_tarifa). No van por ETL.
 
         'tipo_ingresos' => [
             'legacy' => 'com_tipoingresos',
@@ -302,6 +295,7 @@ return [
             'legacy' => 'com_tipomodelo',
             'pk' => 'idtipomod',
             'columnas' => [
+                'idtipomodelo' => 'codigo',
                 'modelo' => 'nombre',
                 'idunidad' => 'id_entidad',
                 'ancho' => 'ancho',
@@ -335,17 +329,39 @@ return [
             ],
         ],
 
+        // Tarjetas de combustible (legacy cont_tarjetas): campos originales
+        // completos. id_cliente queda NULL (legacy relaciona con empleado/
+        // tractivo). idunidad → id_entidad. estado queda 'activa' por default
+        // (cancelado/inactiva se conservan como columnas originales).
         'tarjetas' => [
             'legacy' => 'cont_tarjetas',
             'pk' => 'idtarjeta',
             'columnas' => [
                 'codtm' => 'numero',
                 'saldoactualmon' => 'saldo_actual',
+                'fcompra' => 'fcompra',
+                'fvence' => 'fvence',
+                'saldoinicialmon' => 'saldoinicialmon',
+                'saldoiniciallts' => 'saldoiniciallts',
+                'saldoactuallts' => 'saldoactuallts',
+                'saldotransferenciamon' => 'saldotransferenciamon',
+                'saldotransferencialts' => 'saldotransferencialts',
+                'idmonedas' => 'idmonedas',
+                'idtipocombustibles' => 'idtipocombustibles',
+                'idempleado' => 'idempleado',
+                'idtractivos' => 'idtractivos',
+                'idchofer' => 'idchofer',
+                'cancelado' => 'cancelado',
+                'inactiva' => 'inactiva',
+                'fmovimiento' => 'fmovimiento',
+                'fcancelado' => 'fcancelado',
+                'fcierre' => 'fcierre',
+                'idunidad' => 'id_entidad',
             ],
             'defaults' => [
                 'descripcion' => '',
-                'id_cliente' => 0,
             ],
+            'cero_a_null' => ['id_entidad'],
         ],
 
         /*
@@ -464,6 +480,19 @@ return [
             ],
         ],
 
+        'areas' => [
+            'legacy' => 'rh_areas',
+            'pk' => 'idareas',
+            'columnas' => [
+                'nombarea' => 'nombre',
+                'idareas' => 'codigo',
+                'idunidad' => 'id_entidad',
+            ],
+            'defaults' => [
+                'activo' => true,
+            ],
+        ],
+
         'categorias_cargo' => [
             'legacy' => 'rh_tipocatcargos',
             'pk' => 'idtipocatcargos',
@@ -488,6 +517,7 @@ return [
                 'revcargo' => 'revisa_cargo',
                 'aprobnombre' => 'aprueba_nombre',
                 'aprobcargo' => 'aprueba_cargo',
+                'idunidad' => 'id_entidad',
             ],
             'defaults' => [
                 'activo' => true,
@@ -592,51 +622,10 @@ return [
             ],
         ],
 
-        'tipos_calificadores' => [
-            'legacy' => 'rh_tipocalificadores',
-            'pk' => 'idtipocalificadores',
-            'columnas' => [
-                'nombcalificador' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
-
-        'tipos_causas_baja' => [
-            'legacy' => 'rh_tipocausabaja',
-            'pk' => 'idtipocausabaja',
-            'columnas' => [
-                'nombcausabaja' => 'nombre',
-                'idtipocausalab' => 'id_tipo_causa_laboral',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
-
-        'tipos_causas_laborales' => [
-            'legacy' => 'rh_tipocausalab',
-            'pk' => 'idtipocausalab',
-            'columnas' => [
-                'nombcausalab' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
-
-        'tipos_causas_movimiento' => [
-            'legacy' => 'rh_tipocausamov',
-            'pk' => 'idtipocausamov',
-            'columnas' => [
-                'nombcausamov' => 'nombre',
-                'idtipocausalab' => 'id_tipo_causa_laboral',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
+        // NOTA: tipos_calificadores, tipos_causas_baja, tipos_causas_laborales,
+        // tipos_causas_movimiento, tipos_especialidad, tipos_plantillas y
+        // tipos_tallas fueron eliminadas intencionalmente del nuevo esquema
+        // (migración 2026_07_31_010000_drop_unused_legacy_catalog_tables).
 
         'tipos_clasificacion_laboral' => [
             'legacy' => 'rh_tipoclasflaboral',
@@ -686,17 +675,6 @@ return [
             ],
         ],
 
-        'tipos_especialidad' => [
-            'legacy' => 'rh_tipoespecialidad',
-            'pk' => 'idtiposespecialidad',
-            'columnas' => [
-                'nombespecialidad' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
-
         'tipos_estado_civil' => [
             'legacy' => 'rh_tipoestadocivil',
             'pk' => 'idtipoestadocivil',
@@ -727,7 +705,6 @@ return [
                 'idtipodeducciones' => 'id_tipo_deducciones',
                 'tsuma' => 'tsuma',
                 'impsuma' => 'impsuma',
-                'penalizacuc' => 'penalizacuc',
             ],
             'defaults' => [
                 'activo' => true,
@@ -807,17 +784,6 @@ return [
             ],
         ],
 
-        'tipos_plantillas' => [
-            'legacy' => 'rh_tipoplantillas',
-            'pk' => 'idtipoplantillas',
-            'columnas' => [
-                'nombtipoplantillas' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
-
         'tipos_sexo' => [
             'legacy' => 'rh_tiposexo',
             'pk' => 'idtiposexo',
@@ -834,17 +800,6 @@ return [
             'pk' => 'idtiposistemapago',
             'columnas' => [
                 'nombsistemapago' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
-
-        'tipos_tallas' => [
-            'legacy' => 'rh_tipotallas',
-            'pk' => 'idtipotallas',
-            'columnas' => [
-                'nombtipotallas' => 'nombre',
             ],
             'defaults' => [
                 'activo' => true,
@@ -885,9 +840,12 @@ return [
             ],
         ],
 
+        // Arrastres: el legacy NO tiene tabla de arrastres (tec_naves está vacía).
+        // Los arrastres son tractivos cuyo idtipotractivos ∈ tec_tipoarrastres (100-197).
+        // Migración dedicada migrarArrastres() → arrastres + migrarAsociaciones() → arrastre_tractivo.
         'arrastres' => [
-            'legacy' => 'tec_naves',
-            'pk' => 'idnave',
+            'legacy' => 'tec_tipoarrastres',
+            'pk' => 'idtipoarrastres',
             'defaults' => [
                 'activo' => true,
             ],
@@ -903,6 +861,22 @@ return [
             ],
             'defaults' => [
                 'fecha' => '1970-01-01',
+            ],
+        ],
+
+        'cajas' => [
+            'legacy' => 'tec_cajas',
+            'pk' => 'idcajas',
+            'columnas' => [
+                'nroserie' => 'numero_serie',
+                'idmarca' => 'marca',
+                'idmodelo' => 'modelo',
+                'idtractivos' => 'id_tractivo',
+                'idunidad' => 'id_entidad',
+            ],
+            'defaults' => [
+                'codigo' => null,
+                'estado' => 'disponible',
             ],
         ],
 
@@ -1056,6 +1030,10 @@ return [
                 'kmmotor' => 'km_motor',
                 'kmcaja' => 'km_caja',
                 'kmdiferencial' => 'km_diferencial',
+                'idunidad' => 'id_entidad',
+                'indice' => 'indice',
+                'indiceac' => 'indice_acumulado',
+                'plancomb' => 'plan_combustible',
             ],
         ],
 
@@ -1157,7 +1135,6 @@ return [
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
-                'id_marca' => 0,
             ],
         ],
 
@@ -1276,6 +1253,8 @@ return [
                 'ordentaller' => 'numero',
                 'idtractivos' => 'id_tractivo',
                 'idtipomtto' => 'id_tipo_mantenimiento',
+                'kmmtto' => 'kilometraje',
+                'notas' => 'observaciones',
             ],
             'defaults' => [
                 'estado' => 'abierta',
@@ -1482,6 +1461,14 @@ return [
             ],
         ],
 
+        // NOTA: tractivos se migra con EtlService::migrarTractivos() (dedicado):
+        // excluye dados de baja, sufijo -entidad en duplicados, estado mapeado
+        // desde idtipoestados. Esta entrada queda solo para --validar.
+        'tractivos' => [
+            'legacy' => 'tec_tractivos',
+            'pk' => 'idtractivos',
+        ],
+
         'tipos_tractivos' => [
             'legacy' => 'tec_tipotractivos',
             'pk' => 'idtipotractivos',
@@ -1526,6 +1513,7 @@ return [
             'columnas' => [
                 'idtipomtto' => 'id_tipo_mantenimiento',
                 'km' => 'kilometraje',
+                'tipomtto' => 'descripcion',
             ],
         ],
 

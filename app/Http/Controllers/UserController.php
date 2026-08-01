@@ -40,6 +40,9 @@ class UserController extends Controller
             ->when($request->perfil, function ($query, $perfil) {
                 $query->whereHas('roles', fn ($q) => $q->where('name', $perfil));
             })
+            ->when($request->entidad, function ($query, $entidad) {
+                $query->where('id_entidad', $entidad);
+            })
             ->when($request->estado, function ($query, $estado) {
                 match ($estado) {
                     'activo' => $query->where('bloqueado', false)->where('intentos_fallidos', '<', 5)->where('password_temporal', false),
@@ -54,7 +57,9 @@ class UserController extends Controller
 
         $entidadesQuery = Entidad::where('activo', true);
 
-        if (! $user->hasRole('SUPERADMIN')) {
+        $esSuperAdmin = $user->hasRole('SUPERADMIN');
+
+        if (! $esSuperAdmin) {
             $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
                 ->push($user->id_entidad)
                 ->unique()
@@ -65,14 +70,20 @@ class UserController extends Controller
             $entidadesQuery->whereIn('id', $ids);
         }
 
+        // Los no superadmin no pueden ver ni asignar el perfil SUPERADMIN.
+        $roles = Role::orderBy('name')->pluck('name');
+        if (! $esSuperAdmin) {
+            $roles = $roles->reject(fn ($rol) => $rol === 'SUPERADMIN')->values();
+        }
+
         return Inertia::render('Usuarios/Index', [
             'title' => 'Usuarios',
             'usuarios' => $usuarios,
-            'roles' => Role::orderBy('name')->pluck('name'),
+            'roles' => $roles,
             'entidades' => $entidadesQuery->orderBy('nombre')->get(['id', 'nombre', 'parent_id']),
             'esAdmin' => $user->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES']),
             'miEntidadId' => $user->id_entidad,
-            'filters' => $request->only(['search', 'perfil', 'estado']),
+            'filters' => $request->only(['search', 'perfil', 'entidad', 'estado']),
         ]);
     }
 
@@ -85,12 +96,23 @@ class UserController extends Controller
         $this->authorize('create', User::class);
         $datos = $request->validated();
 
+        $userActivo = $request->user();
+
+        if (! $userActivo->hasRole('SUPERADMIN')) {
+            if ($datos['role'] === 'SUPERADMIN') {
+                abort(403, 'No puede asignar el perfil SUPERADMIN.');
+            }
+            if (! $this->entidadEnAlcance($userActivo, $datos['id_entidad'] ?? null)) {
+                abort(403, 'La entidad seleccionada está fuera de su alcance.');
+            }
+        }
+
         $user = User::create([
             'name' => $datos['name'],
             'username' => strtoupper($datos['username']),
             'email' => $datos['email'] ?? null,
             'password' => $datos['password'],
-            'id_entidad' => $datos['id_entidad'] ?: $request->user()->id_entidad,
+            'id_entidad' => $datos['id_entidad'] ?: $userActivo->id_entidad,
             'idgrupo' => $datos['idgrupo'] ?? null,
             'password_temporal' => true,
         ]);
@@ -111,6 +133,18 @@ class UserController extends Controller
         $this->authorize('update', $user);
         $datos = $request->validated();
 
+        $userActivo = $request->user();
+
+        if (! $userActivo->hasRole('SUPERADMIN')) {
+            if ($datos['role'] === 'SUPERADMIN') {
+                abort(403, 'No puede asignar el perfil SUPERADMIN.');
+            }
+            if (! $this->entidadEnAlcance($userActivo, $user->id_entidad)
+                || ($datos['id_entidad'] ?? null) && ! $this->entidadEnAlcance($userActivo, $datos['id_entidad'])) {
+                abort(403, 'La entidad está fuera de su alcance.');
+            }
+        }
+
         $payload = [
             'name' => $datos['name'],
             'username' => strtoupper($datos['username']),
@@ -118,7 +152,7 @@ class UserController extends Controller
             'idgrupo' => $datos['idgrupo'] ?? null,
         ];
 
-        if ($request->user()->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES'])) {
+        if ($userActivo->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES'])) {
             $payload['id_entidad'] = $datos['id_entidad'];
         }
 
@@ -222,5 +256,27 @@ class UserController extends Controller
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Contraseña restablecida. El usuario deberá cambiarla en su próximo acceso.');
+    }
+
+    /**
+     * Determina si una entidad está dentro del alcance del usuario activo:
+     * su propia entidad, sus subentidades o las entidades adicionales
+     * a las que tiene acceso explícito.
+     */
+    private function entidadEnAlcance(User $userActivo, ?int $entidadId): bool
+    {
+        if ($entidadId === null) {
+            return true;
+        }
+
+        $ids = collect(Entidad::subEntidadesIds($userActivo->id_entidad))
+            ->push($userActivo->id_entidad)
+            ->unique()
+            ->values()
+            ->all();
+        $adicionales = $userActivo->entidades()->pluck('entidades.id')->all();
+        $ids = array_unique([...$ids, ...$adicionales]);
+
+        return in_array($entidadId, $ids, true);
     }
 }

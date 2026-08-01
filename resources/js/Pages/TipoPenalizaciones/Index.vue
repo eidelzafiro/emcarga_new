@@ -20,7 +20,7 @@ const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
-const form = ref({ codigo: '', nombre: '', activo: true, area_id: null, tipo_pago_adicional_id: null, porcentaje: null })
+const form = ref({ nombre: '', activo: true, area_id: null, tipo_pago_adicional_id: null, porcentaje: null })
 const title = 'Tipo de Penalizaciones'
 
 function onPage(event) {
@@ -33,13 +33,13 @@ watch(search, () => {
 
 function openCreate() {
     editing.value = null
-    form.value = { codigo: '', nombre: '', activo: true, area_id: null, tipo_pago_adicional_id: null, porcentaje: null }
+    form.value = { nombre: '', activo: true, area_id: null, tipo_pago_adicional_id: null, porcentaje: null }
     showForm.value = true
 }
 
 function openEdit(item) {
     editing.value = item
-    form.value = { codigo: item.codigo, nombre: item.nombre, activo: Boolean(item.activo), area_id: item.area_id, tipo_pago_adicional_id: item.tipo_pago_adicional_id, porcentaje: item.porcentaje }
+    form.value = { nombre: item.nombre, activo: Boolean(item.activo), area_id: item.area_id, tipo_pago_adicional_id: item.tipo_pago_adicional_id, porcentaje: item.porcentaje }
     showForm.value = true
 }
 
@@ -66,7 +66,6 @@ function submit() {
             </Toolbar>
 
             <DataTable :value="tipos.data" striped-rows paginator :rows="20" :total-records="tipos.total" :lazy="true" :first="(tipos.current_page - 1) * tipos.per_page" @page="onPage">
-                <Column field="codigo" header="Código" sortable />
                 <Column field="nombre" header="Nombre" sortable />
                 <Column field="area" header="Área">
                     <template #body="{ data }">
@@ -101,10 +100,6 @@ function submit() {
 
         <Dialog v-model:visible="showForm" :header="editing ? 'Editar Tipo de Penalización' : 'Nuevo Tipo de Penalización'" modal style="width: 550px">
             <form @submit.prevent="submit" class="space-y-4">
-                <div>
-                    <label class="block mb-1 font-medium">Código</label>
-                    <InputText v-model="form.codigo" class="w-full" required />
-                </div>
                 <div>
                     <label class="block mb-1 font-medium">Nombre</label>
                     <InputText v-model="form.nombre" class="w-full" required />

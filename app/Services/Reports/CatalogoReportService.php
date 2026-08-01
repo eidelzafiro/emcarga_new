@@ -24,12 +24,12 @@ class CatalogoReportService extends BaseReportService
     public function pdfModelos(): Response
     {
         $this->setTitle('Listado de Modelos');
-        $items = Modelo::with('marca')->where('activo', true)->orderBy('nombre')->get();
+        $items = Modelo::where('activo', true)->orderBy('nombre')->get();
 
         return $this->streamPdf('reports.pdf.catalogos.lista', [
             'items' => $items,
-            'campos' => ['Código', 'Nombre', 'Marca'],
-            'columnas' => ['codigo', 'nombre', 'marca.nombre'],
+            'campos' => ['Código', 'Nombre'],
+            'columnas' => ['codigo', 'nombre'],
         ]);
     }
 

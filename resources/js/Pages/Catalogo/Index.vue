@@ -188,9 +188,10 @@ function submit(continuarActivo = false) {
             <label class="block mb-1 font-medium">Código</label>
             <InputText v-model="form.codigo" class="w-full" required />
           </div>
-          <div>
+          <div :class="(catalogConfig?.fields || {}).nombre?.type === 'textarea' ? 'col-span-2' : ''">
             <label class="block mb-1 font-medium">Nombre</label>
-            <InputText v-model="form.nombre" class="w-full" required />
+            <InputText v-if="(catalogConfig?.fields || {}).nombre?.type !== 'textarea'" v-model="form.nombre" class="w-full" required />
+            <Textarea v-else v-model="form.nombre" class="w-full" :rows="(catalogConfig?.fields || {}).nombre?.rows || 3" required />
           </div>
           <template v-for="(cfg, key) in (catalogConfig?.fields || {})" :key="key">
             <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">

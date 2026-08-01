@@ -23,11 +23,4 @@ class ModelosController extends Controller
     {
         return 'Modelos';
     }
-
-    protected function getExtraFields(): array
-    {
-        return [
-            'id_marca' => ['label' => 'ID Marca', 'type' => 'text'],
-        ];
-    }
 }

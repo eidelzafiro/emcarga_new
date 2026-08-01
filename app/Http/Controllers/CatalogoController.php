@@ -89,10 +89,12 @@ class CatalogoController extends Controller
             $query->withTrashed();
         }
 
-        if (in_array($tipo, ['areas', 'cargos'])) {
+        // Catálogos por-entidad: los ítems guardan id_entidad en el JSON `extra`
+        // (no hay columna dedicada). Se filtran por la entidad activa.
+        if (in_array($tipo, ['tipos_modelo'])) {
             $entidadId = (int) session('entidad_activa_id');
             if ($entidadId) {
-                $query->where('id_entidad', $entidadId);
+                $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(extra, '$.id_entidad')) = ?", [$entidadId]);
             }
         }
 
@@ -139,8 +141,13 @@ class CatalogoController extends Controller
         $itemData = $request->itemData();
         $itemData['tipo'] = $tipo;
 
-        if (in_array($tipo, ['areas', 'cargos'])) {
-            $itemData['id_entidad'] = (int) session('entidad_activa_id');
+        if (in_array($tipo, ['tipos_modelo'])) {
+            $entidadId = (int) session('entidad_activa_id');
+            if ($entidadId) {
+                $extra = $itemData['extra'] ?? [];
+                $extra['id_entidad'] = $entidadId;
+                $itemData['extra'] = $extra ?: null;
+            }
         }
 
         if (! isset($itemData['codigo']) && ! CatalogoSchema::usaCodigoManual($tipo)) {
@@ -156,7 +163,18 @@ class CatalogoController extends Controller
     {
         $item = CatalogoItem::tipo($tipo)->findOrFail($id);
 
-        $item->update($request->itemData());
+        $itemData = $request->itemData();
+
+        if (in_array($tipo, ['tipos_modelo'])) {
+            $extra = $item->extra ?? [];
+            if (! isset($extra['id_entidad'])) {
+                $extra['id_entidad'] = (int) session('entidad_activa_id');
+            }
+            $itemData['extra'] = $itemData['extra'] ?? [];
+            $itemData['extra']['id_entidad'] = $extra['id_entidad'];
+        }
+
+        $item->update($itemData);
 
         return redirect()->back()->with('success', 'Actualizado correctamente');
     }

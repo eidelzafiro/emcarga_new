@@ -20,9 +20,24 @@ trait ManagesCatalog
         return [];
     }
 
+    protected function getNombreConfig(): array
+    {
+        return [];
+    }
+
     protected function isEntityScoped(): bool
     {
         return false;
+    }
+
+    protected function applyEntityScope($query, int $entidadId): void
+    {
+        $query->where('id_entidad', $entidadId);
+    }
+
+    protected function getScopingData(): array
+    {
+        return ['id_entidad' => (int) session('entidad_activa_id')];
     }
 
     protected function getSortField(): string
@@ -49,14 +64,17 @@ trait ManagesCatalog
 
         foreach ($this->getExtraFields() as $key => $config) {
             $type = $config['type'] ?? 'text';
+            $required = $config['required'] ?? false;
+            $base = $required ? 'required' : 'nullable';
+
             if ($type === 'boolean') {
                 $rules[$key] = 'boolean';
             } elseif ($type === 'number') {
-                $rules[$key] = 'nullable|numeric';
+                $rules[$key] = $base.'|numeric';
             } elseif ($type === 'select') {
-                $rules[$key] = 'nullable';
+                $rules[$key] = $base;
             } else {
-                $rules[$key] = 'nullable|string';
+                $rules[$key] = $base.'|string';
             }
         }
 
@@ -84,7 +102,7 @@ trait ManagesCatalog
         if ($this->isEntityScoped()) {
             $entidadId = (int) session('entidad_activa_id');
             if ($entidadId) {
-                $query->where('id_entidad', $entidadId);
+                $this->applyEntityScope($query, $entidadId);
             }
         }
 
@@ -106,7 +124,10 @@ trait ManagesCatalog
                 'title' => $this->getTitle(),
                 'codigoManual' => $this->usaCodigoManual(),
                 'fields' => array_merge(
-                    ['nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true]],
+                    ['nombre' => array_merge(
+                        ['label' => 'Nombre', 'type' => 'text', 'required' => true],
+                        $this->getNombreConfig()
+                    )],
                     $this->getExtraFields()
                 ),
                 'extra' => $this->getExtraFields(),
@@ -120,7 +141,7 @@ trait ManagesCatalog
         $data = $request->validate($this->getValidationRules());
 
         if ($this->isEntityScoped()) {
-            $data['id_entidad'] = (int) session('entidad_activa_id');
+            $data = array_merge($data, $this->getScopingData());
         }
 
         if (! $this->usaCodigoManual() && Schema::hasColumn((new $model)->getTable(), 'codigo')) {

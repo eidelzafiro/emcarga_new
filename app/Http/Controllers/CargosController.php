@@ -24,6 +24,11 @@ class CargosController extends Controller
         return 'Cargos';
     }
 
+    protected function isEntityScoped(): bool
+    {
+        return true;
+    }
+
     protected function getExtraFields(): array
     {
         return [

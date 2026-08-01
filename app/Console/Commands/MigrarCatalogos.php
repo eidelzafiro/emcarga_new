@@ -13,14 +13,13 @@ class MigrarCatalogos extends Command
         {--tipo= : Migrar solo un tipo específico (ej: tipos_cargas)}
         {--dry-run : Solo mostrar qué se migraría sin insertar}
         {--fresh : Vacía catalogo_items antes de migrar (re-sincronización total)}
-        {--force : Migrar también tablas atípicas (tipos_cargas_reporte, tipos_medios_cargo, tipos_modelo, tipos_tractivos)}';
+        {--force : Migrar también tablas atípicas (tipos_cargas_reporte, tipos_medios_cargo, tipos_tractivos)}';
 
     protected $description = 'Migra datos de tablas tipos_* y tipo_* a catalogo_items';
 
     private array $excluidas = [
         'tipos_cargas_reporte',
         'tipos_medios_cargo',
-        'tipos_modelo',
         'tipos_tractivos',
     ];
 
@@ -89,6 +88,33 @@ class MigrarCatalogos extends Command
                 continue;
             }
 
+            // Códigos repetidos en el origen (ej: tipos_modelo 1-4 por entidad)
+            // rompen el índice único (tipo, codigo) → se re-sufijan con id_entidad.
+            $duplicados = $registros
+                ->filter(fn ($r) => isset($r->codigo) && $r->codigo !== null && $r->codigo !== '')
+                ->countBy(fn ($r) => (string) $r->codigo)
+                ->filter(fn ($n) => $n > 1)
+                ->keys()
+                ->flip();
+
+            // Si tras el sufijo de entidad aún colisionan (mismo código+entidad
+            // repetido en el origen), el re-sufijo definitivo usa origen_id.
+            $aunDuplicados = $registros
+                ->filter(function ($r) use ($duplicados) {
+                    if (! isset($r->codigo) || $r->codigo === null || $r->codigo === '') {
+                        return false;
+                    }
+                    if (! isset($duplicados[(string) $r->codigo])) {
+                        return false;
+                    }
+
+                    return isset($r->id_entidad) && $r->id_entidad !== null;
+                })
+                ->countBy(fn ($r) => (string) $r->codigo.'-'.$r->id_entidad)
+                ->filter(fn ($n) => $n > 1)
+                ->keys()
+                ->flip();
+
             $this->line("  [MIGRANDO] {$tabla} ({$count} registros, extras: ".implode(', ', $columnasExtra ?: ['ninguna']).')');
 
             if ($dryRun) {
@@ -111,13 +137,25 @@ class MigrarCatalogos extends Command
                     }
                 }
 
+                $codigo = $row->codigo ?? null;
+                if ($codigo !== null && $codigo !== '' && isset($duplicados[(string) $codigo])) {
+                    $entidad = $row->id_entidad ?? null;
+                    if ($entidad !== null) {
+                        $codigo = $codigo.'-'.$entidad;
+
+                        if (isset($aunDuplicados[(string) $codigo])) {
+                            $codigo = $codigo.'-'.$row->id;
+                        }
+                    }
+                }
+
                 // Upsert idempotente por tipo + origen_id: re-ejecutar
                 // actualiza en vez de duplicar, y conserva la trazabilidad
                 // con la tabla tipos_* de origen.
                 CatalogoItem::withTrashed()->updateOrCreate(
                     ['tipo' => $tabla, 'origen_id' => $row->id],
                     [
-                        'codigo' => $row->codigo ?? null,
+                        'codigo' => $codigo,
                         'nombre' => $row->nombre ?? '',
                         'activo' => $row->activo ?? true,
                         'extra' => empty($extra) ? null : $extra,

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Nave extends Model
 {
-    protected $fillable = ['id_entidad', 'codigo', 'nombre', 'ubicacion', 'activo'];
+    protected $fillable = ['id_entidad', 'id_taller', 'codigo', 'nombre', 'ubicacion', 'activo'];
 
     protected function casts(): array
     {
@@ -23,5 +23,10 @@ class Nave extends Model
     public function entidad(): BelongsTo
     {
         return $this->belongsTo(Entidad::class, 'id_entidad');
+    }
+
+    public function taller(): BelongsTo
+    {
+        return $this->belongsTo(Taller::class, 'id_taller');
     }
 }

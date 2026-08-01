@@ -24,6 +24,11 @@ class OrganismosController extends Controller
         return 'Organismos';
     }
 
+    protected function getNombreConfig(): array
+    {
+        return ['type' => 'textarea', 'rows' => 3];
+    }
+
     protected function getExtraFields(): array
     {
         return [

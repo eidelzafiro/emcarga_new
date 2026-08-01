@@ -18,6 +18,7 @@ class TipoPenalizacione extends Model
         'area_id',
         'tipo_pago_adicional_id',
         'porcentaje',
+        'id_entidad',
     ];
 
     protected function casts(): array

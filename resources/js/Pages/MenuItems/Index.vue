@@ -10,6 +10,16 @@
             </InputIcon>
             <InputText v-model="busqueda" placeholder="Buscar ítem…" class="w-48" />
           </IconField>
+          <Select
+            v-model="filtroPerfil"
+            :options="props.roles"
+            optionLabel="name"
+            optionValue="name"
+            placeholder="Filtrar por perfil"
+            clearable
+            showClear
+            class="w-48"
+          />
           <div class="ml-auto flex gap-2">
             <Button
               v-if="can('menus.crear')"
@@ -234,6 +244,7 @@ const permissions = computed(() => page.props.auth?.permissions ?? []);
 const can = (permiso) => permissions.value.includes(permiso);
 
 const busqueda = ref('');
+const filtroPerfil = ref(null);
 
 const rolesExcluyendoSuperadmin = computed(() =>
   props.roles
@@ -269,10 +280,19 @@ function coincideBusqueda(item) {
   );
 }
 
+function coincidePerfil(item) {
+  if (!filtroPerfil.value) return true;
+  if (item.permission && !item.roles?.length) return false;
+  return item.permission ? item.roles.includes(filtroPerfil.value) : true;
+}
+
 const itemsFiltrados = computed(() => {
   let base = itemsFlat.value;
   if (busqueda.value) {
     base = base.filter((i) => coincideBusqueda(i));
+  }
+  if (filtroPerfil.value) {
+    base = base.filter((i) => coincidePerfil(i));
   }
   return base;
 });

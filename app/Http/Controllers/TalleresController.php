@@ -23,4 +23,9 @@ class TalleresController extends Controller
     {
         return 'Talleres';
     }
+
+    protected function isEntityScoped(): bool
+    {
+        return true;
+    }
 }

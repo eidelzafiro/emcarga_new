@@ -8,6 +8,7 @@ class Firma extends Model
 {
     protected $fillable = [
         'nombre',
+        'id_entidad',
         'confecciona_nombre',
         'confecciona_cargo',
         'revisa_nombre',

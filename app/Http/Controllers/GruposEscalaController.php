@@ -38,7 +38,6 @@ class GruposEscalaController extends Controller
     {
         $entidadId = (int) session('entidad_activa_id');
 
-        $entidadId = (int) session('entidad_activa_id');
         $query = GrupoEscala::query();
         $query->where(function ($q) use ($entidadId) {
             $q->where('id_entidad', $entidadId)->orWhereNull('id_entidad');

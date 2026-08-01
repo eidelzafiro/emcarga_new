@@ -70,6 +70,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Grupos Escala', 'route' => 'grupos-escala.index', 'permission' => 'grupos-escala.ver', 'orden' => 24],
             ['parent' => 'Catálogos', 'label' => 'Cargos', 'route' => 'cargos.index', 'permission' => 'cargos.ver', 'orden' => 25],
             ['parent' => 'Catálogos', 'label' => 'Entidades', 'route' => 'entidades.index', 'permission' => 'entidades.ver', 'orden' => 26],
+            ['parent' => 'Catálogos', 'label' => 'Tipos de Modelo', 'route' => 'tipos-modelo.index', 'permission' => 'tipos-modelo.ver', 'orden' => 27],
 
             // Comercial
             ['parent' => 'Comercial', 'label' => 'Clientes', 'route' => 'clientes.index', 'permission' => 'clientes.ver', 'orden' => 1],
@@ -153,7 +154,6 @@ class MenuSeeder extends Seeder
             // === Catálogos Comercial / Contabilidad ===
             ['parent' => 'Catálogos', 'label' => 'Tipos Servicio',           'route' => 'tipos-servicios.index',           'permission' => 'tipos-servicios.ver',       'orden' => 41],
             ['parent' => 'Catálogos', 'label' => 'Tipos Estado',             'route' => 'tipos-estados.index',             'permission' => 'tipos-estados.ver',         'orden' => 42],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Documento',          'route' => 'tipos-documentos.index',          'permission' => 'tipos-documentos.ver',      'orden' => 43],
             ['parent' => 'Catálogos', 'label' => 'Tipos Tasa',               'route' => 'tipos-tasas.index',               'permission' => 'tipos-tasas.ver',           'orden' => 44],
             ['parent' => 'Catálogos', 'label' => 'Tipos Gasto',              'route' => 'tipos-gastos.index',              'permission' => 'tipos-gastos.ver',          'orden' => 45],
             ['parent' => 'Catálogos', 'label' => 'Tipo Ingresos',            'route' => 'tipo-ingresos.index',             'permission' => 'tipo-ingresos.ver',         'orden' => 46],

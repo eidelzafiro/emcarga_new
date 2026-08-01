@@ -35,13 +35,13 @@ class TiposPenalizacionesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:tipos_penalizaciones,codigo|max:50',
             'nombre' => 'required|max:255',
             'area_id' => 'nullable|exists:areas,id',
             'tipo_pago_adicional_id' => 'nullable|exists:tipos_pagos_adicionales,id',
             'porcentaje' => 'nullable|numeric|min:0|max:100',
         ]);
         $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['codigo'] = $this->generarCodigo();
         TipoPenalizacione::create($validated);
 
         return redirect()->route('tipos-penalizaciones.index')->with('success', 'Tipo de penalización creado correctamente.');
@@ -50,7 +50,6 @@ class TiposPenalizacionesController extends Controller
     public function update(Request $request, TipoPenalizacione $tiposPenalizacione)
     {
         $validated = $request->validate([
-            'codigo' => 'required|unique:tipos_penalizaciones,codigo,'.$tiposPenalizacione->id.'|max:50',
             'nombre' => 'required|max:255',
             'area_id' => 'nullable|exists:areas,id',
             'tipo_pago_adicional_id' => 'nullable|exists:tipos_pagos_adicionales,id',
@@ -66,5 +65,14 @@ class TiposPenalizacionesController extends Controller
         $tiposPenalizacione->delete();
 
         return redirect()->route('tipos-penalizaciones.index')->with('success', 'Tipo de penalización eliminado correctamente.');
+    }
+
+    private function generarCodigo(): string
+    {
+        $max = \Illuminate\Support\Facades\DB::table('tipos_penalizaciones')
+            ->selectRaw('MAX(CAST(codigo AS UNSIGNED)) as max_cod')
+            ->value('max_cod');
+
+        return str_pad((string) ((int) $max + 1), 2, '0', STR_PAD_LEFT);
     }
 }

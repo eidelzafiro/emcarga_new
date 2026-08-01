@@ -14,14 +14,41 @@ class VallasController extends Controller
     protected function getRouteName(): string { return 'vallas'; }
     protected function getTitle(): string { return 'Vallas'; }
 
+    protected function isEntityScoped(): bool
+    {
+        return true;
+    }
+
+    protected function applyEntityScope($query, int $entidadId): void
+    {
+        $query->whereHas('nave', fn ($q) => $q->where('naves.id_entidad', $entidadId));
+    }
+
+    protected function getScopingData(): array
+    {
+        return [];
+    }
+
     protected function getExtraFields(): array
     {
-        $naves = Nave::select('id', 'nombre')->where('activo', true)->orderBy('nombre')->get();
+        $entidadId = (int) session('entidad_activa_id');
+
+        $naves = Nave::select('naves.id', 'naves.nombre', 'talleres.nombre as taller_nombre')
+            ->leftJoin('talleres', 'talleres.id', '=', 'naves.id_taller')
+            ->where('naves.activo', true)
+            ->when($entidadId, fn ($q) => $q->where('naves.id_entidad', $entidadId))
+            ->orderBy('naves.nombre')
+            ->get();
+
         return [
             'id_nave' => [
                 'label' => 'Nave',
                 'type' => 'select',
-                'options' => $naves->map(fn ($n) => ['value' => $n->id, 'label' => $n->nombre])->toArray(),
+                'required' => true,
+                'options' => $naves->map(fn ($n) => [
+                    'value' => $n->id,
+                    'label' => $n->taller_nombre ? "{$n->nombre} ({$n->taller_nombre})" : $n->nombre,
+                ])->toArray(),
             ],
         ];
     }

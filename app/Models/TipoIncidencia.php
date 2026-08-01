@@ -15,7 +15,6 @@ class TipoIncidencia extends Model
         'id_tipo_deducciones',
         'tsuma',
         'impsuma',
-        'penalizacuc',
     ];
 
     protected function casts(): array
@@ -25,7 +24,6 @@ class TipoIncidencia extends Model
             'id_tipo_deducciones' => 'integer',
             'tsuma' => 'boolean',
             'impsuma' => 'boolean',
-            'penalizacuc' => 'boolean',
         ];
     }
 }

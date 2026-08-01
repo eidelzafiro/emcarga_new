@@ -5,7 +5,7 @@
       <template #content>
         <!-- Barra de herramientas -->
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 mb-4 items-center">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
             <span class="p-input-icon-left">
               <i class="pi pi-search" />
               <InputText
@@ -25,6 +25,20 @@
               <template #value="{ value }">
                 <span v-if="value" class="text-sm">{{ value }}</span>
                 <span v-else class="text-surface-400 text-sm">Filtrar por perfil</span>
+              </template>
+            </Select>
+            <Select
+              v-model="entidadFiltro"
+              :options="entidades"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Filtrar por entidad"
+              @change="aplicarFiltros"
+              :showClear="true"
+            >
+              <template #value="{ value }">
+                <span v-if="value" class="text-sm">{{ entidadNombre(value) }}</span>
+                <span v-else class="text-surface-400 text-sm">Filtrar por entidad</span>
               </template>
             </Select>
             <Select
@@ -56,7 +70,7 @@
         <!-- Tabla -->
         <DataTable
           :value="usuarios.data"
-          :rows="10"
+          :rows="15"
           :paginator="true"
           :totalRecords="usuarios.total"
           :lazy="true"
@@ -334,11 +348,18 @@ const entidadesAccesoOptions = computed(() => {
 
 const search = ref(props.filters?.search ?? '');
 const perfilFiltro = ref(props.filters?.perfil ?? '');
+const entidadFiltro = ref(props.filters?.entidad ?? '');
 const estadoFiltro = ref(props.filters?.estado ?? '');
+
+const entidadNombre = (id) => {
+  const ent = props.entidades.find((e) => e.id === id);
+  return ent ? ent.nombre : '';
+};
 
 const paramsFiltro = () => {
   const p = { search: search.value };
   if (perfilFiltro.value) p.perfil = perfilFiltro.value;
+  if (entidadFiltro.value) p.entidad = entidadFiltro.value;
   if (estadoFiltro.value) p.estado = estadoFiltro.value;
   return p;
 };

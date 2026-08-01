@@ -10,8 +10,15 @@ class FirmasController extends Controller
 {
     public function index(Request $request)
     {
-        $items = Firma::orderBy('nombre')
-            ->when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%"))
+        $items = Firma::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%"))
+            ->when(true, function ($q) {
+                $entidadId = (int) session('entidad_activa_id');
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId);
+                }
+                return $q;
+            })
+            ->orderBy('nombre')
             ->paginate(20);
 
         return Inertia::render('Firmas/Index', [
@@ -33,6 +40,7 @@ class FirmasController extends Controller
             'aprueba_cargo' => 'nullable|string|max:150',
             'activo' => 'boolean',
         ]);
+        $validated['id_entidad'] = (int) session('entidad_activa_id');
         Firma::create($validated);
 
         return redirect()->route('firmas.index')->with('success', 'Firma creada correctamente.');

@@ -8,8 +8,6 @@ use Illuminate\Database\Seeder;
 class CatalogoTipoSeeder extends Seeder
 {
     private array $titles = [
-        'areas' => 'Áreas',
-        'cargos' => 'Cargos',
         'tipos_sistemas' => 'Tipos de Sistemas',
         'tipos_aceites' => 'Tipos de Aceites',
         'tipos_agregados' => 'Tipos de Agregados',
@@ -19,7 +17,7 @@ class CatalogoTipoSeeder extends Seeder
         'tipos_color_piel' => 'Color de Piel',
         'tipos_combustibles' => 'Tipos de Combustibles',
         'tipos_deducciones' => 'Deducciones',
-        'tipos_documentos' => 'Tipos de Documentos',
+        'tipos_modelo' => 'Tipos de Modelo',
         'tipos_equipos' => 'Tipos de Equipos',
         'tipos_estado_civil' => 'Estado Civil',
         'tipos_estados' => 'Estados',
@@ -52,7 +50,7 @@ class CatalogoTipoSeeder extends Seeder
             'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
             'Comercial' => ['tipos_cargas', 'tipos_servicios', 'tipos_gastos'],
             'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_sistemas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
-            'RRHH' => ['areas', 'cargos', 'tipos_causas', 'tipos_color_piel', 'tipos_deducciones', 'tipos_documentos', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_sistemas_pago', 'tipos_sexo', 'tipos_suspension', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones'],
+            'RRHH' => ['tipos_causas', 'tipos_color_piel', 'tipos_deducciones', 'tipos_modelo', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_sistemas_pago', 'tipos_sexo', 'tipos_suspension', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones'],
         ];
 
         $all = [];

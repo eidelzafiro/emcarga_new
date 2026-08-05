@@ -9,7 +9,6 @@ use App\Models\Cargo;
 use App\Models\Entidad;
 use App\Models\Tractivo;
 use App\Models\User;
-use App\Services\NotificarDocumentosChofer;
 
 class KpiService
 {

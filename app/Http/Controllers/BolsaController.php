@@ -6,9 +6,11 @@ use App\Models\Bolsa;
 use App\Models\Cargo;
 use App\Models\Entidad;
 use App\Models\User;
+use App\Services\NotificarDocumentosChofer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class BolsaController extends Controller
 {
@@ -26,7 +28,7 @@ class BolsaController extends Controller
 
         $cargos = Cargo::orderBy('nombre')->get(['id', 'nombre']);
         $entidades = Entidad::orderBy('nombre')->get(['id', 'nombre']);
-        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get(['id', 'name']);
+        $roles = Role::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Bolsa/Index', [
             'title' => 'Bolsa',
@@ -90,7 +92,7 @@ class BolsaController extends Controller
 
     private function rules(?int $id = null): array
     {
-        $uniqueCi = $id ? 'unique:bolsa,ci,' . $id : 'unique:bolsa,ci';
+        $uniqueCi = $id ? 'unique:bolsa,ci,'.$id : 'unique:bolsa,ci';
 
         return [
             'ci' => ['required', $uniqueCi, 'max:20'],
@@ -130,9 +132,9 @@ class BolsaController extends Controller
         }
 
         $user = User::create([
-            'name' => trim($bolsa->nombre . ' ' . $bolsa->apellidos),
+            'name' => trim($bolsa->nombre.' '.$bolsa->apellidos),
             'username' => $username,
-            'email' => $bolsa->email ?? $username . '@zafiro.local',
+            'email' => $bolsa->email ?? $username.'@zafiro.local',
             'password' => Hash::make('ZAFIRO'),
             'password_temporal' => true,
             'id_entidad' => $bolsa->id_entidad ?? session('entidad_activa_id'),
@@ -149,6 +151,6 @@ class BolsaController extends Controller
      */
     private function notificarDocumentos(Bolsa $bolsa): void
     {
-        app(\App\Services\NotificarDocumentosChofer::class)->ejecutar($bolsa->id);
+        app(NotificarDocumentosChofer::class)->ejecutar($bolsa->id);
     }
 }

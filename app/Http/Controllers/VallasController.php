@@ -10,9 +10,20 @@ class VallasController extends Controller
 {
     use ManagesCatalog;
 
-    protected function getModelClass(): string { return Valla::class; }
-    protected function getRouteName(): string { return 'vallas'; }
-    protected function getTitle(): string { return 'Vallas'; }
+    protected function getModelClass(): string
+    {
+        return Valla::class;
+    }
+
+    protected function getRouteName(): string
+    {
+        return 'vallas';
+    }
+
+    protected function getTitle(): string
+    {
+        return 'Vallas';
+    }
 
     protected function isEntityScoped(): bool
     {

@@ -14,7 +14,7 @@ class DistanciasController extends Controller
         $distancias = Distancia::with('origen:id,nombre', 'destino:id,nombre')
             ->when($request->search, function ($q, $s) {
                 $q->whereHas('origen', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
-                  ->orWhereHas('destino', fn ($c) => $c->where('nombre', 'like', "%{$s}%"));
+                    ->orWhereHas('destino', fn ($c) => $c->where('nombre', 'like', "%{$s}%"));
             })
             ->paginate(20);
 

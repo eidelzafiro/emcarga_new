@@ -56,7 +56,7 @@ return new class extends Migration
                 Schema::table($tabla, function (Blueprint $table) {
                     $table->dropForeign(['id_tipo_causa_laboral']);
                 });
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 // La FK pudo no existir; se ignora.
             }
         }

@@ -9,6 +9,12 @@ return new class extends Migration
     {
         $legacy = DB::connection('legacy');
 
+        // En CI / entornos sin la BD legacy (p. ej. emcarga_test) no hay de
+        // dónde leer → no-op para no romper `migrate --force`.
+        if (! $this->legacyDisponible('rh_cargos')) {
+            return;
+        }
+
         // rh_tipocalificadores → calificadores (ya migrados en seed)
         // rh_tipocatcargos → categorias_cargo (ya tienen codigo = idtipocatcargos en ETL)
         // etc.
@@ -118,5 +124,16 @@ return new class extends Migration
             'pago_adicional' => null,
             'aseo_tecnologico' => false,
         ]);
+    }
+
+    private function legacyDisponible(string $tabla): bool
+    {
+        try {
+            return DB::connection('legacy')
+                ->getSchemaBuilder()
+                ->hasTable($tabla);
+        } catch (Throwable) {
+            return false;
+        }
     }
 };

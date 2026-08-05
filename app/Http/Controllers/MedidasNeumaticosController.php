@@ -9,7 +9,18 @@ class MedidasNeumaticosController extends Controller
 {
     use ManagesCatalog;
 
-    protected function getModelClass(): string { return MedidaNeumatico::class; }
-    protected function getRouteName(): string { return 'medidas-neumaticos'; }
-    protected function getTitle(): string { return 'Medidas Neumáticos'; }
+    protected function getModelClass(): string
+    {
+        return MedidaNeumatico::class;
+    }
+
+    protected function getRouteName(): string
+    {
+        return 'medidas-neumaticos';
+    }
+
+    protected function getTitle(): string
+    {
+        return 'Medidas Neumáticos';
+    }
 }

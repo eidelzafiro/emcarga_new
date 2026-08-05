@@ -20,6 +20,7 @@ class PrefacturasController extends Controller
                 if ($entidadId) {
                     $q->where('id_entidad', $entidadId);
                 }
+
                 return $q;
             })
             ->orderBy('fecha', 'desc')

@@ -235,14 +235,16 @@ class CargosController extends Controller
 
     protected function calcularSalario(array $data): ?float
     {
-        if (!empty($data['id_grupo_escala'])) {
+        if (! empty($data['id_grupo_escala'])) {
             $grupo = GrupoEscala::find($data['id_grupo_escala']);
             if ($grupo && $grupo->salario !== null) {
                 $salario = (float) $grupo->salario;
                 $cla = (float) ($data['cla'] ?? 0);
+
                 return round($salario + $cla, 2);
             }
         }
+
         return null;
     }
 
@@ -250,7 +252,7 @@ class CargosController extends Controller
     {
         return FondoTiempo::orderBy('fondo_tiempo')
             ->get()
-            ->map(fn($f) => ['value' => $f->id, 'label' => (string) $f->fondo_tiempo])
+            ->map(fn ($f) => ['value' => $f->id, 'label' => (string) $f->fondo_tiempo])
             ->toArray();
     }
 
@@ -259,7 +261,7 @@ class CargosController extends Controller
         return TipoNivelEducacion::where('activo', true)
             ->orderBy('abreviatura')
             ->get()
-            ->map(fn($n) => ['value' => $n->id, 'label' => $n->abreviatura ?? $n->nombre])
+            ->map(fn ($n) => ['value' => $n->id, 'label' => $n->abreviatura ?? $n->nombre])
             ->toArray();
     }
 
@@ -268,7 +270,7 @@ class CargosController extends Controller
         return GrupoEscala::where('activo', true)
             ->orderBy('nombre')
             ->get()
-            ->map(fn($g) => ['value' => $g->id, 'label' => $g->nombre])
+            ->map(fn ($g) => ['value' => $g->id, 'label' => $g->nombre])
             ->toArray();
     }
 
@@ -277,7 +279,7 @@ class CargosController extends Controller
         return CategoriaCargo::where('activo', true)
             ->orderBy('abreviatura')
             ->get()
-            ->map(fn($c) => ['value' => $c->id, 'label' => $c->abreviatura ?? $c->nombre])
+            ->map(fn ($c) => ['value' => $c->id, 'label' => $c->abreviatura ?? $c->nombre])
             ->toArray();
     }
 
@@ -286,7 +288,7 @@ class CargosController extends Controller
         return TipoGrupoHorario::where('activo', true)
             ->orderBy('nombre')
             ->get()
-            ->map(fn($g) => ['value' => $g->id, 'label' => $g->nombre])
+            ->map(fn ($g) => ['value' => $g->id, 'label' => $g->nombre])
             ->toArray();
     }
 }

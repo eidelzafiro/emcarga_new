@@ -18,9 +18,9 @@ class AcuerdosController extends Controller
         $acuerdos = Acuerdo::with(['cliente:id,nombre', 'origen:id,nombre', 'destino:id,nombre', 'producto:id,nombre'])
             ->when($request->search, function ($q, $s) {
                 $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
-                  ->orWhereHas('origen', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
-                  ->orWhereHas('destino', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
-                  ->orWhereHas('producto', fn ($c) => $c->where('nombre', 'like', "%{$s}%"));
+                    ->orWhereHas('origen', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
+                    ->orWhereHas('destino', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
+                    ->orWhereHas('producto', fn ($c) => $c->where('nombre', 'like', "%{$s}%"));
             })
             ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
             ->paginate(20);

@@ -2,6 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Caja;
+use App\Models\Color;
+use App\Models\Diferenciale;
+use App\Models\EstadoComponente;
+use App\Models\Grupo;
+use App\Models\Lubricante;
+use App\Models\Motore;
+use App\Models\TipoServicio;
+use App\Models\TipoTractivo;
 use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,6 +31,7 @@ class TractivosController extends Controller
                 if ($entidadId) {
                     $q->where('id_entidad', $entidadId);
                 }
+
                 return $q;
             })
             ->paginate(20);
@@ -31,15 +41,15 @@ class TractivosController extends Controller
             'tractivos' => $tractivos,
             'filters' => $request->only(['search']),
             'catalogos' => [
-                'tiposTractivo' => $this->combos(\App\Models\TipoTractivo::class, 'nombre'),
-                'motores' => $this->combos(\App\Models\Motore::class, 'descripcion'),
-                'cajas' => $this->combos(\App\Models\Caja::class, 'descripcion'),
-                'diferenciales' => $this->combos(\App\Models\Diferenciale::class, 'descripcion'),
-                'grupos' => $this->combos(\App\Models\Grupo::class, 'nombre'),
-                'tiposServicio' => $this->combos(\App\Models\TipoServicio::class, 'nombre'),
-                'colores' => $this->combos(\App\Models\Color::class, 'nombre'),
-                'estados' => $this->combos(\App\Models\EstadoComponente::class, 'nombre'),
-                'lubricantes' => $this->combos(\App\Models\Lubricante::class, 'nombre'),
+                'tiposTractivo' => $this->combos(TipoTractivo::class, 'nombre'),
+                'motores' => $this->combos(Motore::class, 'descripcion'),
+                'cajas' => $this->combos(Caja::class, 'descripcion'),
+                'diferenciales' => $this->combos(Diferenciale::class, 'descripcion'),
+                'grupos' => $this->combos(Grupo::class, 'nombre'),
+                'tiposServicio' => $this->combos(TipoServicio::class, 'nombre'),
+                'colores' => $this->combos(Color::class, 'nombre'),
+                'estados' => $this->combos(EstadoComponente::class, 'nombre'),
+                'lubricantes' => $this->combos(Lubricante::class, 'nombre'),
             ],
         ]);
     }

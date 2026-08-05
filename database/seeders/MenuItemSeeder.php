@@ -12,7 +12,7 @@ class MenuItemSeeder extends Seeder
         $ruta = database_path('menu_items_backup_2026-07-31.json');
 
         if (! file_exists($ruta)) {
-            $this->command?->warn('No se encontró el backup del menú en ' . $ruta);
+            $this->command?->warn('No se encontró el backup del menú en '.$ruta);
 
             return;
         }
@@ -50,6 +50,6 @@ class MenuItemSeeder extends Seeder
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $this->command?->info('Menú restaurado desde backup: ' . count($items) . ' ítems.');
+        $this->command?->info('Menú restaurado desde backup: '.count($items).' ítems.');
     }
 }

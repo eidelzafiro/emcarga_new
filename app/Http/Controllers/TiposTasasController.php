@@ -16,6 +16,7 @@ class TiposTasasController extends Controller
                 if ($entidadId) {
                     $q->where('id_entidad', $entidadId);
                 }
+
                 return $q;
             })
             ->orderBy('nombre')

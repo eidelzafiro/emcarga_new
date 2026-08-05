@@ -228,7 +228,7 @@ class UserController extends Controller
 
         Bitacora::registrar(
             $nuevoEstado ? 'bloquear_usuario' : 'desbloquear_usuario',
-            "Usuario {$user->username} " . ($nuevoEstado ? 'bloqueado' : 'desbloqueado') . "."
+            "Usuario {$user->username} ".($nuevoEstado ? 'bloqueado' : 'desbloqueado').'.'
         );
 
         return redirect()->route('usuarios.index')

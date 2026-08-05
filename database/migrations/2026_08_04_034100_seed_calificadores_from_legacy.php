@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! $this->legacyDisponible()) {
+            return;
+        }
+
         $legacy = DB::connection('legacy')
             ->table('rh_tipocalificadores')
             ->get();
@@ -27,5 +31,14 @@ return new class extends Migration
     public function down(): void
     {
         DB::table('calificadores')->truncate();
+    }
+
+    private function legacyDisponible(): bool
+    {
+        try {
+            return DB::connection('legacy')->getPdo() !== null;
+        } catch (Throwable) {
+            return false;
+        }
     }
 };

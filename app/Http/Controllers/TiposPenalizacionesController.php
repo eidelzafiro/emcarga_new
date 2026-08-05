@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Entidad;
+use App\Models\Area;
+use App\Models\TipoPagoAdicionale;
 use App\Models\TipoPenalizacione;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TiposPenalizacionesController extends Controller
@@ -17,7 +19,7 @@ class TiposPenalizacionesController extends Controller
             ->where(function ($q) use ($entidadId) {
                 if ($entidadId) {
                     $q->whereHas('area', fn ($sq) => $sq->where('id_entidad', $entidadId))
-                      ->orWhereNull('area_id');
+                        ->orWhereNull('area_id');
                 }
             })
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
@@ -30,8 +32,8 @@ class TiposPenalizacionesController extends Controller
             'title' => 'Tipos de Penalizaciones',
             'tipos' => $tipos,
             'filters' => $request->only(['search']),
-            'areas' => \App\Models\Area::select('id', 'nombre')->orderBy('nombre')->get(),
-            'sistemasPago' => \App\Models\TipoPagoAdicionale::select('id', 'nombre')->orderBy('nombre')->get(),
+            'areas' => Area::select('id', 'nombre')->orderBy('nombre')->get(),
+            'sistemasPago' => TipoPagoAdicionale::select('id', 'nombre')->orderBy('nombre')->get(),
         ]);
     }
 
@@ -72,7 +74,7 @@ class TiposPenalizacionesController extends Controller
 
     private function generarCodigo(): string
     {
-        $max = \Illuminate\Support\Facades\DB::table('tipos_penalizaciones')
+        $max = DB::table('tipos_penalizaciones')
             ->selectRaw('MAX(CAST(codigo AS UNSIGNED)) as max_cod')
             ->value('max_cod');
 

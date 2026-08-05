@@ -44,7 +44,7 @@ class OsdesController extends Controller
         return Organismo::where('activo', true)
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'abreviatura'])
-            ->map(fn ($o) => ['label' => $o->nombre . ($o->abreviatura ? " ({$o->abreviatura})" : ''), 'value' => $o->id])
+            ->map(fn ($o) => ['label' => $o->nombre.($o->abreviatura ? " ({$o->abreviatura})" : ''), 'value' => $o->id])
             ->toArray();
     }
 

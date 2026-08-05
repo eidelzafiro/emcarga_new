@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\ManagesCatalog;
+use App\Models\Lubricante;
 use App\Models\Marca;
 use App\Models\MedidaNeumatico;
 use App\Models\Modelo;
 use App\Models\Pais;
 use App\Models\TipoCombustible;
 use App\Models\TipoTractivo;
-use App\Models\Lubricante;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

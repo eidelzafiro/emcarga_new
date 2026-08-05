@@ -15,16 +15,16 @@ class IncidenciasController extends Controller
         $entidadId = (int) session('entidad_activa_id');
 
         $query = Incidencia::with(['bolsa', 'tipoIncidencia'])
-            ->when($entidadId, fn($q) => $q->whereHas('bolsa', fn($sq) => $sq->where('id_entidad', $entidadId)))
-            ->when($request->search, fn($q, $s) => $q->where(function ($q) use ($s) {
-                $q->whereHas('bolsa', fn($sq) => $sq->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%"))
-                  ->orWhereHas('tipoIncidencia', fn($sq) => $sq->where('nombre', 'like', "%{$s}%"));
+            ->when($entidadId, fn ($q) => $q->whereHas('bolsa', fn ($sq) => $sq->where('id_entidad', $entidadId)))
+            ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
+                $q->whereHas('bolsa', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%"))
+                    ->orWhereHas('tipoIncidencia', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%"));
             }))
             ->orderBy('fecha_inicio', 'desc')
             ->orderBy('id', 'desc');
 
         $items = $query->paginate(20);
-        $empleados = Bolsa::when($entidadId, fn($q) => $q->where('id_entidad', $entidadId))
+        $empleados = Bolsa::when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
             ->orderBy('nombre')
             ->get();
         $tipos = TipoIncidencia::where('activo', true)->select('id', 'nombre')->orderBy('nombre')->get();

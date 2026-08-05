@@ -160,7 +160,7 @@ class EtlService
 
                     $clave = $codigo.'|'.($fila->idunidad ?: '');
                     if (isset($vistos[$clave])) {
-                        $avisos[] = "consecutivos#{$fila->idconsecutivos}: duplicado '{$codigo}' (entidad ".($fila->idunidad ?: '-')."), omitido";
+                        $avisos[] = "consecutivos#{$fila->idconsecutivos}: duplicado '{$codigo}' (entidad ".($fila->idunidad ?: '-').'), omitido';
 
                         continue;
                     }
@@ -320,12 +320,14 @@ class EtlService
             $clave = $fila->idorigen.'|'.$fila->iddestino;
             if (isset($vistos[$clave])) {
                 $omitidas++;
+
                 continue;
             }
             $vistos[$clave] = true;
 
             if (! isset($lugaresValidos[$fila->idorigen]) || ! isset($lugaresValidos[$fila->iddestino])) {
                 $huerfanas++;
+
                 continue;
             }
 
@@ -408,6 +410,7 @@ class EtlService
                 return null;
             }
             $s = (string) $v;
+
             return str_starts_with($s, '0000-00-00') ? null : $s;
         };
         // Resuelve FK: null si es 0/vacío o si el id no existe en la tabla destino.
@@ -416,6 +419,7 @@ class EtlService
                 return null;
             }
             $id = (int) $v;
+
             return isset($idsNuevos[$tabla][$id]) ? $id : null;
         };
 
@@ -442,6 +446,7 @@ class EtlService
                 foreach ($filas as $fila) {
                     if ($fila->fbaja !== null) {
                         $omitidosBaja++;
+
                         continue;
                     }
 
@@ -469,7 +474,7 @@ class EtlService
                         $falta = null;
                     }
 
-$upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo, $marcas, $modelos, $colores, $motores, $cajas, $estados, $anno, $falta, $fecha, $fk, $idTipoVehiculo) {
+                    $upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo, $marcas, $modelos, $colores, $motores, $cajas, $estados, $anno, $falta, $fecha, $fk, $idTipoVehiculo) {
                         DB::table('tractivos')->updateOrInsert(
                             ['id' => $fila->idtractivos],
                             [
@@ -963,7 +968,7 @@ $upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo
         $legacy->table('tec_htractivos')
             ->whereYear('fcierre', $anio)
             ->orderBy('idhtractivos')
-            ->chunk($chunk, function ($filas) use ($anio, &$procesados, &$avisos, $idsTractivos, $idsCajas, $idsMotores, $idsDiferenciales, $idsGrupos, $idsEntidades) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsTractivos, $idsCajas, $idsMotores, $idsDiferenciales, $idsGrupos, $idsEntidades) {
                 foreach ($filas as $fila) {
                     $idTractivo = in_array($fila->idtractivo, $idsTractivos) ? $fila->idtractivo : null;
                     $idCaja = $fila->idcaja !== null && in_array($fila->idcaja, $idsCajas) ? $fila->idcaja : null;
@@ -1198,6 +1203,7 @@ $upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo
                 foreach ($filas as $fila) {
                     if ($fila->idarrastres == 0) {
                         $sinArrastre++;
+
                         continue;
                     }
                     if (! isset($tractivos[$fila->idtractivos])) {
@@ -1318,6 +1324,7 @@ $upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo
                     if ($fila->idbaterias == 0) {
                         $sinBateria++;
                         $avisos[] = "baterias_movimiento#{$fila->idbateriasmov}: idbaterias=0, omitido";
+
                         continue;
                     }
 
@@ -1419,6 +1426,7 @@ $upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo
 
                     if ($ci !== '' && ($keepBolsaPorCi[$ci] ?? null) != $fila->idbolsa) {
                         $avisos[] = "bolsa#{$fila->idbolsa}: CI {$ci} duplicado, omitido";
+
                         continue;
                     }
 

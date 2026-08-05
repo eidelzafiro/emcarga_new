@@ -60,6 +60,7 @@ class NotificarDocumentosChofer
         if (! $bolsa->cargo) {
             return false;
         }
+
         return str_contains(strtoupper((string) $bolsa->cargo->nombre), 'CHOFER');
     }
 

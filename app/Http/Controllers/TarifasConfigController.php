@@ -11,7 +11,7 @@ class TarifasConfigController extends Controller
     public function edit()
     {
         $config = ConfiguracionTarifa::first();
-        if (!$config) {
+        if (! $config) {
             $config = ConfiguracionTarifa::create([]);
         }
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Services\KpiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Inertia\Inertia;
 
 class DashboardController extends Controller

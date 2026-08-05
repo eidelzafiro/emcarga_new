@@ -113,7 +113,7 @@ class PermissionSeeder extends Seeder
             'embalajes.ver', 'embalajes.crear', 'embalajes.editar', 'embalajes.eliminar',
             'navieras.ver', 'navieras.crear', 'navieras.editar', 'navieras.eliminar',
             'organismos.ver', 'organismos.crear', 'organismos.editar', 'organismos.eliminar',
-                'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
+            'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
             'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
             'cargos.ver', 'cargos.crear', 'cargos.editar', 'cargos.eliminar',
             'areas.ver', 'areas.crear', 'areas.editar', 'areas.eliminar',

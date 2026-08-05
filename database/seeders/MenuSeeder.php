@@ -158,7 +158,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Tipos Gasto',              'route' => 'tipos-gastos.index',              'permission' => 'tipos-gastos.ver',          'orden' => 45],
             ['parent' => 'Catálogos', 'label' => 'Tipo Ingresos',            'route' => 'tipo-ingresos.index',             'permission' => 'tipo-ingresos.ver',         'orden' => 46],
             ['parent' => 'Catálogos', 'label' => 'Tipos Concepto',           'route' => 'tipos-conceptos.index',           'permission' => 'tipos-conceptos.ver',       'orden' => 47],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Cat. Lugares',       'route' => 'tipos-catalogo-lugares.index',    'permission' => 'tipos-catalogo-lugares.ver','orden' => 49],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Cat. Lugares',       'route' => 'tipos-catalogo-lugares.index',    'permission' => 'tipos-catalogo-lugares.ver', 'orden' => 49],
 
             // === Geográficos ===
             ['parent' => 'Catálogos', 'label' => 'Colores',                  'route' => 'colores.index',                   'permission' => 'colores.ver',               'orden' => 51],
@@ -170,27 +170,27 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Tipos Sexo',               'route' => 'tipos-sexo.index',                'permission' => 'tipos-sexo.ver',            'orden' => 55],
             ['parent' => 'Catálogos', 'label' => 'Tipos Estado Civil',       'route' => 'tipos-estado-civil.index',        'permission' => 'tipos-estado-civil.ver',    'orden' => 56],
             ['parent' => 'Catálogos', 'label' => 'Tipos Color Piel',         'route' => 'tipos-color-piel.index',          'permission' => 'tipos-color-piel.ver',      'orden' => 57],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Nivel Educación',    'route' => 'tipos-nivel-educacion.index',     'permission' => 'tipos-nivel-educacion.ver','orden' => 58],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Nivel Educación',    'route' => 'tipos-nivel-educacion.index',     'permission' => 'tipos-nivel-educacion.ver', 'orden' => 58],
 
             // === Catálogos RRHH — laboral ===
             ['parent' => 'Catálogos', 'label' => 'Tipos Grupo Horario',      'route' => 'tipos-grupo-horario.index',       'permission' => 'tipos-grupo-horario.ver',   'orden' => 61],
             ['parent' => 'Catálogos', 'label' => 'Tipos Contrato',           'route' => 'tipos-contratos.index',           'permission' => 'tipos-contratos.ver',       'orden' => 62],
             ['parent' => 'Catálogos', 'label' => 'Tipos Deducción',          'route' => 'tipos-deducciones.index',         'permission' => 'tipos-deducciones.ver',     'orden' => 63],
             ['parent' => 'Catálogos', 'label' => 'Tipos Sistema Pago',       'route' => 'tipos-sistemas-pago.index',       'permission' => 'tipos-sistemas-pago.ver',   'orden' => 64],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Pago Adicional',     'route' => 'tipos-pagos-adicionales.index',   'permission' => 'tipos-pagos-adicionales.ver','orden' => 68],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Pago Adicional',     'route' => 'tipos-pagos-adicionales.index',   'permission' => 'tipos-pagos-adicionales.ver', 'orden' => 68],
             ['parent' => 'Catálogos', 'label' => 'Tipos Medio Cargo',        'route' => 'tipos-medios-cargo.index',        'permission' => 'tipos-medios-cargo.ver',    'orden' => 69],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Medio Protección',   'route' => 'tipos-medios-proteccion.index',   'permission' => 'tipos-medios-proteccion.ver','orden' => 70],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Ubicación Defensa',  'route' => 'tipos-ubicacion-defensa.index',   'permission' => 'tipos-ubicacion-defensa.ver','orden' => 71],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Integración Polít.', 'route' => 'tipos-integracion-politica.index','permission' => 'tipos-integracion-politica.ver','orden' => 72],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Medio Protección',   'route' => 'tipos-medios-proteccion.index',   'permission' => 'tipos-medios-proteccion.ver', 'orden' => 70],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Ubicación Defensa',  'route' => 'tipos-ubicacion-defensa.index',   'permission' => 'tipos-ubicacion-defensa.ver', 'orden' => 71],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Integración Polít.', 'route' => 'tipos-integracion-politica.index', 'permission' => 'tipos-integracion-politica.ver', 'orden' => 72],
 
             // === Otros catálogos ===
             ['parent' => 'Catálogos', 'label' => 'Categorías Productos',     'route' => 'categorias-productos.index',      'permission' => 'categorias-productos.ver',  'orden' => 75],
 
             // === Otros módulos ===
-            ['parent' => 'Flota',        'label' => 'Estad. Explotación',    'route' => 'estadisticas-explotacion.index',  'permission' => 'estadisticas-explotacion.ver','orden' => 33],
-            ['parent' => 'Contabilidad', 'label' => 'Mov. Inventario',       'route' => 'movimientos-inventario.index',    'permission' => 'movimientos-inventario.ver','orden' => 9],
-            ['parent' => 'Contabilidad', 'label' => 'Detalle Carga Comb.',   'route' => 'detalles-carga-combustible.index','permission' => 'detalles-carga-combustible.ver','orden' => 13],
-            ['parent' => 'Taller',       'label' => 'Registro OT',           'route' => 'registro-ordenes-taller.index',   'permission' => 'registro-ordenes-taller.ver','orden' => 17],
+            ['parent' => 'Flota',        'label' => 'Estad. Explotación',    'route' => 'estadisticas-explotacion.index',  'permission' => 'estadisticas-explotacion.ver', 'orden' => 33],
+            ['parent' => 'Contabilidad', 'label' => 'Mov. Inventario',       'route' => 'movimientos-inventario.index',    'permission' => 'movimientos-inventario.ver', 'orden' => 9],
+            ['parent' => 'Contabilidad', 'label' => 'Detalle Carga Comb.',   'route' => 'detalles-carga-combustible.index', 'permission' => 'detalles-carga-combustible.ver', 'orden' => 13],
+            ['parent' => 'Taller',       'label' => 'Registro OT',           'route' => 'registro-ordenes-taller.index',   'permission' => 'registro-ordenes-taller.ver', 'orden' => 17],
         ];
 
         foreach ($tiposCatalogo as $h) {

@@ -23,5 +23,4 @@ class MarcasController extends Controller
     {
         return 'Marcas';
     }
-
 }

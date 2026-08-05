@@ -46,11 +46,11 @@ return new class extends Migration
         foreach ($missingAcciones as &$accion) {
             $baseCodigo = str_replace(' ', '', $accion['nombre']);
             if ($accion['nombre'] === 'SIN DEFINIR') {
-                $baseCodigo = 'SinDefinir' . $counter;
+                $baseCodigo = 'SinDefinir'.$counter;
                 $counter++;
             }
             while (in_array($baseCodigo, $existingCodigos)) {
-                $baseCodigo .= '_' . $accion['id'];
+                $baseCodigo .= '_'.$accion['id'];
             }
             $accion['codigo'] = $baseCodigo;
             $existingCodigos[] = $baseCodigo;

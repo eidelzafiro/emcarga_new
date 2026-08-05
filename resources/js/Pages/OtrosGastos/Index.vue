@@ -70,7 +70,7 @@ function submit() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="otros_gastos.data" striped-rows paginator :rows="20" :total-records="otros_gastos.total">
+            <DataTable :value="otros_gastos.data" striped-rows paginator :rows="20" :total-records="otros_gastos.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="concepto" header="Concepto" sortable />
                 <Column field="bolsa.nombre" header="Bolsa" />
                 <Column field="tractivo.descripcion" header="Tractivo" />

@@ -45,8 +45,11 @@ function emptyForm() {
     agencia: '',
     cliente_fincimex_mn: '',
     abreviatura: '',
-    cta_mn: '',
-    direccion: '',
+      cta_mn: '',
+      cta_me: '',
+      folio_fact: null,
+      licencia: '',
+      direccion: '',
     notas_fact: '',
     email: '',
     talon_versat: '',
@@ -98,6 +101,9 @@ function openEdit(item) {
     cliente_fincimex_mn: item.cliente_fincimex_mn ?? '',
     abreviatura: item.abreviatura ?? '',
     cta_mn: item.cta_mn ?? '',
+    cta_me: item.cta_me ?? '',
+    folio_fact: item.folio_fact ?? null,
+    licencia: item.licencia ?? '',
     direccion: item.direccion ?? '',
     notas_fact: item.notas_fact ?? '',
     email: item.email ?? '',
@@ -180,7 +186,7 @@ function printGrid() {
         </template>
       </Toolbar>
 
-      <DataTable ref="dt" :value="items.data" striped-rows paginator :rows="20" :total-records="items.total">
+      <DataTable ref="dt" :value="items.data" striped-rows paginator :rows="20" :total-records="items.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
         <Column field="codigo" header="Código" sortable>
           <template #body="{ data }">
             <span :class="data.codigo ? '' : 'text-surface-400 italic'">{{ data.codigo ?? 'Sin código' }}</span>
@@ -262,6 +268,20 @@ function printGrid() {
               <div class="form-field">
                 <label class="form-label">CTA MN</label>
                 <InputText v-model="form.cta_mn" class="w-full" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">CTA ME</label>
+                <InputText v-model="form.cta_me" class="w-full" />
+              </div>
+            </div>
+            <div class="form-row form-row-triple">
+              <div class="form-field">
+                <label class="form-label">FOLIO FACTURA</label>
+                <InputNumber v-model="form.folio_fact" :min="0" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">LICENCIA</label>
+                <InputText v-model="form.licencia" class="w-full" />
               </div>
               <div class="form-field">
                 <label class="form-label">PROVINCIA</label>

@@ -3,11 +3,9 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class NotificacionSistema extends Notification implements ShouldBroadcast
+class NotificacionSistema extends Notification
 {
     use Queueable;
 
@@ -21,7 +19,10 @@ class NotificacionSistema extends Notification implements ShouldBroadcast
 
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        // Se persisten en BD (tabla notifications). La UI las consume vía
+        // NotificationsController; no se usa broadcast (requiere Redis, que no
+        // está disponible en el contenedor app).
+        return ['database'];
     }
 
     public function toArray(object $notifiable): array
@@ -33,16 +34,6 @@ class NotificacionSistema extends Notification implements ShouldBroadcast
             'url' => $this->url,
             'icono' => $this->icono ?? $this->iconoPorTipo(),
         ];
-    }
-
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage($this->toArray($notifiable));
-    }
-
-    public function broadcastType(): string
-    {
-        return 'notificacion.sistema';
     }
 
     private function iconoPorTipo(): string

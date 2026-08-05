@@ -18,7 +18,7 @@ const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
-const form = ref({ nombre: '', provincia: '', municipio: '', latitud: null, longitud: null })
+const form = ref({ nombre: '', provincia: '', municipio: '', direccion: '', personalidad: '', latitud: null, longitud: null, activo: true })
 const title = 'Lugares'
 
 function onPage(event) {
@@ -31,13 +31,13 @@ watch(search, () => {
 
 function openCreate() {
     editing.value = null
-    form.value = { nombre: '', provincia: '', municipio: '', latitud: null, longitud: null }
+    form.value = { nombre: '', provincia: '', municipio: '', direccion: '', personalidad: '', latitud: null, longitud: null, activo: true }
     showForm.value = true
 }
 
 function openEdit(item) {
     editing.value = item
-    form.value = { nombre: item.nombre, provincia: item.provincia, municipio: item.municipio, latitud: item.latitud, longitud: item.longitud }
+    form.value = { nombre: item.nombre, provincia: item.provincia, municipio: item.municipio, direccion: item.direccion, personalidad: item.personalidad, latitud: item.latitud, longitud: item.longitud, activo: Boolean(item.activo) }
     showForm.value = true
 }
 
@@ -63,11 +63,13 @@ function submit() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="lugares.data" striped-rows paginator :rows="20" :total-records="lugares.total" :lazy="true" :first="(lugares.current_page - 1) * lugares.per_page" @page="onPage">
+            <DataTable :value="lugares.data" striped-rows paginator :rows="20" :total-records="lugares.total" :lazy="true" :first="(lugares.current_page - 1) * lugares.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="nombre" header="Nombre" sortable />
+                <Column field="direccion" header="Dirección" />
                 <Column field="provincia" header="Provincia" sortable />
                 <Column field="municipio" header="Municipio" sortable />
-                <Column field="activo" header="Activo">
+                <Column field="personalidad" header="Personalidad" />
+                <Column field="activo" header="Activo" style="width: 80px">
                     <template #body="{ data }">
                         <Tag :value="data.activo ? 'Sí' : 'No'" :severity="data.activo ? 'success' : 'danger'" />
                     </template>
@@ -90,12 +92,22 @@ function submit() {
                     <InputText v-model="form.nombre" class="w-full" required />
                 </div>
                 <div>
-                    <label class="block mb-1 font-medium">Provincia</label>
-                    <InputText v-model="form.provincia" class="w-full" />
+                    <label class="block mb-1 font-medium">Dirección</label>
+                    <InputText v-model="form.direccion" class="w-full" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1 font-medium">Provincia</label>
+                        <InputText v-model="form.provincia" class="w-full" />
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Municipio</label>
+                        <InputText v-model="form.municipio" class="w-full" />
+                    </div>
                 </div>
                 <div>
-                    <label class="block mb-1 font-medium">Municipio</label>
-                    <InputText v-model="form.municipio" class="w-full" />
+                    <label class="block mb-1 font-medium">Personalidad</label>
+                    <InputText v-model="form.personalidad" class="w-full" />
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>

@@ -51,7 +51,7 @@ function submit() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="prefacturas.data" striped-rows paginator :rows="20" :total-records="prefacturas.total">
+            <DataTable :value="prefacturas.data" striped-rows paginator :rows="20" :total-records="prefacturas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="numero" header="No. Prefactura" sortable />
                 <Column field="cliente.nombre" header="Cliente" sortable />
                 <Column field="fecha" header="Fecha" sortable />

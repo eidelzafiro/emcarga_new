@@ -42,4 +42,34 @@ class TipoTractivo extends Model
     {
         return $this->belongsTo(Pais::class, 'id_pais');
     }
+
+    public function tipoCombustible(): BelongsTo
+    {
+        return $this->belongsTo(TipoCombustible::class, 'id_tipo_combustible');
+    }
+
+    public function lubricanteMotor(): BelongsTo
+    {
+        return $this->belongsTo(Lubricante::class, 'id_lubricante_motor');
+    }
+
+    public function lubricanteCubo(): BelongsTo
+    {
+        return $this->belongsTo(Lubricante::class, 'id_lubricante_cubo');
+    }
+
+    public function medidaDel(): BelongsTo
+    {
+        return $this->belongsTo(MedidaNeumatico::class, 'id_medida_del');
+    }
+
+    public function medidaTra(): BelongsTo
+    {
+        return $this->belongsTo(MedidaNeumatico::class, 'id_medida_tra');
+    }
+
+    public function medidaRes(): BelongsTo
+    {
+        return $this->belongsTo(MedidaNeumatico::class, 'id_medida_res');
+    }
 }

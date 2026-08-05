@@ -3,7 +3,7 @@
     <Card>
       <template #title>Baterías</template>
       <template #content>
-        <DataTable :value="baterias.data" paginator :rows="20" stripedRows class="p-datatable-sm">
+        <DataTable :value="baterias.data" paginator :rows="20" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="folio" header="Folio" sortable />
           <Column field="marca" header="Marca" />
           <Column field="modelo" header="Modelo" />

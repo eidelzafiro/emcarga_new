@@ -83,6 +83,19 @@
                 {{ contexto.entidadActiva.abreviatura }}
               </span>
 
+              <!-- Selector de perfil (solo SUPERADMIN) -->
+              <Select
+                v-if="contexto.perfiles"
+                v-model="perfilSeleccionado"
+                :options="contexto.perfiles"
+                size="small"
+                class="w-36 lg:w-44"
+                :loading="cambiandoPerfil"
+                v-tooltip.bottom="'Perfil activo'"
+                @change="cambiarPerfil"
+                pt:label="text-xs"
+              />
+
               <DatePicker
                 v-model="fechaOperaciones"
                 dateFormat="dd/mm/yy"
@@ -234,6 +247,19 @@ const toast = useToast();
 const entidadSeleccionada = ref(page.props.contexto?.entidadActiva?.id ?? null);
 const fechaOperaciones = ref(parseFechaLocal(page.props.contexto?.fechaOperaciones));
 const cambiandoEntidad = ref(false);
+
+// Perfil: solo SUPERADMIN puede cambiar de perfil
+const perfilSeleccionado = ref(page.props.contexto?.perfilActivo ?? 'SUPERADMIN');
+const cambiandoPerfil = ref(false);
+
+const cambiarPerfil = () => {
+  if (perfilSeleccionado.value === page.props.contexto?.perfilActivo) return;
+  cambiandoPerfil.value = true;
+  router.post(route('contexto.perfil'), { perfil: perfilSeleccionado.value }, {
+    preserveScroll: true,
+    onFinish: () => { cambiandoPerfil.value = false; },
+  });
+};
 
 function parseFechaLocal(valor) {
   if (!valor) return null;

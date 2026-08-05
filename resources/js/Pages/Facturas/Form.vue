@@ -100,6 +100,7 @@ function submit() {
                             <template #body="{ data }">${{ Number(data.ingreso_mt).toLocaleString() }}</template>
                         </Column>
                     </DataTable>
+                    <div class="text-xs text-surface-400 pt-1">Total: {{ aforos_pendientes.length }} registros</div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

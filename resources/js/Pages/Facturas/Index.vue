@@ -77,7 +77,7 @@ function confirmEliminar(factura) {
                 </template>
             </Toolbar>
 
-            <DataTable :value="facturas.data" :loading="false" striped-rows paginator :rows="20" :total-records="facturas.total">
+            <DataTable :value="facturas.data" :loading="false" striped-rows paginator :rows="20" :total-records="facturas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="numero" header="No. Factura" sortable />
                 <Column field="cliente.nombre" header="Cliente" sortable />
                 <Column field="fecha_emision" header="Fecha Emisión" sortable>

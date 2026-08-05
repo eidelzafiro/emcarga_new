@@ -17,10 +17,15 @@ class ConfiguracionesModeloController extends Controller
         $query = ConfiguracioneModelo::with('tipoModelo');
 
         if ($user->hasRole('SUPERADMIN')) {
-            $query->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId)
-                ->orWhereNull('id_entidad'));
+            $query->where(function ($q) use ($entidadId) {
+                if ($entidadId) {
+                    $q->where('id_entidad', $entidadId)->orWhereNull('id_entidad');
+                }
+            });
         } else {
-            $query->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId));
+            if ($entidadId) {
+                $query->where('id_entidad', $entidadId);
+            }
         }
 
         $query->when($request->search, function ($q, $search) {

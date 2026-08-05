@@ -59,11 +59,27 @@ class EnsureModulePermission
 
         $permiso = $this->resolverPermiso($modulo, $accion, $request);
 
-        if ($permiso === null || $user->can($permiso)) {
+        if ($permiso === null || $this->usuarioPuede($user, $permiso, $request)) {
             return $next($request);
         }
 
         abort(403);
+    }
+
+    /**
+     * Verifica si el usuario (o su perfil activo en sesión) tiene el permiso.
+     */
+    private function usuarioPuede($user, string $permiso, Request $request): bool
+    {
+        $perfil = $request->session()->get('perfil_activo');
+
+        if (! $perfil) {
+            return $user->can($permiso);
+        }
+
+        $role = \Spatie\Permission\Models\Role::findByName($perfil);
+
+        return $role->hasPermissionTo($permiso);
     }
 
     /**

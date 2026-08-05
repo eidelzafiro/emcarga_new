@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Bolsa;
 use App\Models\Cargo;
 use App\Models\Entidad;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class BolsaController extends Controller
@@ -24,12 +26,15 @@ class BolsaController extends Controller
 
         $cargos = Cargo::orderBy('nombre')->get(['id', 'nombre']);
         $entidades = Entidad::orderBy('nombre')->get(['id', 'nombre']);
+        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Bolsa/Index', [
             'title' => 'Bolsa',
             'bolsa' => $items,
             'cargos' => $cargos,
             'entidades' => $entidades,
+            'roles' => $roles,
+            'esSuperadmin' => $request->user()->hasRole('SUPERADMIN'),
             'filters' => $request->only(['search']),
         ]);
     }
@@ -40,22 +45,17 @@ class BolsaController extends Controller
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
 
-        $validated = $request->validate([
-            'ci' => 'required|unique:bolsa,ci|max:20',
-            'nombre' => 'required|max:255',
-            'apellidos' => 'required|max:255',
-            'sexo' => 'nullable|max:1',
-            'fecha_nacimiento' => 'nullable|date',
-            'direccion' => 'nullable|max:500',
-            'telefono' => 'nullable|max:100',
-            'email' => 'nullable|email|max:255',
-            'id_cargo' => 'nullable|exists:cargos,id',
-            'id_entidad' => 'nullable|exists:entidades,id',
-        ]);
+        $validated = $request->validate($this->rules());
 
         $validated['id_entidad'] ??= session('entidad_activa_id');
 
-        Bolsa::create($validated);
+        $bolsa = Bolsa::create($validated);
+
+        if ($request->boolean('crear_usuario')) {
+            $this->crearUsuario($bolsa, $request);
+        }
+
+        $this->notificarDocumentos($bolsa);
 
         return redirect()->route('bolsa.index')->with('success', 'Registro creado correctamente.');
     }
@@ -66,22 +66,13 @@ class BolsaController extends Controller
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
 
-        $validated = $request->validate([
-            'ci' => 'required|unique:bolsa,ci,'.$bolsa->id.'|max:20',
-            'nombre' => 'required|max:255',
-            'apellidos' => 'required|max:255',
-            'sexo' => 'nullable|max:1',
-            'fecha_nacimiento' => 'nullable|date',
-            'direccion' => 'nullable|max:500',
-            'telefono' => 'nullable|max:100',
-            'email' => 'nullable|email|max:255',
-            'id_cargo' => 'nullable|exists:cargos,id',
-            'id_entidad' => 'nullable|exists:entidades,id',
-        ]);
+        $validated = $request->validate($this->rules($bolsa->id));
 
         $validated['id_entidad'] ??= session('entidad_activa_id');
 
         $bolsa->update($validated);
+
+        $this->notificarDocumentos($bolsa);
 
         return redirect()->route('bolsa.index')->with('success', 'Registro actualizado correctamente.');
     }
@@ -95,5 +86,69 @@ class BolsaController extends Controller
         $bolsa->delete();
 
         return redirect()->route('bolsa.index')->with('success', 'Registro eliminado correctamente.');
+    }
+
+    private function rules(?int $id = null): array
+    {
+        $uniqueCi = $id ? 'unique:bolsa,ci,' . $id : 'unique:bolsa,ci';
+
+        return [
+            'ci' => ['required', $uniqueCi, 'max:20'],
+            'nombre' => ['required', 'max:255'],
+            'apellidos' => ['required', 'max:255'],
+            'sexo' => ['nullable', 'max:1'],
+            'color_piel' => ['nullable', 'max:50'],
+            'nivel_educacional' => ['nullable', 'max:100'],
+            'estado_civil' => ['nullable', 'max:50'],
+            'ubicacion_defensa' => ['nullable', 'max:200'],
+            'tiene_licencia' => ['boolean'],
+            'categorias_licencia' => ['nullable', 'max:100'],
+            'licencia_emision' => ['nullable', 'date'],
+            'licencia_vencimiento' => ['nullable', 'date'],
+            'limitaciones' => ['nullable', 'string'],
+            'chequeo_medico_emision' => ['nullable', 'date'],
+            'chequeo_medico_vencimiento' => ['nullable', 'date'],
+            'reubicacion_emision' => ['nullable', 'date'],
+            'reubicacion_vencimiento' => ['nullable', 'date'],
+            'psicometrico_emision' => ['nullable', 'date'],
+            'psicometrico_vencimiento' => ['nullable', 'date'],
+            'fecha_nacimiento' => ['nullable', 'date'],
+            'direccion' => ['nullable', 'max:500'],
+            'telefono' => ['nullable', 'max:100'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'id_cargo' => ['nullable', 'exists:cargos,id'],
+            'id_entidad' => ['nullable', 'exists:entidades,id'],
+        ];
+    }
+
+    private function crearUsuario(Bolsa $bolsa, Request $request): void
+    {
+        $username = strtoupper($bolsa->ci);
+
+        if (User::where('username', $username)->exists()) {
+            return;
+        }
+
+        $user = User::create([
+            'name' => trim($bolsa->nombre . ' ' . $bolsa->apellidos),
+            'username' => $username,
+            'email' => $bolsa->email ?? $username . '@zafiro.local',
+            'password' => Hash::make('ZAFIRO'),
+            'password_temporal' => true,
+            'id_entidad' => $bolsa->id_entidad ?? session('entidad_activa_id'),
+            'activo' => true,
+        ]);
+
+        $rol = $request->input('rol', 'RECHUM');
+        $user->assignRole($rol);
+    }
+
+    /**
+     * Emite notificaciones si el trabajador es chofer y algún documento está
+     * próximo a vencer o vencido (licencia, chequeo médico, recalificación, psicométrico).
+     */
+    private function notificarDocumentos(Bolsa $bolsa): void
+    {
+        app(\App\Services\NotificarDocumentosChofer::class)->ejecutar($bolsa->id);
     }
 }

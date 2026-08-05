@@ -1,10 +1,14 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="'Dashboard — ' + rolLabel">
       <div class="space-y-6">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Panel de control</h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1 flex items-center gap-2">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                :class="rolBadgeClass">
+                {{ rolLabel }}
+              </span>
               Bienvenido, {{ user?.name }} — {{ new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
             </p>
           </div>
@@ -17,7 +21,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div v-if="kpis && kpis.length" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <div v-for="kpi in kpis" :key="kpi.label" class="kpi-card dark:bg-gray-800 dark:border-gray-700">
             <div class="flex items-start justify-between">
               <div class="min-w-0">
@@ -72,9 +76,24 @@
                   <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ act.hace }}</p>
                 </div>
               </div>
-              <div v-if="actividadReciente.length === 0" class="text-center py-6">
+              <div v-if="actividadReciente && actividadReciente.length === 0" class="text-center py-6">
                 <i class="pi pi-inbox text-2xl text-gray-300 dark:text-gray-600 block mb-2" />
                 <p class="text-sm text-gray-400 dark:text-gray-500">Sin actividad reciente</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="secciones && secciones.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div v-for="(sec, i) in secciones" :key="i"
+            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" :class="sec.color">
+                <i :class="sec.icono" class="text-white text-lg" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ sec.titulo }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ sec.descripcion }}</p>
               </div>
             </div>
           </div>
@@ -86,10 +105,6 @@
               <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Últimos movimientos</h3>
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Listado de las últimas operaciones registradas</p>
             </div>
-            <button class="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
-              Ver todos
-              <i class="pi pi-arrow-right ml-1 text-xs" />
-            </button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
@@ -98,7 +113,6 @@
                   <th class="table-header dark:bg-gray-700 dark:text-gray-300">ID</th>
                   <th class="table-header dark:bg-gray-700 dark:text-gray-300">Tipo</th>
                   <th class="table-header dark:bg-gray-700 dark:text-gray-300">Descripción</th>
-                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">Monto</th>
                   <th class="table-header dark:bg-gray-700 dark:text-gray-300">Estado</th>
                   <th class="table-header dark:bg-gray-700 dark:text-gray-300">Fecha</th>
                 </tr>
@@ -113,9 +127,6 @@
                     </span>
                   </td>
                   <td class="table-cell font-medium dark:text-gray-200">{{ row.descripcion }}</td>
-                  <td class="table-cell font-medium dark:text-gray-200" :class="row.monto >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
-                    {{ row.monto >= 0 ? '+' : '' }}${{ Math.abs(row.monto).toLocaleString() }}
-                  </td>
                   <td class="table-cell">
                     <span :class="row.claseBadge">{{ row.estado }}</span>
                   </td>
@@ -124,7 +135,7 @@
               </tbody>
             </table>
           </div>
-          <div v-if="movimientos.length === 0" class="text-center py-12">
+          <div v-if="movimientos && movimientos.length === 0" class="text-center py-12">
             <i class="pi pi-inbox text-3xl text-gray-300 dark:text-gray-600 block mb-2" />
             <p class="text-sm text-gray-400 dark:text-gray-500">No hay movimientos registrados</p>
           </div>
@@ -141,15 +152,15 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 
 Chart.register(...registerables);
 
-const page = usePage();
-const user = page.props.auth?.user;
 const props = defineProps({
   kpis: { type: Array, default: () => [] },
+  rol: { type: String, default: 'default' },
   movimientos: { type: Array, default: () => [] },
   actividadReciente: { type: Array, default: () => [] },
+  secciones: { type: Array, default: () => [] },
 });
 
-const kpis = ref(props.kpis);
+const user = usePage().props.auth?.user || { name: '' };
 const periodos = [
   { label: '7 días', value: '7d' },
   { label: '30 días', value: '30d' },
@@ -160,6 +171,29 @@ const chartCanvas = ref(null);
 const conectado = ref(false);
 const ultimaActualizacion = ref(null);
 let chartInstance = null;
+
+const labelPorRol = {
+  SUPERADMIN: 'Super Administrador',
+  TECNICA: 'Técnica',
+  COMERCIAL: 'Comercial',
+  CONTABILIDAD: 'Contabilidad',
+  RECHUM: 'Recursos Humanos',
+  OPERATIVOS: 'Operativos',
+  CONFIGURACIONES: 'Configuraciones',
+};
+
+const badgePorRol = {
+  SUPERADMIN: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+  TECNICA: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+  COMERCIAL: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
+  CONTABILIDAD: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+  RECHUM: 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300',
+  OPERATIVOS: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300',
+  CONFIGURACIONES: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300',
+};
+
+const rolLabel = computed(() => labelPorRol[props.rol] || 'General');
+const rolBadgeClass = computed(() => badgePorRol[props.rol] || 'bg-gray-100 text-gray-800');
 
 const generarDatosGrafico = (periodo) => {
   const puntos = periodo === '7d' ? 7 : periodo === '30d' ? 30 : 90;
@@ -274,7 +308,6 @@ onMounted(() => {
     echoChannel = window.Echo.channel('kpis')
       .listen('.KpisUpdated', (e) => {
         if (e.kpis) {
-          kpis.value = e.kpis;
           ultimaActualizacion.value = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES');
         }
       });

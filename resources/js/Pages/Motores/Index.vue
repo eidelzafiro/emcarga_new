@@ -4,7 +4,7 @@
       <template #title>Motores</template>
       <template #content>
         <DataTable :value="motores.data" paginator :rows="20" :totalRecords="motores.total" :lazy="false"
-          stripedRows class="p-datatable-sm">
+          stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="codigo" header="Código" sortable />
           <Column field="descripcion" header="Descripción" sortable />
           <Column field="marca" header="Marca" sortable />

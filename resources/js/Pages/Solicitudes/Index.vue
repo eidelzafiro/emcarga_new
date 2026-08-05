@@ -1,5 +1,5 @@
 <template><AppLayout><Card><template #title>Solicitudes de Servicio</template><template #content>
-<DataTable :value="solicitudes.data" paginator :rows="20" stripedRows class="p-datatable-sm">
+<DataTable :value="solicitudes.data" paginator :rows="20" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
 <Column field="numero" header="N°" sortable />
 <Column field="cliente.nombre" header="Cliente" />
 <Column field="fecha_solicitud" header="Fecha" />

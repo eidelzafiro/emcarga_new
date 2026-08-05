@@ -28,7 +28,7 @@ watch(search, () => {
                 </template>
             </Toolbar>
 
-            <DataTable :value="historial.data" striped-rows paginator :rows="20" :total-records="historial.total">
+            <DataTable :value="historial.data" striped-rows paginator :rows="20" :total-records="historial.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="id" header="#" sortable />
                 <Column field="fecha" header="Fecha" sortable />
                 <Column field="tipo_movimiento" header="Tipo de Movimiento" sortable />

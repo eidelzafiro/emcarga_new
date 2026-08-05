@@ -3,7 +3,7 @@
     <Card>
       <template #title>Otros Agregados</template>
       <template #content>
-        <DataTable :value="agregados.data" paginator :rows="20" stripedRows class="p-datatable-sm">
+        <DataTable :value="agregados.data" paginator :rows="20" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="codigo" header="Código" sortable />
           <Column field="descripcion" header="Descripción" sortable />
           <Column field="numero_serie" header="N° Serie" />

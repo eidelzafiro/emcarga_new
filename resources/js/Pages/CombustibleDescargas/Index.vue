@@ -74,7 +74,7 @@ function submit() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="descargas.data" striped-rows paginator :rows="20" :total-records="descargas.total">
+            <DataTable :value="descargas.data" striped-rows paginator :rows="20" :total-records="descargas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="carga.numero" header="Carga" />
                 <Column field="tractivo.descripcion" header="Tractivo" />
                 <Column field="fecha_descarga" header="Fecha Descarga" sortable />

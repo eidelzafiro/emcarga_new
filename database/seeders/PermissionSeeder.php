@@ -216,6 +216,10 @@ class PermissionSeeder extends Seeder
         // Asignación de permisos por rol (perfiles legacy)
         $asignacion = [
             'SUPERADMIN' => $permisos,
+            'DIRECTIVOS' => [
+                'dashboard.ver',
+                'bolsa.ver',
+            ],
             'TECNICA' => [
                 'dashboard.ver',
                 'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',

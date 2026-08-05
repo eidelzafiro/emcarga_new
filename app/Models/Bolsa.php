@@ -17,6 +17,21 @@ class Bolsa extends Model
         'nombre',
         'apellidos',
         'sexo',
+        'color_piel',
+        'nivel_educacional',
+        'estado_civil',
+        'ubicacion_defensa',
+        'tiene_licencia',
+        'categorias_licencia',
+        'licencia_emision',
+        'licencia_vencimiento',
+        'limitaciones',
+        'chequeo_medico_emision',
+        'chequeo_medico_vencimiento',
+        'reubicacion_emision',
+        'reubicacion_vencimiento',
+        'psicometrico_emision',
+        'psicometrico_vencimiento',
         'fecha_nacimiento',
         'direccion',
         'telefono',
@@ -30,6 +45,15 @@ class Bolsa extends Model
     {
         return [
             'fecha_nacimiento' => 'date',
+            'tiene_licencia' => 'boolean',
+            'licencia_emision' => 'date',
+            'licencia_vencimiento' => 'date',
+            'chequeo_medico_emision' => 'date',
+            'chequeo_medico_vencimiento' => 'date',
+            'reubicacion_emision' => 'date',
+            'reubicacion_vencimiento' => 'date',
+            'psicometrico_emision' => 'date',
+            'psicometrico_vencimiento' => 'date',
             'activo' => 'boolean',
         ];
     }
@@ -42,5 +66,12 @@ class Bolsa extends Model
     public function entidad(): BelongsTo
     {
         return $this->belongsTo(Entidad::class, 'id_entidad');
+    }
+
+    protected $appends = ['nombrecompleto'];
+
+    public function getNombrecompletoAttribute(): string
+    {
+        return trim($this->nombre.' '.$this->apellidos);
     }
 }

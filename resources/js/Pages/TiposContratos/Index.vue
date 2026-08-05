@@ -59,7 +59,7 @@ function submit() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="tiposContratos.data" striped-rows paginator :rows="20" :total-records="tiposContratos.total">
+            <DataTable :value="tiposContratos.data" striped-rows paginator :rows="20" :total-records="tiposContratos.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="codigo" header="Código" sortable />
                 <Column field="nombre" header="Nombre" sortable />
                 <Column field="activo" header="Activo">

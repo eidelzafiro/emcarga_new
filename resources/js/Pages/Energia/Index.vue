@@ -3,7 +3,7 @@
     <Card>
       <template #title>Control de Energía</template>
       <template #content>
-        <DataTable :value="medidores.data" paginator :rows="20" stripedRows class="p-datatable-sm">
+        <DataTable :value="medidores.data" paginator :rows="20" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="codigo" header="Código" sortable />
           <Column field="metro" header="Medidor" />
           <Column field="tipo" header="Tipo" />

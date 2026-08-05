@@ -66,6 +66,7 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
                             <template #body="{ data }">${{ Number(data.ingreso_mt).toLocaleString() }}</template>
                         </Column>
                     </DataTable>
+                    <div class="text-xs text-surface-400 pt-1">Total: {{ (factura.aforos || []).length }} registros</div>
                 </template>
             </Card>
 

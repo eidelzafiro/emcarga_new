@@ -96,6 +96,9 @@
               No hay ítems de menú registrados.
             </div>
           </template>
+          <template #footer>
+            <span class="text-xs text-surface-400">Total: {{ itemsFiltrados.length }} registros</span>
+          </template>
         </DataTable>
       </template>
     </Card>

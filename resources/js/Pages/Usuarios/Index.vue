@@ -80,7 +80,7 @@
           stripedRows
           size="small"
           class="p-datatable-sm"
-        >
+         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="username" header="Usuario" sortable />
           <Column header="Entidad">
             <template #body="{ data }">

@@ -32,7 +32,9 @@ trait ManagesCatalog
 
     protected function applyEntityScope($query, int $entidadId): void
     {
-        $query->where('id_entidad', $entidadId);
+        if ($entidadId > 0) {
+            $query->where('id_entidad', $entidadId);
+        }
     }
 
     protected function getScopingData(): array

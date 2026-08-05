@@ -3,7 +3,7 @@
     <Card>
       <template #title>Control de Lubricantes</template>
       <template #content>
-        <DataTable :value="lubricantes.data" paginator :rows="20" stripedRows class="p-datatable-sm">
+        <DataTable :value="lubricantes.data" paginator :rows="20" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="folio" header="Folio" sortable />
           <Column field="tractivo.descripcion" header="Tractivo" />
           <Column field="tipoAceite.nombre" header="Tipo Aceite" />

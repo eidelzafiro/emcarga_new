@@ -11,7 +11,17 @@ class Lugare extends Model
 
     protected $table = 'lugares';
 
-    protected $fillable = ['codigo', 'nombre', 'provincia', 'municipio', 'latitud', 'longitud', 'activo'];
+    protected $fillable = [
+        'codigo',
+        'nombre',
+        'provincia',
+        'municipio',
+        'direccion',
+        'personalidad',
+        'latitud',
+        'longitud',
+        'activo',
+    ];
 
     protected function casts(): array
     {

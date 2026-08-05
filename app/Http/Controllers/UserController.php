@@ -21,15 +21,20 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $user = $request->user();
+        $entidadActivaId = (int) session('entidad_activa_id');
 
         $usuarios = User::with('roles:id,name', 'entidades:id,nombre', 'entidad:id,nombre,abreviatura')
-            ->when(! $user->hasRole('SUPERADMIN'), function ($query) use ($user) {
-                $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
-                    ->push($user->id_entidad)
-                    ->unique()
-                    ->values()
-                    ->all();
-                $query->whereIn('id_entidad', $ids);
+            ->when($entidadActivaId > 0, function ($query) use ($entidadActivaId) {
+                $query->where('id_entidad', $entidadActivaId);
+            }, function ($query) use ($user) {
+                if (! $user->hasRole('SUPERADMIN')) {
+                    $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
+                        ->push($user->id_entidad)
+                        ->unique()
+                        ->values()
+                        ->all();
+                    $query->whereIn('id_entidad', $ids);
+                }
             })
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -59,7 +64,9 @@ class UserController extends Controller
 
         $esSuperAdmin = $user->hasRole('SUPERADMIN');
 
-        if (! $esSuperAdmin) {
+        if ($entidadActivaId > 0) {
+            $entidadesQuery->where('id', $entidadActivaId);
+        } elseif (! $esSuperAdmin) {
             $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
                 ->push($user->id_entidad)
                 ->unique()

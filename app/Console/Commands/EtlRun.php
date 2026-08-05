@@ -224,6 +224,13 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'bolsa');
         }
 
+        // Hojas de ruta: solo el año de negocio (2026); entidad derivada del tractivo
+        if (! $solo || $solo === 'hojas_ruta') {
+            $this->info('Migrando hojas de ruta (año 2026)...');
+            $etl->migrarHojasRuta(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'hojas_ruta');
+        }
+
         // Pivote multi-entidad: requiere usuarios + entidades ya migrados
         if (! $solo) {
             $this->info('Sembrando pivote entidad_user...');

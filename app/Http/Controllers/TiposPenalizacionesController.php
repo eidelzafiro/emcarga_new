@@ -15,7 +15,10 @@ class TiposPenalizacionesController extends Controller
 
         $tipos = TipoPenalizacione::with(['area', 'tipoPagoAdicional'])
             ->where(function ($q) use ($entidadId) {
-                $q->where('id_entidad', $entidadId)->orWhereNull('id_entidad');
+                if ($entidadId) {
+                    $q->whereHas('area', fn ($sq) => $sq->where('id_entidad', $entidadId))
+                      ->orWhereNull('area_id');
+                }
             })
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%");

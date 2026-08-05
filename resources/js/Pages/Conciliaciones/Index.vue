@@ -81,7 +81,7 @@ function submit() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="conciliaciones.data" striped-rows paginator :rows="20" :total-records="conciliaciones.total">
+            <DataTable :value="conciliaciones.data" striped-rows paginator :rows="20" :total-records="conciliaciones.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="numero" header="Número" sortable />
                 <Column field="factura.numero" header="Factura" />
                 <Column field="fecha_conciliacion" header="Fecha Conciliación" sortable />

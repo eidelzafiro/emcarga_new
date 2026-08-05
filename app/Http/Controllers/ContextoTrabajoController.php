@@ -37,6 +37,36 @@ class ContextoTrabajoController extends Controller
     }
 
     /**
+     * Cambia el perfil activo del usuario (solo SUPERADMIN).
+     * Guarda el rol a emular en sesión para que el menú y los permisos
+     * se comporten como si el usuario tuviera ese rol.
+     */
+    public function cambiarPerfil(Request $request)
+    {
+        $user = $request->user();
+
+        if (! $user->hasRole('SUPERADMIN')) {
+            return back()->with('error', 'No tiene permisos para cambiar de perfil.');
+        }
+
+        $datos = $request->validate([
+            'perfil' => ['required', 'string', 'in:SUPERADMIN,TECNICA,COMERCIAL,RECHUM,CONTABILIDAD,OPERATIVOS'],
+        ]);
+
+        $perfil = $datos['perfil'];
+
+        if ($perfil === 'SUPERADMIN') {
+            $request->session()->forget('perfil_activo');
+            Bitacora::registrar('cambiar_perfil', 'Perfil restaurado a SUPERADMIN', $user->id);
+        } else {
+            $request->session()->put('perfil_activo', $perfil);
+            Bitacora::registrar('cambiar_perfil', "Perfil activo: {$perfil}", $user->id);
+        }
+
+        return redirect()->route('dashboard')->with('success', "Perfil cambiado a {$perfil}.");
+    }
+
+    /**
      * Cambia la fecha de operaciones (sesión + persistencia en el usuario).
      */
     public function cambiarFechaOperaciones(Request $request)

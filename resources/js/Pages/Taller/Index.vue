@@ -3,7 +3,7 @@
     <Card>
       <template #title>Órdenes de Taller</template>
       <template #content>
-        <DataTable :value="ordenes.data" paginator :rows="20" :totalRecords="ordenes.total" stripedRows class="p-datatable-sm">
+        <DataTable :value="ordenes.data" paginator :rows="20" :totalRecords="ordenes.total" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="numero" header="N° Orden" sortable />
           <Column field="tractivo.descripcion" header="Vehículo" />
           <Column field="tipoMantenimiento.nombre" header="Tipo Mtto." />

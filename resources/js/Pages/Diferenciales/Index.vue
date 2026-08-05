@@ -3,7 +3,7 @@
     <Card>
       <template #title>Diferenciales</template>
       <template #content>
-        <DataTable :value="diferenciales.data" paginator :rows="20" stripedRows class="p-datatable-sm">
+        <DataTable :value="diferenciales.data" paginator :rows="20" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="codigo" header="Código" sortable />
           <Column field="descripcion" header="Descripción" sortable />
           <Column field="marca" header="Marca" />

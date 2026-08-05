@@ -59,7 +59,7 @@ class TiposModeloController extends Controller
         $model = $this->getModelClass();
         $entidadId = (int) session('entidad_activa_id');
 
-        $query = $model::where('id_entidad', $entidadId);
+        $query = $entidadId > 0 ? $model::where('id_entidad', $entidadId) : $model::query();
         $search = $request->get('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -91,7 +91,7 @@ class TiposModeloController extends Controller
         $modelClass = $this->getModelClass();
         $data = $request->validate($this->getValidationRules());
 
-        $data['id_entidad'] = (int) session('entidad_activa_id');
+        $data['id_entidad'] = (int) session('entidad_activa_id') ?: null;
         $max = $modelClass::max('codigo') ?? 0;
         $data['codigo'] = $max + 1;
 

@@ -388,6 +388,37 @@ class EtlService
         $cajas = $legacy->table('tec_cajas')->pluck('nroserie', 'idcajas');
         $tiposNuevos = DB::table('tipos_tractivos')->pluck('id')->flip();
 
+        // Ids reales de las tablas destino (los FKs deben apuntar a ids existentes;
+        // el legacy guarda ids huérfanos tipo idcolorprimario=1 que no existen).
+        $idsNuevos = [
+            'grupos' => DB::table('grupos')->pluck('id')->flip(),
+            'tipos_servicios' => DB::table('tipos_servicios')->pluck('id')->flip(),
+            'colores' => DB::table('colores')->pluck('id')->flip(),
+            'estados_componentes' => DB::table('estados_componentes')->pluck('id')->flip(),
+            'lubricantes' => DB::table('lubricantes')->pluck('id')->flip(),
+            'motores' => DB::table('motores')->pluck('id')->flip(),
+            'cajas' => DB::table('cajas')->pluck('id')->flip(),
+            'diferenciales' => DB::table('diferenciales')->pluck('id')->flip(),
+        ];
+
+        // Helpers de normalización
+        $nullif0 = fn ($v) => $v === null || (int) $v === 0 ? null : (int) $v;
+        $fecha = function ($v): ?string {
+            if ($v === null) {
+                return null;
+            }
+            $s = (string) $v;
+            return str_starts_with($s, '0000-00-00') ? null : $s;
+        };
+        // Resuelve FK: null si es 0/vacío o si el id no existe en la tabla destino.
+        $fk = function (string $tabla, $v) use ($idsNuevos): ?int {
+            if ($v === null || (int) $v === 0) {
+                return null;
+            }
+            $id = (int) $v;
+            return isset($idsNuevos[$tabla][$id]) ? $id : null;
+        };
+
         $estados = [
             14 => 'activo',
             26 => 'taller',
@@ -407,7 +438,7 @@ class EtlService
 
         $legacy->table('tec_tractivos')
             ->orderBy('idtractivos')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidosBaja, &$avisos, &$tiposHuerfanos, $tipos, $marcas, $modelos, $colores, $motores, $cajas, $tiposNuevos, $estados, $dupChapas, $dupCodigos) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidosBaja, &$avisos, &$tiposHuerfanos, $tipos, $marcas, $modelos, $colores, $motores, $cajas, $tiposNuevos, $estados, $dupChapas, $dupCodigos, $fecha, $fk) {
                 foreach ($filas as $fila) {
                     if ($fila->fbaja !== null) {
                         $omitidosBaja++;
@@ -438,7 +469,7 @@ class EtlService
                         $falta = null;
                     }
 
-                    $upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo, $marcas, $modelos, $colores, $motores, $cajas, $estados, $anno, $falta, $idTipoVehiculo) {
+$upsert = function (?string $codigoFinal, ?string $placaFinal) use ($fila, $tipo, $marcas, $modelos, $colores, $motores, $cajas, $estados, $anno, $falta, $fecha, $fk, $idTipoVehiculo) {
                         DB::table('tractivos')->updateOrInsert(
                             ['id' => $fila->idtractivos],
                             [
@@ -446,18 +477,60 @@ class EtlService
                                 'descripcion' => trim((string) ($fila->codtractivo ?? '')) ?: '',
                                 'placa' => $placaFinal ?? '',
                                 'id_tipo_vehiculo' => $idTipoVehiculo,
+                                // FKs componentes (id legacy preservado, validado contra destino)
+                                'id_motor' => $fk('motores', $fila->idmotores),
+                                'id_caja' => $fk('cajas', $fila->idcajas),
+                                'id_diferencial' => $fk('diferenciales', $fila->iddiferenciales),
+                                // FKs catálogos (validado contra destino)
+                                'id_grupo' => $fk('grupos', $fila->idgrupo),
+                                'id_tipo_servicio' => $fk('tipos_servicios', $fila->idtiposervicios),
+                                'id_color_primario' => $fk('colores', $fila->idcolorprimario),
+                                'id_color_secundario' => $fk('colores', $fila->idcolorsecundario),
+                                'id_tipo_estado' => $fk('estados_componentes', $fila->idtipoestados),
+                                'id_lubricante_hidraulico' => $fk('lubricantes', $fila->idlubricantes),
+                                // Descripción / identidad
                                 'marca' => $tipo ? ($marcas[$tipo->idmarca] ?? null) : null,
                                 'modelo' => $tipo ? ($modelos[$tipo->idmodelo] ?? null) : null,
                                 'anno' => $anno,
                                 'color' => $colores[$fila->idcolorprimario] ?? null,
+                                'vin' => trim((string) ($fila->vin ?? '')) ?: null,
                                 'numero_motor' => $motores[$fila->idmotores] ?? null,
                                 'numero_chasis' => trim((string) ($fila->chassis ?? '')) ?: null,
                                 'numero_caja' => $cajas[$fila->idcajas] ?? null,
                                 'capacidad_toneladas' => $fila->capacidad,
+                                // Físico / capacidad de combustible
+                                'tara' => $fila->tara ?: null,
+                                'cap_deposito' => $fila->captanque ?: null,
+                                'cap_hidraulico' => $fila->caphidraulico ?: null,
+                                'cta_combustible' => trim((string) ($fila->ctacomb ?? '')) ?: null,
+                                'indice_consumo' => $fila->indice ?: null,
+                                'indice_aceite' => $fila->indiceac ?? null,
+                                // Kilometrajes / planes
+                                'kms_disp' => $fila->kmsdisp ?: null,
+                                'kms_plan_mtto' => $fila->kmsplanmtto ?: null,
+                                'kilometraje_actual' => $fila->kmsacum ?? 0,
+                                'plan_comb' => $fila->plancomb ?? null,
+                                'plan_tn' => $fila->plantn ?? null,
+                                'plan_viajes' => $fila->planviajes ?? null,
+                                'plan_gastos' => $fila->plangastos ?? null,
+                                'plan_cdt' => $fila->plancdt ?? null,
+                                'plan_diario' => $fila->plandiario ?: null,
+                                // Estado / fechas
                                 'estado' => $estados[$fila->idtipoestados] ?? 'activo',
                                 'fecha_alta' => $falta,
                                 'fecha_baja' => null,
-                                'kilometraje_actual' => $fila->kmsacum ?? 0,
+                                // Vencimientos
+                                'ficav' => trim((string) ($fila->ficav ?? '')) ?: null,
+                                'femision_ficav' => $fecha($fila->femision_ficav),
+                                'fvence_ficav' => $fecha($fila->fvence_ficav),
+                                'lot' => trim((string) ($fila->lot ?? '')) ?: null,
+                                'femision_lot' => $fecha($fila->femision_lot),
+                                'fvence_lot' => $fecha($fila->fvence_lot),
+                                'circulacion' => trim((string) ($fila->circulacion ?? '')) ?: null,
+                                'femision_circ' => $fecha($fila->femision_circ),
+                                'fvence_circ' => $fecha($fila->fvence_circ),
+                                'f_reconstruccion' => $fecha($fila->fureconstruccion),
+                                'gps' => $fila->gps ?: null,
                                 'id_entidad' => $fila->idunidad ?: null,
                                 'created_at' => now(),
                                 'updated_at' => now(),
@@ -1370,6 +1443,9 @@ class EtlService
                     $direccion = trim((string) $fila->direccion) ?: null;
                     $telefono = trim((string) $fila->telefono) ?: null;
 
+                    $categoriasLicencia = trim((string) $fila->licencia) ?: null;
+                    $fechaNula = static fn ($f) => $f && $f !== '0000-00-00' ? $f : null;
+
                     DB::table('bolsa')->updateOrInsert(
                         ['id' => $fila->idbolsa],
                         [
@@ -1382,6 +1458,16 @@ class EtlService
                             'direccion' => $direccion,
                             'telefono' => $telefono,
                             'email' => null,
+                            'tiene_licencia' => $categoriasLicencia !== null ? 1 : 0,
+                            'categorias_licencia' => $categoriasLicencia,
+                            'licencia_emision' => $fechaNula($fila->femisionlic),
+                            'licencia_vencimiento' => $fechaNula($fila->fvencelic),
+                            'chequeo_medico_emision' => $fechaNula($fila->femisioncm),
+                            'chequeo_medico_vencimiento' => $fechaNula($fila->fvencecm),
+                            'reubicacion_emision' => $fechaNula($fila->femisionrec),
+                            'reubicacion_vencimiento' => $fechaNula($fila->fvencerec),
+                            'psicometrico_emision' => $fechaNula($fila->femisionpsi),
+                            'psicometrico_vencimiento' => $fechaNula($fila->fvencepsi),
                             'id_cargo' => $cargoPorBolsa[$fila->idbolsa] ?? $cargoDefaultId,
                             'id_entidad' => $fila->idunidad ?: 1,
                             'activo' => (int) $fila->baja === 0,
@@ -1437,6 +1523,126 @@ class EtlService
             'legacy' => (int) $legacy->table('com_lugares')->count(),
             'nueva' => $procesados,
             'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de hojas de ruta: com_hojaruta → hojas_ruta (solo el año de negocio).
+     * Reglas:
+     * - id = idhojaruta (preservado).
+     * - estado derivado: cancelada==1 → 'cancelada'; si no y hay fecha_cierre → 'cerrada'; si no 'abierta'.
+     * - id_entidad derivado del tractivo (hojas_ruta.id_entidad). Si el tractivo no está, la HR se omite.
+     * - FKs (chofer/arrastre/parqueo/grupo/entidad/hr_anterior) validadas contra catálogos migrados; no existe → null.
+     */
+    public function migrarHojasRuta(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $omitidas = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsTractivos = DB::table('tractivos')->pluck('id')->flip();
+        $idsArrastres = DB::table('arrastres')->pluck('id')->flip();
+        $idsChoferes = DB::table('bolsa')->pluck('id')->flip();
+        $idsParqueos = DB::table('lugares')->pluck('id')->flip();
+        $idsGrupos = DB::table('grupos')->pluck('id')->flip();
+        $idsUsers = DB::table('users')->pluck('id')->flip();
+        // Ids ya presentes (re-ejecución) y que se irán acumulando por lote
+        $idsHojas = DB::table('hojas_ruta')->pluck('id')->flip();
+
+        // id_entidad de la HR se deriva del tractivo
+        $entidadPorTractivo = DB::table('tractivos')
+            ->whereNotNull('id_entidad')
+            ->pluck('id_entidad', 'id');
+
+        $legacy->table('com_hojaruta')
+            ->whereYear('femision', $anio)
+            ->orderBy('idhojaruta')
+            ->chunk($chunk, function ($filas) use (
+                &$procesados, &$omitidas, &$avisos, &$idsHojas,
+                $idsTractivos, $idsArrastres, $idsChoferes, $idsParqueos, $idsGrupos,
+                $idsUsers, $entidadPorTractivo
+            ) {
+                foreach ($filas as $fila) {
+                    $idTractivo = (int) $fila->idtractivos;
+                    if (! isset($idsTractivos[$idTractivo])) {
+                        $omitidas++;
+                        $avisos[] = "hojas_ruta#{$fila->idhojaruta}: tractivo {$idTractivo} no migrado, omitida";
+
+                        continue;
+                    }
+
+                    $idEntidad = $entidadPorTractivo[$idTractivo] ?? null;
+
+                    // id_hr_anterior solo si apunta a una HR ya migrada (en BD).
+                    // Los ancestros de otros años (fuera del anio) se dejan null.
+                    $idHrAnterior = $fila->idhranterior
+                        ? ($idsHojas->has((int) $fila->idhranterior) ? (int) $fila->idhranterior : null)
+                        : null;
+
+                    $fechaCierre = $fila->fcierre ?: null;
+                    $cancelada = (int) $fila->cancelada === 1;
+                    $estado = $cancelada
+                        ? 'cancelada'
+                        : ($fechaCierre ? 'cerrada' : 'abierta');
+
+                    try {
+                        DB::table('hojas_ruta')->updateOrInsert(
+                            ['id' => $fila->idhojaruta],
+                            [
+                                'numero' => $fila->nrohr,
+                                'fecha_emision' => $fila->femision,
+                                'hora_emision' => $fila->hemision,
+                                'id_solicitud' => null,
+                                'id_tractivo' => $idTractivo,
+                                'id_entidad' => $idEntidad,
+                                'id_arrastre' => isset($idsArrastres[$fila->idarrastre]) ? $fila->idarrastre : null,
+                                'id_chofer' => isset($idsChoferes[$fila->idchofer]) ? $fila->idchofer : null,
+                                'id_chofer2' => isset($idsChoferes[$fila->idchofer2]) ? $fila->idchofer2 : null,
+                                'kms_disponible' => $fila->kms_disp,
+                                'kms_disponibles_adicionales' => $fila->kms_dispa,
+                                'id_hr_anterior' => $idHrAnterior,
+                                'id_parqueo' => isset($idsParqueos[$fila->idparqueo]) ? $fila->idparqueo : null,
+                                'id_grupo' => isset($idsGrupos[$fila->idgrupo]) ? $fila->idgrupo : null,
+                                'id_user' => isset($idsUsers[$fila->iduser]) ? $fila->iduser : null,
+                                'fecha_cierre' => $fechaCierre,
+                                'hora_cierre' => $fila->hcierre,
+                                'kms_totales' => $fila->kms_total,
+                                'combustible_habilitado' => $fila->comb_hab,
+                                'combustible_consumido' => $fila->comb_cons,
+                                'combustible_tecnico' => $fila->comb_tec,
+                                'indice_hr' => $fila->indicehr,
+                                'tiempo_mov' => $fila->tmov,
+                                'tiempo_espera' => $fila->tespera,
+                                'tiempo_carga' => $fila->tcarga,
+                                'tiempo_taller' => $fila->ttaller,
+                                'tiempo_inactivo' => $fila->tinactivo,
+                                'tiempo_otras_actividades' => $fila->totrasact,
+                                'tiempo_total' => $fila->ttotal,
+                                'notas' => $fila->notas,
+                                'analisis' => $fila->analisis,
+                                'dias_trabajados' => $fila->dtrabajados,
+                                'cancelada' => $cancelada,
+                                'estado' => $estado,
+                                'fecha_salida' => $fila->femision,
+                                'observaciones' => $fila->analisis,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                        $idsHojas->put((int) $fila->idhojaruta, true);
+                    } catch (\Throwable $e) {
+                        $avisos[] = "hojas_ruta#{$fila->idhojaruta}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['hojas_ruta'] = [
+            'legacy' => (int) $legacy->table('com_hojaruta')->whereYear('femision', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(["{$omitidas} omitidas por tractivo no migrado"], $avisos),
         ];
     }
 
@@ -1511,6 +1717,26 @@ class EtlService
 
         foreach ($config['cero_a_null'] ?? [] as $col) {
             if (array_key_exists($col, $datos) && (int) $datos[$col] === 0) {
+                $datos[$col] = null;
+            }
+        }
+
+        // Columnas enteras que en legacy pueden traer texto sucio (p. ej.
+        // fabricacion='BIEL'): si no es numérico, se anula en vez de fallar.
+        foreach ($config['int_or_null'] ?? [] as $col) {
+            if (array_key_exists($col, $datos) && $datos[$col] !== null && ! is_numeric($datos[$col])) {
+                $datos[$col] = null;
+            }
+        }
+
+        // FKs huérfanas del legacy: si el id no existe en la tabla destino
+        // (catálogo no migrado con ese id, o dato sucio), se anula en vez de
+        // descartar la fila completa por violación de integridad referencial.
+        foreach ($config['fk_validar'] ?? [] as $col => $tablaDestino) {
+            if (! array_key_exists($col, $datos) || $datos[$col] === null) {
+                continue;
+            }
+            if (! DB::table($tablaDestino)->where('id', $datos[$col])->exists()) {
                 $datos[$col] = null;
             }
         }

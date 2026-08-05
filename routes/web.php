@@ -49,6 +49,7 @@ use App\Http\Controllers\GruposController;
 use App\Http\Controllers\GruposEscalaController;
 use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
+use App\Http\Controllers\IncidenciasController;
 use App\Http\Controllers\IndicadoresController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\LubricantesController;
@@ -75,6 +76,7 @@ use App\Http\Controllers\OtrosGastosController;
 use App\Http\Controllers\OtrosIngresosPreController;
 use App\Http\Controllers\PagosAdicionalesCargoController;
 use App\Http\Controllers\PagosController;
+use App\Http\Controllers\PenalizacionesController;
 use App\Http\Controllers\PaisesController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraTractivosController;
@@ -123,6 +125,8 @@ use App\Http\Controllers\TiposSexoController;
 use App\Http\Controllers\TiposSistemasController;
 use App\Http\Controllers\TiposSistemasPagoController;
 use App\Http\Controllers\TiposSuspensionController;
+use App\Http\Controllers\TiposTractivosController;
+use App\Http\Controllers\TiposArrrastresController;
 use App\Http\Controllers\TiposTasasController;
 use App\Http\Controllers\TiposUbicacionDefensaController;
 use App\Http\Controllers\TractivosController;
@@ -156,6 +160,7 @@ Route::middleware('auth')->group(function () {
 
     // Contexto de trabajo: entidad activa y fecha de operaciones
     Route::post('contexto/entidad', [ContextoTrabajoController::class, 'cambiarEntidad'])->name('contexto.entidad');
+    Route::post('contexto/perfil', [ContextoTrabajoController::class, 'cambiarPerfil'])->name('contexto.perfil');
     Route::post('contexto/fecha-operaciones', [ContextoTrabajoController::class, 'cambiarFechaOperaciones'])->name('contexto.fecha-operaciones');
 
     // API de KPIs (también accesible con password temporal para el dashboard)
@@ -497,6 +502,10 @@ Route::middleware('auth')->group(function () {
         // Técnica - Tablas faltantes (Fase 5.8)
         Route::resource('arrastres', ArrastresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-tractivos', TiposTractivosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('tipos-arrastres', TiposArrrastresController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('historial-tractivos', HistorialTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('motivos-baja-bateria', MotivosBajaBateriaController::class)
@@ -537,6 +546,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('devoluciones', DevolucionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('descuentos-empleados', DescuentosEmpleadosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('incidencias', IncidenciasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('penalizaciones', PenalizacionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('vacaciones', VacacionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);

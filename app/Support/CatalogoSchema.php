@@ -89,7 +89,11 @@ class CatalogoSchema
         'tipos_grupo_horario' => [],
         'tipos_lubricantes' => [],
         'tipos_pagos_adicionales' => [],
-        'tipos_penalizaciones' => [],
+        'tipos_penalizaciones' => [
+            'id_tipo_pago_adicional' => ['label' => 'Pago Adicional', 'type' => 'number'],
+            'id_area' => ['label' => 'Área Penalizada', 'type' => 'number'],
+            'importe' => ['label' => '% Penalización', 'type' => 'number'],
+        ],
         'tipos_roturas' => [],
         'tipos_servicios' => [],
     ];

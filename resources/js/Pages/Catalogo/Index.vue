@@ -50,6 +50,11 @@ const allFields = computed(() => {
   return merged
 })
 
+const activosCount = computed(() => {
+  if (!props.items?.data) return null
+  return props.items.data.filter(i => i.activo).length
+})
+
 const gridFields = computed(() => {
   const result = {}
   if (props.catalogConfig?.codigoManual !== false) {
@@ -143,6 +148,10 @@ function submit(continuarActivo = false) {
         <template #start>
           <Button icon="pi pi-arrow-left" severity="secondary" text rounded class="mr-2" @click="router.visit(route('catalogo.gestionar'))" v-tooltip="'Volver a catálogos'" />
           <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
+          <span v-if="items.total !== undefined" class="ml-3 text-xs text-gray-500 dark:text-gray-400">
+            {{ items.total }} registros
+            <span v-if="activosCount !== null" class="ml-1">· {{ activosCount }} activos</span>
+          </span>
         </template>
         <template #end>
           <InputText v-model="search" placeholder="Buscar..." />
@@ -150,7 +159,7 @@ function submit(continuarActivo = false) {
       </Toolbar>
 
       <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total"
-                 :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage">
+                 :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
         <Column v-if="catalogConfig?.codigoManual !== false" field="codigo" header="Código" sortable />
         <Column v-if="!catalogConfig?.hideNombre" field="nombre" header="Nombre" sortable />
         <template v-for="(cfg, key) in gridFields" :key="key">

@@ -1,5 +1,5 @@
 <template><AppLayout><Card><template #title>Cartas Porte</template><template #content>
-<DataTable :value="giros.data" paginator :rows="20" stripedRows class="p-datatable-sm">
+<DataTable :value="giros.data" paginator :rows="20" stripedRows class="p-datatable-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
 <Column field="numero_carta_porte" header="Carta Porte" sortable />
 <Column field="cliente.nombre" header="Cliente" />
 <Column field="fecha_parte" header="Fecha" />

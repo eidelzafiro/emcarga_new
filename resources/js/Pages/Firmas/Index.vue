@@ -82,7 +82,7 @@ function submit() {
         </template>
       </Toolbar>
 
-      <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total" :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage">
+      <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total" :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
         <Column field="nombre" header="Nombre" sortable />
         <Column field="confecciona_nombre" header="Confecciona" />
         <Column field="revisa_nombre" header="Revisa" />

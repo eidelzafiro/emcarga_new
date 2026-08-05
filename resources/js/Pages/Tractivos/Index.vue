@@ -14,25 +14,26 @@
               @input="debouncedSearch"
             />
           </div>
-          <Button icon="pi pi-plus" label="Nuevo vehículo" @click="showModal = true" />
+          <Button icon="pi pi-plus" label="Nuevo vehículo" @click="openCreate" />
         </div>
 
-        <DataTable :value="tractivos.data" stripedRows size="small" :rows="10" :paginator="true" :totalRecords="tractivos.total" :lazy="true" :first="(tractivos.current_page - 1) * tractivos.per_page" @page="onPage">
+        <DataTable :value="tractivos.data" stripedRows size="small" :rows="10" :paginator="true" :totalRecords="tractivos.total" :lazy="true" :first="(tractivos.current_page - 1) * tractivos.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="descripcion" header="Descripción" sortable />
           <Column field="placa" header="Placa" sortable />
           <Column field="marca" header="Marca" sortable />
+          <Column field="capacidad_toneladas" header="Cap (ton)" sortable />
           <Column header="Estado">
             <template #body="{ data }">
               <Tag
                 :value="data.estado || 'activo'"
-                :severity="(data.estado || 'activo') === 'activo' ? 'success' : 'danger'"
+                :severity="(data.estado || 'activo') === 'activo' ? 'success' : (data.estado ? 'warn' : 'danger')"
               />
             </template>
           </Column>
           <Column header="Acciones" :exportable="false">
             <template #body="{ data }">
               <div class="flex gap-1">
-                <Button icon="pi pi-pencil" severity="secondary" text rounded size="small" @click="edit(data)" v-tooltip.left="'Editar'" />
+                <Button icon="pi pi-pencil" severity="secondary" text rounded size="small" @click="openEdit(data)" v-tooltip.left="'Editar'" />
                 <Button icon="pi pi-trash" severity="danger" text rounded size="small" @click="confirmDelete(data)" v-tooltip.left="'Eliminar'" />
               </div>
             </template>
@@ -47,10 +48,11 @@
       </template>
     </Card>
 
-    <Dialog v-model:visible="showModal" :header="editing ? 'Editar Vehículo' : 'Nuevo Vehículo'" :modal="true" class="w-full max-w-lg">
+    <Dialog v-model:visible="showModal" :header="editing ? 'Editar Vehículo' : 'Nuevo Vehículo'" :modal="true" :style="{ width: '820px' }">
       <form @submit.prevent="submit">
-        <div class="space-y-4">
-          <div>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="col-span-3 border-b border-surface-200 pb-2 mb-1 text-sm font-semibold text-surface-600">Identificación</div>
+          <div class="col-span-2">
             <label class="block text-sm font-medium text-surface-700 mb-1">Descripción *</label>
             <InputText v-model="form.descripcion" required class="w-full" />
           </div>
@@ -58,24 +60,220 @@
             <label class="block text-sm font-medium text-surface-700 mb-1">Placa *</label>
             <InputText v-model="form.placa" required class="w-full" />
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-surface-700 mb-1">Marca</label>
-              <InputText v-model="form.marca" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-surface-700 mb-1">Modelo</label>
-              <InputText v-model="form.modelo" class="w-full" />
-            </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo de Vehículo</label>
+            <Select v-model="form.id_tipo_vehiculo" :options="catalogos.tiposTractivo" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Motor</label>
+            <Select v-model="form.id_motor" :options="catalogos.motores" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Caja</label>
+            <Select v-model="form.id_caja" :options="catalogos.cajas" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Diferencial</label>
+            <Select v-model="form.id_diferencial" :options="catalogos.diferenciales" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Marca</label>
+            <InputText v-model="form.marca" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Modelo</label>
+            <InputText v-model="form.modelo" class="w-full" />
           </div>
           <div>
             <label class="block text-sm font-medium text-surface-700 mb-1">Año</label>
             <InputNumber v-model="form.anno" class="w-full" />
           </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Color</label>
+            <InputText v-model="form.color" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Color primario</label>
+            <Select v-model="form.id_color_primario" :options="catalogos.colores" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Color secundario</label>
+            <Select v-model="form.id_color_secundario" :options="catalogos.colores" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Grupo</label>
+            <Select v-model="form.id_grupo" :options="catalogos.grupos" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo servicio</label>
+            <Select v-model="form.id_tipo_servicio" :options="catalogos.tiposServicio" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo estado</label>
+            <Select v-model="form.id_tipo_estado" :options="catalogos.estados" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Lubricante hidráulico</label>
+            <Select v-model="form.id_lubricante_hidraulico" :options="catalogos.lubricantes" optionLabel="label" optionValue="value" class="w-full" showClear />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Estado</label>
+            <InputText v-model="form.estado" class="w-full" />
+          </div>
+
+          <div class="col-span-3 border-b border-surface-200 pb-1 mb-1 text-sm font-semibold text-surface-600">Números / Físico</div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">No. Motor</label>
+            <InputText v-model="form.numero_motor" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">No. Chasis</label>
+            <InputText v-model="form.numero_chasis" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">No. Caja</label>
+            <InputText v-model="form.numero_caja" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">VIN</label>
+            <InputText v-model="form.vin" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">No. Carrocería</label>
+            <InputText v-model="form.nro_carroceria" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Registro</label>
+            <InputText v-model="form.nro_registro" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Resolución</label>
+            <InputText v-model="form.nro_resolucion" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Capacidad (ton)</label>
+            <InputNumber v-model="form.capacidad_toneladas" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Tara</label>
+            <InputNumber v-model="form.tara" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Cap. depósito</label>
+            <InputNumber v-model="form.cap_deposito" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Cap. hidráulico</label>
+            <InputNumber v-model="form.cap_hidraulico" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Cuenta combustible</label>
+            <InputText v-model="form.cta_combustible" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Índice consumo</label>
+            <InputNumber v-model="form.indice_consumo" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Índice aceite</label>
+            <InputNumber v-model="form.indice_aceite" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">GPS</label>
+            <InputText v-model="form.gps" class="w-full" />
+          </div>
+
+          <div class="col-span-3 border-b border-surface-200 pb-1 mb-1 text-sm font-semibold text-surface-600">Kilometrajes / Planes</div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Kilometraje actual</label>
+            <InputNumber v-model="form.kilometraje_actual" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Kms disponibilidad</label>
+            <InputNumber v-model="form.kms_disp" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">KMS plan MTTO</label>
+            <InputNumber v-model="form.kms_plan_mtto" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Plan combustible</label>
+            <InputNumber v-model="form.plan_comb" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Plan TN</label>
+            <InputNumber v-model="form.plan_tn" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Plan viajes</label>
+            <InputNumber v-model="form.plan_viajes" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Plan gastos</label>
+            <InputNumber v-model="form.plan_gastos" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Plan CDT</label>
+            <InputNumber v-model="form.plan_cdt" mode="decimal" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Plan diario</label>
+            <InputNumber v-model="form.plan_diario" mode="decimal" class="w-full" />
+          </div>
+
+          <div class="col-span-3 border-b border-surface-200 pb-1 mb-1 text-sm font-semibold text-surface-600">Vencimientos / Fechas</div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Fecha alta</label>
+            <DatePicker v-model="form.fecha_alta" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Fecha baja</label>
+            <DatePicker v-model="form.fecha_baja" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Fecha reconstrucción</label>
+            <DatePicker v-model="form.f_reconstruccion" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">FICAV</label>
+            <InputText v-model="form.ficav" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Emisión FICAV</label>
+            <DatePicker v-model="form.femision_ficav" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Vence FICAV</label>
+            <DatePicker v-model="form.fvence_ficav" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">LOT</label>
+            <InputText v-model="form.lot" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Emisión LOT</label>
+            <DatePicker v-model="form.femision_lot" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Vence LOT</label>
+            <DatePicker v-model="form.fvence_lot" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Circulación</label>
+            <InputText v-model="form.circulacion" class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Emisión circulación</label>
+            <DatePicker v-model="form.femision_circ" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Vence circulación</label>
+            <DatePicker v-model="form.fvence_circ" dateFormat="yy-mm-dd" showIcon class="w-full" />
+          </div>
         </div>
       </form>
       <template #footer>
-        <Button label="Cancelar" severity="secondary" @click="showModal = false" />
+        <Button label="Cancelar" severity="secondary" @click="closeModal" />
         <Button :label="editing ? 'Actualizar' : 'Crear'" @click="submit" />
       </template>
     </Dialog>
@@ -84,26 +282,39 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { debounce } from 'lodash';
 
 const props = defineProps({
   tractivos: Object,
   filters: Object,
+  catalogos: Object,
 });
 
 const search = ref(props.filters?.search || '');
 const showModal = ref(false);
 const editing = ref(false);
-const form = ref({
-  id: null,
-  descripcion: '',
-  placa: '',
-  marca: '',
-  modelo: '',
-  anno: null,
-});
+const form = ref(baseForm());
+
+function baseForm() {
+  return {
+    id: null,
+    descripcion: '', placa: '', marca: '', modelo: '', anno: null,
+    id_tipo_vehiculo: null, id_motor: null, id_caja: null, id_diferencial: null,
+    id_grupo: null, id_tipo_servicio: null, id_color_primario: null, id_color_secundario: null,
+    id_tipo_estado: null, id_lubricante_hidraulico: null, color: '', estado: '',
+    numero_motor: '', numero_chasis: '', numero_caja: '', vin: '', nro_carroceria: '', nro_registro: '', nro_resolucion: '',
+    capacidad_toneladas: null, tara: null, cap_deposito: null, cap_hidraulico: null, cta_combustible: '',
+    indice_consumo: null, indice_aceite: null, gps: '',
+    kilometraje_actual: null, kms_disp: null, kms_plan_mtto: null,
+    plan_comb: null, plan_tn: null, plan_viajes: null, plan_gastos: null, plan_cdt: null, plan_diario: null,
+    fecha_alta: null, fecha_baja: null, f_reconstruccion: null,
+    ficav: '', femision_ficav: null, fvence_ficav: null,
+    lot: '', femision_lot: null, fvence_lot: null,
+    circulacion: '', femision_circ: null, fvence_circ: null,
+  };
+}
 
 const debouncedSearch = debounce(() => {
   router.get(route('tractivos.index'), { search: search.value }, {
@@ -116,27 +327,30 @@ const onPage = (event) => {
   router.get(route('tractivos.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true });
 };
 
-const edit = (tractivo) => {
-  editing.value = true;
-  form.value = { ...tractivo };
+const openCreate = () => {
+  editing.value = false;
+  form.value = baseForm();
   showModal.value = true;
 };
 
+const openEdit = (tractivo) => {
+  editing.value = true;
+  form.value = { ...baseForm(), ...tractivo };
+  form.value.id = tractivo.id;
+  showModal.value = true;
+};
+
+const closeModal = () => { showModal.value = false; editing.value = false; };
+
 const submit = () => {
+  const payload = { ...form.value };
   if (editing.value) {
-    router.put(route('tractivos.update', form.value.id), form.value, {
-      onSuccess: () => {
-        showModal.value = false;
-        editing.value = false;
-        resetForm();
-      },
+    router.put(route('tractivos.update', payload.id), payload, {
+      onSuccess: closeModal,
     });
   } else {
-    router.post(route('tractivos.store'), form.value, {
-      onSuccess: () => {
-        showModal.value = false;
-        resetForm();
-      },
+    router.post(route('tractivos.store'), payload, {
+      onSuccess: closeModal,
     });
   }
 };
@@ -145,9 +359,5 @@ const confirmDelete = (tractivo) => {
   if (confirm('¿Está seguro de eliminar este vehículo?')) {
     router.delete(route('tractivos.destroy', tractivo.id));
   }
-};
-
-const resetForm = () => {
-  form.value = { id: null, descripcion: '', placa: '', marca: '', modelo: '', anno: null };
 };
 </script>

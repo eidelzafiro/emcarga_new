@@ -68,6 +68,9 @@
               No hay perfiles registrados.
             </div>
           </template>
+          <template #footer>
+            <span class="text-xs text-surface-400">Total: {{ perfiles.length }} registros</span>
+          </template>
         </DataTable>
 
         <div class="mt-4 flex justify-end">

@@ -41,7 +41,11 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => fn () => $request->user()?->getAllPermissions()->pluck('name'),
             ],
             // Menú dinámico filtrado por los permisos del usuario (Fase 4.5)
-            'menu' => fn () => MenuBuilder::para($request->user()),
+            'menu' => fn () => MenuBuilder::para(
+                $request->user(),
+                $request->session()->get('perfil_activo'),
+                (int) $request->session()->get('entidad_activa_id')
+            ),
             // Contexto de trabajo: entidad activa + fecha de operaciones
             'contexto' => fn () => $this->contextoTrabajo($request),
             'flash' => [
@@ -72,6 +76,8 @@ class HandleInertiaRequests extends Middleware
         $activaId = (int) $request->session()->get('entidad_activa_id');
         $activa = $activaId ? Entidad::find($activaId) : null;
 
+        $perfilActivo = $request->session()->get('perfil_activo');
+
         return [
             'entidadActiva' => $activa ? [
                 'id' => $activa->id,
@@ -87,6 +93,11 @@ class HandleInertiaRequests extends Middleware
                 ->values()
                 ->all(),
             'fechaOperaciones' => $request->session()->get('fecha_operaciones'),
+            'perfilActivo' => $perfilActivo,
+            // Solo SUPERADMIN puede cambiar de perfil
+            'perfiles' => $user->hasRole('SUPERADMIN')
+                ? ['SUPERADMIN', 'TECNICA', 'COMERCIAL', 'RECHUM', 'CONTABILIDAD', 'OPERATIVOS', 'CONFIGURACIONES']
+                : null,
         ];
     }
 }

@@ -8,19 +8,28 @@
             <InputIcon>
               <i class="pi pi-search" />
             </InputIcon>
-            <InputText v-model="busqueda" placeholder="Buscar ítem…" class="w-48" />
+            <InputText v-model="busqueda" placeholder="Buscar ítem…" class="w-48" @input="hidratarVista" />
           </IconField>
           <Select
             v-model="filtroPerfil"
-            :options="props.roles"
+            :options="rolesExpon"
             optionLabel="name"
             optionValue="name"
             placeholder="Filtrar por perfil"
             clearable
             showClear
             class="w-48"
+            @update:modelValue="hidratarVista"
           />
           <div class="ml-auto flex gap-2">
+            <Button
+              v-if="tieneCambios"
+              icon="pi pi-sort-alt"
+              label="Guardar orden"
+              :loading="guardando"
+              :disabled="filtroActivo"
+              @click="guardarOrden"
+            />
             <Button
               v-if="can('menus.crear')"
               icon="pi pi-plus"
@@ -30,76 +39,76 @@
           </div>
         </div>
 
-        <DataTable :value="itemsFiltrados" stripedRows size="small" sortField="orden" :sortOrder="1">
-          <Column header="Ítem">
-            <template #body="{ data }">
-              <span
-                class="font-medium"
-                :style="{ paddingLeft: (data._depth || 0) * 24 + 'px' }"
-              >
-                <i v-if="data.icon" :class="data.icon + ' mr-2'" />
-                {{ data.label }}
-              </span>
-            </template>
-          </Column>
-          <Column field="route" header="Ruta">
-            <template #body="{ data }">
-              <code v-if="data.route" class="text-xs bg-surface-100 dark:bg-surface-800 px-1.5 py-0.5 rounded">
-                {{ data.route }}
-              </code>
-              <span v-else class="text-xs text-surface-400 italic">Agrupador</span>
-            </template>
-          </Column>
-          <Column field="permission" header="Permiso">
-            <template #body="{ data }">
-              <Tag v-if="data.permission" :value="data.permission" severity="info" size="small" />
-              <span v-else class="text-xs text-surface-400">—</span>
-            </template>
-          </Column>
+        <div v-if="puedeMover" class="mb-3 text-xs text-surface-400 dark:text-surface-400">
+          <i class="pi pi-info-circle mr-1" />
+          Arrastra el icono <i class="pi pi-bars mx-1" /> para reordenar o cambiar el agrupador. Al
+          pulsar «Guardar orden» se respeta exactamente el orden dejado con el arrastrar y soltar:
+          los ítems se renumeran (1..n) dentro de cada agrupador sin reordenar alfabéticamente.
+        </div>
 
-          <Column field="orden" header="Orden" style="width:80px" />
-          <Column header="Activo" style="width:80px">
-            <template #body="{ data }">
-              <i v-if="data.activo !== false" class="pi pi-check-circle text-green-500" />
-              <i v-else class="pi pi-times-circle text-red-400" />
-            </template>
-          </Column>
-          <Column header="Acciones" :exportable="false" style="width:100px">
-            <template #body="{ data }">
-              <div class="flex gap-1">
-                <Button
-                  v-if="can('menus.editar')"
-                  icon="pi pi-pencil"
-                  severity="secondary"
-                  text
-                  rounded
-                  size="small"
-                  @click="abrirEditar(data)"
-                  v-tooltip.left="'Editar'"
+        <div class="border border-surface-200 dark:border-surface-800 rounded-lg overflow-hidden">
+          <div class="flex items-center gap-2 px-3 py-2 sticky top-0 z-10 bg-surface-50 dark:bg-surface-800/60 border-b border-surface-100 dark:border-surface-800 text-xs font-semibold text-surface-500">
+            <span style="width: 28px" />
+            <span class="flex-1">Ítem</span>
+            <span style="min-width: 44px; text-align: center">Orden</span>
+            <span style="min-width: 90px; text-align: center">Estado</span>
+            <span class="flex-1 flex min-w-0">
+              <span
+                v-for="rol in rolesExpon"
+                :key="rol.id"
+                class="flex-1 text-center font-bold uppercase truncate px-1"
+                :title="rol.name"
+              >
+                {{ abreviatura(rol.name) }}
+              </span>
+            </span>
+            <span style="width: 72px; text-align: right">Acciones</span>
+          </div>
+
+          <div style="max-height: 62vh; overflow-y: auto;">
+            <!-- Modo árbol arrastrable (sin filtros) -->
+            <draggable
+              v-if="!filtroActivo && itemsFiltrados.length"
+              v-model="itemsFiltrados"
+              item-key="id"
+              group="menu-raiz"
+              handle=".drag-handle"
+              :animation="150"
+              class="select-none"
+            >
+              <template #item="{ element }">
+                <MenuItemNode
+                  :node="element"
+                  :roles="rolesExpon"
+                  @editar="abrirEditar"
+                  @eliminar="abrirEliminar"
                 />
-                <Button
-                  v-if="can('menus.eliminar')"
-                  icon="pi pi-trash"
-                  severity="danger"
-                  text
-                  rounded
-                  size="small"
-                  @click="abrirEliminar(data)"
-                  v-tooltip.left="'Eliminar'"
-                />
+              </template>
+            </draggable>
+
+            <!-- Mod árbol inerte (solo lectura) con filtro activo -->
+            <template v-else-if="filtroActivo">
+              <MenuItemNode
+                v-for="el in itemsVisibles"
+                :key="el.id"
+                :node="el"
+                :roles="rolesExpon"
+                :grupo="'sin-arrastre'"
+                @editar="abrirEditar"
+                @eliminar="abrirEliminar"
+              />
+              <div v-if="!itemsVisibles.length" class="text-center py-8 text-surface-400">
+                <i class="pi pi-search text-2xl mb-2 block" />
+                Sin resultados para el filtro actual.
               </div>
             </template>
-          </Column>
-          <template #empty>
-            <div class="text-center py-8 text-surface-400">
+
+            <div v-else class="text-center py-8 text-surface-400">
               <i class="pi pi-bars text-3xl mb-2 block" />
               No hay ítems de menú registrados.
             </div>
-          </template>
-          <template #footer>
-            <span class="text-xs text-surface-400">Total: {{ itemsFiltrados.length }} registros</span>
-          </template>
-        </DataTable>
+          </div>
+        </div>
       </template>
     </Card>
 
@@ -123,29 +132,29 @@
             <InputText v-model="form.icon" class="w-full" placeholder="pi pi-circle" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Orden</label>
-            <InputNumber v-model="form.orden" class="w-full" :min="0" />
+            <label class="block text-sm font-medium text-surface-700 mb-1">Ruta (nombre de ruta)</label>
+            <InputText v-model="form.route" class="w-full" placeholder="ej: tractivos.index" />
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Ruta (nombre de ruta)</label>
-          <InputText v-model="form.route" class="w-full" placeholder="ej: tractivos.index" />
-          <small class="text-surface-400">Dejar vacío si es agrupador.</small>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Padre (agrupador)</label>
-          <Select
-            v-model="form.parent_id"
-            :options="opcionesPadre"
-            optionLabel="label"
-            optionValue="id"
-            placeholder="Sin padre (raíz)"
-            class="w-full"
-            :showClear="true"
-            @change="alCambiarPadre($event.value)"
-          />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Padre (agrupador)</label>
+            <Select
+              v-model="form.parent_id"
+              :options="opcionesPadre"
+              optionLabel="label"
+              optionValue="id"
+              placeholder="Sin padre (raíz)"
+              class="w-full"
+              :showClear="true"
+              @update:modelValue="alCambiarPadre"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-surface-700 mb-1">Orden</label>
+            <InputNumber v-model="form.orden" class="w-full" :min="0" />
+          </div>
         </div>
 
         <div>
@@ -170,9 +179,9 @@
           <label class="block text-sm font-medium text-surface-700 mb-2">Visibilidad por perfil</label>
           <p class="text-xs text-surface-400 mb-3">Seleccione qué perfiles pueden ver este ítem.</p>
           <div class="flex flex-wrap gap-3">
-            <div v-for="rol in rolesExcluyendoSuperadmin" :key="rol.id" class="flex items-center gap-2">
+            <div v-for="rol in rolesExpon" :key="rol.id" class="flex items-center gap-2">
               <ToggleSwitch
-                :modelValue="rol.tienePermiso"
+                :modelValue="seleccionado && seleccionado.roles.includes(rol.name)"
                 @update:modelValue="toggleRolEnForm(rol)"
                 :inputId="'rol-' + rol.id"
                 :disabled="!can('menus.editar')"
@@ -217,22 +226,19 @@
 
 <script setup>
 import { useForm, usePage, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import { route } from 'ziggy-js';
-import AppLayout from '@/Layouts/AppLayout.vue';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
 import ToggleSwitch from 'primevue/toggleswitch';
-import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
-import Card from 'primevue/card';
-import { useToast } from 'primevue/usetoast';
+import Button from 'primevue/button';
+import draggable from 'vuedraggable';
+import { route } from 'ziggy-js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import MenuItemNode from './MenuItemNode.vue';
 
 const props = defineProps({
   items: Array,
@@ -242,110 +248,97 @@ const props = defineProps({
 });
 
 const page = usePage();
-const toast = useToast();
 const permissions = computed(() => page.props.auth?.permissions ?? []);
 const can = (permiso) => permissions.value.includes(permiso);
+const puedeMover = computed(() => can('menus.editar'));
+
+const rolesExpon = computed(() =>
+  (props.roles ?? []).filter((r) => r.name !== 'SUPERADMIN')
+);
+
+function abreviatura(nombre) {
+  return (nombre || '').slice(0, 3).toUpperCase();
+}
+
+// itemsFiltrados es el árbol editable (draggable raíz vive aquí).
+const itemsFiltrados = ref([]);
+const snapshot = ref('');
+const guardando = ref(false);
+const tieneCambios = ref(false);
 
 const busqueda = ref('');
 const filtroPerfil = ref(null);
 
-const rolesExcluyendoSuperadmin = computed(() =>
-  props.roles
-    .filter((r) => r.name !== 'SUPERADMIN')
-    .map((r) => ({
-      ...r,
-      get tienePermiso() {
-        return seleccionado.value?.roles?.includes(r.name) ?? false;
-      },
-    }))
+const filtroActivo = computed(() => busqueda.value.trim() !== '' || filtroPerfil.value != null);
+
+function clonar(objs) {
+  return JSON.parse(JSON.stringify(objs ?? []));
+}
+
+function hidratar() {
+  itemsFiltrados.value = clonar(props.items);
+  snapshot.value = JSON.stringify(itemsFiltrados.value);
+  tieneCambios.value = false;
+}
+
+watch(
+  () => props.items,
+  () => { if (!filtroActivo.value) hidratar(); },
+  { deep: true, immediate: true }
 );
+watch(itemsFiltrados, () => {
+  tieneCambios.value = JSON.stringify(itemsFiltrados.value) !== snapshot.value;
+}, { deep: true });
 
-function aplanar(nodos, depth = 0) {
-  const result = [];
+function aplanar(nodos, depth = 0, out = []) {
   for (const n of nodos) {
-    result.push({ ...n, _depth: depth });
-    if (n.children?.length) {
-      result.push(...aplanar(n.children, depth + 1));
-    }
+    out.push({ ...n, _depth: depth });
+    if (n.children?.length) aplanar(n.children, depth + 1, out);
   }
-  return result;
+  return out;
 }
 
-const itemsFlat = computed(() => aplanar(props.items));
-
-function coincideBusqueda(item) {
-  if (!busqueda.value) return true;
-  const q = busqueda.value.toLowerCase();
-  return (
-    (item.label || '').toLowerCase().includes(q) ||
-    (item.route || '').toLowerCase().includes(q) ||
-    (item.permission || '').toLowerCase().includes(q)
-  );
-}
-
-function coincidePerfil(item) {
-  if (!filtroPerfil.value) return true;
-  if (item.permission && !item.roles?.length) return false;
-  return item.permission ? item.roles.includes(filtroPerfil.value) : true;
-}
-
-const itemsFiltrados = computed(() => {
-  let base = itemsFlat.value;
-  if (busqueda.value) {
-    base = base.filter((i) => coincideBusqueda(i));
-  }
+function coincide(n) {
+  const q = busqueda.value.trim().toLowerCase();
+  const hit = !q ||
+    (n.label || '').toLowerCase().includes(q) ||
+    (n.route || '').toLowerCase().includes(q) ||
+    (n.permission || '').toLowerCase().includes(q);
+  if (!hit) return false;
   if (filtroPerfil.value) {
-    base = base.filter((i) => coincidePerfil(i));
+    if (!n.permission) return true;
+    if (!n.roles?.length) return false;
+    return n.roles.includes(filtroPerfil.value);
   }
-  return base;
+  return true;
+}
+
+const itemsVisibles = computed(() => {
+  const encontrar = (nodos) => nodos
+    .map((n) => ({ ...n, children: encontrar(n.children ?? []) }))
+    .filter((n) => coincide(n) || (n.children ?? []).length > 0);
+  return encontrar(itemsFiltrados.value);
 });
 
-function toggleRolEnForm(rol) {
-  if (!seleccionado.value?.permission || !can('menus.editar')) return;
-  router.visit(route('menu-items.toggle-visibility', [seleccionado.value.id, rol.id]), {
-    method: 'post',
+function hidratarVista() {
+  // sólo usado por eventos de filtro: garantiza copia viva acorde a props
+  if (!filtroActivo.value && !tieneCambios.value) {
+    itemsFiltrados.value = clonar(props.items);
+    snapshot.value = JSON.stringify(itemsFiltrados.value);
+  }
+}
+
+function guardarOrden() {
+  guardando.value = true;
+  router.post(route('menu-items.reordenar'), { tree: itemsFiltrados.value }, {
     preserveScroll: true,
-    preserveState: false,
-    onSuccess: () => {
-      const tieneAhora = seleccionado.value.roles.includes(rol.name);
-      toast.add({
-        severity: 'success',
-        summary: tieneAhora
-          ? `Acceso quitado a ${rol.name}`
-          : `Acceso concedido a ${rol.name}`,
-        life: 3000,
-      });
-    },
+    only: ['items', 'flash'],
+    onSuccess: () => { hidratar(); },
+    onFinish: () => { guardando.value = false; },
   });
 }
 
-const opcionesPadre = computed(() => {
-  const build = (nodos, depth = 0) => {
-    const result = [];
-    for (const n of nodos) {
-      const disabled = editando.value && n.id === seleccionado.value?.id;
-      result.push({
-        id: n.id,
-        label: '  '.repeat(depth) + n.label,
-        disabled,
-      });
-      if (n.children?.length) {
-        result.push(...build(n.children, depth + 1));
-      }
-    }
-    return result;
-  };
-  return build(props.items);
-});
-
-function alCambiarPadre(id) {
-  if (!id) return;
-  const padre = itemsFlat.value.find((i) => i.id === id);
-  if (padre) {
-    form.orden = padre.orden;
-  }
-}
-
+// ---------- Modal crear/editar ----------
 const modalForm = ref(false);
 const modalEliminar = ref(false);
 const editando = ref(false);
@@ -363,15 +356,34 @@ const form = useForm({
 
 const formEliminar = useForm({});
 
-const abrirCrear = () => {
+const itemsFlat = computed(() => aplanar(itemsFiltrados.value));
+
+function opcionesPadreRec(nodos, depth = 0, out = []) {
+  for (const n of nodos) {
+    const disabled = editando.value && n.id === seleccionado.value?.id;
+    out.push({ id: n.id, label: '  '.repeat(depth) + n.label, disabled });
+    if (n.children?.length) opcionesPadreRec(n.children, depth + 1, out);
+  }
+  return out;
+}
+
+const opcionesPadre = computed(() => opcionesPadreRec(itemsFiltrados.value));
+
+function alCambiarPadre(id) {
+  if (!id) return;
+  const padre = itemsFlat.value.find((i) => i.id === id);
+  if (padre) form.orden = padre.orden;
+}
+
+function abrirCrear() {
   editando.value = false;
   seleccionado.value = null;
   form.reset();
   form.clearErrors();
   modalForm.value = true;
-};
+}
 
-const abrirEditar = (item) => {
+function abrirEditar(item) {
   editando.value = true;
   seleccionado.value = item;
   form.label = item.label;
@@ -383,9 +395,9 @@ const abrirEditar = (item) => {
   form.activo = item.activo !== false;
   form.clearErrors();
   modalForm.value = true;
-};
+}
 
-const guardarForm = () => {
+function guardarForm() {
   if (editando.value) {
     form.put(route('menu-items.update', seleccionado.value.id), {
       onSuccess: () => cerrarModales(),
@@ -395,22 +407,33 @@ const guardarForm = () => {
       onSuccess: () => cerrarModales(),
     });
   }
-};
+}
 
-const abrirEliminar = (item) => {
+function abrirEliminar(item) {
   seleccionado.value = item;
   modalEliminar.value = true;
-};
+}
 
-const eliminar = () => {
+function eliminar() {
   formEliminar.delete(route('menu-items.destroy', seleccionado.value.id), {
     onSuccess: () => cerrarModales(),
   });
-};
+}
 
-const cerrarModales = () => {
+function cerrarModales() {
   modalForm.value = false;
   modalEliminar.value = false;
   seleccionado.value = null;
-};
+}
+
+function toggleRolEnForm(rol) {
+  if (!seleccionado.value?.permission || !can('menus.editar')) return;
+  router.visit(route('menu-items.toggle-visibility', [seleccionado.value.id, rol.id]), {
+    method: 'post',
+    preserveScroll: true,
+    preserveState: false,
+    only: ['items', 'flash'],
+    onSuccess: () => cerrarModales(),
+  });
+}
 </script>

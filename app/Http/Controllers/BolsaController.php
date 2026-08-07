@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bolsa;
 use App\Models\Cargo;
+use App\Models\Area;
 use App\Models\Entidad;
 use App\Models\User;
 use App\Services\NotificarDocumentosChofer;
@@ -16,17 +17,28 @@ class BolsaController extends Controller
 {
     public function index(Request $request)
     {
-        $items = Bolsa::with(['cargo', 'entidad'])
+        $items = Bolsa::with(['cargo', 'area', 'entidad'])
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('nombre', 'like', "%{$s}%")
                     ->orWhere('apellidos', 'like', "%{$s}%")
                     ->orWhere('ci', 'like', "%{$s}%");
             }))
+            ->when($request->id_cargo, fn ($q, $c) => $q->where('id_cargo', $c))
+            ->when($request->id_area, fn ($q, $a) => $q->where('id_area', $a))
             ->when($entidadId = session('entidad_activa_id'), fn ($q) => $q->where('id_entidad', $entidadId))
             ->orderBy('nombre')
             ->paginate(20);
 
-        $cargos = Cargo::orderBy('nombre')->get(['id', 'nombre']);
+        $entidadActiva = (int) session('entidad_activa_id');
+
+        $cargos = Cargo::query()
+            ->when($entidadActiva, fn ($q) => $q->where('id_entidad', $entidadActiva))
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+        $areas = Area::query()
+            ->when($entidadActiva, fn ($q) => $q->where('id_entidad', $entidadActiva))
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
         $entidades = Entidad::orderBy('nombre')->get(['id', 'nombre']);
         $roles = Role::orderBy('name')->get(['id', 'name']);
 
@@ -34,10 +46,11 @@ class BolsaController extends Controller
             'title' => 'Bolsa',
             'bolsa' => $items,
             'cargos' => $cargos,
+            'areas' => $areas,
             'entidades' => $entidades,
             'roles' => $roles,
             'esSuperadmin' => $request->user()->hasRole('SUPERADMIN'),
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'id_cargo', 'id_area']),
         ]);
     }
 
@@ -119,6 +132,7 @@ class BolsaController extends Controller
             'telefono' => ['nullable', 'max:100'],
             'email' => ['nullable', 'email', 'max:255'],
             'id_cargo' => ['nullable', 'exists:cargos,id'],
+            'id_area' => ['nullable', 'exists:areas,id'],
             'id_entidad' => ['nullable', 'exists:entidades,id'],
         ];
     }

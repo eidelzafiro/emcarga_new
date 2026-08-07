@@ -49,6 +49,7 @@ use App\Http\Controllers\GruposController;
 use App\Http\Controllers\GruposEscalaController;
 use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
+use App\Http\Controllers\HojasRutaController;
 use App\Http\Controllers\IncidenciasController;
 use App\Http\Controllers\IndicadoresController;
 use App\Http\Controllers\InventarioController;
@@ -96,6 +97,7 @@ use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
 use App\Http\Controllers\TipoAgregadosController;
 use App\Http\Controllers\TipoEquiposController;
+use App\Http\Controllers\TiposMantenimientosController;
 use App\Http\Controllers\TipoIngresosController;
 use App\Http\Controllers\TipoNeumaticosController;
 use App\Http\Controllers\TiposAceitesController;
@@ -225,6 +227,9 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('giros', GirosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('hojas-ruta', HojasRutaController::class, ['parameters' => ['hojas-ruta' => 'hoja']])
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Comercial - Tablas faltantes (Fase 5.3 parte 2)
@@ -414,6 +419,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-equipos', TipoEquiposController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::resource('tipos-mantenimientos', TiposMantenimientosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
         Route::resource('tipos-agregados', TipoAgregadosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
@@ -501,6 +509,7 @@ Route::middleware('auth')->group(function () {
 
         // Técnica - Tablas faltantes (Fase 5.8)
         Route::resource('arrastres', ArrastresController::class)
+            ->parameters(['arrastres' => 'tractivo'])
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-tractivos', TiposTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -577,6 +586,8 @@ Route::middleware('auth')->group(function () {
             ->parameters(['menu-items' => 'menuItem']);
         Route::post('menu-items/{menuItem}/toggle-visibility/{role}', [MenuItemController::class, 'toggleVisibility'])
             ->name('menu-items.toggle-visibility');
+        Route::post('menu-items/reordenar', [MenuItemController::class, 'reordenar'])
+            ->name('menu-items.reordenar');
 
         // Catálogo unificado (Fase 6.1)
         Route::get('catalogo', [CatalogoController::class, 'tipos'])->name('catalogo.tipos');

@@ -9,7 +9,7 @@ class MenuItemSeeder extends Seeder
 {
     public function run(): void
     {
-        $ruta = database_path('menu_items_backup_2026-07-31.json');
+        $ruta = database_path('menu_items_backup_2026-08-06.json');
 
         if (! file_exists($ruta)) {
             $this->command?->warn('No se encontró el backup del menú en '.$ruta);

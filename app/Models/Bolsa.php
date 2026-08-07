@@ -37,6 +37,7 @@ class Bolsa extends Model
         'telefono',
         'email',
         'id_cargo',
+        'id_area',
         'id_entidad',
         'activo',
     ];
@@ -61,6 +62,11 @@ class Bolsa extends Model
     public function cargo(): BelongsTo
     {
         return $this->belongsTo(Cargo::class, 'id_cargo');
+    }
+
+    public function area(): BelongsTo
+    {
+        return $this->belongsTo(Area::class, 'id_area');
     }
 
     public function entidad(): BelongsTo

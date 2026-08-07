@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -22,7 +22,7 @@ import Checkbox from 'primevue/checkbox'
 import DatePicker from 'primevue/datepicker'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, filters: Object, provincias: Array, municipios: Array, sistemas: Array, entidadesPadre: Array })
+const props = defineProps({ items: { type: Object, default: null }, filters: { type: Object, default: () => ({}) }, provincias: { type: Array, default: () => [] }, municipios: { type: Array, default: () => [] }, sistemas: { type: Array, default: () => [] }, entidadesPadre: { type: Array, default: () => [] }, soloEntidad: { type: Object, default: null } })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
@@ -30,7 +30,16 @@ const editing = ref(null)
 const tabActivo = ref(0)
 const dt = ref()
 
+const solo = computed(() => props.soloEntidad != null)
+
 const form = ref(emptyForm())
+
+onMounted(() => {
+  if (solo.value && props.soloEntidad) {
+    openEdit(props.soloEntidad)
+    showForm.value = true
+  }
+})
 
 function emptyForm() {
   return {
@@ -171,44 +180,56 @@ function printGrid() {
 </script>
 
 <template>
-  <AppLayout title="Entidades">
+  <AppLayout :title="solo ? 'Mi Entidad' : 'Entidades'">
     <div class="card">
-      <Toolbar class="mb-4">
-        <template #start>
-          <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
-        </template>
-        <template #end>
-          <div class="flex gap-2">
-            <Button icon="pi pi-print" severity="info" outlined @click="printGrid" v-tooltip.left="'Imprimir'" />
-            <Button icon="pi pi-file-excel" severity="success" outlined @click="exportExcel" v-tooltip.left="'Exportar a Excel'" />
-            <InputText v-model="search" placeholder="Buscar..." />
-          </div>
-        </template>
-      </Toolbar>
+      <template v-if="solo">
+        <div class="mb-4 p-4 border border-primary-200 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+          <p class="text-sm text-surface-600 dark:text-surface-300">
+            <i class="pi pi-info-circle mr-2 text-primary" />
+            Su entidad no tiene subordinados. Solo puede editar los datos de su propia entidad.
+          </p>
+        </div>
+        <Button label="EDITAR MI ENTIDAD" icon="pi pi-pencil" severity="info" @click="openEdit(props.soloEntidad)" />
+      </template>
 
-      <DataTable ref="dt" :value="items.data" striped-rows paginator :rows="20" :total-records="items.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
-        <Column field="codigo" header="Código" sortable>
-          <template #body="{ data }">
-            <span :class="data.codigo ? '' : 'text-surface-400 italic'">{{ data.codigo ?? 'Sin código' }}</span>
+      <template v-else>
+        <Toolbar class="mb-4">
+          <template #start>
+            <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
           </template>
-        </Column>
-        <Column field="nombre" header="Nombre" sortable />
-        <Column field="abreviatura" header="Siglas" />
-        <Column field="nit" header="NIT" />
-        <Column header="Activo" style="width: 100px">
-          <template #body="{ data }">
-            <i v-if="data.activo !== undefined" :class="data.activo ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />
-          </template>
-        </Column>
-        <Column header="Acciones" :exportable="false" style="width: 120px">
-          <template #body="{ data }">
-            <div class="flex gap-1">
-              <Button icon="pi pi-pencil" rounded text severity="info" @click="openEdit(data)" />
-              <Button icon="pi pi-trash" rounded text severity="danger" @click="destroyItem(data.id)" />
+          <template #end>
+            <div class="flex gap-2">
+              <Button icon="pi pi-print" severity="info" outlined @click="printGrid" v-tooltip.left="'Imprimir'" />
+              <Button icon="pi pi-file-excel" severity="success" outlined @click="exportExcel" v-tooltip.left="'Exportar a Excel'" />
+              <InputText v-model="search" placeholder="Buscar..." />
             </div>
           </template>
-        </Column>
-      </DataTable>
+        </Toolbar>
+
+        <DataTable ref="dt" :value="items.data" striped-rows paginator :rows="20" :total-records="items.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
+          <Column field="codigo" header="Código" sortable>
+            <template #body="{ data }">
+              <span :class="data.codigo ? '' : 'text-surface-400 italic'">{{ data.codigo ?? 'Sin código' }}</span>
+            </template>
+          </Column>
+          <Column field="nombre" header="Nombre" sortable />
+          <Column field="abreviatura" header="Siglas" />
+          <Column field="nit" header="NIT" />
+          <Column header="Activo" style="width: 100px">
+            <template #body="{ data }">
+              <i v-if="data.activo !== undefined" :class="data.activo ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />
+            </template>
+          </Column>
+          <Column header="Acciones" :exportable="false" style="width: 120px">
+            <template #body="{ data }">
+              <div class="flex gap-1">
+                <Button icon="pi pi-pencil" rounded text severity="info" @click="openEdit(data)" />
+                <Button icon="pi pi-trash" rounded text severity="danger" @click="destroyItem(data.id)" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </template>
     </div>
 
     <Dialog v-model:visible="showForm" header="DATOS DE LA ENTIDAD" modal :style="{ width: '750px' }" :closable="true">
@@ -229,7 +250,7 @@ function printGrid() {
                 <label class="form-label">CODIGO</label>
                 <InputText v-model="form.codigo" class="w-full" />
               </div>
-              <div class="form-field">
+              <div class="form-field" v-if="!solo">
                 <label class="form-label">ENTIDAD PADRE</label>
                 <Select v-model="form.parent_id" :options="entidadesPadre.filter(e => !editing || e.id !== editing.id)" optionLabel="abreviatura" optionValue="id" placeholder="Ninguna (raíz)" class="w-full" :showClear="true" />
               </div>

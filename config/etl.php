@@ -878,8 +878,9 @@ return [
         ],
 
         // Arrastres: el legacy NO tiene tabla de arrastres (tec_naves está vacía).
-        // Los arrastres son tractivos cuyo idtipotractivos ∈ tec_tipoarrastres (100-197).
-        // Migración dedicada migrarArrastres() → arrastres + migrarAsociaciones() → arrastre_tractivo.
+        // Los arrastres son tractivos idgrupo=8 (grupo ARRASTRES), unificados en
+        // `tractivos`. Migración dedicada migrarArrastres() re-asocia tipo y entidad;
+        // migrarAsociaciones() → arrastre_tractivo. No config de tabla genérica.
         'arrastres' => [
             'legacy' => 'tec_tipoarrastres',
             'pk' => 'idtipoarrastres',
@@ -1478,6 +1479,11 @@ return [
             'pk' => 'idtipomtto',
             'columnas' => [
                 'tipomtto' => 'nombre',
+                'kmsmax' => 'kms_max',
+                'frecuencia' => 'frecuencia',
+                'mttobase' => 'mtto_base',
+                'holgura' => 'holgura',
+                'mttos' => 'mttos',
             ],
             'defaults' => [
                 'activo' => true,
@@ -1560,6 +1566,7 @@ return [
                 'idmarca' => 'id_marca',
                 'idmodelo' => 'id_modelo',
                 'idpaises' => 'id_pais',
+                'idtipomtto' => 'id_tipo_mantenimiento',
                 'fabricacion' => 'fabricacion',
                 'bat_cant' => 'bat_cant',
                 'bat_amp' => 'bat_amp',
@@ -1588,7 +1595,7 @@ return [
             ],
             'cero_a_null' => [
                 'id_marca', 'id_modelo', 'id_pais', 'id_medida_del', 'id_medida_tra', 'id_medida_res',
-                'id_tipo_combustible', 'id_lubricante_motor', 'id_lubricante_cubo',
+                'id_tipo_combustible', 'id_lubricante_motor', 'id_lubricante_cubo', 'id_tipo_mantenimiento',
             ],
             'int_or_null' => [
                 'fabricacion',
@@ -1603,6 +1610,7 @@ return [
                 'id_tipo_combustible' => 'tipos_combustibles',
                 'id_lubricante_motor' => 'lubricantes',
                 'id_lubricante_cubo' => 'lubricantes',
+                'id_tipo_mantenimiento' => 'tipos_mantenimiento',
             ],
             'defaults' => [
                 'activo' => true,

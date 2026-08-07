@@ -9,6 +9,7 @@ use App\Models\MedidaNeumatico;
 use App\Models\Modelo;
 use App\Models\Pais;
 use App\Models\TipoCombustible;
+use App\Models\TiposMantenimiento;
 use App\Models\TipoTractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,7 +35,7 @@ class TiposTractivosController extends Controller
 
     public function index(Request $request)
     {
-        $query = TipoTractivo::with(['marca', 'modelo', 'pais', 'tipoCombustible']);
+        $query = TipoTractivo::with(['marca', 'modelo', 'pais', 'tipoMantenimiento', 'tipoCombustible']);
 
         $search = $request->get('search');
         if ($search) {
@@ -44,17 +45,44 @@ class TiposTractivosController extends Controller
             });
         }
 
+        if ($request->filled('id_marca')) {
+            $query->where('id_marca', $request->get('id_marca'));
+        }
+        if ($request->filled('id_modelo')) {
+            $query->where('id_modelo', $request->get('id_modelo'));
+        }
+        if ($request->filled('tipo_equipo')) {
+            $query->where('tipo_equipo', 'like', "%{$request->get('tipo_equipo')}%");
+        }
+
         $items = $query->orderBy($this->getSortField())->paginate(20);
+
+        $items->getCollection()->transform(function ($item) {
+            $partes = array_filter([
+                $item->marca?->nombre,
+                $item->modelo?->nombre,
+            ]);
+            $item->nombre = $partes ? implode(' - ', $partes) : ('Tipo '.$item->id);
+
+            return $item;
+        });
 
         return Inertia::render('Catalogo/Index', [
             'title' => $this->getTitle(),
             'items' => $items,
-            'filters' => $request->only('search'),
+            'filters' => $request->only(['search', 'id_marca', 'id_modelo', 'tipo_equipo']),
             'catalogConfig' => [
                 'route' => $this->getRouteName(),
                 'title' => $this->getTitle(),
                 'codigoManual' => false,
+                'hideNombre' => true,
                 'fields' => ['nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true]],
+                'gridOnly' => ['id_marca', 'id_modelo', 'id_pais', 'tipo_equipo', 'id_tipo_mantenimiento'],
+                'filters' => [
+                    'id_marca' => $this->filterOptions(Marca::class, 'id_marca'),
+                    'id_modelo' => $this->filterOptions(Modelo::class, 'id_modelo'),
+                    'tipo_equipo' => $this->filterTipoEquipo(),
+                ],
                 'extra' => $this->getExtraFields(),
             ],
         ]);
@@ -66,6 +94,7 @@ class TiposTractivosController extends Controller
             'id_marca' => $this->select('Marca', Marca::class),
             'id_modelo' => $this->select('Modelo', Modelo::class),
             'id_pais' => $this->select('País', Pais::class),
+            'id_tipo_mantenimiento' => $this->select('Tipo de mantenimiento', TiposMantenimiento::class),
             'fabricacion' => $this->num('Año fabricación'),
             'tipo_equipo' => $this->texto('Tipo de equipo'),
             'bat_cant' => $this->num('Baterías (cant)'),
@@ -108,7 +137,7 @@ class TiposTractivosController extends Controller
         return $rules;
     }
 
-    private function base(string $etiqueta, string $tipo): array
+        private function base(string $etiqueta, string $tipo): array
     {
         return ['label' => $etiqueta, 'type' => $tipo, 'required' => false, 'grid' => false];
     }

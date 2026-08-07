@@ -13,6 +13,36 @@ class EntidadesController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
+
+        // Determinación del modo de acceso:
+        //  - Si el usuario pertenece a una entidad SIN subordinados (hoja),
+        //    entra en modo "solo edición de su propia entidad": sin grid,
+        //    sin crear ni eliminar.
+        //  - En otro caso (matriz / entidad con subordinados / sin entidad)
+        //    conserva el grid completo.
+        $soloEntidad = null;
+        if ($user && $user->id_entidad) {
+            $miEntidad = Entidad::find($user->id_entidad);
+            if ($miEntidad && ! $miEntidad->children()->exists()) {
+                $soloEntidad = $miEntidad;
+            }
+        }
+
+        $provincias = Provincia::orderBy('nombre')->get(['id', 'nombre']);
+        $municipios = Municipio::orderBy('nombre')->get(['id', 'nombre', 'id_provincia']);
+        $sistemas = TipoSistema::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']);
+
+        if ($soloEntidad) {
+            return Inertia::render('Entidades/Index', [
+                'title' => 'Mi Entidad',
+                'soloEntidad' => $soloEntidad,
+                'provincias' => $provincias,
+                'municipios' => $municipios,
+                'sistemas' => $sistemas,
+            ]);
+        }
+
         $query = Entidad::query();
         $search = $request->get('search');
         if ($search) {
@@ -25,9 +55,6 @@ class EntidadesController extends Controller
             });
         }
 
-        $provincias = Provincia::orderBy('nombre')->get(['id', 'nombre']);
-        $municipios = Municipio::orderBy('nombre')->get(['id', 'nombre', 'id_provincia']);
-        $sistemas = TipoSistema::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']);
         $entidadesPadre = Entidad::orderBy('nombre')->get(['id', 'codigo', 'nombre', 'abreviatura']);
 
         return Inertia::render('Entidades/Index', [
@@ -43,6 +70,10 @@ class EntidadesController extends Controller
 
     public function store(Request $request)
     {
+        if ($this->modoSoloEntidad()) {
+            return back()->with('error', 'Su entidad no tiene subordinados. No puede crear entidades.');
+        }
+
         $data = $request->validate($this->rules());
         Entidad::create($data);
 
@@ -52,6 +83,11 @@ class EntidadesController extends Controller
     public function update(Request $request, $id)
     {
         $item = Entidad::findOrFail($id);
+
+        if ($this->modoSoloEntidad() && (int) $item->id !== (int) auth()->user()->id_entidad) {
+            return back()->with('error', 'Solo puede editar su propia entidad.');
+        }
+
         $data = $request->validate($this->rules($id));
         $item->update($data);
 
@@ -60,10 +96,25 @@ class EntidadesController extends Controller
 
     public function destroy($id)
     {
+        if ($this->modoSoloEntidad()) {
+            return back()->with('error', 'Su entidad no tiene subordinados. No puede eliminar entidades.');
+        }
+
         $item = Entidad::findOrFail($id);
         $item->delete();
 
         return redirect()->back()->with('success', 'Eliminado correctamente');
+    }
+
+    private function modoSoloEntidad(): bool
+    {
+        $user = auth()->user();
+        if (! $user || ! $user->id_entidad) {
+            return false;
+        }
+        $miEntidad = Entidad::find($user->id_entidad);
+
+        return $miEntidad && ! $miEntidad->children()->exists();
     }
 
     private function rules($id = null): array

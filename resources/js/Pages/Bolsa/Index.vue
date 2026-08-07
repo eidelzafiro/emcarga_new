@@ -15,9 +15,11 @@ import Dialog from 'primevue/dialog'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ bolsa: Object, filters: Object, cargos: Array, entidades: Array, roles: Array, esSuperadmin: Boolean })
+const props = defineProps({ bolsa: Object, filters: Object, cargos: Array, areas: Array, entidades: Array, roles: Array, esSuperadmin: Boolean })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
+const filtroCargo = ref(props.filters?.id_cargo || null)
+const filtroArea = ref(props.filters?.id_area || null)
 const showForm = ref(false)
 const editing = ref(null)
 const isChofer = ref(false)
@@ -30,7 +32,7 @@ const emptyForm = () => ({
   chequeo_medico_emision: null, chequeo_medico_vencimiento: null,
   reubicacion_emision: null, reubicacion_vencimiento: null,
   psicometrico_emision: null, psicometrico_vencimiento: null,
-  direccion: '', telefono: '', email: '', id_cargo: null, id_entidad: null,
+  direccion: '', telefono: '', email: '', id_cargo: null, id_area: null, id_entidad: null,
   crear_usuario: false, rol: 'RECHUM',
 })
 
@@ -42,7 +44,11 @@ const nivelEducOpciones = ['6to Grado', '9no Grado', '12mo Grado', 'Técnico Med
 const estadoCivilOpciones = ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Unión Libre']
 
 watch(search, () => {
-  router.get(route('bolsa.index'), { search: search.value }, { preserveState: true, replace: true })
+  router.get(route('bolsa.index'), { search: search.value, id_cargo: filtroCargo.value, id_area: filtroArea.value }, { preserveState: true, replace: true })
+})
+
+watch([filtroCargo, filtroArea], () => {
+  router.get(route('bolsa.index'), { search: search.value, id_cargo: filtroCargo.value, id_area: filtroArea.value }, { preserveState: true, replace: true })
 })
 
 watch(() => form.value.id_cargo, (val) => {
@@ -79,7 +85,7 @@ function openEdit(item) {
     psicometrico_emision: item.psicometrico_emision ? new Date(item.psicometrico_emision) : null,
     psicometrico_vencimiento: item.psicometrico_vencimiento ? new Date(item.psicometrico_vencimiento) : null,
     direccion: item.direccion || '', telefono: item.telefono || '', email: item.email || '',
-    id_cargo: item.id_cargo, id_entidad: item.id_entidad,
+    id_cargo: item.id_cargo, id_area: item.id_area, id_entidad: item.id_entidad,
   }
   isChofer.value = item.cargo?.nombre?.toUpperCase().includes('CHOFER') || false
   showForm.value = true
@@ -103,7 +109,11 @@ function submit() {
           <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
         </template>
         <template #end>
-          <InputText v-model="search" placeholder="Buscar..." />
+          <div class="flex gap-2 flex-wrap">
+            <Select v-model="filtroArea" :options="areas" optionLabel="nombre" optionValue="id" placeholder="Filtrar por área" class="w-56" showClear />
+            <Select v-model="filtroCargo" :options="cargos" optionLabel="nombre" optionValue="id" placeholder="Filtrar por cargo" class="w-56" showClear />
+            <InputText v-model="search" placeholder="Buscar..." />
+          </div>
         </template>
       </Toolbar>
 
@@ -119,6 +129,7 @@ function submit() {
           </template>
         </Column>
         <Column field="cargo.nombre" header="Cargo" />
+        <Column field="area.nombre" header="Área" />
         <Column field="entidad.nombre" header="Entidad" />
         <Column header="Acciones" style="width: 120px">
           <template #body="{ data }">
@@ -183,6 +194,10 @@ function submit() {
             <div>
               <label class="block mb-1 font-medium">Cargo</label>
               <Select v-model="form.id_cargo" :options="cargos" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Área</label>
+              <Select v-model="form.id_area" :options="areas" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
             </div>
             <div v-if="esSuperadmin">
               <label class="block mb-1 font-medium">Entidad</label>

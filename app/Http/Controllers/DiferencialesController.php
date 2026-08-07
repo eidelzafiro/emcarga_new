@@ -39,6 +39,14 @@ class DiferencialesController extends Controller
             'numero_serie' => 'nullable|string|max:100',
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'estado' => 'nullable|string|max:50',
+            // Ficha técnica
+            'durabilidad' => 'nullable|numeric',
+            'relacion' => 'nullable|string|max:50',
+            'ancho' => 'nullable|numeric',
+            'cantidad_lubricante' => 'nullable|numeric',
+            'cantidad' => 'nullable|numeric',
+            'kms_acumulados' => 'nullable|numeric',
+            'capacidad_carter' => 'nullable|numeric',
         ]);
 
         $validated['id_entidad'] = (int) session('entidad_activa_id');
@@ -59,6 +67,14 @@ class DiferencialesController extends Controller
             'numero_serie' => 'nullable|string|max:100',
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'estado' => 'nullable|string|max:50',
+            // Ficha técnica
+            'durabilidad' => 'nullable|numeric',
+            'relacion' => 'nullable|string|max:50',
+            'ancho' => 'nullable|numeric',
+            'cantidad_lubricante' => 'nullable|numeric',
+            'cantidad' => 'nullable|numeric',
+            'kms_acumulados' => 'nullable|numeric',
+            'capacidad_carter' => 'nullable|numeric',
         ]);
 
         $diferencial->update($validated);

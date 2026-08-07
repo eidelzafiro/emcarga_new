@@ -107,6 +107,7 @@ class PermissionSeeder extends Seeder
             'colores.ver', 'colores.crear', 'colores.editar', 'colores.eliminar',
             'talleres.ver', 'talleres.crear', 'talleres.editar', 'talleres.eliminar',
             'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
+            'tipos-mantenimientos.ver', 'tipos-mantenimientos.crear', 'tipos-mantenimientos.editar', 'tipos-mantenimientos.eliminar',
             'tipos-agregados.ver', 'tipos-agregados.crear', 'tipos-agregados.editar', 'tipos-agregados.eliminar',
             'tipos-neumaticos.ver', 'tipos-neumaticos.crear', 'tipos-neumaticos.editar', 'tipos-neumaticos.eliminar',
             'posiciones-neumaticos.ver', 'posiciones-neumaticos.crear', 'posiciones-neumaticos.editar', 'posiciones-neumaticos.eliminar',
@@ -173,6 +174,8 @@ class PermissionSeeder extends Seeder
 
             // Técnica - Tablas faltantes
             'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
+            'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
+            'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
             'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
             'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',
             'motivos-baja-bateria.ver', 'motivos-baja-bateria.crear', 'motivos-baja-bateria.editar', 'motivos-baja-bateria.eliminar',
@@ -247,11 +250,14 @@ class PermissionSeeder extends Seeder
                 'grupos.ver', 'grupos.crear', 'grupos.editar', 'grupos.eliminar',
                 'talleres.ver', 'talleres.crear', 'talleres.editar', 'talleres.eliminar',
                 'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
+                'tipos-mantenimientos.ver', 'tipos-mantenimientos.crear', 'tipos-mantenimientos.editar', 'tipos-mantenimientos.eliminar',
                 'tipos-agregados.ver', 'tipos-agregados.crear', 'tipos-agregados.editar', 'tipos-agregados.eliminar',
                 'tipos-neumaticos.ver', 'tipos-neumaticos.crear', 'tipos-neumaticos.editar', 'tipos-neumaticos.eliminar',
                 'posiciones-neumaticos.ver', 'posiciones-neumaticos.crear', 'posiciones-neumaticos.editar', 'posiciones-neumaticos.eliminar',
                 // Técnica - Tablas faltantes
-                'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
+                                 'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
+                'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
+                'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
                 'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
 
                 'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',

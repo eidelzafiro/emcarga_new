@@ -1,0 +1,1002 @@
+[
+    {
+        "id": 1,
+        "parent_id": null,
+        "label": "Dashboard",
+        "icon": "pi pi-home",
+        "route": "dashboard",
+        "permission": "dashboard.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 2,
+        "parent_id": null,
+        "label": "Flota",
+        "icon": "pi pi-truck",
+        "route": null,
+        "permission": null,
+        "orden": 5,
+        "activo": true
+    },
+    {
+        "id": 3,
+        "parent_id": 2,
+        "label": "Vehículos",
+        "icon": "pi pi-truck",
+        "route": "tractivos.index",
+        "permission": "tractivos.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 4,
+        "parent_id": 2,
+        "label": "Motores",
+        "icon": "pi pi-cog",
+        "route": "motores.index",
+        "permission": "motores.ver",
+        "orden": 2,
+        "activo": true
+    },
+    {
+        "id": 5,
+        "parent_id": 2,
+        "label": "Cajas",
+        "icon": "pi pi-cog",
+        "route": "cajas.index",
+        "permission": "cajas.ver",
+        "orden": 3,
+        "activo": true
+    },
+    {
+        "id": 6,
+        "parent_id": 2,
+        "label": "Diferenciales",
+        "icon": "pi pi-cog",
+        "route": "diferenciales.index",
+        "permission": "diferenciales.ver",
+        "orden": 4,
+        "activo": true
+    },
+    {
+        "id": 7,
+        "parent_id": 2,
+        "label": "Baterías",
+        "icon": "pi pi-bolt",
+        "route": "baterias.index",
+        "permission": "baterias.ver",
+        "orden": 5,
+        "activo": true
+    },
+    {
+        "id": 8,
+        "parent_id": 2,
+        "label": "Neumáticos",
+        "icon": "pi pi-cog",
+        "route": "neumaticos.index",
+        "permission": "neumaticos.ver",
+        "orden": 6,
+        "activo": true
+    },
+    {
+        "id": 9,
+        "parent_id": 2,
+        "label": "Lubricantes",
+        "icon": "pi pi-eye-dropper",
+        "route": "lubricantes.index",
+        "permission": "lubricantes.ver",
+        "orden": 7,
+        "activo": true
+    },
+    {
+        "id": 10,
+        "parent_id": 2,
+        "label": "Otros Agregados",
+        "icon": "pi pi-cog",
+        "route": "otros-agregados.index",
+        "permission": "otros-agregados.ver",
+        "orden": 8,
+        "activo": true
+    },
+    {
+        "id": 11,
+        "parent_id": 2,
+        "label": "Arrastres",
+        "icon": "pi pi-truck",
+        "route": "arrastres.index",
+        "permission": "arrastres.ver",
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 12,
+        "parent_id": 2,
+        "label": "Motivos Entrada Taller",
+        "icon": "pi pi-sign-in",
+        "route": "motivos-entrada-taller.index",
+        "permission": "motivos-entrada-taller.ver",
+        "orden": 11,
+        "activo": true
+    },
+    {
+        "id": 13,
+        "parent_id": 2,
+        "label": "Clasif. OT",
+        "icon": "pi pi-tags",
+        "route": "clasificaciones-ordenes-taller.index",
+        "permission": "clasificaciones-ordenes-taller.ver",
+        "orden": 13,
+        "activo": true
+    },
+    {
+        "id": 14,
+        "parent_id": 2,
+        "label": "Motivos Baja Batería",
+        "icon": "pi pi-bolt",
+        "route": "motivos-baja-bateria.index",
+        "permission": "motivos-baja-bateria.ver",
+        "orden": 16,
+        "activo": true
+    },
+    {
+        "id": 15,
+        "parent_id": 2,
+        "label": "Historial Tractivos",
+        "icon": "pi pi-history",
+        "route": "historial-tractivos.index",
+        "permission": "historial-tractivos.ver",
+        "orden": 21,
+        "activo": true
+    },
+    {
+        "id": 16,
+        "parent_id": 2,
+        "label": "Choferes",
+        "icon": "pi pi-user",
+        "route": "choferes.index",
+        "permission": "choferes.ver",
+        "orden": 32,
+        "activo": true
+    },
+    {
+        "id": 17,
+        "parent_id": 2,
+        "label": "Estad. Explotación",
+        "icon": "pi pi-chart-line",
+        "route": "estadisticas-explotacion.index",
+        "permission": "estadisticas-explotacion.ver",
+        "orden": 33,
+        "activo": true
+    },
+    {
+        "id": 18,
+        "parent_id": null,
+        "label": "Taller",
+        "icon": "pi pi-wrench",
+        "route": "taller.index",
+        "permission": "taller.ver",
+        "orden": 6,
+        "activo": true
+    },
+    {
+        "id": 19,
+        "parent_id": null,
+        "label": "Comercial",
+        "icon": "pi pi-briefcase",
+        "route": null,
+        "permission": null,
+        "orden": 7,
+        "activo": true
+    },
+    {
+        "id": 20,
+        "parent_id": 19,
+        "label": "Clientes",
+        "icon": "pi pi-users",
+        "route": "clientes.index",
+        "permission": "clientes.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 21,
+        "parent_id": 19,
+        "label": "Lugares",
+        "icon": "pi pi-map-marker",
+        "route": "lugares.index",
+        "permission": "lugares.ver",
+        "orden": 2,
+        "activo": true
+    },
+    {
+        "id": 22,
+        "parent_id": 19,
+        "label": "Distancias",
+        "icon": "pi pi-arrows-alt",
+        "route": "distancias.index",
+        "permission": "distancias.ver",
+        "orden": 3,
+        "activo": true
+    },
+    {
+        "id": 23,
+        "parent_id": 19,
+        "label": "Acuerdos",
+        "icon": "pi pi-file",
+        "route": "acuerdos.index",
+        "permission": "acuerdos.ver",
+        "orden": 4,
+        "activo": true
+    },
+    {
+        "id": 24,
+        "parent_id": 19,
+        "label": "Solicitudes",
+        "icon": "pi pi-envelope",
+        "route": "solicitudes.index",
+        "permission": "solicitudes.ver",
+        "orden": 5,
+        "activo": true
+    },
+    {
+        "id": 25,
+        "parent_id": 19,
+        "label": "Cartas Porte",
+        "icon": "pi pi-file",
+        "route": "giros.index",
+        "permission": "giros.ver",
+        "orden": 6,
+        "activo": true
+    },
+    {
+        "id": 26,
+        "parent_id": 19,
+        "label": "Alertas",
+        "icon": "pi pi-bell",
+        "route": "alertas.index",
+        "permission": "alertas.ver",
+        "orden": 7,
+        "activo": true
+    },
+    {
+        "id": 27,
+        "parent_id": 19,
+        "label": "Tarifas",
+        "icon": "pi pi-dollar",
+        "route": "tarifas.index",
+        "permission": "tarifas.ver",
+        "orden": 8,
+        "activo": true
+    },
+    {
+        "id": 28,
+        "parent_id": 19,
+        "label": "Demandas",
+        "icon": "pi pi-chart-bar",
+        "route": "demandas.index",
+        "permission": "demandas.ver",
+        "orden": 9,
+        "activo": true
+    },
+    {
+        "id": 29,
+        "parent_id": 19,
+        "label": "Indicadores",
+        "icon": "pi pi-chart-line",
+        "route": "indicadores.index",
+        "permission": "indicadores.ver",
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 30,
+        "parent_id": 19,
+        "label": "Pizarra Tractivos",
+        "icon": "pi pi-th-large",
+        "route": "pizarra-tractivos.index",
+        "permission": "pizarra-tractivos.ver",
+        "orden": 11,
+        "activo": true
+    },
+    {
+        "id": 31,
+        "parent_id": 19,
+        "label": "Turnos",
+        "icon": "pi pi-clock",
+        "route": "turnos-comerciales.index",
+        "permission": "turnos-comerciales.ver",
+        "orden": 12,
+        "activo": true
+    },
+    {
+        "id": 32,
+        "parent_id": 19,
+        "label": "Otros Ingresos Pre",
+        "icon": "pi pi-plus-circle",
+        "route": "otros-ingresos-pre.index",
+        "permission": "otros-ingresos-pre.ver",
+        "orden": 14,
+        "activo": true
+    },
+    {
+        "id": 33,
+        "parent_id": 93,
+        "label": "Config. Modelo",
+        "icon": "pi pi-sliders-h",
+        "route": "configuraciones-modelo.index",
+        "permission": "configuraciones-modelo.ver",
+        "orden": 96,
+        "activo": true
+    },
+    {
+        "id": 34,
+        "parent_id": 19,
+        "label": "Contenedores",
+        "icon": "pi pi-box",
+        "route": "contenedores.index",
+        "permission": "contenedores.ver",
+        "orden": 22,
+        "activo": true
+    },
+    {
+        "id": 35,
+        "parent_id": 19,
+        "label": "Categorías Productos",
+        "icon": "pi pi-tags",
+        "route": "categorias-productos.index",
+        "permission": "categorias-productos.ver",
+        "orden": 23,
+        "activo": true
+    },
+    {
+        "id": 36,
+        "parent_id": 19,
+        "label": "Devoluciones",
+        "icon": "pi pi-undo",
+        "route": "devoluciones.index",
+        "permission": "devoluciones.ver",
+        "orden": 26,
+        "activo": true
+    },
+    {
+        "id": 37,
+        "parent_id": null,
+        "label": "Facturación",
+        "icon": "pi pi-file",
+        "route": null,
+        "permission": null,
+        "orden": 8,
+        "activo": true
+    },
+    {
+        "id": 38,
+        "parent_id": 37,
+        "label": "Facturas",
+        "icon": "pi pi-file",
+        "route": "facturas.index",
+        "permission": "facturas.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 39,
+        "parent_id": 37,
+        "label": "Prefacturas",
+        "icon": "pi pi-file-edit",
+        "route": "prefacturas.index",
+        "permission": "prefacturas.ver",
+        "orden": 2,
+        "activo": true
+    },
+    {
+        "id": 40,
+        "parent_id": null,
+        "label": "RRHH",
+        "icon": "pi pi-users",
+        "route": null,
+        "permission": null,
+        "orden": 9,
+        "activo": true
+    },
+    {
+        "id": 41,
+        "parent_id": 40,
+        "label": "Bolsa",
+        "icon": "pi pi-user",
+        "route": "bolsa.index",
+        "permission": "bolsa.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 42,
+        "parent_id": 40,
+        "label": "Historial",
+        "icon": "pi pi-history",
+        "route": "historial-movimientos.index",
+        "permission": "historial-movimientos.ver",
+        "orden": 3,
+        "activo": true
+    },
+    {
+        "id": 43,
+        "parent_id": 40,
+        "label": "Salarios",
+        "icon": "pi pi-dollar",
+        "route": "salarios.index",
+        "permission": "salarios.ver",
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 44,
+        "parent_id": 40,
+        "label": "Salarios Admin.",
+        "icon": "pi pi-briefcase",
+        "route": "salarios-administrativos.index",
+        "permission": "salarios-administrativos.ver",
+        "orden": 11,
+        "activo": true
+    },
+    {
+        "id": 45,
+        "parent_id": 40,
+        "label": "OSDES",
+        "icon": "pi pi-building",
+        "route": "osdes.index",
+        "permission": "osdes.ver",
+        "orden": 14,
+        "activo": true
+    },
+    {
+        "id": 46,
+        "parent_id": 40,
+        "label": "Firmas",
+        "icon": "pi pi-file-edit",
+        "route": "firmas.index",
+        "permission": "firmas.ver",
+        "orden": 15,
+        "activo": true
+    },
+    {
+        "id": 47,
+        "parent_id": 40,
+        "label": "Medios Protección",
+        "icon": "pi pi-shield",
+        "route": "medios-proteccion.index",
+        "permission": "medios-proteccion.ver",
+        "orden": 18,
+        "activo": true
+    },
+    {
+        "id": 48,
+        "parent_id": 40,
+        "label": "Centros Costo",
+        "icon": "pi pi-dollar",
+        "route": "centros-costos.index",
+        "permission": "centros-costos.ver",
+        "orden": 38,
+        "activo": true
+    },
+    {
+        "id": 49,
+        "parent_id": 40,
+        "label": "Pagos Adic. Cargo",
+        "icon": "pi pi-money-bill",
+        "route": "pagos-adicionales-cargo.index",
+        "permission": "pagos-adicionales-cargo.ver",
+        "orden": 43,
+        "activo": true
+    },
+    {
+        "id": 50,
+        "parent_id": 40,
+        "label": "Empleados",
+        "icon": "pi pi-users",
+        "route": "empleados.index",
+        "permission": "empleados.ver",
+        "orden": 47,
+        "activo": true
+    },
+    {
+        "id": 51,
+        "parent_id": 40,
+        "label": "Desc. Empleados",
+        "icon": "pi pi-minus-circle",
+        "route": "descuentos-empleados.index",
+        "permission": "descuentos-empleados.ver",
+        "orden": 48,
+        "activo": true
+    },
+    {
+        "id": 52,
+        "parent_id": 40,
+        "label": "Vacaciones",
+        "icon": "pi pi-calendar",
+        "route": "vacaciones.index",
+        "permission": "vacaciones.ver",
+        "orden": 49,
+        "activo": true
+    },
+    {
+        "id": 53,
+        "parent_id": null,
+        "label": "Contabilidad",
+        "icon": "pi pi-book",
+        "route": null,
+        "permission": null,
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 54,
+        "parent_id": 53,
+        "label": "Conciliaciones",
+        "icon": "pi pi-check-circle",
+        "route": "conciliaciones.index",
+        "permission": "conciliaciones.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 55,
+        "parent_id": 53,
+        "label": "Otros Gastos",
+        "icon": "pi pi-dollar",
+        "route": "otros-gastos.index",
+        "permission": "otros-gastos.ver",
+        "orden": 3,
+        "activo": true
+    },
+    {
+        "id": 56,
+        "parent_id": 53,
+        "label": "Carga Combustible",
+        "icon": "pi pi-gauge",
+        "route": "combustible-cargas.index",
+        "permission": "combustible-cargas.ver",
+        "orden": 4,
+        "activo": true
+    },
+    {
+        "id": 57,
+        "parent_id": 53,
+        "label": "Descarga Combustible",
+        "icon": "pi pi-download",
+        "route": "combustible-descargas.index",
+        "permission": "combustible-descargas.ver",
+        "orden": 5,
+        "activo": true
+    },
+    {
+        "id": 58,
+        "parent_id": 53,
+        "label": "Inventario",
+        "icon": "pi pi-box",
+        "route": "inventario.index",
+        "permission": "inventario.ver",
+        "orden": 6,
+        "activo": true
+    },
+    {
+        "id": 59,
+        "parent_id": 53,
+        "label": "Vales",
+        "icon": "pi pi-ticket",
+        "route": "vales.index",
+        "permission": "vales.ver",
+        "orden": 7,
+        "activo": true
+    },
+    {
+        "id": 60,
+        "parent_id": 53,
+        "label": "Servicentros",
+        "icon": "pi pi-map",
+        "route": "servicentros.index",
+        "permission": "servicentros.ver",
+        "orden": 8,
+        "activo": true
+    },
+    {
+        "id": 61,
+        "parent_id": 53,
+        "label": "Firmas Autorizadas",
+        "icon": "pi pi-pencil",
+        "route": "firmas-autorizadas.index",
+        "permission": "firmas-autorizadas.ver",
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 62,
+        "parent_id": 53,
+        "label": "Reportes Costos",
+        "icon": "pi pi-chart-line",
+        "route": "reportes-costos.index",
+        "permission": "reportes-costos.ver",
+        "orden": 11,
+        "activo": true
+    },
+    {
+        "id": 63,
+        "parent_id": 53,
+        "label": "Estados Tarjetas",
+        "icon": "pi pi-credit-card",
+        "route": "estados-tarjetas.index",
+        "permission": "estados-tarjetas.ver",
+        "orden": 12,
+        "activo": true
+    },
+    {
+        "id": 64,
+        "parent_id": 53,
+        "label": "Comb. Lubricantes",
+        "icon": "pi pi-eye-dropper",
+        "route": "combustibles-lubricantes.index",
+        "permission": "combustibles-lubricantes.ver",
+        "orden": 14,
+        "activo": true
+    },
+    {
+        "id": 65,
+        "parent_id": 53,
+        "label": "Pagos",
+        "icon": "pi pi-money-bill",
+        "route": "pagos.index",
+        "permission": "pagos.ver",
+        "orden": 15,
+        "activo": true
+    },
+    {
+        "id": 66,
+        "parent_id": 53,
+        "label": "Elementos Gasto",
+        "icon": "pi pi-receipt",
+        "route": "elementos-gasto.index",
+        "permission": "elementos-gasto.ver",
+        "orden": 16,
+        "activo": true
+    },
+    {
+        "id": 67,
+        "parent_id": null,
+        "label": "Catálogos",
+        "icon": "pi pi-bookmark",
+        "route": null,
+        "permission": null,
+        "orden": 3,
+        "activo": true
+    },
+    {
+        "id": 68,
+        "parent_id": 67,
+        "label": "Catálogos",
+        "icon": "pi pi-book",
+        "route": "catalogo.gestionar",
+        "permission": "catalogo.editar",
+        "orden": 3,
+        "activo": true
+    },
+    {
+        "id": 69,
+        "parent_id": 67,
+        "label": "Marcas",
+        "icon": "pi pi-tag",
+        "route": "marcas.index",
+        "permission": "marcas.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 70,
+        "parent_id": 67,
+        "label": "Modelos",
+        "icon": "pi pi-cog",
+        "route": "modelos.index",
+        "permission": "modelos.ver",
+        "orden": 2,
+        "activo": true
+    },
+    {
+        "id": 71,
+        "parent_id": 67,
+        "label": "Grupos",
+        "icon": "pi pi-bullseye",
+        "route": "grupos.index",
+        "permission": "grupos.ver",
+        "orden": 4,
+        "activo": true
+    },
+    {
+        "id": 72,
+        "parent_id": 67,
+        "label": "Talleres",
+        "icon": "pi pi-wrench",
+        "route": "talleres.index",
+        "permission": "talleres.ver",
+        "orden": 7,
+        "activo": true
+    },
+    {
+        "id": 73,
+        "parent_id": 67,
+        "label": "Naves",
+        "icon": "pi pi-building",
+        "route": "naves.index",
+        "permission": "naves.ver",
+        "orden": 8,
+        "activo": true
+    },
+    {
+        "id": 74,
+        "parent_id": 67,
+        "label": "Vallas",
+        "icon": "pi pi-th-large",
+        "route": "vallas.index",
+        "permission": "vallas.ver",
+        "orden": 9,
+        "activo": true
+    },
+    {
+        "id": 75,
+        "parent_id": 67,
+        "label": "Destinos Agregados",
+        "icon": "pi pi-map",
+        "route": "destinos-agregados.index",
+        "permission": "destinos-agregados.ver",
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 76,
+        "parent_id": 67,
+        "label": "Medidas Neumáticos",
+        "icon": "pi pi-arrows-h",
+        "route": "medidas-neumaticos.index",
+        "permission": "medidas-neumaticos.ver",
+        "orden": 11,
+        "activo": true
+    },
+    {
+        "id": 77,
+        "parent_id": 67,
+        "label": "Posiciones Neumáticos",
+        "icon": "pi pi-arrows-alt",
+        "route": "posiciones-neumaticos.index",
+        "permission": "posiciones-neumaticos.ver",
+        "orden": 16,
+        "activo": true
+    },
+    {
+        "id": 78,
+        "parent_id": 93,
+        "label": "Folios",
+        "icon": "pi pi-list",
+        "route": "consecutivos.index",
+        "permission": "consecutivos.ver",
+        "orden": 6,
+        "activo": true
+    },
+    {
+        "id": 79,
+        "parent_id": 67,
+        "label": "Embalajes",
+        "icon": "pi pi-box",
+        "route": "embalajes.index",
+        "permission": "embalajes.ver",
+        "orden": 20,
+        "activo": true
+    },
+    {
+        "id": 80,
+        "parent_id": 67,
+        "label": "Incidencias",
+        "icon": "pi pi-exclamation-circle",
+        "route": "tipos-incidencias.index",
+        "permission": "tipos-incidencias.ver",
+        "orden": 21,
+        "activo": true
+    },
+    {
+        "id": 81,
+        "parent_id": 67,
+        "label": "Penalizaciones",
+        "icon": "pi pi-ban",
+        "route": "tipos-penalizaciones.index",
+        "permission": "tipos-penalizaciones.ver",
+        "orden": 22,
+        "activo": true
+    },
+    {
+        "id": 82,
+        "parent_id": 67,
+        "label": "Navieras",
+        "icon": "pi pi-globe",
+        "route": "navieras.index",
+        "permission": "navieras.ver",
+        "orden": 23,
+        "activo": true
+    },
+    {
+        "id": 83,
+        "parent_id": 67,
+        "label": "Organismos",
+        "icon": "pi pi-building",
+        "route": "organismos.index",
+        "permission": "organismos.ver",
+        "orden": 23,
+        "activo": true
+    },
+    {
+        "id": 84,
+        "parent_id": 67,
+        "label": "Categorías Cargo",
+        "icon": "pi pi-tags",
+        "route": "categorias-cargo.index",
+        "permission": "categorias-cargo.ver",
+        "orden": 24,
+        "activo": true
+    },
+    {
+        "id": 85,
+        "parent_id": 67,
+        "label": "Grupos Escala",
+        "icon": "pi pi-chart-bar",
+        "route": "grupos-escala.index",
+        "permission": "grupos-escala.ver",
+        "orden": 25,
+        "activo": true
+    },
+    {
+        "id": 86,
+        "parent_id": 67,
+        "label": "Áreas",
+        "icon": "pi pi-building",
+        "route": "areas.index",
+        "permission": "areas.ver",
+        "orden": 25,
+        "activo": true
+    },
+    {
+        "id": 87,
+        "parent_id": 67,
+        "label": "Cargos",
+        "icon": "pi pi-briefcase",
+        "route": "cargos.index",
+        "permission": "cargos.ver",
+        "orden": 26,
+        "activo": true
+    },
+    {
+        "id": 88,
+        "parent_id": 67,
+        "label": "Meses",
+        "icon": "pi pi-calendar",
+        "route": "meses.index",
+        "permission": "meses.ver",
+        "orden": 31,
+        "activo": true
+    },
+    {
+        "id": 89,
+        "parent_id": null,
+        "label": "Reportes",
+        "icon": "pi pi-file-pdf",
+        "route": null,
+        "permission": "reportes.ver",
+        "orden": 12,
+        "activo": true
+    },
+    {
+        "id": 90,
+        "parent_id": 89,
+        "label": "Listado de Marcas",
+        "icon": "pi pi-tag",
+        "route": "reportes.marcas",
+        "permission": "reportes.generar",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 91,
+        "parent_id": 89,
+        "label": "Listado de Modelos",
+        "icon": "pi pi-cog",
+        "route": "reportes.modelos",
+        "permission": "reportes.generar",
+        "orden": 2,
+        "activo": true
+    },
+    {
+        "id": 92,
+        "parent_id": 89,
+        "label": "Listado de Países",
+        "icon": "pi pi-globe",
+        "route": "reportes.paises",
+        "permission": "reportes.generar",
+        "orden": 3,
+        "activo": true
+    },
+    {
+        "id": 93,
+        "parent_id": null,
+        "label": "Administración",
+        "icon": "pi pi-cog",
+        "route": null,
+        "permission": null,
+        "orden": 2,
+        "activo": true
+    },
+    {
+        "id": 94,
+        "parent_id": 93,
+        "label": "Usuarios",
+        "icon": "pi pi-users",
+        "route": "usuarios.index",
+        "permission": "usuarios.ver",
+        "orden": 2,
+        "activo": true
+    },
+    {
+        "id": 95,
+        "parent_id": 93,
+        "label": "Perfiles",
+        "icon": "pi pi-shield",
+        "route": "perfiles.index",
+        "permission": "perfiles.ver",
+        "orden": 5,
+        "activo": true
+    },
+    {
+        "id": 96,
+        "parent_id": 93,
+        "label": "Menús",
+        "icon": "pi pi-bars",
+        "route": "menu-items.index",
+        "permission": "menus.admin",
+        "orden": 7,
+        "activo": true
+    },
+    {
+        "id": 97,
+        "parent_id": 93,
+        "label": "Entidades",
+        "icon": "pi pi-circle-fill",
+        "route": "entidades.index",
+        "permission": "entidades.ver",
+        "orden": 1,
+        "activo": true
+    },
+    {
+        "id": 98,
+        "parent_id": 93,
+        "label": "Tipos de Modelo",
+        "icon": "pi pi-circle-fill",
+        "route": "tipos-modelo.index",
+        "permission": "tipos-modelo.ver",
+        "orden": 94,
+        "activo": true
+    },
+    {
+        "id": 99,
+        "parent_id": 2,
+        "label": "Tipos de Arrastres",
+        "icon": "pi pi-box",
+        "route": "tipos-arrastres.index",
+        "permission": "tipos-arrastres.ver",
+        "orden": 22,
+        "activo": true
+    },
+    {
+        "id": 100,
+        "parent_id": 2,
+        "label": "Tipos de Tractivos",
+        "icon": "pi pi-truck",
+        "route": "tipos-tractivos.index",
+        "permission": "tipos-tractivos.ver",
+        "orden": 23,
+        "activo": true
+    }
+]

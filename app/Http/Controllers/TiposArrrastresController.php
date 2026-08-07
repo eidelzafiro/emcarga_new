@@ -37,7 +37,7 @@ class TiposArrrastresController extends Controller
 
     public function index(Request $request)
     {
-        $query = TipoArrastre::with(['marca', 'modelo', 'pais', 'tipoEquipo', 'tipoSuspension', 'tipoCombustible']);
+        $query = TipoArrastre::with(['marca', 'modelo', 'pais', 'tipoEquipo', 'tipoMantenimiento', 'tipoSuspension', 'tipoCombustible']);
 
         $search = $request->get('search');
         if ($search) {
@@ -47,20 +47,37 @@ class TiposArrrastresController extends Controller
             });
         }
 
+        if ($request->filled('id_marca')) {
+            $query->where('id_marca', $request->get('id_marca'));
+        }
+        if ($request->filled('id_modelo')) {
+            $query->where('id_modelo', $request->get('id_modelo'));
+        }
+        if ($request->filled('id_tipo_equipo')) {
+            $query->where('id_tipo_equipo', $request->get('id_tipo_equipo'));
+        }
+
         $items = $query->orderBy($this->getSortField())->paginate(20);
 
         return Inertia::render('Catalogo/Index', [
             'title' => $this->getTitle(),
             'items' => $items,
-            'filters' => $request->only('search'),
+            'filters' => $request->only(['search', 'id_marca', 'id_modelo', 'id_tipo_equipo']),
             'catalogConfig' => [
                 'route' => $this->getRouteName(),
                 'title' => $this->getTitle(),
                 'codigoManual' => false,
+                'hideNombre' => true,
                 'fields' => [
                     'nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true, 'grid' => true],
                     'descripcion' => ['label' => 'Descripción', 'type' => 'textarea', 'required' => false, 'grid' => false],
                     'capacidad_toneladas' => ['label' => 'Capacidad (ton)', 'type' => 'number', 'required' => false, 'grid' => true],
+                ],
+                'gridOnly' => ['id_marca', 'id_modelo', 'id_pais', 'id_tipo_equipo', 'id_tipo_mantenimiento'],
+                'filters' => [
+                    'id_marca' => $this->filterOptions(Marca::class, 'id_marca'),
+                    'id_modelo' => $this->filterOptions(Modelo::class, 'id_modelo'),
+                    'id_tipo_equipo' => $this->filterOptions(TipoEquipo::class, 'id_tipo_equipo'),
                 ],
                 'extra' => $this->getExtraFields(),
             ],
@@ -96,6 +113,13 @@ class TiposArrrastresController extends Controller
             'id_lubricante' => $this->select('Lubricante', Lubricante::class),
             'id_lub_cubo' => $this->select('Lubricante cubo', Lubricante::class),
             'id_tipo_mantenimiento' => $this->select('Tipo de mantenimiento', TiposMantenimiento::class),
+        ];
+    }
+
+    protected function getReferenciasManualmente(): array
+    {
+        return [
+            'tractivos' => 'id_tipo_vehiculo',
         ];
     }
 

@@ -11,6 +11,7 @@ class TipoTractivo extends Model
 
     protected $fillable = [
         'codigo', 'nombre', 'id_marca', 'id_modelo', 'id_pais',
+        'id_tipo_mantenimiento',
         'fabricacion', 'tipo_equipo',
         'bat_cant', 'bat_amp',
         'dif_cant', 'dif_relacion', 'dif_ancho',
@@ -46,6 +47,11 @@ class TipoTractivo extends Model
     public function tipoCombustible(): BelongsTo
     {
         return $this->belongsTo(TipoCombustible::class, 'id_tipo_combustible');
+    }
+
+    public function tipoMantenimiento(): BelongsTo
+    {
+        return $this->belongsTo(TiposMantenimiento::class, 'id_tipo_mantenimiento');
     }
 
     public function lubricanteMotor(): BelongsTo

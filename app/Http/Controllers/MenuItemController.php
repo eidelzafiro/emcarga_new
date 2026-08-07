@@ -6,6 +6,8 @@ use App\Http\Requests\StoreMenuItemRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\Bitacora;
 use App\Models\MenuItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
@@ -17,6 +19,88 @@ class MenuItemController extends Controller
     {
         $this->authorize('viewAny', MenuItem::class);
 
+        return $this->respuestaIndex();
+    }
+
+/**
+     * Reordena el árbol de menú tras el arrastrar y soltar.
+     *
+     * Recibe el árbol en el orden visual deseado (padres con sus hijos en
+     * profundidad). Respeta exactamente el orden dejado por el usuario con el
+     * arrastrar y soltar: no se reordena alfabéticamente ni se fuerzan
+     * posiciones fijas; solo se renumeran los ítems de forma consecutiva
+     * (1..n) dentro de cada grupo, conservando el parent_id enviado.
+     */
+    public function reordenar(Request $request)
+    {
+        $this->authorize('update', new MenuItem());
+
+        $data = $request->validate([
+            'tree' => ['required', 'array'],
+            'tree.*.id' => ['required', 'integer', 'exists:menu_items,id'],
+            'tree.*.parent_id' => ['nullable', 'integer', 'exists:menu_items,id'],
+            'tree.*.children' => ['present', 'array'],
+            'tree.*.children.*.id' => ['required', 'integer', 'exists:menu_items,id'],
+        ]);
+
+        // Ítems actuales para consultar label/route de cada nodo.
+        $modelos = MenuItem::query()
+            ->get(['id', 'parent_id', 'label', 'route', 'permission', 'orden', 'icon', 'activo'])
+            ->keyBy('id');
+
+        // Aplana el árbol anidado (raíces con sus children) a [id, parent].
+        $nodos = $this->flattenArbol($data['tree']);
+
+        DB::transaction(function () use ($nodos, $modelos) {
+            // parent_id => lista ordenada de ids según el orden visual dado.
+            // La raíz se guarda con la clave 'root' (PHP convierte null a '' en claves).
+            $padres = [];
+            foreach ($nodos as $nodo) {
+                $clave = $nodo['parent'] === null ? 'root' : $nodo['parent'];
+                $padres[$clave][] = $nodo['id'];
+            }
+
+            // Aplicar parent_id y renumerar 1..n por grupo, respetando el orden
+            // del arrastrar y soltar (no se reordena alfabéticamente).
+            foreach ($padres as $parentId => $ids) {
+                $orden = 1;
+                foreach ($ids as $id) {
+                    $item = $modelos->get($id);
+                    if (! $item) {
+                        continue;
+                    }
+                    $item->parent_id = $parentId === 'root' ? null : $parentId;
+                    $item->orden = $orden++;
+                    $item->save();
+                }
+            }
+
+            Bitacora::registrar('reordenar_menu', 'Menú reordenado.');
+        });
+
+        return $this->respuestaIndex('El menú se ha reordenado correctamente.');
+    }
+
+    /**
+     * Aplana un árbol anidado {id, children} a una lista [id, parent].
+     */
+    private function flattenArbol(array $raices): array
+    {
+        $flat = [];
+        $walk = function (array $nodo, ?int $parentId = null) use (&$walk, &$flat) {
+            $flat[] = ['id' => (int) $nodo['id'], 'parent' => $parentId];
+            foreach ($nodo['children'] ?? [] as $hijo) {
+                $walk($hijo, (int) $nodo['id']);
+            }
+        };
+        foreach ($raices as $raiz) {
+            $walk($raiz);
+        }
+        return $flat;
+    }
+
+    private function respuestaIndex(?string $flash = null, string $nivel = 'success')
+    {
         $roles = Role::with('permissions:id,name')
             ->where('name', '!=', 'SUPERADMIN')
             ->orderBy('name')
@@ -42,13 +126,20 @@ class MenuItemController extends Controller
 
         $permisos = Permission::orderBy('name')->pluck('name');
 
-        return Inertia::render('MenuItems/Index', [
+        $payload = [
             'title' => 'Menús',
             'items' => $items,
             'permisos' => $permisos,
             'roles' => $roles,
             'parents' => MenuItem::orderBy('label')->get(['id', 'label', 'parent_id']),
-        ]);
+        ];
+
+        if ($flash !== null) {
+            return back()
+                ->with('success', $flash);
+        }
+
+        return Inertia::render('MenuItems/Index', $payload);
     }
 
     public function store(StoreMenuItemRequest $request)

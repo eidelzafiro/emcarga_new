@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\DatabaseBackupService;
 use App\Services\Etl\EtlService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,8 @@ class EtlRun extends Command
                             {--solo= : Migrar solo una tabla (users o una del mapeo)}
                             {--validar : Solo muestra conteos legacy vs nueva}
                             {--chunk=1000 : Tamaño del lote de lectura}
-                            {--no-fresh : Omite migrate:fresh --seed (para re-ejecutar sin reiniciar)}';
+                            {--no-fresh : Omite migrate:fresh --seed (para re-ejecutar sin reiniciar)}
+                            {--no-salva : Omite la salva total automática tras el ETL}';
 
     protected $description = 'Migra datos del sistema legacy (CodeIgniter) al nuevo esquema (Fase 3)';
 
@@ -189,9 +191,9 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'ordenes_taller');
         }
 
-        // Arrastres: son tractivos con idtipotractivos en tec_tipoarrastres (100-197)
+        // Arrastres: regla idgrupo=8 (grupo ARRASTRES), ficha desde tec_tipoarrastres
         if (! $solo || $solo === 'arrastres') {
-            $this->info('Migrando arrastres (tractivos tipo-arrastre)...');
+            $this->info('Re-asociando arrastres (idgrupo=8, ficha tec_tipoarrastres)...');
             $etl->migrarArrastres($chunk);
             $this->mostrarResultado($etl->getReporte(), 'arrastres');
         }
@@ -238,8 +240,28 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'entidad_user');
         }
 
+        // Orden organizativa: OFICINA CENTRAL como matriz y EIDEL SUPERADMIN
+        // (idempotente, se re-aplica en cada corrida ETL)
+        if (! $solo) {
+            $this->info('Aplicando jerarquía de entidades (OFICINA CENTRAL = matriz)...');
+            $etl->migrarJerarquiaEntidades();
+            $this->mostrarResultado($etl->getReporte(), 'jerarquia_entidades');
+        }
+
         $this->newLine();
         $this->info('ETL finalizado. Ejecute php artisan emcarga:etl --validar para verificar conteos.');
+
+        // Salva total automática tras un ETL exitoso (punto de restauración).
+        // Se omite con --no-salva o cuando ya se reinició la BD con --no-fresh ausente
+        // (en ese caso migrate:fresh partió de cero y la salva previa ya existe).
+        if (! $this->option('no-salva')) {
+            try {
+                $archivo = app(DatabaseBackupService::class)->salvar('etl');
+                $this->info('✔ Salva total tras ETL: '.basename($archivo));
+            } catch (\RuntimeException $e) {
+                $this->warn('⚠ No se pudo crear la salva tras el ETL: '.$e->getMessage());
+            }
+        }
 
         return self::SUCCESS;
     }

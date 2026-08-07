@@ -5,6 +5,7 @@ namespace App\Services\Etl;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 /**
  * Motor del ETL legacy → nuevo esquema (Fase 3).
@@ -600,9 +601,11 @@ class EtlService
             14 => 'disponible',
         ];
 
+        $codigosUsados = [];
+
         $legacy->table('tec_motores')
             ->orderBy('idmotores')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $modelos, $estados) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $modelos, $estados, &$codigosUsados) {
                 foreach ($filas as $fila) {
                     $numeroSerie = trim((string) ($fila->nroserie ?? '')) ?: null;
                     $marca = $marcas[$fila->idmarca] ?? null;
@@ -622,12 +625,25 @@ class EtlService
                         $fbaja = null;
                     }
 
-                    $descripcion = trim((string) ($numeroSerie ?? '')) ?: $marca ?: 'Motor';
+                    // Código = nº de serie; sufijo -2/-3 si hay duplicados (columna unique)
+                    $codigo = $numeroSerie;
+                    if ($codigo) {
+                        $base = $codigo;
+                        $i = 2;
+                        while (isset($codigosUsados[$codigo])) {
+                            $codigo = $base.'-'.$i++;
+                        }
+                        $codigosUsados[$codigo] = true;
+                    }
+
+                    $descripcion = $numeroSerie
+                        ? ($marca ? "Motor {$marca} núm. {$numeroSerie}" : "Motor núm. {$numeroSerie}")
+                        : ($marca ? "Motor {$marca}" : 'Motor');
 
                     DB::table('motores')->updateOrInsert(
                         ['id' => $fila->idmotores],
                         [
-                            'codigo' => null,
+                            'codigo' => $codigo,
                             'descripcion' => $descripcion,
                             'marca' => $marca,
                             'modelo' => $modelo,
@@ -697,7 +713,7 @@ class EtlService
                         $avisos[] = "diferencial#{$fila->iddiferenciales}: marca legacy {$fila->idmarca} inexistente, se deja NULL";
                     }
 
-                    $descripcion = trim((string) ($fila->codigo ?? '')) ?: 'Diferencial';
+                    $descripcion = $marca ? "Diferencial {$marca}" : 'Diferencial';
 
                     DB::table('diferenciales')->updateOrInsert(
                         ['id' => $fila->iddiferenciales],
@@ -843,7 +859,7 @@ class EtlService
         $marcas = $legacy->table('tec_marca')->pluck('marca', 'idmarca');
         $modelos = $legacy->table('tec_modelo')->pluck('modelo', 'idmodelo');
 
-        $estados = [
+$estados = [
             27 => 'nuevo',
             18 => 'reparado',
             16 => 'regular',
@@ -851,9 +867,11 @@ class EtlService
             15 => 'regular',  // MALO → regular
         ];
 
+        $codigosUsados = [];
+
         $legacy->table('tec_cajas')
             ->orderBy('idcajas')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $modelos, $estados) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $modelos, $estados, &$codigosUsados) {
                 foreach ($filas as $fila) {
                     $numeroSerie = trim((string) ($fila->nroserie ?? '')) ?: null;
                     $marca = $marcas[$fila->idmarca] ?? null;
@@ -867,12 +885,25 @@ class EtlService
                         $avisos[] = "caja#{$fila->idcajas}: modelo legacy {$fila->idmodelo} inexistente, se deja NULL";
                     }
 
-                    $descripcion = $numeroSerie ?: $marca ?: 'Caja';
+                    // Código = nº de serie; sufijo -2/-3 si hay duplicados (columna unique)
+                    $codigo = $numeroSerie;
+                    if ($codigo) {
+                        $base = $codigo;
+                        $i = 2;
+                        while (isset($codigosUsados[$codigo])) {
+                            $codigo = $base.'-'.$i++;
+                        }
+                        $codigosUsados[$codigo] = true;
+                    }
+
+                    $descripcion = $numeroSerie
+                        ? ($marca ? "Caja {$marca} núm. {$numeroSerie}" : "Caja núm. {$numeroSerie}")
+                        : ($marca ? "Caja {$marca}" : 'Caja');
 
                     DB::table('cajas')->updateOrInsert(
                         ['id' => $fila->idcajas],
                         [
-                            'codigo' => null,
+                            'codigo' => $codigo,
                             'descripcion' => $descripcion,
                             'marca' => $marca,
                             'modelo' => $modelo,
@@ -981,7 +1012,9 @@ class EtlService
                         $avisos[] = "historial#{$fila->idhtractivos}: caja legacy {$fila->idcaja} inexistente, NULL";
                     }
                     if ($idTractivo === null) {
-                        $avisos[] = "historial#{$fila->idhtractivos}: tractivo legacy {$fila->idtractivo} inexistente, NULL";
+                        $avisos[] = "historial#{$fila->idhtractivos}: tractivo legacy {$fila->idtractivo} inexistente, omitido";
+
+                        continue;
                     }
 
                     DB::table('historial_tractivos')->updateOrInsert(
@@ -1080,101 +1113,72 @@ class EtlService
     /**
      * ETL de arrastres (remolques/semirremolques).
      *
-     * El legacy NO tiene tabla de arrastres: tec_naves está vacía. Los arrastres
-     * son tractivos cuyo idtipotractivos pertenece a tec_tipoarrastres (rango
-     * 100-197). Decidido con usuario 2026-07-31: poblar arrastres desde esos
-     * tractivos (código = codtractivo, marca/tipo equipo desde el tipo) y luego
-     * tec_asociaciones → arrastre_tractivo.
+     * El legacy NO tiene tabla de arrastres: tec_naves está vacía. La regla de
+     * negocio: un tractivo es ARRASTRE si su idgrupo == 8 (grupo ARRASTRES),
+     * sino es TRACTOR. La ficha técnica (marca y tipo de equipo) de cada
+     * arrastre se lee de tec_tipoarrastres (key idtipotractivos = idtipoarrastres),
+     * NO de tec_tipotractivos (esa es la ficha de los tractores). Decidido con
+     * usuario 2026-08-06 (corrige clasificación errónea por rango 100-197 y el
+     * bug del arrastre 25120 que quedaba como CUÑA TRACTORA en vez de SEMI-REM).
+     *
+     * Como 2026-08-07 los arrastres viven en la tabla `tractivos` (id_grupo=8);
+     * la tabla física `arrastres` se eliminó y las FKs (hojas_ruta,
+     * arrastre_tractivo) apuntan a tractivos. Este método re-asocia el tipo de
+     * arrastre (id_tipo_vehiculo) y la entidad de cada tractivo grupo 8.
      */
     public function migrarArrastres(int $chunk = 1000): void
     {
         $avisos = [];
         $procesados = 0;
+        $omitidos = 0;
 
         $legacy = DB::connection('legacy');
 
-        $tipos = $legacy->table('tec_tipotractivos')
-            ->get(['idtipotractivos', 'idmarca', 'idtipoequipos'])
-            ->keyBy('idtipotractivos');
-        $marcas = DB::table('marcas')->pluck('id')->flip();
-        $tiposEquipos = DB::table('tipos_equipos')->pluck('id')->flip();
-
-        $dupCodigos = $legacy->table('tec_tractivos')
-            ->whereIn('idtipotractivos', $legacy->table('tec_tipoarrastres')->pluck('idtipoarrastres'))
-            ->whereNull('fbaja')
-            ->whereRaw("TRIM(COALESCE(codtractivo, '')) != ''")
-            ->groupBy('codtractivo')->havingRaw('COUNT(*) > 1')->pluck('codtractivo')->flip();
+        // Ids reales de tipos de arrastre en BD nueva (heredan id del legacy).
+        $tiposA = DB::table('tipos_arrastres')->pluck('id')->flip();
 
         $legacy->table('tec_tractivos')
-            ->whereIn('idtipotractivos', $legacy->table('tec_tipoarrastres')->pluck('idtipoarrastres'))
+            ->where('idgrupo', 8)
             ->orderBy('idtractivos')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $tipos, $marcas, $tiposEquipos, $dupCodigos) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidos, &$avisos, $tiposA) {
                 foreach ($filas as $fila) {
-                    $tipo = $tipos->get($fila->idtipotractivos);
-
-                    $codigo = trim((string) ($fila->codtractivo ?? '')) ?: null;
-                    if ($codigo !== null && isset($dupCodigos[$codigo])) {
-                        $codigo = $codigo.'-'.$fila->idtractivos;
+                    // El tractivo referencia idtipotractivos (coincide con id de
+                    // tec_tipoarrastres/tipos_arrastres) → id_tipo_vehiculo.
+                    $idTipoVehiculo = null;
+                    if (isset($tiposA[$fila->idtipotractivos])) {
+                        $idTipoVehiculo = $fila->idtipotractivos;
+                    } elseif ($fila->idtipotractivos !== null && (int) $fila->idtipotractivos > 0) {
+                        $avisos[] = "arrastre#{$fila->idtractivos}: tipo {$fila->idtipotractivos} no existe en tipos_arrastres nueva";
                     }
 
-                    $idMarca = null;
-                    if ($tipo && isset($marcas[$tipo->idmarca])) {
-                        $idMarca = $tipo->idmarca;
-                    } elseif ($tipo) {
-                        $avisos[] = "arrastre#{$fila->idtractivos}: marca {$tipo->idmarca} no existe en marcas nueva";
+                    // migrarTractivos excluye los de baja (fbaja != null): no hay
+                    // fila en tractivos sobre la que actualizar.
+                    $existe = DB::table('tractivos')->where('id', $fila->idtractivos)->exists();
+                    if (! $existe) {
+                        $omitidos++;
+
+                        continue;
                     }
 
-                    $idTipoEquipo = null;
-                    if ($tipo && isset($tiposEquipos[$tipo->idtipoequipos])) {
-                        $idTipoEquipo = $tipo->idtipoequipos;
-                    } elseif ($tipo) {
-                        $avisos[] = "arrastre#{$fila->idtractivos}: tipo equipo {$tipo->idtipoequipos} no existe en tipos_equipos nueva";
-                    }
+                    DB::table('tractivos')
+                        ->where('id', $fila->idtractivos)
+                        ->update([
+                            'id_tipo_vehiculo' => $idTipoVehiculo,
+                            'id_entidad' => $fila->idunidad ?: null,
+                            'updated_at' => now(),
+                        ]);
 
-                    $upsert = function (?string $codigoFinal) use ($fila, $idMarca, $idTipoEquipo) {
-                        DB::table('arrastres')->updateOrInsert(
-                            ['id' => $fila->idtractivos],
-                            [
-                                'codigo' => $codigoFinal,
-                                'chapa' => trim((string) ($fila->chapa ?? '')) ?: null,
-                                'id_marca' => $idMarca,
-                                'id_tipo_equipo' => $idTipoEquipo,
-                                'capacidad' => $fila->capacidad,
-                                'lot' => trim((string) ($fila->lot ?? '')) ?: null,
-                                'circulacion' => trim((string) ($fila->circulacion ?? '')) ?: null,
-                                'activo' => $fila->fbaja === null,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]
-                        );
-                    };
-
-                    try {
-                        $upsert($codigo);
-                        $procesados++;
-                    } catch (\Throwable $e) {
-                        if ($codigo !== null && str_contains($e->getMessage(), 'arrastres_codigo_unique')) {
-                            try {
-                                $upsert($codigo.'-'.$fila->idtractivos);
-                                $procesados++;
-                                $avisos[] = "arrastre#{$fila->idtractivos}: código duplicado, re-sufijado con id";
-                            } catch (\Throwable $e2) {
-                                $avisos[] = "arrastre#{$fila->idtractivos}: {$e2->getMessage()}";
-                            }
-                        } else {
-                            $avisos[] = "arrastre#{$fila->idtractivos}: {$e->getMessage()}";
-                        }
-                    }
+                    $procesados++;
                 }
             });
 
         $avisos[] = (int) $legacy->table('tec_tractivos')
-            ->whereIn('idtipotractivos', $legacy->table('tec_tipoarrastres')->pluck('idtipoarrastres'))
-            ->whereNotNull('fbaja')->count().' arrastres con fecha de baja quedan activo=false';
+            ->where('idgrupo', 8)
+            ->whereNotNull('fbaja')->count().' arrastres con fecha de baja (no migrados como tractivos)';
 
         $this->reporte['arrastres'] = [
             'legacy' => (int) $legacy->table('tec_tractivos')
-                ->whereIn('idtipotractivos', $legacy->table('tec_tipoarrastres')->pluck('idtipoarrastres'))
+                ->where('idgrupo', 8)
                 ->count(),
             'nueva' => $procesados,
             'avisos' => $avisos,
@@ -1194,7 +1198,7 @@ class EtlService
 
         $legacy = DB::connection('legacy');
 
-        $arrastres = DB::table('arrastres')->pluck('id')->flip();
+        $arrastres = DB::table('tractivos')->where('id_grupo', 8)->pluck('id')->flip();
         $tractivos = DB::table('tractivos')->pluck('id')->flip();
 
         $legacy->table('tec_asociaciones')
@@ -1404,22 +1408,30 @@ class EtlService
             ->groupBy('cidentidad')
             ->pluck('keep_id', 'cidentidad');
 
-        // Último movimiento por persona → idcargos (via rh_plantilla).
-        $cargoPorBolsa = $legacy->table('rh_movimientos as m')
+        // Último movimiento por persona → idcargos + idareas (via rh_plantilla).
+        $asignacionPorBolsa = $legacy->table('rh_movimientos as m')
             ->join('rh_plantilla as p', 'p.idplantilla', '=', 'm.idplantilla')
             ->whereIn('m.idmovimientos', function ($q) {
                 $q->selectRaw('MAX(mm.idmovimientos)')
                     ->from('rh_movimientos as mm')
                     ->groupBy('mm.idbolsa');
             })
-            ->select('m.idbolsa', 'p.idcargos')
+            ->select('m.idbolsa', 'p.idcargos', 'p.idareas')
             ->get()
-            ->pluck('idcargos', 'idbolsa');
+            ->keyBy('idbolsa');
+
+        $cargoPorBolsa = $asignacionPorBolsa->map(fn ($r) => $r->idcargos);
+
+        // Solo asignar áreas que realmente existan (el legacy tiene referencias huérfanas).
+        $areasValidas = DB::table('areas')->pluck('id')->all();
+        $areaPorBolsa = $asignacionPorBolsa->map(
+            fn ($r) => in_array($r->idareas, $areasValidas, true) ? $r->idareas : null
+        );
 
         $legacy->table('rh_bolsa')
             ->orderBy('idbolsa')
             ->chunk($chunk, function ($filas) use (
-                &$procesados, &$avisos, $keepBolsaPorCi, $cargoPorBolsa, $cargoDefaultId
+                &$procesados, &$avisos, $keepBolsaPorCi, $cargoPorBolsa, $areaPorBolsa, $cargoDefaultId
             ) {
                 foreach ($filas as $fila) {
                     $ci = trim((string) $fila->cidentidad);
@@ -1477,6 +1489,7 @@ class EtlService
                             'psicometrico_emision' => $fechaNula($fila->femisionpsi),
                             'psicometrico_vencimiento' => $fechaNula($fila->fvencepsi),
                             'id_cargo' => $cargoPorBolsa[$fila->idbolsa] ?? $cargoDefaultId,
+                            'id_area' => ($areaPorBolsa[$fila->idbolsa] ?? null) ?: null,
                             'id_entidad' => $fila->idunidad ?: 1,
                             'activo' => (int) $fila->baja === 0,
                             'created_at' => now(),
@@ -1551,7 +1564,7 @@ class EtlService
         $legacy = DB::connection('legacy');
 
         $idsTractivos = DB::table('tractivos')->pluck('id')->flip();
-        $idsArrastres = DB::table('arrastres')->pluck('id')->flip();
+        $idsArrastres = DB::table('tractivos')->where('id_grupo', 8)->pluck('id')->flip();
         $idsChoferes = DB::table('bolsa')->pluck('id')->flip();
         $idsParqueos = DB::table('lugares')->pluck('id')->flip();
         $idsGrupos = DB::table('grupos')->pluck('id')->flip();
@@ -1576,12 +1589,12 @@ class EtlService
                     $idTractivo = (int) $fila->idtractivos;
                     if (! isset($idsTractivos[$idTractivo])) {
                         $omitidas++;
-                        $avisos[] = "hojas_ruta#{$fila->idhojaruta}: tractivo {$idTractivo} no migrado, omitida";
-
-                        continue;
+                        $avisos[] = "hojas_ruta#{$fila->idhojaruta}: tractivo {$idTractivo} no migrado, id_tractivo NULL";
+                        $idTractivo = null;
+                        $idEntidad = null;
+                    } else {
+                        $idEntidad = $entidadPorTractivo[$idTractivo] ?? null;
                     }
-
-                    $idEntidad = $entidadPorTractivo[$idTractivo] ?? null;
 
                     // id_hr_anterior solo si apunta a una HR ya migrada (en BD).
                     // Los ancestros de otros años (fuera del anio) se dejan null.
@@ -1650,7 +1663,7 @@ class EtlService
         $this->reporte['hojas_ruta'] = [
             'legacy' => (int) $legacy->table('com_hojaruta')->whereYear('femision', $anio)->count(),
             'nueva' => $procesados,
-            'avisos' => array_merge(["{$omitidas} omitidas por tractivo no migrado"], $avisos),
+            'avisos' => array_merge(["{$omitidas} con id_tractivo NULL por tractivo no migrado"], $avisos),
         ];
     }
 
@@ -1828,6 +1841,81 @@ class EtlService
     }
 
     /**
+     * ORDEN ORGANIZATIVA (jerarquía de entidades).
+     *
+     * Regla de negocio: la OFICINA CENTRAL (entidad con abreviatura
+     * 'OFICINA CENTRAL', es decir EMPRESA CAMIONES EMCARGA) es la MATRIZ
+     * de la empresa: es_matriz = true y parent_id = NULL. Todas las demás
+     * entidades (filiales, UEB, brigadas) quedan subordinadas a ella
+     * (parent_id = id de la OFICINA CENTRAL). Esta regla debe preservarse
+     * en todas las corridas ETL.
+     *
+     * Además, el usuario EIDEL (id 1) es SUPERADMIN y pertenece a la
+     * OFICINA CENTRAL. Cada corrida ETL re-asegura esta condición porque
+     * migrarUsuarios() re-sincroniza roles y entidad desde legacy.
+     *
+     * Idempotente: se puede ejecutar todas las veces que se quiera.
+     */
+    public function migrarJerarquiaEntidades(): void
+    {
+        $avisos = [];
+
+        $oficinaCentral = DB::table('entidades')
+            ->where('abreviatura', 'OFICINA CENTRAL')
+            ->first();
+
+        if (! $oficinaCentral) {
+            $avisos[] = 'No se encontró la entidad OFICINA CENTRAL (abreviatura OFICINA CENTRAL)';
+
+            $this->reporte['jerarquia_entidades'] = [
+                'legacy' => 0,
+                'nueva' => 0,
+                'avisos' => $avisos,
+            ];
+
+            return;
+        }
+
+        // 1) La OFICINA CENTRAL es la matriz.
+        DB::table('entidades')
+            ->where('id', $oficinaCentral->id)
+            ->update([
+                'es_matriz' => true,
+                'parent_id' => null,
+                'updated_at' => now(),
+            ]);
+
+        // 2) Todas las demás entidades le están subordinadas.
+        DB::table('entidades')
+            ->where('id', '!=', $oficinaCentral->id)
+            ->where(function ($q) use ($oficinaCentral) {
+                $q->whereNull('parent_id')
+                    ->orWhere('parent_id', '!=', $oficinaCentral->id);
+            })
+            ->update([
+                'parent_id' => $oficinaCentral->id,
+                'updated_at' => now(),
+            ]);
+
+        // 3) EIDEL es SUPERADMIN y pertenece a la OFICINA CENTRAL.
+        $eidel = User::find(1);
+        if ($eidel) {
+            $eidel->forceFill(['id_entidad' => $oficinaCentral->id])->save();
+            if (Role::where('name', 'SUPERADMIN')->exists()) {
+                $eidel->syncRoles(['SUPERADMIN']);
+            }
+        } else {
+            $avisos[] = 'No se encontró el usuario EIDEL (id 1)';
+        }
+
+        $this->reporte['jerarquia_entidades'] = [
+            'legacy' => (int) DB::table('entidades')->count(),
+            'nueva' => (int) DB::table('entidades')->count(),
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
      * Conteos old vs new de todas las tablas mapeadas (sin migrar).
      */
     public function validar(): array
@@ -1863,13 +1951,13 @@ class EtlService
         }
 
         // Arrastres: legacy NO tiene tabla (tec_naves vacía). Los arrastres son
-        // tractivos tipo-arrastre (idtipotractivos ∈ tec_tipoarrastres, 100-197).
+        // tractivos grupo ARRASTRES (idgrupo=8), ya unificados en `tractivos`.
         $legacyArrastres = (int) DB::connection('legacy')->table('tec_tractivos')
-            ->whereIn('idtipotractivos', DB::connection('legacy')->table('tec_tipoarrastres')->pluck('idtipoarrastres'))
+            ->where('idgrupo', 8)
             ->count();
         $resultado['arrastres'] = [
             'legacy' => $legacyArrastres,
-            'nueva' => (int) DB::table('arrastres')->count(),
+            'nueva' => (int) DB::table('tractivos')->where('id_grupo', 8)->count(),
         ];
         $resultado['arrastre_tractivo'] = [
             'legacy' => (int) DB::connection('legacy')->table('tec_asociaciones')

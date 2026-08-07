@@ -19,9 +19,12 @@ const props = defineProps({ items: Object, filters: Object, catalogConfig: Objec
 const tipo = computed(() => props.catalogConfig?.tipo)
 const toast = useToast()
 const search = ref(props.filters?.search || '')
+const filterModel = ref({})
 const showForm = ref(false)
 const editing = ref(null)
 const continuar = ref(false)
+
+const catalogFilters = computed(() => props.catalogConfig?.filters || {})
 
 const baseForm = () => ({
   codigo: props.catalogConfig?.codigoManual !== false ? '' : undefined,
@@ -31,14 +34,35 @@ const baseForm = () => ({
 
 const form = ref(baseForm())
 
+const aplicaFiltro = () => {
+  router.get(route(`${props.catalogConfig.route}.index`, { tipo: props.catalogConfig.tipo }), {
+    search: search.value,
+    id_marca: filterModel.value.id_marca,
+    id_modelo: filterModel.value.id_modelo,
+    tipo_equipo: filterModel.value.tipo_equipo ?? filterModel.value.id_tipo_equipo,
+  }, { preserveState: true, replace: true })
+}
+
 watch(search, () => {
-  router.get(route(`${props.catalogConfig.route}.index`, { tipo: props.catalogConfig.tipo }), { search: search.value }, { preserveState: true, replace: true })
+  aplicaFiltro()
 })
+
+watch(catalogFilters, (f) => {
+  const actual = {}
+  Object.keys(f).forEach((k) => {
+    const cfg = f[k]
+    actual[cfg.key] = props.filters?.[cfg.key] || null
+  })
+  filterModel.value = actual
+}, { immediate: true })
 
 const onPage = (event) => {
   router.get(route(`${props.catalogConfig.route}.index`, { tipo: props.catalogConfig.tipo }), {
     page: event.page + 1,
     search: search.value,
+    id_marca: filterModel.value.id_marca,
+    id_modelo: filterModel.value.id_modelo,
+    tipo_equipo: filterModel.value.tipo_equipo ?? filterModel.value.id_tipo_equipo,
   }, { preserveState: true, replace: true })
 }
 
@@ -60,8 +84,11 @@ const gridFields = computed(() => {
   if (props.catalogConfig?.codigoManual !== false) {
     result.codigo = { label: 'Código', type: 'text' }
   }
-  Object.entries(allFields.value).forEach(([k, v]) => {
-    if (k !== 'activo') result[k] = v
+  const permitidas = props.catalogConfig?.gridOnly
+  const orden = permitidas?.length ? permitidas : Object.keys(allFields.value)
+  orden.forEach((k) => {
+    if (k === 'activo' || !allFields.value[k]) return
+    result[k] = allFields.value[k]
   })
   return result
 })
@@ -154,7 +181,13 @@ function submit(continuarActivo = false) {
           </span>
         </template>
         <template #end>
-          <InputText v-model="search" placeholder="Buscar..." />
+          <div class="flex items-center gap-2 flex-wrap">
+            <template v-for="(cfg, key) in catalogFilters" :key="key">
+              <Select v-model="filterModel[cfg.key]" :options="cfg.options" optionLabel="label" optionValue="value"
+                      class="w-48" :showClear="true" :filter="true" filterPlaceholder="Buscar..." :placeholder="cfg.label" @change="aplicaFiltro" />
+            </template>
+            <InputText v-model="search" placeholder="Buscar..." />
+          </div>
         </template>
       </Toolbar>
 

@@ -47,6 +47,27 @@ trait ManagesCatalog
         return 'nombre';
     }
 
+    protected function filterTipoEquipo(): array
+    {
+        $valores = $this->getModelClass()::query()
+            ->whereNotNull('tipo_equipo')
+            ->where('tipo_equipo', '!=', '')
+            ->distinct()
+            ->pluck('tipo_equipo')
+            ->map(fn ($v) => ['value' => (string) $v, 'label' => (string) $v])
+            ->toArray();
+
+        return ['key' => 'tipo_equipo', 'label' => 'Tipo de equipo', 'options' => $valores];
+    }
+
+    protected function filterOptions(string $model, string $key, ?string $label = null): array
+    {
+        $options = $model::where('activo', true)->orderBy('nombre')
+            ->get()->map(fn ($f) => ['value' => (int) $f->id, 'label' => (string) $f->nombre])->toArray();
+
+        return ['key' => $key, 'label' => $label ?? $key, 'options' => $options];
+    }
+
     protected function getSearchFields(): array
     {
         return ['codigo', 'nombre'];
@@ -150,7 +171,9 @@ trait ManagesCatalog
             $data['codigo'] = $this->generarCodigo();
         }
 
-        $model::create($data);
+        $item = $model::create($data);
+
+        $this->afterStore($item, $data);
 
         if ($request->boolean('_continuar')) {
             return redirect()->back()->with('success', 'Creado correctamente. Puede continuar añadiendo.');
@@ -167,15 +190,74 @@ trait ManagesCatalog
 
         $item->update($data);
 
+        $this->afterUpdate($item, $data);
+
         return redirect()->back()->with('success', 'Actualizado correctamente');
+    }
+
+    protected function afterStore($item, array $data): void
+    {
+    }
+
+    protected function afterUpdate($item, array $data): void
+    {
     }
 
     public function destroy($id)
     {
         $model = $this->getModelClass();
         $item = $model::findOrFail($id);
+
+        $bloqueos = $this->referenciasEnUso($model, $item->getKey());
+
+        if ($bloqueos) {
+            return redirect()->back()
+                ->with('error', 'No se puede eliminar: está en uso en '.implode(', ', $bloqueos).'.');
+        }
+
         $item->delete();
 
         return redirect()->back()->with('success', 'Eliminado correctamente');
+    }
+
+    /**
+     * Comprueba si el registro está referenciado por otras tablas (FK física
+     * detectada en information_schema) o por referencias manuales declaradas
+     * en getReferenciasManualmente(). Devuelve la lista de tablas que lo usan.
+     */
+    protected function referenciasEnUso(string $model, $id): array
+    {
+        $tabla = (new $model)->getTable();
+        $uso = [];
+
+        foreach ($this->getReferenciasManualmente() as $tablaRef => $col) {
+            if (DB::table($tablaRef)->where($col, $id)->exists()) {
+                $uso[] = $tablaRef;
+            }
+        }
+
+        $fk = DB::select(
+            "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE
+             WHERE REFERENCED_TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()",
+            [$tabla]
+        );
+
+        foreach ($fk as $fila) {
+            if (DB::table($fila->TABLE_NAME)->where($fila->COLUMN_NAME, $id)->exists()) {
+                $uso[] = $fila->TABLE_NAME;
+            }
+        }
+
+        return array_values(array_unique($uso));
+    }
+
+    /**
+     * Declara tablas/columnas que referencian a la entidad sin FK física
+     * (p. ej. tractivos.id_tipo_vehiculo → tipos_arrastres). Formato:
+     * ['tractivos' => 'id_tipo_vehiculo'].
+     */
+    protected function getReferenciasManualmente(): array
+    {
+        return [];
     }
 }

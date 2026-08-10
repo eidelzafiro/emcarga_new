@@ -41,9 +41,10 @@
 
         <div v-if="puedeMover" class="mb-3 text-xs text-surface-400 dark:text-surface-400">
           <i class="pi pi-info-circle mr-1" />
-          Arrastra el icono <i class="pi pi-bars mx-1" /> para reordenar o cambiar el agrupador. Al
-          pulsar «Guardar orden» se respeta exactamente el orden dejado con el arrastrar y soltar:
-          los ítems se renumeran (1..n) dentro de cada agrupador sin reordenar alfabéticamente.
+          Arrastra el icono <i class="pi pi-bars mx-1" /> para reordenar o cambiar el agrupador.
+          Para meter un ítem dentro de un agrupador suéltalo <strong>sobre el nombre</strong> del
+          agrupador (o entre sus ítems). Al pulsar «Guardar orden» se respeta exactamente el orden
+          dejado: los ítems se renumeran (1..n) dentro de cada agrupador sin reordenar alfabéticamente.
         </div>
 
         <div class="border border-surface-200 dark:border-surface-800 rounded-lg overflow-hidden">
@@ -71,10 +72,16 @@
               v-if="!filtroActivo && itemsFiltrados.length"
               v-model="itemsFiltrados"
               item-key="id"
-              group="menu-raiz"
-              handle=".drag-handle"
+              group="menu"
               :animation="150"
+              :force-fallback="true"
+              :fallback-on-body="false"
+              :ghost-class="'drag-ghost'"
+              :fallback-class="'drag-fallback'"
+              data-drag-root
               class="select-none"
+              @end="emitirDrop"
+              @move="onMoveTree"
             >
               <template #item="{ element }">
                 <MenuItemNode
@@ -226,7 +233,7 @@
 
 <script setup>
 import { useForm, usePage, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
@@ -289,6 +296,61 @@ watch(
 watch(itemsFiltrados, () => {
   tieneCambios.value = JSON.stringify(itemsFiltrados.value) !== snapshot.value;
 }, { deep: true });
+
+function buscarNodo(nodos, id) {
+  for (const n of nodos) {
+    if (n.id === id) return n;
+    if (n.children?.length) {
+      const enHijos = buscarNodo(n.children, id);
+      if (enHijos) return enHijos;
+    }
+  }
+  return null;
+}
+
+// Cada draggable propaga su fin de arrastre como evento propio, porque el
+// evento `end` de vuedraggable solo se emite en el draggable ORIGEN y la
+// corrección de anidación necesita acceso al árbol global.
+function emitirDrop(evt) {
+  const to = evt?.to;
+  const raiz = !!(to && to.hasAttribute && to.hasAttribute('data-drag-root'));
+  document.dispatchEvent(new CustomEvent('menu-drop', {
+    detail: {
+      raiz,
+      newIndex: evt.newIndex,
+      destino: document.__menuLastTarget ?? null,
+    },
+  }));
+  document.__menuLastTarget = null;
+}
+
+// Durante el arrastre, anota la última fila de nodo bajo el cursor (sus
+// posiciones son estables todavía, a diferencia del instante final).
+function onMoveTree(evt) {
+  const related = evt?.related;
+  const fila = related?.querySelector?.('.drag-node') || related?.closest?.('.drag-node');
+  if (fila) document.__menuLastTarget = Number(fila.getAttribute('data-menu-id'));
+}
+
+// Si el ítem quedó en la raíz pero se soltó sobre la fila de un agrupador, lo
+// re-anida como último hijo de dicho agrupador.
+function onMenuDrop(e) {
+  const d = e.detail || {};
+  if (!d.raiz || d.newIndex == null) return;
+
+  const destinoId = d.destino;
+  if (!destinoId) return;
+
+  const destino = buscarNodo(itemsFiltrados.value, destinoId);
+  const item = itemsFiltrados.value[d.newIndex];
+  if (!destino || !item || destino.id === item.id) return;
+
+  itemsFiltrados.value.splice(d.newIndex, 1);
+  destino.children = [...(destino.children ?? []), item];
+}
+
+onMounted(() => document.addEventListener('menu-drop', onMenuDrop));
+onBeforeUnmount(() => document.removeEventListener('menu-drop', onMenuDrop));
 
 function aplanar(nodos, depth = 0, out = []) {
   for (const n of nodos) {

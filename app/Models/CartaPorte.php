@@ -15,14 +15,111 @@ class CartaPorte extends Model
     protected $fillable = [
         'numero',
         'id_hoja_ruta',
+        'id_solicitud',
+        'id_tractivo',
+        'id_arrastre',
         'id_cliente',
+        'id_producto',
+        'id_producto2',
+        'id_tipo_carga',
+        'id_tipo_carga2',
+        'id_chofer',
+        'id_chofer2',
         'id_lugar_origen',
         'id_lugar_destino',
+        'fecha_emision',
+        'fecha_parte',
+        'fecha_recepcion',
+        'toneladas',
+        'peso1',
+        'peso2',
+        'distancia',
+        'tarifa_km',
+        'total_flete',
+        'ingreso_mt',
+        'flete_mt',
+        'conduce',
+        'estado',
+        'cancelada',
+        'imprimir',
+        'notas',
+        'id_user',
+        'id_user_recepcion',
+        'id_buque',
+        'id_turno',
+        'id_moneda',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'fecha_emision' => 'date',
+            'fecha_parte' => 'date',
+            'fecha_recepcion' => 'date',
+            'toneladas' => 'decimal:2',
+            'peso1' => 'decimal:2',
+            'peso2' => 'decimal:2',
+            'distancia' => 'integer',
+            'ingreso_mt' => 'decimal:2',
+            'flete_mt' => 'decimal:2',
+            'cancelada' => 'boolean',
+            'imprimir' => 'boolean',
+        ];
+    }
+
+    public function hojaRuta(): BelongsTo
+    {
+        return $this->belongsTo(HojasRuta::class, 'id_hoja_ruta');
+    }
+
+    public function solicitud(): BelongsTo
+    {
+        return $this->belongsTo(SolicitudesServicio::class, 'id_solicitud');
+    }
+
+    public function tractivo(): BelongsTo
+    {
+        return $this->belongsTo(Tractivo::class, 'id_tractivo');
+    }
+
+    public function arrastre(): BelongsTo
+    {
+        return $this->belongsTo(Tractivo::class, 'id_arrastre');
+    }
 
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'id_cliente');
+    }
+
+    public function producto(): BelongsTo
+    {
+        return $this->belongsTo(Producto::class, 'id_producto');
+    }
+
+    public function producto2(): BelongsTo
+    {
+        return $this->belongsTo(Producto::class, 'id_producto2');
+    }
+
+    public function tipoCarga(): BelongsTo
+    {
+        return $this->belongsTo(TipoCarga::class, 'id_tipo_carga');
+    }
+
+    public function tipoCarga2(): BelongsTo
+    {
+        return $this->belongsTo(TipoCarga::class, 'id_tipo_carga2');
+    }
+
+    public function chofer(): BelongsTo
+    {
+        return $this->belongsTo(Bolsa::class, 'id_chofer');
+    }
+
+    public function chofer2(): BelongsTo
+    {
+        return $this->belongsTo(Bolsa::class, 'id_chofer2');
     }
 
     public function lugarOrigen(): BelongsTo
@@ -33,5 +130,30 @@ class CartaPorte extends Model
     public function lugarDestino(): BelongsTo
     {
         return $this->belongsTo(Lugare::class, 'id_lugar_destino');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function userRecepcion(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_user_recepcion');
+    }
+
+    public function moneda(): BelongsTo
+    {
+        return $this->belongsTo(Moneda::class, 'id_moneda');
+    }
+
+    public function buque(): BelongsTo
+    {
+        return $this->belongsTo(Buque::class, 'id_buque');
+    }
+
+    public function turno(): BelongsTo
+    {
+        return $this->belongsTo(Turno::class, 'id_turno');
     }
 }

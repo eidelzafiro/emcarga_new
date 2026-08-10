@@ -38,7 +38,7 @@ class PrefacturasController extends Controller
         return Inertia::render('Prefacturas/Form', [
             'title' => 'Nueva Prefactura',
             'clientes' => Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'codigo']),
-            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero_carta_porte')
+            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero')
                 ->whereNull('id_prefactura')
                 ->whereNull('id_factura')
                 ->orderBy('fecha_parte')

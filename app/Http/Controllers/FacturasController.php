@@ -41,7 +41,7 @@ class FacturasController extends Controller
             'title' => 'Nueva Factura',
             'clientes' => Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'codigo']),
             'tipos_ingreso' => TipoIngreso::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'siglas']),
-            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero_carta_porte', 'cartaPorte.cliente:id,nombre')
+            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero', 'cartaPorte.cliente:id,nombre')
                 ->whereNull('id_factura')
                 ->where('ingreso_mt', '>', 0)
                 ->orderBy('fecha_parte')

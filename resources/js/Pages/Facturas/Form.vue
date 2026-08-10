@@ -88,7 +88,7 @@ function submit() {
                     <h3 class="font-medium mb-2">Cartas Porte pendientes de facturar</h3>
                     <DataTable v-model:selection="selectedAforos" :value="aforos_pendientes" selection-mode="multiple" data-key="id" @update:selection="onAforosSelect" striped-rows>
                         <Column selection-mode="multiple" header-style="width: 3rem" />
-                        <Column field="carta_porte.numero_carta_porte" header="CP" />
+                        <Column field="carta_porte.numero" header="CP" />
                         <Column field="fecha_parte" header="Fecha" />
                         <Column field="flete_mt" header="Flete MN">
                             <template #body="{ data }">${{ Number(data.flete_mt).toLocaleString() }}</template>

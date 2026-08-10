@@ -233,6 +233,13 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'hojas_ruta');
         }
 
+        // Cartas de porte (girado): com_girado solo 2026, numero = nrocp
+        if (! $solo || $solo === 'cartas_porte') {
+            $this->info('Migrando cartas de porte (girado, año 2026)...');
+            $etl->migrarCartasPorte(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'cartas_porte');
+        }
+
         // Pivote multi-entidad: requiere usuarios + entidades ya migrados
         if (! $solo) {
             $this->info('Sembrando pivote entidad_user...');

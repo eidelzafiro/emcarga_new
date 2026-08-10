@@ -84,6 +84,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Comercial', 'label' => 'Demandas', 'route' => 'demandas.index', 'permission' => 'demandas.ver', 'orden' => 9],
             ['parent' => 'Comercial', 'label' => 'Indicadores', 'route' => 'indicadores.index', 'permission' => 'indicadores.ver', 'orden' => 10],
             ['parent' => 'Comercial', 'label' => 'Turnos', 'route' => 'turnos-comerciales.index', 'permission' => 'turnos-comerciales.ver', 'orden' => 12],
+            ['parent' => 'Comercial', 'label' => 'Hojas de Ruta', 'route' => 'hojas-ruta.index', 'permission' => 'hojas-ruta.ver', 'orden' => 13],
             ['parent' => 'Comercial', 'label' => 'Devoluciones', 'route' => 'devoluciones.index', 'permission' => 'devoluciones.ver', 'orden' => 26],
 
             // Facturación

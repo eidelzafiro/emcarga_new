@@ -94,11 +94,11 @@ class SolicitudesServicio extends Model
     }
 
     /**
-     * Cartas de porte (giros) generadas en base a esta solicitud.
+     * Cartas de porte que amparan esta solicitud.
      * Las toneladas se acumulan desde ingreso_mt para seguir el cumplimiento.
      */
-    public function giros(): HasMany
+    public function cartasPorte(): HasMany
     {
-        return $this->hasMany(Giro::class, 'id_solicitud');
+        return $this->hasMany(CartaPorte::class, 'id_solicitud');
     }
 }

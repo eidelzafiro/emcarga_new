@@ -38,7 +38,7 @@ class Aforo extends Model
 
     public function cartaPorte(): BelongsTo
     {
-        return $this->belongsTo(Giro::class, 'id_carta_porte');
+        return $this->belongsTo(CartaPorte::class, 'id_carta_porte');
     }
 
     public function factura(): BelongsTo

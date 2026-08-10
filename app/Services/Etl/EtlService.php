@@ -1667,6 +1667,145 @@ $estados = [
         ];
     }
 
+    /**
+     * ETL de cartas de porte (girado): com_girado → cartas_porte.
+     * - Solo el año de negocio (2026).
+     * - numero = nrocp legacy (varchar numérico 5-6 dígitos) con sufijo -2/-3
+     *   cuando nrocp está duplicado (columna UNIQUE en la tabla nueva).
+     * - id preservado (FCKs entre tablas migradas resuelven directo).
+     * - id_solicitud: SOLO si la CP tiene solicitud legacy vinculada vía
+     *   com_solicitudes.idcartaporte = nrocp (73 en 2026). El resto queda NULL.
+     * - estado: 'cancelada' (cancelada=1) / 'recepcionada' (frecepcion) / 'emitida'.
+     * - toneladas = peso1 + peso2; ingreso_mt se rellena igual (seguimiento).
+     */
+    public function migrarCartasPorte(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $canceladas = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsHojas = DB::table('hojas_ruta')->pluck('id')->flip();
+        $idsTractivos = DB::table('tractivos')->pluck('id')->flip();
+        $idsArrastres = DB::table('tractivos')->where('id_grupo', 8)->pluck('id')->flip();
+        $idsChoferes = DB::table('bolsa')->pluck('id')->flip();
+        $idsClientes = DB::table('clientes')->pluck('id')->flip();
+        $idsLugares = DB::table('lugares')->pluck('id')->flip();
+        $idsProductos = DB::table('productos')->pluck('id')->flip();
+        $idsTiposCarga = DB::table('tipos_cargas')->pluck('id')->flip();
+        $idsUsers = DB::table('users')->pluck('id')->flip();
+
+        // nrocp duplicados en el año → sufijo -2, -3 (unique nueva).
+        $dupNrocp = $legacy->table('com_girado')
+            ->whereYear('femision', $anio)
+            ->groupBy('nrocp')->havingRaw('COUNT(*) > 1')
+            ->pluck('nrocp')->flip();
+
+        $usosNrocp = [];
+
+        $fechaValida = function (?string $f): ?string {
+            if (! $f || str_starts_with($f, '0000')) {
+                return null;
+            }
+
+            return substr($f, 0, 10);
+        };
+
+        $legacy->table('com_girado')
+            ->whereYear('femision', $anio)
+            ->orderBy('idcartaporte')
+            ->chunk($chunk, function ($filas) use (
+                &$procesados, &$canceladas, &$avisos, &$usosNrocp,
+                $idsHojas, $idsTractivos, $idsArrastres, $idsChoferes, $idsClientes,
+                $idsLugares, $idsProductos, $idsTiposCarga, $idsUsers,
+                $dupNrocp, $fechaValida
+            ) {
+                foreach ($filas as $fila) {
+                    $nrocpRaw = trim((string) $fila->nrocp);
+                    $nrocp = $nrocpRaw;
+                    if (isset($dupNrocp[$nrocpRaw])) {
+                        $usosNrocp[$nrocpRaw] = ($usosNrocp[$nrocpRaw] ?? 0) + 1;
+                        if ($usosNrocp[$nrocpRaw] > 1) {
+                            $nrocp = $nrocpRaw.'-'.$usosNrocp[$nrocpRaw];
+                        }
+                    }
+
+                    $laFechaEmision = $fechaValida($fila->femision);
+
+                    $idArr = (int) $fila->idarrastre;
+                    $idChofer2 = (int) $fila->idchofer2;
+                    $idProd2 = (int) $fila->idproducto2;
+                    $idTc2 = (int) $fila->idtipocarga2;
+                    $idUserRec = (int) $fila->iduserrecepcion;
+
+                    $toneladas = ((float) $fila->peso1 + (float) $fila->peso2) ?: 0;
+
+                    try {
+                        DB::table('cartas_porte')->updateOrInsert(
+                            ['id' => $fila->idcartaporte],
+                            [
+                                'numero' => $nrocp,
+                                'id_hoja_ruta' => (int) $fila->idhojaruta && isset($idsHojas[$fila->idhojaruta]) ? $fila->idhojaruta : null,
+                                'id_solicitud' => null,
+                                'id_tractivo' => (int) $fila->idtractivos && isset($idsTractivos[$fila->idtractivos]) ? $fila->idtractivos : null,
+                                'id_arrastre' => $idArr && isset($idsArrastres[$idArr]) ? $idArr : null,
+                                'id_cliente' => isset($idsClientes[$fila->idcliente]) ? $fila->idcliente : null,
+                                'id_producto' => (int) $fila->idproducto1 && isset($idsProductos[$fila->idproducto1]) ? $fila->idproducto1 : null,
+                                'id_producto2' => $idProd2 && isset($idsProductos[$idProd2]) ? $idProd2 : null,
+                                'id_tipo_carga' => (int) $fila->idtipocarga1 && isset($idsTiposCarga[$fila->idtipocarga1]) ? $fila->idtipocarga1 : null,
+                                'id_tipo_carga2' => $idTc2 && isset($idsTiposCarga[$idTc2]) ? $idTc2 : null,
+                                'id_chofer' => (int) $fila->idchofer && isset($idsChoferes[$fila->idchofer]) ? $fila->idchofer : null,
+                                'id_chofer2' => $idChofer2 && isset($idsChoferes[$idChofer2]) ? $idChofer2 : null,
+                                'id_lugar_origen' => isset($idsLugares[$fila->idorigen]) ? $fila->idorigen : null,
+                                'id_lugar_destino' => isset($idsLugares[$fila->iddestino]) ? $fila->iddestino : null,
+                                'fecha_emision' => $laFechaEmision,
+                                'fecha_parte' => $laFechaEmision,
+                                'fecha_recepcion' => $fechaValida($fila->frecepcion),
+                                'toneladas' => $toneladas,
+                                'peso1' => $fila->peso1 ?: 0,
+                                'peso2' => $fila->peso2 ?: 0,
+                                'distancia' => (int) $fila->distancia ?: null,
+                                'conduce' => trim((string) $fila->conduce) ?: null,
+                                'ingreso_mt' => $toneladas,
+                                'estado' => (int) $fila->cancelada === 1
+                                    ? 'cancelada'
+                                    : ($fila->frecepcion ? 'recepcionada' : 'emitida'),
+                                'cancelada' => (int) $fila->cancelada === 1,
+                                'imprimir' => (int) $fila->imprimir === 1,
+                                'notas' => trim((string) $fila->notas) ?: null,
+                                'id_user' => (int) $fila->iduser && isset($idsUsers[$fila->iduser]) ? $fila->iduser : null,
+                                'id_user_recepcion' => $idUserRec && isset($idsUsers[$idUserRec]) ? $idUserRec : null,
+                                'id_turno' => null,
+                                'id_buque' => null,
+                                'id_moneda' => null,
+                                'tarifa_km' => null,
+                                'total_flete' => null,
+                                'flete_mt' => null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                        if ((int) $fila->cancelada === 1) {
+                            $canceladas++;
+                        }
+                    } catch (\Throwable $e) {
+                        $avisos[] = "cartas_porte#{$fila->idcartaporte} ({$nrocpRaw}): {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['cartas_porte'] = [
+            'legacy' => (int) $legacy->table('com_girado')->whereYear('femision', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(
+                ["{$canceladas} canceladas (estado 'cancelada')", "{$dupNrocp->count()} nrocp duplicados re-sufijados"],
+                $avisos
+            ),
+        ];
+    }
+
     public function migrarTabla(string $nombre, int $chunk = 1000): void
     {
         $config = config("etl.tablas.{$nombre}");

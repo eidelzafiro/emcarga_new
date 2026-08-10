@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartaPorte;
 use App\Models\Cliente;
-use App\Models\Giro;
 use App\Models\Lugare;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -27,7 +27,7 @@ class SolicitudesController extends Controller
             'tipoCarga:id,codigo,nombre',
             'tipoCarga2:id,codigo,nombre',
             'moneda:id,codigo,nombre,simbolo',
-            'giros' => fn ($q) => $q->where('estado', '!=', 'cancelada'),
+            'cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada'),
         ])
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%")
                 ->orWhereHas('cliente', fn ($q2) => $q2->where('nombre', 'like', "%{$s}%")))
@@ -36,10 +36,10 @@ class SolicitudesController extends Controller
             ->orderBy('numero', 'asc')
             ->paginate(20);
 
-        // Seguimiento de toneladas: suma de giros (cartas de porte) vigentes
+        // Seguimiento de toneladas: suma de cartas_porte (vigentes)
         foreach ($solicitudes as $sol) {
             $total = (float) ($sol->peso1 ?? 0) + (float) ($sol->peso2 ?? 0);
-            $ejecutado = (float) $sol->giros->sum('ingreso_mt');
+            $ejecutado = (float) $sol->cartasPorte->sum('ingreso_mt');
             $sol->toneladas_total = $total;
             $sol->toneladas_ejecutadas = $ejecutado;
             $sol->toneladas_pendientes = max(0, $total - $ejecutado);
@@ -131,7 +131,7 @@ class SolicitudesController extends Controller
      */
     public function registrarCartaPorte(Request $request, SolicitudesServicio $solicitude)
     {
-        $pendientes = max(0, (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0) - (float) Giro::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('ingreso_mt'));
+        $pendientes = max(0, (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0) - (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('ingreso_mt'));
 
         $validated = $request->validate([
             'ingreso_mt' => ['required', 'numeric', 'min:0.01', 'max:'.($pendientes > 0 ? $pendientes : 0.01)],
@@ -140,23 +140,28 @@ class SolicitudesController extends Controller
 
         $numero = $this->generarNumeroCartaPorte();
 
-        Giro::create([
-            'numero_carta_porte' => $numero,
+        CartaPorte::create([
+            'numero' => $numero,
             'id_solicitud' => $solicitude->id,
             'id_cliente' => $solicitude->id_cliente,
             'id_lugar_origen' => $solicitude->id_lugar_origen,
             'id_lugar_destino' => $solicitude->id_lugar_destino,
             'id_producto' => $solicitude->id_producto,
+            'id_producto2' => $solicitude->id_producto2,
             'id_tipo_carga' => $solicitude->id_tipo_carga,
+            'id_tipo_carga2' => $solicitude->id_tipo_carga2,
             'id_moneda' => $solicitude->id_moneda,
             'id_user' => auth()->id(),
+            'fecha_emision' => $validated['fecha_parte'] ?? now()->toDateString(),
             'fecha_parte' => $validated['fecha_parte'] ?? now()->toDateString(),
+            'peso1' => $validated['ingreso_mt'],
+            'toneladas' => $validated['ingreso_mt'],
             'ingreso_mt' => $validated['ingreso_mt'],
             'flete_mt' => $solicitude->valor_mt,
-            'estado' => 'activo',
+            'estado' => 'emitida',
         ]);
 
-        $estaRealizada = (float) Giro::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('ingreso_mt')
+        $estaRealizada = (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('ingreso_mt')
             >= (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0);
 
         $solicitude->update([
@@ -170,9 +175,9 @@ class SolicitudesController extends Controller
     private function generarNumeroCartaPorte(): string
     {
         $base = 'CP-'.now()->format('Y').'-';
-        $ultimo = Giro::where('numero_carta_porte', 'like', $base.'%')
-            ->orderBy('numero_carta_porte', 'desc')
-            ->value('numero_carta_porte');
+        $ultimo = CartaPorte::where('numero', 'like', $base.'%')
+            ->orderBy('numero', 'desc')
+            ->value('numero');
         $sec = $ultimo ? ((int) substr($ultimo, strlen($base))) + 1 : 1;
 
         return $base.str_pad((string) $sec, 5, '0', STR_PAD_LEFT);

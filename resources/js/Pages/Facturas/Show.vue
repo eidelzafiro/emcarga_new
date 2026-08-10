@@ -54,7 +54,7 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
                 <template #title>Cartas Porte</template>
                 <template #content>
                     <DataTable :value="factura.aforos || []" striped-rows>
-                        <Column field="carta_porte.numero_carta_porte" header="CP" />
+                        <Column field="carta_porte.numero" header="CP" />
                         <Column field="fecha_parte" header="Fecha" />
                         <Column field="flete_mt" header="Flete MN">
                             <template #body="{ data }">${{ Number(data.flete_mt).toLocaleString() }}</template>

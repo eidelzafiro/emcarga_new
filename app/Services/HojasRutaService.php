@@ -25,6 +25,7 @@ class HojasRutaService
             'id_chofer2' => $datos['id_chofer2'] ?? null,
             'id_parqueo' => $datos['id_parqueo'] ?? null,
             'id_grupo' => $datos['id_grupo'] ?? null,
+            'id_hr_anterior' => $datos['id_hr_anterior'] ?? null,
             'kms_disponible' => $datos['kms_disponible'] ?? 0,
             'kms_disponibles_adicionales' => $datos['kms_disponibles_adicionales'] ?? 0,
             'fecha_emision' => $datos['fecha_emision'],
@@ -54,16 +55,16 @@ class HojasRutaService
         $nueva = HojasRuta::create([
             'numero' => $datos['numero_nueva'],
             'id_tractivo' => $hr->id_tractivo,
-            'id_arrastre' => $hr->id_arrastre,
-            'id_chofer' => $hr->id_chofer,
+            'id_arrastre' => $datos['id_arrastre'] ?? $hr->id_arrastre,
+            'id_chofer' => $datos['id_chofer'] ?? $hr->id_chofer,
             'id_chofer2' => $hr->id_chofer2,
-            'id_parqueo' => $hr->id_parqueo,
+            'id_parqueo' => $datos['id_parqueo'] ?? $hr->id_parqueo,
             'id_grupo' => $hr->id_grupo,
             'kms_disponible' => $datos['kms_disponible'] ?? 0,
             'kms_disponibles_adicionales' => $datos['kms_disponibles_adicionales'] ?? 0,
-            'fecha_emision' => $datos['fecha_emision'],
-            'hora_emision' => $datos['hora_emision'] ?? null,
-            'fecha_salida' => $datos['fecha_emision'],
+            'fecha_emision' => $datos['fecha_cierre'] ?? $hr->fecha_cierre,
+            'hora_emision' => $datos['hora_cierre'] ?? $hr->hora_cierre,
+            'fecha_salida' => $datos['fecha_cierre'] ?? $hr->fecha_cierre,
             'id_hr_anterior' => $hr->id,
             'id_entidad' => $hr->id_entidad,
             'id_user' => $userId,
@@ -71,7 +72,7 @@ class HojasRutaService
             'estado' => 'abierta',
         ]);
 
-        $this->asociar($hr->id_tractivo, $hr->id_arrastre);
+        $this->asociar($hr->id_tractivo, $datos['id_arrastre'] ?? $hr->id_arrastre);
         $this->actualizarKmsTractor($hr->id_tractivo, $datos['kms_disponible'] ?? 0);
 
         return $nueva;
@@ -95,8 +96,12 @@ class HojasRutaService
     {
         $hr = HojasRuta::findOrFail($idHoja);
 
+        if ($hr->cancelada) {
+            abort(422, 'No se puede editar una Hoja de Ruta cancelada.');
+        }
+
         $campos = [
-            'numero', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2',
+            'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2',
             'id_parqueo', 'id_grupo', 'fecha_emision', 'hora_emision',
             'fecha_cierre', 'hora_cierre', 'kms_disponible', 'kms_disponibles_adicionales',
             'kms_totales', 'combustible_habilitado', 'combustible_consumido',
@@ -106,6 +111,7 @@ class HojasRutaService
         ];
 
         $hr->fill(collect($campos)->mapWithKeys(fn ($c) => [$c => $datos[$c] ?? null])->all());
+        $hr->numero = $hr->getOriginal('numero');
         $hr->indice_hr = $this->calcularIndice($datos['combustible_habilitado'] ?? 0, $datos['kms_totales'] ?? 0);
         $hr->cancelada = (bool) ($datos['cancelada'] ?? false);
         $hr->estado = $hr->cancelada
@@ -149,12 +155,17 @@ class HojasRutaService
     }
 
     /**
-     * Rechaza la operación si la HR ya tiene Cartas de Porte.
+     * Rechaza la operación si la HR tiene Cartas de Porte sin cancelar.
+     * Las canceladas se ignoran (estado = 'cancelada').
      */
     private function assertSinCartasPorte(int $id): void
     {
-        if (CartaPorte::where('id_hoja_ruta', $id)->exists()) {
-            abort(422, 'La Hoja de Ruta ya tiene Cartas de Porte asociadas.');
+        $sinCancelar = CartaPorte::where('id_hoja_ruta', $id)
+            ->where('estado', '!=', 'cancelada')
+            ->exists();
+
+        if ($sinCancelar) {
+            abort(422, 'La Hoja de Ruta tiene Cartas de Porte sin cancelar asociadas.');
         }
     }
 

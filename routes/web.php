@@ -226,6 +226,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('solicitudes', SolicitudesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::post('solicitudes/{solicitude}/duplicar', [SolicitudesController::class, 'duplicar'])
+            ->name('solicitudes.duplicar');
+        Route::post('solicitudes/{solicitude}/carta-porte', [SolicitudesController::class, 'registrarCartaPorte'])
+            ->name('solicitudes.carta-porte');
+
         Route::resource('giros', GirosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 

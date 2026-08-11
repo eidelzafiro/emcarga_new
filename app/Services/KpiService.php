@@ -5,12 +5,31 @@ namespace App\Services;
 use App\Models\Bateria;
 use App\Models\Bolsa;
 use App\Models\Cargo;
+use App\Models\CartaPorte;
 use App\Models\Entidad;
+use App\Models\HojasRuta;
+use App\Models\SolicitudesServicio;
 use App\Models\Tractivo;
 use App\Models\User;
 
 class KpiService
 {
+    private function periodoMes(): array
+    {
+        return [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()];
+    }
+
+    private function cartasDelMes(?int $entidadId = null)
+    {
+        return CartaPorte::where('cancelada', false)
+            ->whereBetween('fecha_emision', $this->periodoMes())
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)));
+    }
+
+    private function fmtMoneda(mixed $valor): string
+    {
+        return '$'.number_format((float) $valor, 2, '.', ',');
+    }
     public function calcular(?int $entidadId = null): array
     {
         return $this->paraRol('default', $entidadId);
@@ -87,6 +106,13 @@ class KpiService
         $bateriasQuery = Bateria::query();
         $this->scopeEntidad($bateriasQuery, $entidadId);
 
+        $conductoresEnRuta = HojasRuta::whereNull('fecha_cierre')
+            ->where('cancelada', false)
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->whereNotNull('id_chofer')
+            ->distinct('id_chofer')
+            ->count('id_chofer');
+
         return [
             [
                 'label' => 'Vehículos activos',
@@ -110,9 +136,9 @@ class KpiService
                 'color' => 'bg-orange-500',
             ],
             [
-                'label' => 'Conductores asignados',
-                'valor' => '—',
-                'subtexto' => 'Operadores en ruta',
+                'label' => 'Conductores en ruta',
+                'valor' => $conductoresEnRuta > 0 ? (string) $conductoresEnRuta : '—',
+                'subtexto' => 'Choferes en hojas abiertas',
                 'icono' => 'pi pi-user',
                 'color' => 'bg-blue-500',
             ],
@@ -121,32 +147,45 @@ class KpiService
 
     private function kpisComercial(?int $entidadId): array
     {
+        $cartasMes = $this->cartasDelMes($entidadId);
+        $cartas = (clone $cartasMes)->count();
+        $ingresos = (clone $cartasMes)->sum('ingreso_mt');
+        $porRecepcionar = CartaPorte::where('cancelada', false)
+            ->where('estado', 'emitida')
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->count();
+        $clientesActivos = CartaPorte::where('cancelada', false)
+            ->whereBetween('fecha_emision', $this->periodoMes())
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->distinct('id_cliente')
+            ->count('id_cliente');
+
         return [
             [
-                'label' => 'Facturas del mes',
-                'valor' => '—',
+                'label' => 'Cartas de porte del mes',
+                'valor' => (string) $cartas,
                 'subtexto' => $entidadId ? 'Entidad activa' : 'Emitidas este período',
                 'icono' => 'pi pi-file',
                 'color' => 'bg-emerald-500',
             ],
             [
                 'label' => 'Ingresos del mes',
-                'valor' => '—',
-                'subtexto' => $entidadId ? 'Entidad activa' : 'Facturación acumulada',
+                'valor' => $ingresos > 0 ? $this->fmtMoneda($ingresos) : '—',
+                'subtexto' => $entidadId ? 'Entidad activa' : 'Ingresos acumulados (MN)',
                 'icono' => 'pi pi-dollar',
                 'color' => 'bg-cyan-500',
             ],
             [
-                'label' => 'Aforos pendientes',
-                'valor' => '—',
-                'subtexto' => 'Operaciones en curso',
-                'icono' => 'pi pi-shopping-cart',
+                'label' => 'CP por recepcionar',
+                'valor' => (string) $porRecepcionar,
+                'subtexto' => 'Cartas emitidas en curso',
+                'icono' => 'pi pi-clock',
                 'color' => 'bg-amber-500',
             ],
             [
                 'label' => 'Clientes activos',
-                'valor' => '—',
-                'subtexto' => 'Con operaciones recientes',
+                'valor' => (string) $clientesActivos,
+                'subtexto' => 'Con cartas de porte en el mes',
                 'icono' => 'pi pi-building',
                 'color' => 'bg-violet-500',
             ],
@@ -155,11 +194,14 @@ class KpiService
 
     private function kpisContabilidad(?int $entidadId): array
     {
+        $ingresos = (clone $this->cartasDelMes($entidadId))->sum('ingreso_mt');
+        $emitidasMes = (clone $this->cartasDelMes($entidadId))->count();
+
         return [
             [
                 'label' => 'Ingresos del mes',
-                'valor' => '—',
-                'subtexto' => $entidadId ? 'Entidad activa' : 'Total facturado',
+                'valor' => $ingresos > 0 ? $this->fmtMoneda($ingresos) : '—',
+                'subtexto' => $entidadId ? 'Entidad activa' : 'Total facturado (MN)',
                 'icono' => 'pi pi-arrow-up',
                 'color' => 'bg-emerald-500',
             ],
@@ -171,9 +213,9 @@ class KpiService
                 'color' => 'bg-red-500',
             ],
             [
-                'label' => 'Centros de costo',
-                'valor' => '—',
-                'subtexto' => 'Activos en sistema',
+                'label' => 'Cartas emitidas',
+                'valor' => (string) $emitidasMes,
+                'subtexto' => 'Giros en el período',
                 'icono' => 'pi pi-chart-bar',
                 'color' => 'bg-blue-500',
             ],
@@ -235,34 +277,43 @@ class KpiService
 
     private function kpisOperativos(?int $entidadId): array
     {
+        $hrAbiertas = HojasRuta::whereNull('fecha_cierre')
+            ->where('cancelada', false)
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId));
+        $abiertas = (clone $hrAbiertas)->count();
+        $vehiculosEnRuta = (clone $hrAbiertas)->whereNotNull('id_tractivo')->distinct('id_tractivo')->count('id_tractivo');
+        $cartasMes = $this->cartasDelMes($entidadId);
+        $cartas = (clone $cartasMes)->count();
+        $toneladas = (clone $cartasMes)->sum('ingreso_mt');
+
         return [
             [
-                'label' => 'Turnos hoy',
-                'valor' => '—',
-                'subtexto' => $entidadId ? 'Entidad activa' : 'Programados para hoy',
-                'icono' => 'pi pi-clock',
+                'label' => 'Hojas de ruta abiertas',
+                'valor' => (string) $abiertas,
+                'subtexto' => $entidadId ? 'Entidad activa' : 'Sin cerrar en el sistema',
+                'icono' => 'pi pi-compass',
                 'color' => 'bg-blue-500',
             ],
             [
                 'label' => 'Vehículos en ruta',
-                'valor' => '—',
-                'subtexto' => 'Activos esta jornada',
-                'icono' => 'pi pi-compass',
+                'valor' => (string) $vehiculosEnRuta,
+                'subtexto' => 'Tractivos en hojas abiertas',
+                'icono' => 'pi pi-truck',
                 'color' => 'bg-emerald-500',
             ],
             [
-                'label' => 'Combustible hoy',
-                'valor' => '—',
-                'subtexto' => 'Litros despachados',
-                'icono' => 'pi pi-fuel',
+                'label' => 'Toneladas del mes',
+                'valor' => $toneladas > 0 ? number_format((float) $toneladas, 0, '.', '.').' t' : '—',
+                'subtexto' => 'Ingresos de carga del período',
+                'icono' => 'pi pi-weight',
                 'color' => 'bg-amber-500',
             ],
             [
-                'label' => 'Incidencias',
-                'valor' => '—',
-                'subtexto' => 'Reportadas en el día',
-                'icono' => 'pi pi-exclamation-triangle',
-                'color' => 'bg-red-500',
+                'label' => 'Cartas del mes',
+                'valor' => (string) $cartas,
+                'subtexto' => 'Giros emitidos en el período',
+                'icono' => 'pi pi-file',
+                'color' => 'bg-violet-500',
             ],
         ];
     }
@@ -313,6 +364,15 @@ class KpiService
         $bolsaQuery = Bolsa::query();
         $this->scopeEntidad($bolsaQuery, $entidadId);
 
+        $ingresosMes = $this->cartasDelMes($entidadId)->sum('ingreso_mt');
+        $pendientes = SolicitudesServicio::whereIn('estado', ['pendiente', 'en_proceso'])
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->count();
+        $porRecepcionar = CartaPorte::where('cancelada', false)
+            ->where('estado', 'emitida')
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->count();
+
         return [
             [
                 'label' => 'Vehículos activos',
@@ -330,15 +390,15 @@ class KpiService
             ],
             [
                 'label' => 'Ingresos del mes',
-                'valor' => '—',
-                'subtexto' => $entidadId ? 'Entidad activa' : 'Facturación acumulada',
+                'valor' => $ingresosMes > 0 ? $this->fmtMoneda($ingresosMes) : '—',
+                'subtexto' => $entidadId ? 'Entidad activa' : 'Cartas de porte del período (MN)',
                 'icono' => 'pi pi-dollar',
                 'color' => 'bg-violet-500',
             ],
             [
-                'label' => 'Órdenes pendientes',
-                'valor' => '—',
-                'subtexto' => 'Por atender',
+                'label' => 'Solicitudes pendientes',
+                'valor' => $pendientes > 0 ? (string) $pendientes : ($porRecepcionar > 0 ? (string) $porRecepcionar : '—'),
+                'subtexto' => $pendientes > 0 ? 'Por atender' : 'CP por recepcionar',
                 'icono' => 'pi pi-clipboard',
                 'color' => 'bg-amber-500',
             ],

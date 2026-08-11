@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartaPorte;
+use App\Models\HojasRuta;
+use App\Models\SolicitudesServicio;
 use App\Services\KpiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -24,8 +28,9 @@ class DashboardController extends Controller
         $rol = $this->detectarRol($request, $user);
         $kpis = $this->kpiService->paraRol($rol, $entidadId);
         $actividadReciente = $this->actividadPorRol($rol);
-        $movimientos = $this->movimientosPorRol($rol);
+        $movimientos = $this->movimientosPorRol($rol, $entidadId);
         $secciones = $this->seccionesPorRol($rol);
+        $serieActividad = $this->actividadDiaria($entidadId);
 
         return Inertia::render('Dashboard', [
             'title' => 'Dashboard',
@@ -35,6 +40,7 @@ class DashboardController extends Controller
             'actividadReciente' => $actividadReciente,
             'movimientos' => $movimientos,
             'secciones' => $secciones,
+            'serieActividad' => $serieActividad,
         ]);
     }
 
@@ -115,44 +121,140 @@ class DashboardController extends Controller
         };
     }
 
-    private function movimientosPorRol(string $rol): array
+    /**
+     * Últimos movimientos con datos reales de la operación: hojas de ruta,
+     * cartas de porte y solicitudes de servicio recientes.
+     */
+    private function movimientosPorRol(string $rol, ?int $entidadId = null): array
     {
-        return match ($rol) {
-            'TECNICA' => [
-                ['id' => 2001, 'tipo' => 'Mantenimiento', 'icono' => 'pi pi-wrench', 'color' => '#6366f1', 'descripcion' => 'Servicio programado tractor #T-042', 'monto' => '—', 'estado' => 'Pendiente', 'claseBadge' => 'status-badge-pendiente', 'fecha' => 'Próximo'],
-                ['id' => 2002, 'tipo' => 'Batería', 'icono' => 'pi pi-bolt', 'color' => '#d97706', 'descripcion' => 'Rotación de batería #B-018', 'monto' => '—', 'estado' => 'En proceso', 'claseBadge' => 'status-badge-proceso', 'fecha' => 'Hoy'],
-                ['id' => 2003, 'tipo' => 'Arrastre', 'icono' => 'pi pi-link', 'color' => '#059669', 'descripcion' => 'Asignación arrastre #A-105', 'monto' => '—', 'estado' => 'Completado', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Ayer'],
-                ['id' => 2004, 'tipo' => 'Inspección', 'icono' => 'pi pi-search', 'color' => '#0ea5e9', 'descripcion' => 'Revisión neumáticos flota', 'monto' => '—', 'estado' => 'Programado', 'claseBadge' => 'status-badge-pendiente', 'fecha' => 'Mañana'],
-            ],
-            'COMERCIAL' => [
-                ['id' => 3001, 'tipo' => 'Cotización', 'icono' => 'pi pi-shopping-cart', 'color' => '#059669', 'descripcion' => 'Aforo #AF-089 para Cliente XYZ', 'monto' => '—', 'estado' => 'Pendiente', 'claseBadge' => 'status-badge-pendiente', 'fecha' => 'Hoy'],
-                ['id' => 3002, 'tipo' => 'Factura', 'icono' => 'pi pi-file', 'color' => '#6366f1', 'descripcion' => 'Factura #F-2025-050 emitida', 'monto' => '—', 'estado' => 'Completado', 'claseBadge' => 'status-badge-completado', 'fecha' => '25 jul'],
-                ['id' => 3003, 'tipo' => 'Tarifa', 'icono' => 'pi pi-tag', 'color' => '#ec4899', 'descripcion' => 'Actualización tarifas carga general', 'monto' => '—', 'estado' => 'Vigente', 'claseBadge' => 'status-badge-completado', 'fecha' => '01 ago'],
-            ],
-            'CONTABILIDAD' => [
-                ['id' => 4001, 'tipo' => 'Ingreso', 'icono' => 'pi pi-arrow-up', 'color' => '#059669', 'descripcion' => 'Facturación acumulada agosto', 'monto' => '—', 'estado' => 'En curso', 'claseBadge' => 'status-badge-proceso', 'fecha' => 'Agosto'],
-                ['id' => 4002, 'tipo' => 'Egreso', 'icono' => 'pi pi-arrow-down', 'color' => '#ef4444', 'descripcion' => 'Pago de nómina mensual', 'monto' => '—', 'estado' => 'Programado', 'claseBadge' => 'status-badge-pendiente', 'fecha' => 'Próximo'],
-                ['id' => 4003, 'tipo' => 'Balance', 'icono' => 'pi pi-calculator', 'color' => '#6366f1', 'descripcion' => 'Cierre contable julio', 'monto' => '—', 'estado' => 'Completado', 'claseBadge' => 'status-badge-completado', 'fecha' => '31 jul'],
-            ],
-            'RECHUM' => [
-                ['id' => 5001, 'tipo' => 'Ingreso', 'icono' => 'pi pi-user-plus', 'color' => '#059669', 'descripcion' => 'Nuevo trabajador registrado', 'monto' => '—', 'estado' => 'Completado', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Hoy'],
-                ['id' => 5002, 'tipo' => 'Vacaciones', 'icono' => 'pi pi-calendar', 'color' => '#d97706', 'descripcion' => 'Solicitud de vacaciones aprobada', 'monto' => '—', 'estado' => 'Aprobado', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Agosto'],
-                ['id' => 5003, 'tipo' => 'Cargo', 'icono' => 'pi pi-briefcase', 'color' => '#6366f1', 'descripcion' => 'Nuevo cargo creado: Especialista', 'monto' => '—', 'estado' => 'Activo', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Ayer'],
-            ],
-            'OPERATIVOS' => [
-                ['id' => 6001, 'tipo' => 'Turno', 'icono' => 'pi pi-clock', 'color' => '#059669', 'descripcion' => 'Turno matutino en curso', 'monto' => '—', 'estado' => 'Activo', 'claseBadge' => 'status-badge-proceso', 'fecha' => 'Hoy'],
-                ['id' => 6002, 'tipo' => 'Combustible', 'icono' => 'pi pi-fuel', 'color' => '#d97706', 'descripcion' => 'Carga tractor #T-015', 'monto' => '—', 'estado' => 'Completado', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Hoy'],
-                ['id' => 6003, 'tipo' => 'Incidencia', 'icono' => 'pi pi-exclamation-triangle', 'color' => '#ef4444', 'descripcion' => 'Neumático bajo reportado', 'monto' => '—', 'estado' => 'Atendido', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Hoy'],
-            ],
-            'CONFIGURACIONES' => [
-                ['id' => 7001, 'tipo' => 'Usuario', 'icono' => 'pi pi-user-plus', 'color' => '#6366f1', 'descripcion' => 'Nuevo usuario registrado', 'monto' => '—', 'estado' => 'Activo', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Hoy'],
-                ['id' => 7002, 'tipo' => 'Entidad', 'icono' => 'pi pi-building', 'color' => '#059669', 'descripcion' => 'Entidad configurada', 'monto' => '—', 'estado' => 'Activa', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Reciente'],
-            ],
-            default => [
-                ['id' => 1001, 'tipo' => 'Sistema', 'icono' => 'pi pi-cog', 'color' => '#6366f1', 'descripcion' => 'Panel de control activo', 'monto' => '—', 'estado' => 'Activo', 'claseBadge' => 'status-badge-completado', 'fecha' => 'Ahora'],
-                ['id' => 1002, 'tipo' => 'Vehículo', 'icono' => 'pi pi-truck', 'color' => '#059669', 'descripcion' => 'Vehículos registrados en sistema', 'monto' => '—', 'estado' => '—', 'claseBadge' => 'status-badge-completado', 'fecha' => '—'],
-            ],
-        };
+        $movimientos = [];
+
+        $hojas = HojasRuta::with('tractivo:id,codigo')
+            ->select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'cancelada', 'id_tractivo')
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->whereNotNull('fecha_emision')
+            ->orderByDesc('fecha_emision')
+            ->limit(6)
+            ->get();
+
+        foreach ($hojas as $hr) {
+            $movimientos[] = [
+                'id' => $hr->id,
+                'tipo' => 'Hoja de ruta',
+                'icono' => 'pi pi-truck',
+                'color' => '#059669',
+                'descripcion' => "HR {$hr->numero}".($hr->tractivo ? " · {$hr->tractivo->codigo}" : ''),
+                'monto' => '—',
+                'estado' => $hr->cancelada ? 'Cancelada' : ($hr->fecha_cierre ? 'Cerrada' : 'Abierta'),
+                'claseBadge' => $hr->cancelada ? 'status-badge-cancelado' : ($hr->fecha_cierre ? 'status-badge-completado' : 'status-badge-proceso'),
+                'fecha' => $hr->fecha_emision?->translatedFormat('d M y'),
+                '_ts' => $hr->fecha_emision ? $hr->fecha_emision->timestamp : 0,
+            ];
+        }
+
+        $cartas = CartaPorte::with('cliente:id,nombre')
+            ->select('id', 'numero', 'fecha_emision', 'estado', 'cancelada', 'id_cliente')
+            ->where('cancelada', false)
+            ->whereNotNull('fecha_emision')
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->orderByDesc('fecha_emision')
+            ->limit(6)
+            ->get();
+
+        foreach ($cartas as $cp) {
+            $movimientos[] = [
+                'id' => $cp->id,
+                'tipo' => 'Carta de porte',
+                'icono' => 'pi pi-file',
+                'color' => '#2563eb',
+                'descripcion' => "CP {$cp->numero}".($cp->cliente ? " · {$cp->cliente->nombre}" : ''),
+                'monto' => '—',
+                'estado' => ucfirst($cp->estado),
+                'claseBadge' => $cp->estado === 'emitida' ? 'status-badge-proceso' : 'status-badge-completado',
+                'fecha' => $cp->fecha_emision?->translatedFormat('d M y'),
+                '_ts' => $cp->fecha_emision ? $cp->fecha_emision->timestamp : 0,
+            ];
+        }
+
+        $solicitudes = SolicitudesServicio::with('cliente:id,nombre')
+            ->select('id', 'numero', 'fecha_solicitud', 'estado', 'id_cliente')
+            ->whereNotNull('fecha_solicitud')
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->orderByDesc('fecha_solicitud')
+            ->limit(4)
+            ->get();
+
+        foreach ($solicitudes as $sol) {
+            $movimientos[] = [
+                'id' => $sol->id,
+                'tipo' => 'Solicitud',
+                'icono' => 'pi pi-shopping-cart',
+                'color' => '#d97706',
+                'descripcion' => "SOL {$sol->numero}".($sol->cliente ? " · {$sol->cliente->nombre}" : ''),
+                'monto' => '—',
+                'estado' => match ($sol->estado) {
+                    'ejecutada' => 'Ejecutada',
+                    'en_proceso' => 'En proceso',
+                    default => 'Pendiente',
+                },
+                'claseBadge' => match ($sol->estado) {
+                    'ejecutada' => 'status-badge-completado',
+                    'en_proceso' => 'status-badge-proceso',
+                    default => 'status-badge-pendiente',
+                },
+                'fecha' => $sol->fecha_solicitud?->translatedFormat('d M y'),
+                '_ts' => $sol->fecha_solicitud ? $sol->fecha_solicitud->timestamp : 0,
+            ];
+        }
+
+        usort($movimientos, fn ($a, $b) => $b['_ts'] <=> $a['_ts']);
+
+        return collect(array_slice($movimientos, 0, 12))
+            ->map(fn ($m) => Arr::except($m, ['_ts']))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Serie diaria de emisión de hojas de ruta, cartas de porte y solicitudes
+     * para alimentar el gráfico de actividad con datos reales.
+     */
+    private function actividadDiaria(?int $entidadId = null, int $dias = 90): array
+    {
+        $desde = now()->subDays($dias - 1)->toDateString();
+        $hasta = now()->toDateString();
+
+        $hojas = HojasRuta::whereBetween('fecha_emision', [$desde, $hasta])
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->selectRaw('fecha_emision, count(*) as total')
+            ->groupBy('fecha_emision')
+            ->pluck('total', 'fecha_emision');
+
+        $cartas = CartaPorte::whereBetween('fecha_emision', [$desde, $hasta])
+            ->where('cancelada', false)
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->selectRaw('fecha_emision, count(*) as total')
+            ->groupBy('fecha_emision')
+            ->pluck('total', 'fecha_emision');
+
+        $solicitudes = SolicitudesServicio::whereBetween('fecha_solicitud', [$desde, $hasta])
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->selectRaw('fecha_solicitud, count(*) as total')
+            ->groupBy('fecha_solicitud')
+            ->pluck('total', 'fecha_solicitud');
+
+        $serie = [];
+        for ($i = $dias - 1; $i >= 0; $i--) {
+            $d = now()->subDays($i)->toDateString();
+            $serie[] = [
+                'fecha' => $d,
+                'hojas' => (int) ($hojas[$d] ?? 0),
+                'cartas' => (int) ($cartas[$d] ?? 0),
+                'solicitudes' => (int) ($solicitudes[$d] ?? 0),
+            ];
+        }
+
+        return $serie;
     }
 
     private function seccionesPorRol(string $rol): array

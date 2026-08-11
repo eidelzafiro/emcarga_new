@@ -11,6 +11,8 @@ use App\Models\Tractivo;
 use App\Services\HojasRutaService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Inertia\Inertia;
 
 class HojasRutaController extends Controller
@@ -26,7 +28,7 @@ class HojasRutaController extends Controller
         $inicioMes = Carbon::parse($fechaOperaciones)->startOfMonth()->toDateString();
         $finMes = Carbon::parse($fechaOperaciones)->endOfMonth()->toDateString();
 
-        $hojas = HojasRuta::with(['tractivo:id,codigo,id_entidad,id_grupo,indice_consumo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos,ci,categorias_licencia', 'chofer2:id,nombre,apellidos,ci,categorias_licencia', 'entidad:id,nombre', 'parqueo:id,nombre', 'grupo:id,nombre'])
+        $hojas = HojasRuta::with(['tractivo:id,codigo,id_entidad,id_grupo,indice_consumo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos,ci,categorias_licencia', 'chofer2:id,nombre,apellidos,ci,categorias_licencia', 'entidad:id,nombre', 'parqueo:id,nombre', 'grupo:id,nombre', 'cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')->select('id', 'id_hoja_ruta', 'numero', 'estado', 'imprimir')])
             ->withCount(['cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')])
             // Entidad activa por el tractivo de la hoja de ruta
             ->when($entidadId, fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
@@ -151,7 +153,45 @@ class HojasRutaController extends Controller
             'hojas' => $hojas,
             'filters' => $request->only(['search', 'estado', 'equipo', 'chofer', 'grupo']),
             'catalogos' => $catalogos,
+            'filtros' => $this->filtrosHojas($entidadId, $inicioMes, $finMes),
         ]);
+    }
+
+    /**
+     * Opciones para los filtros del grid de hojas de ruta: SOLO tractivos,
+     * choferes y grupos que aparecen en hojas de ruta del mes de operaciones.
+     * Incluye las combinaciones reales para que los filtros sean dependientes
+     * entre sí (mismo patrón que las cartas de porte).
+     */
+    private function filtrosHojas(?int $entidadId, string $inicioMes, string $finMes): array
+    {
+        $base = HojasRuta::query()
+            ->when($entidadId, fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
+            ->where(fn ($q) => $q
+                ->whereNull('fecha_cierre')
+                ->orWhereBetween('fecha_cierre', [$inicioMes, $finMes]));
+
+        $tractivoIds = (clone $base)->whereNotNull('id_tractivo')->distinct()->pluck('id_tractivo');
+        $grupoIds = (clone $base)->whereNotNull('id_grupo')->distinct()->pluck('id_grupo');
+        $choferIds = (clone $base)->whereNotNull('id_chofer')->distinct()->pluck('id_chofer')
+            ->merge((clone $base)->whereNotNull('id_chofer2')->distinct()->pluck('id_chofer2'))
+            ->unique();
+
+        return [
+            'tractivos' => Tractivo::select('id', 'codigo')->whereIn('id', $tractivoIds)->orderBy('codigo')->get(),
+            'grupos' => Grupo::select('id', 'nombre')->whereIn('id', $grupoIds)->orderBy('nombre')->get(),
+            'choferes' => Bolsa::select('id', 'nombre', 'apellidos')->whereIn('id', $choferIds)->orderBy('nombre')->get(),
+            // Combinaciones reales del mes para filtros encadenados
+            'combinaciones' => (clone $base)
+                ->select('id_tractivo', 'id_chofer', 'id_chofer2', 'id_grupo')
+                ->get()
+                ->map(fn ($h) => [
+                    'tractivo' => $h->id_tractivo,
+                    'chofer' => $h->id_chofer,
+                    'chofer2' => $h->id_chofer2,
+                    'grupo' => $h->id_grupo,
+                ]),
+        ];
     }
 
     public function store(Request $request)
@@ -188,12 +228,20 @@ class HojasRutaController extends Controller
     public function destroy(Request $request, int $hoja)
     {
         if ($request->input('operacion') === 'cancelar') {
-            $this->service->cancelar($hoja, $request->user()->id, session('fecha_operaciones'));
+            try {
+                $this->service->cancelar($hoja, $request->user()->id, session('fecha_operaciones'));
+            } catch (HttpException $e) {
+                throw ValidationException::withMessages(['general' => $e->getMessage()]);
+            }
 
             return back()->with('success', 'Hoja de Ruta cancelada.');
         }
 
-        $this->service->eliminar($hoja);
+        try {
+            $this->service->eliminar($hoja);
+        } catch (HttpException $e) {
+            throw ValidationException::withMessages(['general' => $e->getMessage()]);
+        }
 
         return back()->with('success', 'Hoja de Ruta eliminada correctamente.');
     }
@@ -205,11 +253,11 @@ class HojasRutaController extends Controller
             'fecha_emision' => ['required', 'date'],
             'hora_emision' => ['nullable', 'string', 'max:15'],
             'id_hr_anterior' => ['nullable', 'exists:hojas_ruta,id'],
-            'id_tractivo' => ['nullable', 'exists:tractivos,id'],
+            'id_tractivo' => ['required', 'exists:tractivos,id'],
             'id_arrastre' => ['nullable', 'exists:tractivos,id'],
-            'id_chofer' => ['nullable', 'exists:bolsa,id'],
+            'id_chofer' => ['required', 'exists:bolsa,id'],
             'id_chofer2' => ['nullable', 'exists:bolsa,id'],
-            'id_parqueo' => ['nullable', 'exists:lugares,id'],
+            'id_parqueo' => ['required', 'exists:lugares,id'],
             'id_grupo' => ['nullable', 'exists:grupos,id'],
             'kms_disponible' => ['nullable', 'numeric', 'min:0'],
             'kms_disponibles_adicionales' => ['nullable', 'numeric', 'min:0'],

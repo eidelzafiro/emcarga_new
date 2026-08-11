@@ -44,6 +44,7 @@ class CartaPorteController extends Controller
             'tractivo:id,codigo',
             'arrastre:id,codigo',
             'solicitud:id,numero,id_lugar_origen,id_lugar_destino',
+            'userCancelacion:id,name',
         ])
             ->withExists('aforos')
             ->withExists('facturas')
@@ -57,25 +58,81 @@ class CartaPorteController extends Controller
                 ->orWhereHas('chofer', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
                 ->orWhereHas('chofer', fn ($c) => $c->where('apellidos', 'like', "%{$s}%"))
                 ->orWhereHas('tractivo', fn ($c) => $c->where('codigo', 'like', "%{$s}%"))))
-            ->when($request->estado && $request->estado !== 'todas', fn ($q, $v) => $q->where('estado', $v))
-            ->when($request->recepcionadas === 'si', fn ($q) => $q->whereNotNull('fecha_recepcion'))
-            ->when($request->recepcionadas === 'no', fn ($q) => $q->whereNull('fecha_recepcion'))
-            ->when($request->canceladas === 'si', fn ($q) => $q->where('cancelada', true))
-            ->when($request->canceladas === 'no', fn ($q) => $q->where('cancelada', false))
-            ->when($request->hoja, fn ($q, $v) => $q->where('id_hoja_ruta', $v))
+            ->when($request->equipo, fn ($q, $v) => $q->where('id_tractivo', $v))
+            ->when($request->chofer, fn ($q, $v) => $q->where(fn ($q2) => $q2->where('id_chofer', $v)->orWhere('id_chofer2', $v)))
+            ->when($request->cliente, fn ($q, $v) => $q->where('id_cliente', $v))
             ->orderByDesc('fecha_emision')
             ->paginate(20);
 
         $hoy = now()->toDateString();
 
         $catalogos = $this->catalogos($entidadId, $hoy, $inicioMes, $finMes, $request);
+        $filtros = $this->filtrosCartas($entidadId, $inicioMes, $finMes);
+
+        // Si llega ?editar=<id> (desde una Hoja de Ruta) se abre el diálogo de
+        // edición con la carta completa cargada, esté o no en la página actual.
+        $cartaEditar = null;
+        if ($request->filled('editar')) {
+            $cartaEditar = CartaPorte::with([
+                'hojaRuta:id,numero,fecha_cierre,id_entidad',
+                'hojaRuta.entidad:id,nombre,abreviatura',
+                'cliente:id,nombre',
+                'lugarOrigen:id,nombre',
+                'lugarDestino:id,nombre',
+                'chofer:id,nombre,apellidos',
+                'chofer2:id,nombre,apellidos',
+                'tractivo:id,codigo',
+                'arrastre:id,codigo',
+                'solicitud:id,numero,id_lugar_origen,id_lugar_destino',
+            ])
+                ->withExists('aforos')
+                ->withExists('facturas')
+                ->find($request->integer('editar'));
+        }
 
         return Inertia::render('CartaPorte/Index', [
             'title' => 'Carta de Porte',
             'cartas' => $cartas,
-            'filters' => $request->only(['search', 'estado', 'recepcionadas', 'canceladas', 'hoja']),
+            'filters' => $request->only(['search', 'equipo', 'chofer', 'cliente']),
             'catalogos' => $catalogos,
+            'filtros' => $filtros,
+            'cartaEditar' => $cartaEditar,
         ]);
+    }
+
+    /**
+     * Opciones para los filtros del grid: SOLO clientes, choferes y equipos
+     * que tienen carta de porte en el mes de operaciones. Además devuelve las
+     * combinaciones reales (cliente, chofer, chofer2, tractivo) para que los
+     * filtros sean dependientes entre sí.
+     */
+    private function filtrosCartas(?int $entidadId, string $inicioMes, string $finMes): array
+    {
+        $base = CartaPorte::query()
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->whereBetween('fecha_emision', [$inicioMes, $finMes]);
+
+        $clienteIds = (clone $base)->whereNotNull('id_cliente')->distinct()->pluck('id_cliente');
+        $tractivoIds = (clone $base)->whereNotNull('id_tractivo')->distinct()->pluck('id_tractivo');
+        $choferIds = (clone $base)->whereNotNull('id_chofer')->distinct()->pluck('id_chofer')
+            ->merge((clone $base)->whereNotNull('id_chofer2')->distinct()->pluck('id_chofer2'))
+            ->unique();
+
+        return [
+            'clientes' => Cliente::select('id', 'nombre')->whereIn('id', $clienteIds)->orderBy('nombre')->get(),
+            'tractivos' => Tractivo::select('id', 'codigo')->whereIn('id', $tractivoIds)->orderBy('codigo')->get(),
+            'choferes' => Bolsa::select('id', 'nombre', 'apellidos')->whereIn('id', $choferIds)->orderBy('nombre')->get(),
+            // Combinaciones reales del mes para filtros encadenados
+            'combinaciones' => (clone $base)
+                ->select('id_cliente', 'id_chofer', 'id_chofer2', 'id_tractivo')
+                ->get()
+                ->map(fn ($c) => [
+                    'cliente' => $c->id_cliente,
+                    'chofer' => $c->id_chofer,
+                    'chofer2' => $c->id_chofer2,
+                    'tractivo' => $c->id_tractivo,
+                ]),
+        ];
     }
 
     /**
@@ -97,6 +154,10 @@ class CartaPorteController extends Controller
                     'id' => $hr->id,
                     'numero' => $hr->numero,
                     'fecha_cierre' => $hr->fecha_cierre,
+                    'id_chofer' => $hr->id_chofer,
+                    'id_chofer2' => $hr->id_chofer2,
+                    'id_tractivo' => $hr->id_tractivo,
+                    'id_arrastre' => $hr->id_arrastre,
                     'tractivo_codigo' => $hr->tractivo?->codigo,
                     'arrastre_codigo' => $hr->arrastre?->codigo,
                     'chofer_nombre' => $hr->chofer ? trim($hr->chofer->nombre.' '.$hr->chofer->apellidos) : null,
@@ -170,6 +231,13 @@ class CartaPorteController extends Controller
             $validated['toneladas'] = (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0);
         }
 
+        if (isset($validated['kms1']) || isset($validated['kms2'])) {
+            $kmsTotal = (float) ($validated['kms1'] ?? 0) + (float) ($validated['kms2'] ?? 0);
+            if ($kmsTotal > 0) {
+                $validated['distancia'] = $kmsTotal;
+            }
+        }
+
         if (isset($validated['id_hoja_ruta'])) {
             $hoja = HojasRuta::with('tractivo:id,id_entidad')->find($validated['id_hoja_ruta']);
             // Si no se especificaron, hereda equipo/choferes/cliente de la hoja
@@ -202,6 +270,13 @@ class CartaPorteController extends Controller
         }
 
         $validated = $this->validar($request, $carta);
+
+        if (isset($validated['kms1']) || isset($validated['kms2'])) {
+            $kmsTotal = (float) ($validated['kms1'] ?? 0) + (float) ($validated['kms2'] ?? 0);
+            if ($kmsTotal > 0) {
+                $validated['distancia'] = $kmsTotal;
+            }
+        }
 
         if (isset($validated['id_lugar_origen'], $validated['id_lugar_destino'])) {
             $distancia = Distancia::where('id_lugar_origen', $validated['id_lugar_origen'])
@@ -236,6 +311,8 @@ class CartaPorteController extends Controller
                 'cancelada' => true,
                 'estado' => 'cancelada',
                 'notas' => $request->input('notas') ?? $carta->notas,
+                'id_user_cancelacion' => $request->user()->id,
+                'fecha_cancelacion' => now(),
             ]);
 
             return back()->with('success', "Carta de porte {$carta->numero} cancelada.");
@@ -344,6 +421,8 @@ class CartaPorteController extends Controller
             'peso1' => ['nullable', 'numeric', 'min:0'],
             'peso2' => ['nullable', 'numeric', 'min:0'],
             'distancia' => ['nullable', 'integer', 'min:0'],
+            'kms1' => ['nullable', 'numeric', 'min:0'],
+            'kms2' => ['nullable', 'numeric', 'min:0'],
             'tarifa_km' => ['nullable', 'numeric', 'min:0'],
             'total_flete' => ['nullable', 'numeric', 'min:0'],
             'ingreso_mt' => ['nullable', 'numeric', 'min:0'],

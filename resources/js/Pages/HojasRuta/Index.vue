@@ -3,20 +3,18 @@ import { ref, watch, computed, nextTick } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
-import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
+import Paginator from 'primevue/paginator'
 
 import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ hojas: Object, catalogos: Object, filters: Object })
+const props = defineProps({ hojas: Object, catalogos: Object, filters: Object, filtros: Object })
 const toast = useToast()
 const title = 'Hoja de Ruta'
 const search = ref(props.filters?.search || '')
@@ -24,6 +22,56 @@ const estado = ref(props.filters?.estado || 'todas')
 const equipo = ref(props.filters?.equipo || null)
 const chofer = ref(props.filters?.chofer || null)
 const grupo = ref(props.filters?.grupo || null)
+
+// Opciones de filtros: solo lo que tiene hojas de ruta este mes, con combinaciones reales
+const filtrosTractivos = computed(() => props.filtros?.tractivos || [])
+const filtrosGrupos = computed(() => props.filtros?.grupos || [])
+const filtrosChoferes = computed(() => (props.filtros?.choferes || []).map(c => ({ id: c.id, label: `${c.nombre} ${c.apellidos || ''}`.trim() })))
+const combinacionesHr = computed(() => props.filtros?.combinaciones || [])
+
+// Filtros dependientes: cada selector restringe a las combinaciones reales del mes.
+function idsRelacionadosHr(extraer, usarTractivo = true, usarChofer = true, usarGrupo = true) {
+  const set = new Set()
+  for (const r of combinacionesHr.value) {
+    if (usarTractivo && equipo.value && r.tractivo !== equipo.value) continue
+    if (usarChofer && chofer.value && r.chofer !== chofer.value && r.chofer2 !== chofer.value) continue
+    if (usarGrupo && grupo.value && r.grupo !== grupo.value) continue
+    const id = extraer(r)
+    if (id != null) set.add(id)
+  }
+  return set
+}
+
+const opcionesTractivosHr = computed(() => {
+  if (!chofer.value && !grupo.value) return filtrosTractivos.value
+  const ids = idsRelacionadosHr(r => r.tractivo, false, true, true)
+  return filtrosTractivos.value.filter(t => ids.has(t.id))
+})
+const opcionesGruposHr = computed(() => {
+  if (!equipo.value && !chofer.value) return filtrosGrupos.value
+  const ids = idsRelacionadosHr(r => r.grupo, true, true, false)
+  return filtrosGrupos.value.filter(g => ids.has(g.id))
+})
+const opcionesChoferesHr = computed(() => {
+  if (!equipo.value && !grupo.value) return filtrosChoferes.value
+  const ids = idsRelacionadosHr(r => r.chofer, true, false, true)
+  const ids2 = idsRelacionadosHr(r => r.chofer2, true, false, true)
+  const unidos = new Set([...ids, ...ids2])
+  return filtrosChoferes.value.filter(c => unidos.has(c.id))
+})
+
+watch(equipo, () => {
+  if (chofer.value && !opcionesChoferesHr.value.some(c => c.id === chofer.value)) chofer.value = null
+  if (grupo.value && !opcionesGruposHr.value.some(g => g.id === grupo.value)) grupo.value = null
+})
+watch(chofer, () => {
+  if (equipo.value && !opcionesTractivosHr.value.some(t => t.id === equipo.value)) equipo.value = null
+  if (grupo.value && !opcionesGruposHr.value.some(g => g.id === grupo.value)) grupo.value = null
+})
+watch(grupo, () => {
+  if (equipo.value && !opcionesTractivosHr.value.some(t => t.id === equipo.value)) equipo.value = null
+  if (chofer.value && !opcionesChoferesHr.value.some(c => c.id === chofer.value)) chofer.value = null
+})
 
 const showApertura = ref(false)
 const showCierre = ref(false)
@@ -36,6 +84,26 @@ const choferes = (props.catalogos?.choferes || [])
   .filter(c => c.id)
   .map(c => ({ id: c.id, label: `${c.nombre} ${c.apellidos || ''}`.trim(), ci: c.ci, cat: c.categorias_licencia || '' }))
 const choferOptions = choferes
+// Choferes ya asignados en la fila en edición/cierre: se agregan a las opciones
+// aunque no cumplan los filtros del catálogo (entidad activa + licencia válida)
+// para que el selector siempre muestre el valor actual.
+const choferesExtra = ref([])
+const choferOptionsCompleto = computed(() => {
+  const mapa = new Map()
+  for (const c of choferes) mapa.set(c.id, c)
+  for (const c of choferesExtra.value) mapa.set(c.id, c)
+  return [...mapa.values()]
+})
+
+function choferesDeFila(row) {
+  const extra = []
+  const empujar = (id, rel) => {
+    if (id && rel) extra.push({ id, label: `${rel.nombre || ''} ${rel.apellidos || ''}`.trim(), ci: rel.ci, cat: rel.categorias_licencia || '' })
+  }
+  empujar(row?.id_chofer, row?.chofer)
+  empujar(row?.id_chofer2, row?.chofer2)
+  return extra
+}
 
 const hojasAnteriores = computed(() => (props.catalogos?.hojasAnteriores || []).map(h => ({ ...h, label: `${h.numero} - (${h.tractivo_codigo || '?'})` })))
 const tractivosCat = computed(() => props.catalogos?.tractivos || [])
@@ -47,8 +115,8 @@ const folioInput = ref(null)
 
 const infoTractivo = computed(() => tractivosCat.value.find(t => t.id === apertura.value.id_tractivo) || null)
 const infoArrastre = computed(() => arrastresCat.value.find(a => a.id === apertura.value.id_arrastre) || null)
-const infoChofer = computed(() => apertura.value.id_chofer ? choferes.find(c => c.id === apertura.value.id_chofer) || null : null)
-const infoChofer2 = computed(() => apertura.value.id_chofer2 ? choferes.find(c => c.id === apertura.value.id_chofer2) || null : null)
+const infoChofer = computed(() => apertura.value.id_chofer ? choferOptionsCompleto.value.find(c => c.id === apertura.value.id_chofer) || null : null)
+const infoChofer2 = computed(() => apertura.value.id_chofer2 ? choferOptionsCompleto.value.find(c => c.id === apertura.value.id_chofer2) || null : null)
 
 function aplicarHrAnterior(hr) {
   if (!hr) return
@@ -135,6 +203,7 @@ function submitApertura() {
 
 function openCierre(row) {
   creandoHr.value = row
+  choferesExtra.value = choferesDeFila(row)
   cierre.value = { fecha_cierre: nowDate(), hora_cierre: nowTime(), kms_totales: null, combustible_habilitado: 0, combustible_consumido: 0, combustible_tecnico: 0, dias_trabajados: '', crear_siguiente: true, numero_nueva: '', fecha_emision: row.fecha_cierre || nowDate(), hora_emision: nowTime(), kms_disponible: row.kms_disponible, kms_disponibles_adicionales: row.kms_disponibles_adicionales, id_arrastre: row.id_arrastre ?? null, id_chofer: row.id_chofer ?? null, id_parqueo: row.id_parqueo ?? null }
   showCierre.value = true
 }
@@ -162,6 +231,7 @@ function submitCierre() {
 }
 
 function openEdicion(row) {
+  choferesExtra.value = choferesDeFila(row)
   // HR sin cerrar → reutiliza el formulario de apertura en modo edición (no crea de nuevo)
   if (!row.fecha_cierre) {
     editandoId.value = row.id
@@ -229,24 +299,49 @@ function marcaModelo(v) {
   const partes = [v.marca, v.modelo].filter(Boolean)
   return partes.length ? partes.join(' ') : '—'
 }
-function filaClase(data) {
-  if (data.estado === 'cancelada' || data.cancelada) return 'fila-cancelada'
-  if (Number(data.cartas_porte_count) > 0) return 'fila-con-cartas'
-  return undefined
+function iniciales(nombre) {
+  return String(nombre || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase() || '?'
 }
-function fmtDiaHora(fecha, hora) {
-  if (!fecha) return '—'
-  const d = new Date(fecha)
-  if (isNaN(d.getTime())) return '—'
-  const dia = `${String(d.getDate()).padStart(2, '0')}-${hora || '00:00'}`
-  return dia
-}
-function fmtGrid(v) {
-  if (v === null || v === undefined || v === '') return ''
+function fmtNum(v) {
+  if (v === null || v === undefined || v === '') return '—'
   const n = Number(v)
-  if (!Number.isFinite(n) || n <= 0) return ''
-  return n.toLocaleString('es-CU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+  return Number.isFinite(n) ? n.toLocaleString('es-CU', { maximumFractionDigits: 2 }) : '—'
 }
+function estadoHR(d) {
+  if (d.cancelada) return { label: 'Cancelada', cls: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300' }
+  if (!d.fecha_cierre) return { label: 'Abierta', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' }
+  return { label: 'Cerrada', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' }
+}
+const diffComb = (h) => ((Number(h.combustible_consumido) || 0) - (Number(h.combustible_habilitado) || 0))
+
+function tieneValor(v) {
+  return v !== null && v !== undefined && v !== ''
+}
+
+// Tarjetas KMS/combustible solo cuando hay valores: kms_totales, consumo,
+// habilitado y diferencia (esta última requiere consumo y habilitado).
+function tilesHR(h) {
+  const tiles = []
+  if (tieneValor(h.kms_totales)) tiles.push({ label: 'KMS totales', valor: fmtNum(h.kms_totales), cls: 'text-gray-800 dark:text-gray-100' })
+  if (tieneValor(h.combustible_consumido)) tiles.push({ label: 'Consumo', valor: fmtNum(h.combustible_consumido), cls: 'text-gray-800 dark:text-gray-100' })
+  if (tieneValor(h.combustible_habilitado)) tiles.push({ label: 'Habilitado', valor: fmtNum(h.combustible_habilitado), cls: 'text-gray-800 dark:text-gray-100' })
+  if (tieneValor(h.combustible_consumido) && tieneValor(h.combustible_habilitado)) {
+    const d = diffComb(h)
+    tiles.push({ label: 'Dif', valor: fmtNum(d), cls: d < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100' })
+  }
+  return tiles
+}
+
+function editarCarta(cp) {
+  router.get(route('carta-porte.index', { editar: cp.id }))
+}
+
 const CAMPOS_TIEMPO = ['tiempo_mov', 'tiempo_espera', 'tiempo_carga', 'tiempo_taller', 'tiempo_inactivo', 'tiempo_otras_actividades']
 
 function fmtTiempo(v) {
@@ -286,48 +381,146 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
 
 <template>
   <AppLayout :title="title">
-    <div class="card">
-      <Toolbar class="mb-4">
-        <template #start>
+    <div class="space-y-4">
+      <!-- Barra de acciones y filtros -->
+      <div class="flex flex-col lg:flex-row lg:items-center gap-3 justify-between rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
           <Button label="Nueva Hoja" icon="pi pi-plus" severity="success" @click="openApertura" />
-        </template>
-        <template #end>
-          <div class="flex gap-2 items-center">
-            <Select v-model="equipo" :options="tractivosCat" optionLabel="codigo" optionValue="id" filter placeholder="Equipo" class="w-44" :showClear="true" />
-            <Select v-model="grupo" :options="catalogos.grupos" optionLabel="nombre" optionValue="id" filter placeholder="Grupo" class="w-40" :showClear="true" />
-            <Select v-model="chofer" :options="choferOptions" optionLabel="label" optionValue="id" filter placeholder="Chofer" class="w-48" :showClear="true" />
-            <Select v-model="estado" :options="[{ label: 'Todas', value: 'todas' }, { label: 'Abiertas', value: 'abiertas' }, { label: 'Cerradas', value: 'cerradas' }, { label: 'Canceladas', value: 'canceladas' }]" optionLabel="label" optionValue="value" class="w-40" />
-            <InputText v-model="search" placeholder="Buscar número, chofer..." class="w-52" />
-          </div>
-        </template>
-      </Toolbar>
+          <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/60 text-xs font-semibold text-gray-600 dark:text-gray-300">
+            <i class="pi pi-folder text-gray-400" />
+            {{ hojas.total }} hojas
+          </span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <Select v-model="equipo" :options="opcionesTractivosHr" optionLabel="codigo" optionValue="id" filter placeholder="Equipo" class="w-40" :showClear="true" />
+          <Select v-model="grupo" :options="opcionesGruposHr" optionLabel="nombre" optionValue="id" filter placeholder="Grupo" class="w-36" :showClear="true" />
+          <Select v-model="chofer" :options="opcionesChoferesHr" optionLabel="label" optionValue="id" filter placeholder="Chofer" class="w-44" :showClear="true" />
+          <Select v-model="estado" :options="[{ label: 'Todas', value: 'todas' }, { label: 'Abiertas', value: 'abiertas' }, { label: 'Cerradas', value: 'cerradas' }, { label: 'Canceladas', value: 'canceladas' }]" optionLabel="label" optionValue="value" class="w-36" />
+          <span class="relative">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <InputText v-model="search" placeholder="Buscar número, chofer..." class="w-52 !pl-9" />
+          </span>
+        </div>
+      </div>
 
-      <DataTable :value="hojas.data" stripedRows paginator :rows="20" :total-records="hojas.total" :lazy="true" :first="(hojas.current_page - 1) * hojas.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros" size="small" :scrollable="true" scrollHeight="flex" :row-class="filaClase">
-        <Column field="numero" header="Código" sortable :style="{ minWidth: '90px' }">
-          <template #body="{ data }">
-            <span :class="{ 'line-through': data.estado === 'cancelada' }">{{ data.numero }}<template v-if="Number(data.cartas_porte_count) > 0"> ({{ data.cartas_porte_count }})</template></span>
-          </template>
-        </Column>
-        <Column header="Chofer" :style="{ minWidth: '280px' }"><template #body="{ data }">{{ choferNombre(data.chofer) }}</template></Column>
-        <Column header="Equipos" :style="{ minWidth: '100px' }"><template #body="{ data }"><div>{{ tractivoCodigo(data.tractivo) }}</div><div class="text-surface-400">{{ data.arrastre?.codigo || '—' }}</div></template></Column>
-        <Column header="Fecha emisión" :style="{ minWidth: '120px', whiteSpace: 'nowrap' }"><template #body="{ data }">{{ fmtDiaHora(data.fecha_emision, data.hora_emision) }}</template></Column>
-        <Column header="Fecha Cierre" :style="{ minWidth: '120px', whiteSpace: 'nowrap' }"><template #body="{ data }">{{ fmtDiaHora(data.fecha_cierre, data.hora_cierre) }}</template></Column>
-        <Column header="Kms" class="text-right"><template #body="{ data }">{{ fmtGrid(data.kms_totales) }}</template></Column>
-        <Column header="Consumo" class="text-right"><template #body="{ data }">{{ fmtGrid(data.combustible_consumido) }}</template></Column>
-        <Column header="Habilitado" class="text-right"><template #body="{ data }">{{ fmtGrid(data.combustible_habilitado) }}</template></Column>
-        <Column header="Dif" class="text-right"><template #body="{ data }">{{ fmtGrid((Number(data.combustible_consumido) || 0) - (Number(data.combustible_habilitado) || 0)) }}</template></Column>
-        <Column header="Tiempo" class="text-right"><template #body="{ data }">{{ fmtGrid(data.tiempo_total) }}</template></Column>
-        <Column header="Acciones" :style="{ minWidth: '220px', whiteSpace: 'nowrap' }">
-          <template #body="{ data }">
-            <div class="flex gap-1">
-              <Button v-if="data.estado === 'abierta' && !data.fecha_cierre" icon="pi pi-check" rounded text severity="success" title="Cerrar" @click="openCierre(data)" />
-              <Button v-if="!data.cancelada" icon="pi pi-pencil" rounded text severity="info" title="Editar" @click="openEdicion(data)" />
-              <Button v-if="!data.cancelada" icon="pi pi-ban" rounded text severity="warning" title="Cancelar" @click="cancelar(data)" />
-              <Button icon="pi pi-trash" rounded text severity="danger" title="Eliminar" @click="eliminar(data)" />
+      <!-- Grid de tarjetas -->
+      <div v-if="hojas.data.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article
+          v-for="(h, i) in hojas.data"
+          :key="h.id"
+          class="hr-card relative flex flex-col overflow-hidden rounded-2xl border bg-white dark:bg-gray-800 shadow-sm transition-shadow hover:shadow-lg dark:border-gray-700"
+          :class="h.cancelada ? 'border-red-300 dark:border-red-800/60' : h.fecha_cierre ? 'border-blue-300 dark:border-blue-700/60' : 'border-emerald-200 dark:border-emerald-800/40'"
+          :style="{ animationDelay: `${Math.min(i, 10) * 45}ms` }"
+        >
+          <!-- Sello cancelada -->
+          <div v-if="h.cancelada" class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <span class="rotate-[-14deg] border-[3px] border-red-500/70 text-red-500/80 dark:border-red-400/70 dark:text-red-300/80 rounded-lg px-4 py-1 text-xl font-black uppercase tracking-[0.22em]">Cancelada</span>
+          </div>
+
+          <!-- Cabecera: folio protagonista -->
+          <header class="relative px-4 pt-3 pb-2.5 border-b border-gray-100 dark:border-gray-700/70" :class="h.cancelada ? 'bg-red-50/60 dark:bg-red-950/20' : h.fecha_cierre ? 'bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/30 dark:to-gray-800' : 'bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-950/20 dark:to-gray-800'">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <span class="block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">Hoja de ruta</span>
+                <div class="hr-folio mt-1 text-[24px] font-black leading-none tracking-tight" :class="h.cancelada ? 'text-red-500 dark:text-red-400 line-through' : h.fecha_cierre ? 'text-blue-700 dark:text-blue-300' : 'text-emerald-700 dark:text-emerald-300'">
+                  {{ h.numero }}
+                </div>
+                <div class="mt-1.5 flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+                  <i class="pi pi-calendar mr-0.5 text-[10px]" />{{ soloFecha(h.fecha_emision) }} {{ h.hora_emision ? `· ${soloHora(h.hora_emision)}` : '' }}
+                  <i class="pi pi-arrow-right mx-1 text-[9px]" />
+                  <i class="pi pi-calendar-times mr-0.5 text-[10px]" />{{ h.fecha_cierre ? `${soloFecha(h.fecha_cierre)} ${h.hora_cierre ? `· ${soloHora(h.hora_cierre)}` : ''}` : 'abierta' }}
+                  <i v-if="tieneValor(h.tiempo_total)" class="pi pi-clock ml-1 text-[10px]" />
+                  <span v-if="tieneValor(h.tiempo_total)" class="font-semibold">{{ fmtTiempo(h.tiempo_total) }} h</span>
+                </div>
+              </div>
+              <span class="shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold" :class="estadoHR(h).cls">{{ estadoHR(h).label }}</span>
             </div>
-          </template>
-        </Column>
-      </DataTable>
+          </header>
+
+          <!-- Cuerpo -->
+          <div class="flex flex-1 flex-col gap-3 px-4 py-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                {{ iniciales(choferNombre(h.chofer)) }}
+              </span>
+              <div class="min-w-0">
+                <div class="truncate text-sm font-semibold text-gray-800 dark:text-gray-100">{{ choferNombre(h.chofer) }}</div>
+                <div v-if="h.chofer2" class="truncate text-[11px] text-gray-500 dark:text-gray-400">2do: {{ choferNombre(h.chofer2) }}</div>
+              </div>
+              <span v-if="Number(h.cartas_porte_count) > 0" class="ml-auto shrink-0 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                {{ h.cartas_porte_count }} CP
+              </span>
+            </div>
+
+            <!-- Folios de cartas de porte asociadas (clic para editar la carta) -->
+            <div v-if="h.cartas_porte && h.cartas_porte.length" class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">CP:</span>
+              <button
+                v-for="cp in h.cartas_porte"
+                :key="cp.id"
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                :title="`Editar carta de porte ${cp.numero}`"
+                @click="editarCarta(cp)"
+              >
+                <i class="pi pi-file-edit text-[10px]" />{{ cp.numero }}
+              </button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5">
+                <i class="pi pi-truck text-xl" style="color:#059669" />
+                <span class="text-lg font-black tracking-tight text-emerald-800 dark:text-emerald-300">{{ tractivoCodigo(h.tractivo) }}</span>
+              </span>
+              <span v-if="h.arrastre" class="inline-flex items-center gap-2 rounded-xl border border-violet-200 dark:border-violet-700/50 bg-violet-50 dark:bg-violet-950/30 px-3 py-1.5">
+                <i class="pi pi-box text-xl" style="color:#7c3aed" />
+                <span class="text-lg font-black tracking-tight text-violet-800 dark:text-violet-300">{{ h.arrastre.codigo }}</span>
+              </span>
+            </div>
+
+            <div v-if="tilesHR(h).length" class="grid grid-cols-2 gap-2 text-center">
+              <div v-for="t in tilesHR(h)" :key="t.label" class="rounded-xl border border-gray-100 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-700/30 px-2 py-1.5">
+                <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{{ t.label }}</div>
+                <div class="text-sm font-black" :class="t.cls">{{ t.valor }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie: entidad/parqueo y acciones -->
+          <footer class="mt-auto border-t border-gray-100 dark:border-gray-700/70 bg-gray-50/80 dark:bg-gray-700/30 px-3 py-2">
+            <div class="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+              <span>{{ h.entidad?.nombre || '—' }}</span>
+              <span>{{ h.parqueo?.nombre || '—' }}</span>
+            </div>
+            <div class="mt-1.5 flex items-center justify-end gap-1">
+              <Button v-if="!h.cancelada && !h.fecha_cierre" icon="pi pi-check" rounded text severity="success" title="Cerrar" @click="openCierre(h)" />
+              <Button v-if="!h.cancelada" icon="pi pi-pencil" rounded text severity="info" title="Editar" @click="openEdicion(h)" />
+              <Button v-if="!h.cancelada" icon="pi pi-ban" rounded text severity="warning" title="Cancelar" @click="cancelar(h)" />
+              <Button icon="pi pi-trash" rounded text severity="danger" title="Eliminar" @click="eliminar(h)" />
+            </div>
+          </footer>
+        </article>
+      </div>
+
+      <!-- Vacío -->
+      <div v-else class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-16 text-center">
+        <i class="pi pi-inbox text-4xl text-gray-300 dark:text-gray-600" />
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">No hay hojas de ruta para los filtros seleccionados</p>
+        <Button label="Nueva Hoja" icon="pi pi-plus" severity="success" @click="openApertura" />
+      </div>
+
+      <!-- Paginación -->
+      <div v-if="hojas.last_page > 1" class="flex justify-center">
+        <Paginator
+          :rows="hojas.per_page"
+          :total-records="hojas.total"
+          :first="(hojas.current_page - 1) * hojas.per_page"
+          :page-links-size="5"
+          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+          currentPageReportTemplate="Total: {totalRecords} registros"
+          @page="onPage"
+        />
+      </div>
     </div>
 
     <!-- Apertura -->
@@ -418,7 +611,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           <div class="border rounded-lg p-4 bg-surface-50">
             <span class="font-semibold block mb-2">Chofer</span>
             <div class="space-y-2">
-              <Select v-model="apertura.id_chofer" :options="choferOptions" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
+              <Select v-model="apertura.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block mb-1 font-medium">CI</label>
@@ -434,7 +627,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           <div class="border rounded-lg p-4 bg-surface-50">
             <span class="font-semibold block mb-2">2do Chofer</span>
             <div class="space-y-2">
-              <Select v-model="apertura.id_chofer2" :options="choferOptions" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
+              <Select v-model="apertura.id_chofer2" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block mb-1 font-medium">CI</label>
@@ -514,7 +707,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
             </div>
             <div>
               <label class="block mb-1 font-medium">Chofer</label>
-              <Select v-model="cierre.id_chofer" :options="choferOptions" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
+              <Select v-model="cierre.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Parqueo</label>
@@ -564,11 +757,11 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
         </div>
         <div>
           <label class="block mb-1 font-medium">Chofer</label>
-          <Select v-model="edicion.id_chofer" :options="choferes" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
+          <Select v-model="edicion.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
         </div>
         <div>
           <label class="block mb-1 font-medium">Chofer 2</label>
-          <Select v-model="edicion.id_chofer2" :options="choferes" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
+          <Select v-model="edicion.id_chofer2" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
         </div>
         <div>
           <label class="block mb-1 font-medium">Parqueo</label>
@@ -667,18 +860,14 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
 </template>
 
 <style scoped>
-.p-datatable .p-datatable-tbody > tr > td {
-  white-space: normal;
+.hr-card {
+  animation: hr-rise 0.45s ease both;
 }
-:deep(.fila-cancelada) {
-  color: #dc2626 !important;
+@keyframes hr-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-:deep(.fila-cancelada td) {
-  color: #dc2626 !important;
-  background-color: #fee2e2 !important;
-}
-:deep(.fila-con-cartas) td {
-  color: #166534 !important;
-  background-color: #dcfce7 !important;
+.hr-folio {
+  font-variant-numeric: tabular-nums;
 }
 </style>

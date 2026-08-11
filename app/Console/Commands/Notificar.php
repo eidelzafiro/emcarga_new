@@ -14,7 +14,7 @@ class Notificar extends Command
 
     public function handle()
     {
-        $titulo = $this->anticipate('Título', ['Prueba', 'Notificación de prueba']);
+        $titulo = $this->anticipate('Título', ['Prueba', 'Notificación de prueba']) ?: 'Notificación de prueba';
         $cuerpo = $this->ask('Mensaje') ?: 'Mensaje de prueba';
 
         $usuarios = collect();

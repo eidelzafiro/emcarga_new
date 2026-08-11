@@ -22,7 +22,7 @@ import Checkbox from 'primevue/checkbox'
 import DatePicker from 'primevue/datepicker'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: { type: Object, default: null }, filters: { type: Object, default: () => ({}) }, provincias: { type: Array, default: () => [] }, municipios: { type: Array, default: () => [] }, sistemas: { type: Array, default: () => [] }, entidadesPadre: { type: Array, default: () => [] }, soloEntidad: { type: Object, default: null } })
+const props = defineProps({ items: { type: Object, default: null }, filters: { type: Object, default: () => ({}) }, provincias: { type: Array, default: () => [] }, municipios: { type: Array, default: () => [] }, sistemas: { type: Array, default: () => [] }, entidadesPadre: { type: Array, default: () => [] }, soloEntidad: { type: Object, default: null }, lugares: { type: Array, default: () => [] } })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
@@ -352,7 +352,7 @@ function printGrid() {
               </div>
               <div class="form-field">
                 <label class="form-label">PARQUEO</label>
-                <Select v-model="form.id_parqueo" :options="[]" placeholder="Seleccionar..." class="w-full" :showClear="true" />
+                <Select v-model="form.id_parqueo" :options="props.lugares" optionLabel="nombre" optionValue="id" filter placeholder="Seleccionar..." class="w-full" :showClear="true" />
               </div>
             </div>
           </div>

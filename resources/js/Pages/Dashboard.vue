@@ -158,6 +158,7 @@ const props = defineProps({
   movimientos: { type: Array, default: () => [] },
   actividadReciente: { type: Array, default: () => [] },
   secciones: { type: Array, default: () => [] },
+  serieActividad: { type: Array, default: () => [] },
 });
 
 const user = usePage().props.auth?.user || { name: '' };
@@ -197,20 +198,23 @@ const rolBadgeClass = computed(() => badgePorRol[props.rol] || 'bg-gray-100 text
 
 const generarDatosGrafico = (periodo) => {
   const puntos = periodo === '7d' ? 7 : periodo === '30d' ? 30 : 90;
+  const serie = props.serieActividad || [];
   const etiquetas = [];
-  const ingresos = [];
-  const egresos = [];
-  const ahora = new Date();
+  const hojas = [];
+  const cartas = [];
+  const solicitudes = [];
+  const inicio = Math.max(0, serie.length - puntos);
 
-  for (let i = puntos - 1; i >= 0; i--) {
-    const d = new Date(ahora);
-    d.setDate(d.getDate() - i);
-    etiquetas.push(d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
-    ingresos.push(Math.round(Math.random() * 8000 + 2000));
-    egresos.push(Math.round(Math.random() * 5000 + 1000));
+  for (let i = inicio; i < serie.length; i++) {
+    const d = serie[i];
+    const fecha = new Date(String(d.fecha).slice(0, 10) + 'T00:00:00');
+    etiquetas.push(fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
+    hojas.push(Number(d.hojas) || 0);
+    cartas.push(Number(d.cartas) || 0);
+    solicitudes.push(Number(d.solicitudes) || 0);
   }
 
-  return { etiquetas, ingresos, egresos };
+  return { etiquetas, hojas, cartas, solicitudes };
 };
 
 const renderChart = () => {
@@ -225,8 +229,8 @@ const renderChart = () => {
       labels: datos.etiquetas,
       datasets: [
         {
-          label: 'Ingresos',
-          data: datos.ingresos,
+          label: 'Hojas de ruta',
+          data: datos.hojas,
           borderColor: '#059669',
           backgroundColor: 'rgba(5, 150, 105, 0.08)',
           fill: true,
@@ -237,8 +241,20 @@ const renderChart = () => {
           pointBorderWidth: 2,
         },
         {
-          label: 'Egresos',
-          data: datos.egresos,
+          label: 'Cartas de porte',
+          data: datos.cartas,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.08)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#2563eb',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Solicitudes',
+          data: datos.solicitudes,
           borderColor: '#d97706',
           backgroundColor: 'rgba(217, 119, 6, 0.08)',
           fill: true,
@@ -285,7 +301,8 @@ const renderChart = () => {
           ticks: {
             font: { size: 11 },
             color: '#9ca3af',
-            callback: (v) => '$' + v.toLocaleString(),
+            beginAtZero: true,
+            precision: 0,
           },
         },
       },

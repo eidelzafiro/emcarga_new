@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CartaPorte;
 use App\Models\Bolsa;
-use App\Models\Buque;
 use App\Models\Cliente;
 use App\Models\HojasRuta;
 use App\Models\Lugare;
@@ -13,7 +12,6 @@ use App\Models\Producto;
 use App\Models\SolicitudesServicio;
 use App\Models\TipoCarga;
 use App\Models\Tractivo;
-use App\Models\Turno;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -41,14 +39,17 @@ class SolicitudesController extends Controller
             ->orderBy('numero', 'asc')
             ->paginate(20);
 
-        // Seguimiento de toneladas: suma de cartas_porte (vigentes)
+        // Seguimiento de toneladas: suma de las toneladas (pesos) de las
+        // cartas de porte vigentes. Una solicitud solo se marca realizada
+        // cuando hay meta definida (peso1+peso2 > 0) y está cubierta.
         foreach ($solicitudes as $sol) {
             $total = (float) ($sol->peso1 ?? 0) + (float) ($sol->peso2 ?? 0);
-            $ejecutado = (float) $sol->cartasPorte->sum('ingreso_mt');
+            $ejecutado = (float) $sol->cartasPorte->sum('toneladas');
             $sol->toneladas_total = $total;
             $sol->toneladas_ejecutadas = $ejecutado;
             $sol->toneladas_pendientes = max(0, $total - $ejecutado);
             $sol->estado_cumplimiento = match (true) {
+                $total <= 0 => 'pendiente',
                 $ejecutado <= 0 => 'pendiente',
                 $sol->toneladas_pendientes > 0 => 'en_proceso',
                 default => 'realizada',
@@ -99,6 +100,10 @@ class SolicitudesController extends Controller
                     'id' => $hr->id,
                     'numero' => $hr->numero,
                     'fecha_cierre' => $hr->fecha_cierre,
+                    'id_tractivo' => $hr->id_tractivo,
+                    'id_arrastre' => $hr->id_arrastre,
+                    'id_chofer' => $hr->id_chofer,
+                    'id_chofer2' => $hr->id_chofer2,
                     'tractivo_codigo' => $hr->tractivo?->codigo,
                     'arrastre_codigo' => $hr->arrastre?->codigo,
                     'chofer_nombre' => $hr->chofer ? trim($hr->chofer->nombre.' '.$hr->chofer->apellidos) : null,
@@ -126,8 +131,6 @@ class SolicitudesController extends Controller
                 ->orderBy('nombre')
                 ->get()
                 ->map(fn ($b) => ['id' => $b->id, 'nombre' => $b->nombre, 'apellidos' => $b->apellidos]),
-            'turnos' => Turno::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
-            'buques' => Buque::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
         ];
     }
 
@@ -189,7 +192,9 @@ class SolicitudesController extends Controller
      */
     public function registrarCartaPorte(Request $request, SolicitudesServicio $solicitude)
     {
-        $pendientes = max(0, (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0) - (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('ingreso_mt'));
+        $total = (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0);
+        $ejecutado = (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('toneladas');
+        $pendientes = max(0, $total - $ejecutado);
 
         $validated = $request->validate([
             'numero' => ['required', 'string', 'max:20', function (string $attribute, mixed $value, \Closure $fail): void {
@@ -218,8 +223,6 @@ class SolicitudesController extends Controller
             'id_producto2' => ['nullable', 'exists:productos,id'],
             'id_tipo_carga' => ['nullable', 'exists:tipos_cargas,id'],
             'id_tipo_carga2' => ['nullable', 'exists:tipos_cargas,id'],
-            'id_turno' => ['nullable', 'exists:turnos,id'],
-            'id_buque' => ['nullable', 'exists:buques,id'],
             'distancia' => ['nullable', 'integer', 'min:0'],
             'conduce' => ['nullable', 'string', 'max:150'],
             'notas' => ['nullable', 'string', 'max:150'],
@@ -243,8 +246,6 @@ class SolicitudesController extends Controller
             'id_producto2' => $validated['id_producto2'] ?? $solicitude->id_producto2,
             'id_tipo_carga' => $validated['id_tipo_carga'] ?? $solicitude->id_tipo_carga,
             'id_tipo_carga2' => $validated['id_tipo_carga2'] ?? $solicitude->id_tipo_carga2,
-            'id_turno' => $validated['id_turno'] ?? null,
-            'id_buque' => $validated['id_buque'] ?? null,
             'id_moneda' => $solicitude->id_moneda,
             'id_user' => auth()->id(),
             'fecha_emision' => $fechaEmision,
@@ -261,8 +262,8 @@ class SolicitudesController extends Controller
             'estado' => 'emitida',
         ]);
 
-        $estaRealizada = (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('ingreso_mt')
-            >= (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0);
+        $estaRealizada = $total > 0
+            && (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('toneladas') >= $total;
 
         $solicitude->update([
             'fecha_ejecutada' => $estaRealizada ? now()->toDateString() : null,

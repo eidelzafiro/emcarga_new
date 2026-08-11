@@ -83,6 +83,7 @@ use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraTractivosController;
 use App\Http\Controllers\PosicionesNeumaticosController;
 use App\Http\Controllers\PrefacturasController;
+use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\ProvinciasController;
 use App\Http\Controllers\RegistroOrdenesTallerController;
 use App\Http\Controllers\ReportController;
@@ -243,6 +244,12 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('hojas-ruta', HojasRutaController::class, ['parameters' => ['hojas-ruta' => 'hoja']])
             ->only(['index', 'store', 'update', 'destroy']);
+
+        // Vistas de prueba del formato de tarjetas (solo lectura)
+        Route::get('preview/hojas-ruta', [PreviewController::class, 'hojasRuta'])
+            ->name('preview.hojas-ruta');
+        Route::get('preview/solicitudes', [PreviewController::class, 'solicitudes'])
+            ->name('preview.solicitudes');
 
         // Comercial - Tablas faltantes (Fase 5.3 parte 2)
         Route::resource('tipos-catalogo-lugares', TiposCatalogoLugaresController::class)

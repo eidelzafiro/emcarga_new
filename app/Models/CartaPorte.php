@@ -36,6 +36,8 @@ class CartaPorte extends Model
         'peso1',
         'peso2',
         'distancia',
+        'kms1',
+        'kms2',
         'tarifa_km',
         'total_flete',
         'ingreso_mt',
@@ -43,10 +45,12 @@ class CartaPorte extends Model
         'conduce',
         'estado',
         'cancelada',
+        'fecha_cancelacion',
         'imprimir',
         'notas',
         'id_user',
         'id_user_recepcion',
+        'id_user_cancelacion',
         'id_buque',
         'id_turno',
         'id_moneda',
@@ -58,10 +62,13 @@ class CartaPorte extends Model
             'fecha_emision' => 'date',
             'fecha_parte' => 'date',
             'fecha_recepcion' => 'date',
+            'fecha_cancelacion' => 'datetime',
             'toneladas' => 'decimal:2',
             'peso1' => 'decimal:2',
             'peso2' => 'decimal:2',
             'distancia' => 'integer',
+            'kms1' => 'integer',
+            'kms2' => 'integer',
             'ingreso_mt' => 'decimal:2',
             'flete_mt' => 'decimal:2',
             'cancelada' => 'boolean',
@@ -159,6 +166,11 @@ class CartaPorte extends Model
     public function userRecepcion(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user_recepcion');
+    }
+
+    public function userCancelacion(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_user_cancelacion');
     }
 
     public function moneda(): BelongsTo

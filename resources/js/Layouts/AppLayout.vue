@@ -9,8 +9,8 @@
     />
 
     <aside
-      class="fixed top-0 left-0 z-30 h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 shadow-sm sidebar-transition flex flex-col"
-      :class="sidebarOpen ? 'w-64' : 'w-0 lg:w-16'"
+      class="fixed top-0 left-0 z-30 h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 shadow-sm sidebar-transition flex flex-col lg:hidden"
+      :class="sidebarOpen ? 'w-64' : 'w-0'"
     >
       <div class="flex items-center h-16 px-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
         <div v-if="sidebarOpen || !isMobile" class="flex items-center gap-3 overflow-hidden">
@@ -29,37 +29,34 @@
       <nav class="flex-1 overflow-y-auto py-2 px-2">
         <PanelMenu :model="menuItems" v-model:expandedKeys="menuExpandedKeys" :multiple="true" class="border-0 !bg-transparent" />
       </nav>
-
-      <div class="hidden lg:flex items-center justify-center h-12 border-t border-gray-100 dark:border-gray-800 shrink-0">
-        <button
-          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-          @click="toggleSidebar"
-          v-tooltip.right="sidebarOpen ? 'Colapsar menú' : 'Expandir menú'"
-        >
-          <i class="pi" :class="sidebarOpen ? 'pi-chevron-left' : 'pi-chevron-right'" />
-        </button>
-      </div>
     </aside>
 
     <div
       class="main-content-transition flex flex-col min-h-screen"
-      :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'"
     >
       <header class="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
-        <div class="flex items-center justify-between h-16 px-4 lg:px-6">
-          <div class="flex items-center gap-3">
-            <button
-              class="p-1.5 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              @click="sidebarOpen = !sidebarOpen"
-            >
-              <i class="pi pi-bars text-lg" />
-            </button>
-            <h1 v-if="pageTitle" class="text-lg font-semibold text-gray-800 dark:text-gray-100 hidden sm:block">
-              {{ pageTitle }}
-            </h1>
+        <div class="flex items-center gap-3 h-14 px-4 lg:px-6 border-b border-gray-100 dark:border-gray-800">
+          <button
+            class="p-1.5 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
+            @click="sidebarOpen = !sidebarOpen"
+          >
+            <i class="pi pi-bars text-lg" />
+          </button>
+          <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100 hidden sm:block shrink-0">
+            Zafiro v5
+          </h1>
+          <div class="hidden lg:flex items-center flex-1 min-w-0">
+            <Menubar :model="menuItems" class="!border-0 !bg-transparent" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-2 px-4 lg:px-6 py-1.5">
+          <div class="hidden sm:flex items-center gap-2 font-semibold text-[15px] text-gray-800 dark:text-gray-100 min-w-0">
+            <i class="pi pi-calculator" />
+            <span class="truncate">{{ pageTitle || (contexto?.fechaOperaciones ? `Operaciones: ${contexto.fechaOperaciones}` : '') }}</span>
           </div>
 
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-1 ml-auto">
             <!-- Contexto de trabajo: entidad activa + fecha de operaciones -->
             <div v-if="contexto" class="flex items-center gap-2 mr-1">
               <Select
@@ -234,6 +231,7 @@ import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 const appName = computed(() => usePage().props.appName || 'Zafiro');
 import { route } from 'ziggy-js';
 import { useToast } from 'primevue/usetoast';
+import Menubar from 'primevue/menubar';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);

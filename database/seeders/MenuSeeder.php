@@ -78,7 +78,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Comercial', 'label' => 'Distancias', 'route' => 'distancias.index', 'permission' => 'distancias.ver', 'orden' => 3],
             ['parent' => 'Comercial', 'label' => 'Acuerdos', 'route' => 'acuerdos.index', 'permission' => 'acuerdos.ver', 'orden' => 4],
             ['parent' => 'Comercial', 'label' => 'Solicitudes', 'route' => 'solicitudes.index', 'permission' => 'solicitudes.ver', 'orden' => 5],
-            ['parent' => 'Comercial', 'label' => 'Cartas Porte', 'route' => 'giros.index', 'permission' => 'giros.ver', 'orden' => 6],
+            ['parent' => 'Comercial', 'label' => 'Cartas Porte', 'route' => 'carta-porte.index', 'permission' => 'carta-porte.ver', 'orden' => 6],
             ['parent' => 'Comercial', 'label' => 'Alertas', 'route' => 'alertas.index', 'permission' => 'alertas.ver', 'orden' => 7],
             ['parent' => 'Comercial', 'label' => 'Tarifas', 'route' => 'tarifas.index', 'permission' => 'tarifas.ver', 'orden' => 8],
             ['parent' => 'Comercial', 'label' => 'Demandas', 'route' => 'demandas.index', 'permission' => 'demandas.ver', 'orden' => 9],

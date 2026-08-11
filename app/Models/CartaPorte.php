@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CartaPorte extends Model
@@ -70,6 +72,23 @@ class CartaPorte extends Model
     public function hojaRuta(): BelongsTo
     {
         return $this->belongsTo(HojasRuta::class, 'id_hoja_ruta');
+    }
+
+    public function aforos(): HasMany
+    {
+        return $this->hasMany(Aforo::class, 'id_carta_porte');
+    }
+
+    public function facturas(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Factura::class,
+            Aforo::class,
+            'id_carta_porte',
+            'id',
+            'id',
+            'id_factura'
+        );
     }
 
     public function solicitud(): BelongsTo

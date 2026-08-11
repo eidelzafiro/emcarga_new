@@ -44,7 +44,7 @@ use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\FirmasAutorizadasController;
 use App\Http\Controllers\FirmasController;
 use App\Http\Controllers\FondosTiempoController;
-use App\Http\Controllers\GirosController;
+use App\Http\Controllers\CartaPorteController;
 use App\Http\Controllers\GruposController;
 use App\Http\Controllers\GruposEscalaController;
 use App\Http\Controllers\HistorialMovimientosController;
@@ -231,8 +231,15 @@ Route::middleware('auth')->group(function () {
         Route::post('solicitudes/{solicitude}/carta-porte', [SolicitudesController::class, 'registrarCartaPorte'])
             ->name('solicitudes.carta-porte');
 
-        Route::resource('giros', GirosController::class)
+        Route::resource('carta-porte', CartaPorteController::class, ['parameters' => ['carta-porte' => 'carta']])
             ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::post('carta-porte/validar-folio', [CartaPorteController::class, 'validarFolio'])
+            ->name('carta-porte.validar-folio');
+        Route::post('carta-porte/obtener-distancia', [CartaPorteController::class, 'obtenerDistancia'])
+            ->name('carta-porte.obtener-distancia');
+        Route::post('carta-porte/{carta}/recepcionar', [CartaPorteController::class, 'recepcionar'])
+            ->name('carta-porte.recepcionar');
 
         Route::resource('hojas-ruta', HojasRutaController::class, ['parameters' => ['hojas-ruta' => 'hoja']])
             ->only(['index', 'store', 'update', 'destroy']);

@@ -51,7 +51,7 @@ class PermissionSeeder extends Seeder
 
             'solicitudes.ver', 'solicitudes.crear', 'solicitudes.editar', 'solicitudes.eliminar',
 
-            'giros.ver', 'giros.crear', 'giros.editar', 'giros.eliminar',
+            'carta-porte.ver', 'carta-porte.crear', 'carta-porte.editar', 'carta-porte.eliminar',
 
             'facturas.ver', 'facturas.crear', 'facturas.editar', 'facturas.eliminar',
             'facturas.cancelar', 'facturas.refacturar', 'facturas.firmar', 'facturas.cobrar',
@@ -286,7 +286,7 @@ class PermissionSeeder extends Seeder
                 'distancias.ver', 'distancias.crear', 'distancias.editar', 'distancias.eliminar',
                 'acuerdos.ver', 'acuerdos.crear', 'acuerdos.editar', 'acuerdos.eliminar',
                 'solicitudes.ver', 'solicitudes.crear', 'solicitudes.editar', 'solicitudes.eliminar',
-                'giros.ver', 'giros.crear', 'giros.editar', 'giros.eliminar',
+                'carta-porte.ver', 'carta-porte.crear', 'carta-porte.editar', 'carta-porte.eliminar',
                 'facturas.ver', 'facturas.crear', 'facturas.editar', 'facturas.eliminar',
                 'facturas.cancelar', 'facturas.refacturar', 'facturas.firmar', 'facturas.cobrar',
                 'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',

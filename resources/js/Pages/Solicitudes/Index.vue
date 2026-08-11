@@ -10,6 +10,7 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
+import Checkbox from 'primevue/checkbox'
 import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
@@ -22,6 +23,7 @@ const props = defineProps({
   productos: Array,
   tiposCargas: Array,
   monedas: Array,
+  catalogosCarta: Object,
   filters: Object,
 })
 const toast = useToast()
@@ -122,22 +124,80 @@ function duplicar(item) {
 
 function abrirCarta(item) {
   cartaSolicitud.value = item
+  const cc = props.catalogosCarta || {}
   carta.value = {
+    numero: '',
     ingreso_mt: item.toneladas_pendientes ?? null,
+    toneladas: item.toneladas_pendientes ?? null,
+    peso1: item.toneladas_pendientes ?? null,
+    peso2: null,
     fecha_parte: fmtDate(new Date()),
+    fecha_emision: fmtDate(new Date()),
+    id_hoja_ruta: null,
+    id_solicitud: item.id,
+    id_cliente: item.id_cliente,
+    id_lugar_origen: item.id_lugar_origen,
+    id_lugar_destino: item.id_lugar_destino,
+    id_producto: item.id_producto,
+    id_producto2: item.id_producto2,
+    id_tipo_carga: item.id_tipo_carga,
+    id_tipo_carga2: item.id_tipo_carga2,
+    id_turno: null,
+    id_buque: null,
+    id_tractivo: null,
+    id_arrastre: null,
+    id_chofer: null,
+    id_chofer2: null,
+    distancia: item.distancia ?? null,
+    conduce: '',
+    notas: '',
+    imprimir: false,
   }
   showCarta.value = true
 }
 
 function registrarCarta() {
   if (!cartaSolicitud.value) return
-  router.post(route('solicitudes.carta-porte', cartaSolicitud.value.id), carta.value, {
+  const payload = { ...carta.value }
+  delete payload.ingreso_mt
+  router.post(route('solicitudes.carta-porte', cartaSolicitud.value.id), payload, {
     onSuccess: () => {
       showCarta.value = false
       toast.add({ severity: 'success', summary: 'Carta de porte registrada', life: 3000 })
     },
     onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
   })
+}
+
+const cc = () => props.catalogosCarta || {}
+const hojasCarta = () => (cc().hojasRuta || []).map(h => ({ ...h, label: `${h.numero}${h.tractivo_codigo ? ` (${h.tractivo_codigo})` : ''}${h.chofer_nombre ? ` • ${h.chofer_nombre}` : ''}` }))
+const choferesCarta = () => (cc().choferes || []).map(c => ({ ...c, label: `${c.nombre} ${c.apellidos || ''}`.trim() }))
+const tractivosCarta = () => cc().tractivos || []
+const arrastresCarta = () => cc().arrastres || []
+const turnosCarta = () => cc().turnos || []
+const buquesCarta = () => cc().buques || []
+
+function aplicarHojaCarta(event) {
+  const hr = hojasCarta().find(h => h.id === event)
+  if (!hr) return
+  carta.value.id_chofer = carta.value.id_chofer || hr.id_chofer || null
+  carta.value.id_chofer2 = carta.value.id_chofer2 || hr.id_chofer2 || null
+  carta.value.id_tractivo = carta.value.id_tractivo || hr.id_tractivo || null
+  carta.value.id_arrastre = carta.value.id_arrastre || hr.id_arrastre || null
+}
+
+function validarFolioCarta() {
+  if (!carta.value.numero) return
+  fetch(route('carta-porte.validar-folio'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' },
+    body: JSON.stringify({ numero: carta.value.numero, fecha_emision: carta.value.fecha_emision || fmtDate(new Date()) }),
+  })
+    .then(r => r.json())
+    .then((json) => {
+      if (!json.disponible) toast.add({ severity: 'warn', summary: 'Folio ocupado', detail: `El folio ${carta.value.numero} ya está registrado en este mes.`, life: 5000 })
+    })
+    .catch(() => {})
 }
 
 function submit() {
@@ -347,27 +407,115 @@ const fmtNum = (v) => (v == null ? '' : Number(v).toLocaleString('es', { maximum
       </form>
     </Dialog>
 
-    <Dialog v-model:visible="showCarta" header="Registrar Carta de Porte" modal style="width: 420px">
-      <div v-if="cartaSolicitud" class="space-y-4">
-        <div class="text-sm">
-          <div><strong>N°:</strong> {{ cartaSolicitud.numero }}</div>
-          <div>
-            <strong>Pendientes:</strong> {{ fmtNum(cartaSolicitud.toneladas_pendientes ?? cartaSolicitud.peso1) }} de
-            {{ fmtNum(cartaSolicitud.toneladas_total ?? cartaSolicitud.peso1) }} tns
+    <Dialog v-model:visible="showCarta" :header="`Ejecutar Carta de Porte — ${cartaSolicitud?.numero || ''}`" modal style="width: 880px">
+      <div v-if="cartaSolicitud">
+        <form @submit.prevent="registrarCarta" class="space-y-4 overflow-y-auto max-h-[75vh]">
+          <div class="text-sm bg-surface-50 p-2 rounded flex gap-6">
+            <div><strong>N°:</strong> {{ cartaSolicitud.numero }}</div>
+            <div><strong>Cliente:</strong> {{ cartaSolicitud.cliente?.nombre }}</div>
+            <div><strong>Pendientes:</strong> {{ fmtNum(cartaSolicitud.toneladas_pendientes ?? cartaSolicitud.peso1) }} de {{ fmtNum(cartaSolicitud.toneladas_total ?? cartaSolicitud.peso1) }} tns</div>
           </div>
-        </div>
-        <div>
-          <label class="block mb-1 font-medium text-sm">Toneladas (carta de porte)</label>
-          <InputText v-model="carta.ingreso_mt" type="number" step="0.01" min="0.01" class="w-full" />
-        </div>
-        <div>
-          <label class="block mb-1 font-medium text-sm">Fecha</label>
-          <DatePicker v-model="carta.fecha_parte" dateFormat="yy-mm-dd" showIcon class="w-full" />
-        </div>
-        <div class="flex gap-2 justify-end">
-          <Button label="Cancelar" severity="secondary" @click="showCarta = false" />
-          <Button label="Registrar" icon="pi pi-check" @click="registrarCarta" />
-        </div>
+
+          <fieldset class="border rounded p-3">
+            <legend class="font-semibold px-2">DATOS DE LA EMISION</legend>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <div>
+                <label class="block mb-1 font-medium">Fecha</label>
+                <DatePicker v-model="carta.fecha_emision" dateFormat="yy-mm-dd" showIcon class="w-full" @date-select="validarFolioCarta" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Folio</label>
+                <InputText v-model="carta.numero" class="w-full" required @blur="validarFolioCarta" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Hoja de Ruta</label>
+                <Select v-model="carta.id_hoja_ruta" :options="hojasCarta()" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" @change="aplicarHojaCarta($event.value)" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Chofer</label>
+                <Select v-model="carta.id_chofer" :options="choferesCarta()" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">2do Chofer</label>
+                <Select v-model="carta.id_chofer2" :options="choferesCarta()" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Conduce</label>
+                <InputText v-model="carta.conduce" class="w-full" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Tractivo</label>
+                <Select v-model="carta.id_tractivo" :options="tractivosCarta()" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Arrastre</label>
+                <Select v-model="carta.id_arrastre" :options="arrastresCarta()" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Turno</label>
+                <Select v-model="carta.id_turno" :options="turnosCarta()" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Buque</label>
+                <Select v-model="carta.id_buque" :options="buquesCarta()" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="border rounded p-3">
+            <legend class="font-semibold px-2">DATOS DE LA TRANSPORTACION</legend>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <div>
+                <label class="block mb-1 font-medium">Origen</label>
+                <Select v-model="carta.id_lugar_origen" :options="lugares" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Destino</label>
+                <Select v-model="carta.id_lugar_destino" :options="lugares" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">KMS</label>
+                <InputText v-model="carta.distancia" type="number" min="0" class="w-full" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Tipo Carga 1</label>
+                <Select v-model="carta.id_tipo_carga" :options="tiposCargas" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Tipo Carga 2</label>
+                <Select v-model="carta.id_tipo_carga2" :options="tiposCargas" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Producto 1</label>
+                <Select v-model="carta.id_producto" :options="productos" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Producto 2</label>
+                <Select v-model="carta.id_producto2" :options="productos" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Peso 1 (tns)</label>
+                <InputText v-model="carta.peso1" type="number" step="0.01" min="0" class="w-full" />
+              </div>
+              <div>
+                <label class="block mb-1 font-medium">Peso 2 (tns)</label>
+                <InputText v-model="carta.peso2" type="number" step="0.01" min="0" class="w-full" />
+              </div>
+              <div class="flex items-end gap-3">
+                <label class="flex items-center gap-2"><Checkbox v-model="carta.imprimir" :binary="true" /> Imprimir notas en la CP</label>
+              </div>
+            </div>
+            <div class="mt-3">
+              <label class="block mb-1 font-medium">Notas</label>
+              <Textarea v-model="carta.notas" rows="2" class="w-full" />
+            </div>
+          </fieldset>
+
+          <div class="flex gap-2 justify-end">
+            <Button label="Cancelar" severity="secondary" type="button" @click="showCarta = false" />
+            <Button label="Registrar" type="submit" icon="pi pi-check" />
+          </div>
+        </form>
       </div>
     </Dialog>
   </AppLayout>

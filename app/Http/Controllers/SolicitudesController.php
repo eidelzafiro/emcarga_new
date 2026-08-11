@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartaPorte;
+use App\Models\Bolsa;
+use App\Models\Buque;
 use App\Models\Cliente;
+use App\Models\HojasRuta;
 use App\Models\Lugare;
 use App\Models\Moneda;
 use App\Models\Producto;
 use App\Models\SolicitudesServicio;
 use App\Models\TipoCarga;
+use App\Models\Tractivo;
+use App\Models\Turno;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -70,7 +75,60 @@ class SolicitudesController extends Controller
                 ->orderBy('codigo')
                 ->get(['id', 'codigo', 'nombre', 'simbolo']),
             'filters' => $request->only(['search']),
+            'catalogosCarta' => $this->catalogosCarta($entidadId),
         ]);
+    }
+
+    /**
+     * Catálogos para el formulario de emisión de carta de porte desde la
+     * solicitud (réplica del legacy: hoja ruta, equipos, choferes, etc.).
+     */
+    private function catalogosCarta(int $entidadId): array
+    {
+        $hoy = now()->toDateString();
+
+        return [
+            'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad', 'id_cliente')
+                ->with(['tractivo:id,codigo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos', 'chofer2:id,nombre,apellidos'])
+                ->where(fn ($q) => $q->whereNull('fecha_cierre')->orWhereBetween('fecha_cierre', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()]))
+                ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+                ->orderByDesc('fecha_emision')
+                ->limit(200)
+                ->get()
+                ->map(fn ($hr) => [
+                    'id' => $hr->id,
+                    'numero' => $hr->numero,
+                    'fecha_cierre' => $hr->fecha_cierre,
+                    'tractivo_codigo' => $hr->tractivo?->codigo,
+                    'arrastre_codigo' => $hr->arrastre?->codigo,
+                    'chofer_nombre' => $hr->chofer ? trim($hr->chofer->nombre.' '.$hr->chofer->apellidos) : null,
+                    'chofer2_nombre' => $hr->chofer2 ? trim($hr->chofer2->nombre.' '.$hr->chofer2->apellidos) : null,
+                    'id_cliente' => $hr->id_cliente,
+                ]),
+            'tractivos' => Tractivo::with('grupo:id,nombre')
+                ->select('id', 'codigo', 'marca', 'modelo', 'placa', 'id_grupo')
+                ->whereNull('fecha_baja')
+                ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+                ->orderBy('codigo')
+                ->get()
+                ->map(fn ($t) => ['id' => $t->id, 'codigo' => $t->codigo, 'tipo' => $t->grupo?->nombre, 'marca' => $t->marca, 'placa' => $t->placa]),
+            'arrastres' => Tractivo::select('id', 'codigo', 'marca', 'placa')
+                ->where('id_grupo', 8)
+                ->whereNull('fecha_baja')
+                ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+                ->orderBy('codigo')
+                ->get(),
+            'choferes' => Bolsa::select('id', 'nombre', 'apellidos')
+                ->where('activo', true)
+                ->where('tiene_licencia', true)
+                ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+                ->where(fn ($q) => $q->whereNull('licencia_vencimiento')->orWhere('licencia_vencimiento', '>=', $hoy))
+                ->orderBy('nombre')
+                ->get()
+                ->map(fn ($b) => ['id' => $b->id, 'nombre' => $b->nombre, 'apellidos' => $b->apellidos]),
+            'turnos' => Turno::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
+            'buques' => Buque::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
+        ];
     }
 
     public function store(Request $request)
@@ -134,30 +192,72 @@ class SolicitudesController extends Controller
         $pendientes = max(0, (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0) - (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('ingreso_mt'));
 
         $validated = $request->validate([
-            'ingreso_mt' => ['required', 'numeric', 'min:0.01', 'max:'.($pendientes > 0 ? $pendientes : 0.01)],
+            'numero' => ['required', 'string', 'max:20', function (string $attribute, mixed $value, \Closure $fail): void {
+                $existe = CartaPorte::where('numero', trim((string) $value))
+                    ->where('cancelada', false)
+                    ->whereNull('deleted_at')
+                    ->exists();
+                if ($existe) {
+                    $fail('El folio ya está registrado. Verifique antes de emitirlo.');
+                }
+            }],
+            'ingreso_mt' => ['nullable', 'numeric', 'min:0', 'max:'.($pendientes > 0 ? $pendientes : 0.01)],
+            'toneladas' => ['nullable', 'numeric', 'min:0'],
+            'peso1' => ['nullable', 'numeric', 'min:0'],
+            'peso2' => ['nullable', 'numeric', 'min:0'],
             'fecha_parte' => ['nullable', 'date'],
+            'fecha_emision' => ['nullable', 'date'],
+            'id_hoja_ruta' => ['nullable', 'exists:hojas_ruta,id'],
+            'id_tractivo' => ['nullable', 'exists:tractivos,id'],
+            'id_arrastre' => ['nullable', 'exists:tractivos,id'],
+            'id_chofer' => ['nullable', 'exists:bolsa,id'],
+            'id_chofer2' => ['nullable', 'exists:bolsa,id'],
+            'id_lugar_origen' => ['nullable', 'exists:lugares,id'],
+            'id_lugar_destino' => ['nullable', 'exists:lugares,id'],
+            'id_producto' => ['nullable', 'exists:productos,id'],
+            'id_producto2' => ['nullable', 'exists:productos,id'],
+            'id_tipo_carga' => ['nullable', 'exists:tipos_cargas,id'],
+            'id_tipo_carga2' => ['nullable', 'exists:tipos_cargas,id'],
+            'id_turno' => ['nullable', 'exists:turnos,id'],
+            'id_buque' => ['nullable', 'exists:buques,id'],
+            'distancia' => ['nullable', 'integer', 'min:0'],
+            'conduce' => ['nullable', 'string', 'max:150'],
+            'notas' => ['nullable', 'string', 'max:150'],
+            'imprimir' => ['sometimes', 'boolean'],
         ]);
 
-        $numero = $this->generarNumeroCartaPorte();
+        $fechaEmision = $validated['fecha_emision'] ?? now()->toDateString();
 
-        CartaPorte::create([
-            'numero' => $numero,
+        $carta = CartaPorte::create([
+            'numero' => $validated['numero'],
+            'id_hoja_ruta' => $validated['id_hoja_ruta'] ?? null,
             'id_solicitud' => $solicitude->id,
             'id_cliente' => $solicitude->id_cliente,
-            'id_lugar_origen' => $solicitude->id_lugar_origen,
-            'id_lugar_destino' => $solicitude->id_lugar_destino,
-            'id_producto' => $solicitude->id_producto,
-            'id_producto2' => $solicitude->id_producto2,
-            'id_tipo_carga' => $solicitude->id_tipo_carga,
-            'id_tipo_carga2' => $solicitude->id_tipo_carga2,
+            'id_tractivo' => $validated['id_tractivo'] ?? null,
+            'id_arrastre' => $validated['id_arrastre'] ?? null,
+            'id_chofer' => $validated['id_chofer'] ?? null,
+            'id_chofer2' => $validated['id_chofer2'] ?? null,
+            'id_lugar_origen' => $validated['id_lugar_origen'] ?? $solicitude->id_lugar_origen,
+            'id_lugar_destino' => $validated['id_lugar_destino'] ?? $solicitude->id_lugar_destino,
+            'id_producto' => $validated['id_producto'] ?? $solicitude->id_producto,
+            'id_producto2' => $validated['id_producto2'] ?? $solicitude->id_producto2,
+            'id_tipo_carga' => $validated['id_tipo_carga'] ?? $solicitude->id_tipo_carga,
+            'id_tipo_carga2' => $validated['id_tipo_carga2'] ?? $solicitude->id_tipo_carga2,
+            'id_turno' => $validated['id_turno'] ?? null,
+            'id_buque' => $validated['id_buque'] ?? null,
             'id_moneda' => $solicitude->id_moneda,
             'id_user' => auth()->id(),
-            'fecha_emision' => $validated['fecha_parte'] ?? now()->toDateString(),
-            'fecha_parte' => $validated['fecha_parte'] ?? now()->toDateString(),
-            'peso1' => $validated['ingreso_mt'],
-            'toneladas' => $validated['ingreso_mt'],
-            'ingreso_mt' => $validated['ingreso_mt'],
+            'fecha_emision' => $fechaEmision,
+            'fecha_parte' => $validated['fecha_parte'] ?? $fechaEmision,
+            'peso1' => $validated['peso1'] ?? $validated['toneladas'] ?? $validated['ingreso_mt'] ?? 0,
+            'peso2' => $validated['peso2'] ?? 0,
+            'toneladas' => $validated['toneladas'] ?? $validated['ingreso_mt'] ?? (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0),
+            'ingreso_mt' => $validated['ingreso_mt'] ?? (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0),
+            'distancia' => $validated['distancia'] ?? $solicitude->distancia,
             'flete_mt' => $solicitude->valor_mt,
+            'conduce' => $validated['conduce'] ?? null,
+            'notas' => $validated['notas'] ?? null,
+            'imprimir' => $request->boolean('imprimir'),
             'estado' => 'emitida',
         ]);
 
@@ -169,18 +269,7 @@ class SolicitudesController extends Controller
             'estado' => $estaRealizada ? 'ejecutada' : 'en_proceso',
         ]);
 
-        return redirect()->route('solicitudes.index')->with('success', "Carta de porte {$numero} registrada correctamente.");
-    }
-
-    private function generarNumeroCartaPorte(): string
-    {
-        $base = 'CP-'.now()->format('Y').'-';
-        $ultimo = CartaPorte::where('numero', 'like', $base.'%')
-            ->orderBy('numero', 'desc')
-            ->value('numero');
-        $sec = $ultimo ? ((int) substr($ultimo, strlen($base))) + 1 : 1;
-
-        return $base.str_pad((string) $sec, 5, '0', STR_PAD_LEFT);
+        return redirect()->route('solicitudes.index')->with('success', "Carta de porte {$carta->numero} registrada correctamente.");
     }
 
     private function validar(Request $request, ?SolicitudesServicio $solicitude = null): array

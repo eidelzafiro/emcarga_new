@@ -34,6 +34,13 @@ function submit() {
         onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
     })
 }
+
+function facturar(prefactura) {
+    router.post(route('prefacturas.facturar', prefactura.id), {}, {
+        onSuccess: () => toast.add({ severity: 'success', summary: 'Prefactura facturada', life: 3000 }),
+        onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
+    })
+}
 </script>
 
 <template>
@@ -63,9 +70,12 @@ function submit() {
                         <Tag :severity="data.estado === 'cancelada' ? 'danger' : data.estado === 'procesada' ? 'success' : 'info'">{{ data.estado }}</Tag>
                     </template>
                 </Column>
-                <Column header="Acciones" style="width: 120px">
+                <Column header="Acciones" style="width: 160px">
                     <template #body="{ data }">
-                        <Button icon="pi pi-trash" rounded text severity="danger" @click="router.delete(route('prefacturas.destroy', data.id))" v-tooltip.top="'Eliminar'" />
+                        <div class="flex gap-1">
+                            <Button icon="pi pi-arrow-right" rounded text severity="success" :disabled="data.estado !== 'pendiente'" @click="facturar(data)" v-tooltip.top="'Facturar'" />
+                            <Button icon="pi pi-trash" rounded text severity="danger" @click="router.delete(route('prefacturas.destroy', data.id))" v-tooltip.top="'Eliminar'" />
+                        </div>
                     </template>
                 </Column>
             </DataTable>

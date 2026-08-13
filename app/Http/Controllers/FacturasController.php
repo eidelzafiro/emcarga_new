@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Aforo;
 use App\Models\Cliente;
+use App\Models\Entidad;
 use App\Models\Factura;
 use App\Models\TipoIngreso;
 use Illuminate\Http\Request;
@@ -19,7 +20,12 @@ class FacturasController extends Controller
             ->when(true, function ($q) {
                 $entidadId = (int) session('entidad_activa_id');
                 if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                    $ids = collect(Entidad::subEntidadesIds($entidadId))
+                        ->push($entidadId)
+                        ->unique()
+                        ->values()
+                        ->all();
+                    $q->whereIn('id_entidad', $ids);
                 }
 
                 return $q;
@@ -41,8 +47,10 @@ class FacturasController extends Controller
             'title' => 'Nueva Factura',
             'clientes' => Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'codigo']),
             'tipos_ingreso' => TipoIngreso::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'siglas']),
+            'siguiente_numero' => $this->siguienteNumero(),
             'aforos_pendientes' => Aforo::with('cartaPorte:id,numero', 'cartaPorte.cliente:id,nombre')
                 ->whereNull('id_factura')
+                ->whereNull('id_prefactura')
                 ->where('ingreso_mt', '>', 0)
                 ->orderBy('fecha_parte')
                 ->get(),
@@ -52,7 +60,7 @@ class FacturasController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'numero' => 'required|unique:facturas,numero|integer',
+            'numero' => 'nullable|unique:facturas,numero|integer',
             'fecha_emision' => 'required|date',
             'id_cliente' => 'required|exists:clientes,id',
             'flete_mt' => 'required|numeric|min:0',
@@ -67,7 +75,8 @@ class FacturasController extends Controller
             'aforos_ids.*' => 'exists:aforos,id',
         ]);
 
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['numero'] ??= $this->siguienteNumero();
+        $validated['id_entidad'] = session('entidad_activa_id') ?: null;
         $validated['id_user'] = auth()->id();
         $validated['id_unidad'] = auth()->user()->id_unidad ?? null;
         $validated['cancelada'] = false;
@@ -79,10 +88,22 @@ class FacturasController extends Controller
         if ($request->filled('aforos_ids')) {
             Aforo::whereIn('id', $request->aforos_ids)
                 ->whereNull('id_factura')
+                ->whereNull('id_prefactura')
                 ->update(['id_factura' => $factura->id]);
         }
 
         return redirect()->route('facturas.index')->with('success', 'Factura creada correctamente.');
+    }
+
+    private function siguienteNumero(?int $anio = null): int
+    {
+        $anio ??= (int) date('Y');
+        $base = $anio * 100000;
+        $max = Factura::where('numero', '>=', $base + 1)
+            ->where('numero', '<', ($anio + 1) * 100000)
+            ->max('numero');
+
+        return $max ? $max + 1 : $base + 1;
     }
 
     public function show(Factura $factura)
@@ -153,7 +174,10 @@ class FacturasController extends Controller
 
     public function firmar(Factura $factura)
     {
-        $factura->update(['fecha_firma' => now()]);
+        $factura->update([
+            'fecha_firma' => now(),
+            'estado' => 'firmada',
+        ]);
 
         return redirect()->route('facturas.index')->with('success', 'Factura marcada como firmada.');
     }
@@ -166,6 +190,12 @@ class FacturasController extends Controller
             'doc_pago_mn' => 'nullable|max:100',
         ]);
 
+        if (! $request->has('fecha_cobro_mn') && ! $request->has('fecha_cobro_mlc') && ! $request->has('doc_pago_mn')) {
+            $validated['fecha_cobro_mn'] = now()->toDateString();
+        }
+
+        $validated['estado'] = 'cobrada';
+
         $factura->update($validated);
 
         return redirect()->route('facturas.index')->with('success', 'Factura marcada como cobrada.');
@@ -175,6 +205,7 @@ class FacturasController extends Controller
     {
         $query = Aforo::with('cartaPorte.cliente:id,nombre')
             ->whereNull('id_factura')
+            ->whereNull('id_prefactura')
             ->where('ingreso_mt', '>', 0);
 
         if ($request->id_cliente) {

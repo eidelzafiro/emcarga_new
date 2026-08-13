@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AcuerdosController;
+use App\Http\Controllers\AforosController;
 use App\Http\Controllers\AlertasController;
 use App\Http\Controllers\AreasController;
 use App\Http\Controllers\ArrastresController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\BateriasController;
 use App\Http\Controllers\BolsaController;
 use App\Http\Controllers\CajasController;
 use App\Http\Controllers\CargosController;
+use App\Http\Controllers\CartaPorteController;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\CategoriasCargoController;
 use App\Http\Controllers\CategoriasProductosController;
@@ -44,7 +46,6 @@ use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\FirmasAutorizadasController;
 use App\Http\Controllers\FirmasController;
 use App\Http\Controllers\FondosTiempoController;
-use App\Http\Controllers\CartaPorteController;
 use App\Http\Controllers\GruposController;
 use App\Http\Controllers\GruposEscalaController;
 use App\Http\Controllers\HistorialMovimientosController;
@@ -98,7 +99,6 @@ use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
 use App\Http\Controllers\TipoAgregadosController;
 use App\Http\Controllers\TipoEquiposController;
-use App\Http\Controllers\TiposMantenimientosController;
 use App\Http\Controllers\TipoIngresosController;
 use App\Http\Controllers\TipoNeumaticosController;
 use App\Http\Controllers\TiposAceitesController;
@@ -117,6 +117,7 @@ use App\Http\Controllers\TiposGastosController;
 use App\Http\Controllers\TiposGrupoHorarioController;
 use App\Http\Controllers\TiposIncidenciasController;
 use App\Http\Controllers\TiposIntegracionPoliticaController;
+use App\Http\Controllers\TiposMantenimientosController;
 use App\Http\Controllers\TiposMediosCargoController;
 use App\Http\Controllers\TiposMediosProteccionController;
 use App\Http\Controllers\TiposModeloController;
@@ -302,8 +303,13 @@ Route::middleware('auth')->group(function () {
         Route::post('facturas/{factura}/cobrar', [FacturasController::class, 'cobrar'])->name('facturas.cobrar');
         Route::get('aforos-pendientes', [FacturasController::class, 'aforosPendientes'])->name('aforos.pendientes');
 
+        Route::resource('aforos', AforosController::class)
+            ->only(['index', 'create', 'store', 'show']);
+        Route::post('aforos/cotizar', [AforosController::class, 'cotizar'])->name('aforos.cotizar');
+
         Route::resource('prefacturas', PrefacturasController::class)
             ->only(['index', 'create', 'store', 'update', 'destroy']);
+        Route::post('prefacturas/{prefactura}/facturar', [PrefacturasController::class, 'facturar'])->name('prefacturas.facturar');
 
         Route::resource('tipo-ingresos', TipoIngresosController::class)
             ->only(['index', 'store', 'update', 'destroy']);

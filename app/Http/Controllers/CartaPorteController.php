@@ -12,6 +12,7 @@ use App\Models\HojasRuta;
 use App\Models\Lugare;
 use App\Models\Moneda;
 use App\Models\Producto;
+use App\Models\SolicitudesServicio;
 use App\Models\TipoCarga;
 use App\Models\Tractivo;
 use App\Models\Turno;
@@ -271,6 +272,10 @@ class CartaPorteController extends Controller
 
         $validated = $this->validar($request, $carta);
 
+        if (empty($validated['toneladas'])) {
+            $validated['toneladas'] = (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0);
+        }
+
         if (isset($validated['kms1']) || isset($validated['kms2'])) {
             $kmsTotal = (float) ($validated['kms1'] ?? 0) + (float) ($validated['kms2'] ?? 0);
             if ($kmsTotal > 0) {
@@ -292,6 +297,8 @@ class CartaPorteController extends Controller
         }
 
         $carta->update($validated);
+
+        $this->recalcularSolicitud($carta);
 
         return back()->with('success', "Carta de porte {$carta->numero} actualizada.");
     }
@@ -315,13 +322,31 @@ class CartaPorteController extends Controller
                 'fecha_cancelacion' => now(),
             ]);
 
+            $this->recalcularSolicitud($carta);
+
             return back()->with('success', "Carta de porte {$carta->numero} cancelada.");
         }
 
+        $idSolicitud = $carta->id_solicitud;
         $numero = $carta->numero;
         $carta->delete();
 
+        $this->recalcularSolicitud($idSolicitud);
+
         return back()->with('success', "Carta de porte {$numero} eliminada.");
+    }
+
+    /**
+     * Recalcula el estado de la solicitud de servicio asociada a una carta de
+     * porte (al editar, cancelar o eliminar). Acepta la carta o su id_solicitud.
+     */
+    private function recalcularSolicitud(CartaPorte|int $carta): void
+    {
+        $idSolicitud = $carta instanceof CartaPorte ? $carta->id_solicitud : $carta;
+
+        if ($idSolicitud) {
+            SolicitudesServicio::find($idSolicitud)?->recalcularEstado();
+        }
     }
 
     /**

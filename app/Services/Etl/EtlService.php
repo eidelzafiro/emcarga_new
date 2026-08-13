@@ -859,7 +859,7 @@ class EtlService
         $marcas = $legacy->table('tec_marca')->pluck('marca', 'idmarca');
         $modelos = $legacy->table('tec_modelo')->pluck('modelo', 'idmodelo');
 
-$estados = [
+        $estados = [
             27 => 'nuevo',
             18 => 'reparado',
             16 => 'regular',
@@ -1806,6 +1806,333 @@ $estados = [
         ];
     }
 
+    /**
+     * Facturas: solo el año de negocio (2026). El folio legacy (com_rfactura.factura)
+     * NO es único (secuencia por unidad, duplicados: 2132 número+año). Se re-numera
+     * correlativamente como {$anio}00001+ ordenado por fecha/id (idempotente) y el
+     * folio original queda en `numero_legacy`. Totales importados tal cual.
+     */
+    public function migrarFacturas(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $secuencia = 0;
+
+        $idsClientes = DB::table('clientes')->pluck('id')->flip();
+        $idsUsers = DB::table('users')->pluck('id')->flip();
+        $idsEntidades = DB::table('entidades')->pluck('id')->flip();
+        $idsTipoIngreso = DB::table('tipo_ingresos')->pluck('id')->flip();
+
+        $fechaValida = function (?string $f): ?string {
+            if (! $f || str_starts_with($f, '0000')) {
+                return null;
+            }
+
+            return substr($f, 0, 10);
+        };
+
+        DB::connection('legacy')->table('com_rfactura')
+            ->whereYear('ffactura', $anio)
+            ->orderBy('ffactura')
+            ->orderBy('idfactura')
+            ->chunk($chunk, function ($filas) use (
+                &$procesados, &$secuencia, &$avisos, $anio,
+                $idsClientes, $idsUsers, $idsEntidades, $idsTipoIngreso, $fechaValida
+            ) {
+                foreach ($filas as $fila) {
+                    $secuencia++;
+                    $numero = (int) ($anio * 100000 + $secuencia);
+                    $idCliente = (int) $fila->idcliente;
+
+                    if (! isset($idsClientes[$idCliente])) {
+                        $avisos[] = "facturas#{$fila->idfactura}: cliente {$idCliente} no migrado, omitida";
+
+                        continue;
+                    }
+
+                    $idTipoIngreso = (int) $fila->idtipoingresos;
+                    $idEntidad = (int) $fila->idunidad;
+
+                    try {
+                        DB::table('facturas')->updateOrInsert(
+                            ['id' => $fila->idfactura],
+                            [
+                                'numero' => $numero,
+                                'numero_legacy' => (string) $fila->factura,
+                                'fecha_emision' => $fechaValida($fila->ffactura) ?? '1970-01-01',
+                                'id_cliente' => $idCliente,
+                                'id_unidad' => $idEntidad ?: null,
+                                'id_entidad' => $idEntidad && isset($idsEntidades[$idEntidad]) ? $idEntidad : null,
+                                'id_user' => (int) $fila->iduser && isset($idsUsers[$fila->iduser]) ? $fila->iduser : null,
+                                'flete_mt' => $fila->fletemtt,
+                                'flete_mlc' => $fila->fletemlc,
+                                'flete_demora' => $fila->fletedemt,
+                                'otros_mt' => $fila->otrosmtt,
+                                'ingreso_mt' => $fila->ingresomt,
+                                'cancelada' => (int) $fila->cancelada === 1,
+                                'refacturada' => (int) $fila->refacturada === 1,
+                                'oventas' => (int) $fila->oventas === 1,
+                                'id_tipo_ingreso' => $idTipoIngreso && isset($idsTipoIngreso[$idTipoIngreso]) ? $idTipoIngreso : null,
+                                'notas' => trim((string) $fila->notas) ?: null,
+                                'fecha_firma' => $fechaValida($fila->ffirma),
+                                'fecha_cobro_mn' => $fechaValida($fila->fcobromn),
+                                'fecha_conciliacion' => $fechaValida($fila->fconciliada),
+                                'doc_pago_mn' => trim((string) $fila->docpagomn) ?: null,
+                                'estado' => (int) $fila->cancelada === 1
+                                    ? 'cancelada'
+                                    : ((int) $fila->refacturada === 1 ? 'refacturada' : 'emitida'),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "facturas#{$fila->idfactura}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['facturas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_rfactura')->whereYear('ffactura', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * Aforos: solo el año de negocio (2026). Un aforo por carta (PK idcartaporte),
+     * vinculado a facturas ya migradas vía idfactura (las facturas de cliente no
+     * migrado quedan con id_factura NULL = pendientes de facturar).
+     */
+    public function migrarAforos(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        $idsFacturas = DB::table('facturas')->pluck('id')->flip();
+
+        $fechaValida = function (?string $f): ?string {
+            if (! $f || str_starts_with($f, '0000')) {
+                return null;
+            }
+
+            return substr($f, 0, 10);
+        };
+
+        DB::connection('legacy')->table('com_aforo')
+            ->whereYear('fparte', $anio)
+            ->orderBy('idcartaporte')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsFacturas, $fechaValida) {
+                foreach ($filas as $fila) {
+                    $idFactura = (int) $fila->idfactura;
+
+                    try {
+                        DB::table('aforos')->updateOrInsert(
+                            ['id' => $fila->idcartaporte],
+                            [
+                                'id_carta_porte' => $fila->idcartaporte,
+                                'id_factura' => $idFactura && isset($idsFacturas[$idFactura]) ? $idFactura : null,
+                                'id_prefactura' => null,
+                                'fecha_parte' => $fechaValida($fila->fparte) ?? '1970-01-01',
+                                'flete_mt' => $fila->fletemtt,
+                                'flete_mlc' => $fila->fletemlc,
+                                'flete_demora' => $fila->fletedemt,
+                                'otros_mt' => $fila->otrosmtt,
+                                'ingreso_mt' => $fila->ingresomt,
+                                'descuento' => (float) $fila->descuento,
+                                'refactura' => false,
+                                'id_user' => null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "aforos#{$fila->idcartaporte}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['aforos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_aforo')->whereYear('fparte', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge($avisos, ["{$idsFacturas->count()} facturas migradas disponibles para vincular"]),
+        ];
+    }
+
+    /**
+     * ETL de tarifas: com_tarifas46 + com_tarifas → tarifas.
+     *
+     * - `com_tarifas46` (tarifario corriente, 8 tipos base) → version='46'.
+     * - `com_tarifas` (tipos especiales 117/118 + base) → version='normal'.
+     *   (El legacy `modAforo::mostrar_tarifa` usa com_tarifas46 por defecto y
+     *   com_tarifas SOLO para 117/118.)
+     * - Idempotente: upsert por (id_tipo_carga, kms, version).
+     */
+    public function migrarTarifas(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        $this->migrarTarifasDesde('com_tarifas46', '46', $chunk, $procesados, $avisos);
+        $this->migrarTarifasDesde('com_tarifas', 'normal', $chunk, $procesados, $avisos);
+
+        $this->reporte['tarifas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_tarifas46')->count()
+                + (int) DB::connection('legacy')->table('com_tarifas')->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    private function migrarTarifasDesde(string $legacyTabla, string $version, int $chunk, int &$procesados, array &$avisos): void
+    {
+        DB::connection('legacy')->table($legacyTabla)
+            ->orderBy('idtarifas')
+            ->chunk($chunk, function ($filas) use ($version, &$procesados, &$avisos) {
+                foreach ($filas as $fila) {
+                    try {
+                        DB::table('tarifas')->updateOrInsert(
+                            [
+                                'id_tipo_carga' => $fila->idtipocargas,
+                                'kms' => $fila->kms,
+                                'version' => $version,
+                            ],
+                            [
+                                'tarifa_mt' => $fila->tarmt,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "tarifas#{$legacyTabla}#{$fila->idtarifas}: {$e->getMessage()}";
+                    }
+                }
+            });
+    }
+
+    /**
+     * ETL de configuraciones de tarifa: com_tarconfigcarga + com_tarconfigcont →
+     * una única fila en `configuraciones_tarifa` (diseño unificado de Zafiro).
+     */
+    public function migrarConfiguracionesTarifa(): void
+    {
+        $avisos = [];
+
+        $carga = DB::connection('legacy')->table('com_tarconfigcarga')->first();
+        $cont = DB::connection('legacy')->table('com_tarconfigcont')->first();
+
+        if (! $carga && ! $cont) {
+            $this->reporte['configuraciones_tarifa'] = [
+                'legacy' => 0,
+                'nueva' => (int) DB::table('configuraciones_tarifa')->count(),
+                'avisos' => ['Sin datos en legacy com_tarconfigcarga/com_tarconfigcont'],
+            ];
+
+            return;
+        }
+
+        try {
+            DB::table('configuraciones_tarifa')->updateOrInsert(
+                ['id' => 1],
+                [
+                    'demora_1' => $carga->demora1 ?? null,
+                    'demora_2' => $carga->demora2 ?? null,
+                    'kms_vacio_1' => $carga->kmsvacio1 ?? null,
+                    'kms_vacio_2' => $carga->kmsvacio2 ?? null,
+                    'tarifa_horaria_1' => $cont->tarhor1 ?? $carga->tarhor1 ?? null,
+                    'tarifa_horaria_2' => $carga->tarhor2 ?? null,
+                    'kms_adicionales_1' => $carga->kmsadic1 ?? null,
+                    'kms_adicionales_2' => $carga->kmsadic2 ?? null,
+                    'almacenaje' => $carga->almacenaje ?? null,
+                    'recargo_1' => $carga->recargo1 ?? null,
+                    'recargo_2' => $carga->recargo2 ?? null,
+                    'recargo_3_1' => $carga->recargo31 ?? null,
+                    'recargo_3_2' => $carga->recargo32 ?? null,
+                    'recargo_3_3' => $carga->recargo33 ?? null,
+                    'recargo_4' => $carga->recargo4 ?? null,
+                    'recargo_5' => $carga->recargo5 ?? null,
+                    'hora_1' => $carga->hora1 ?? null,
+                    'hora_2' => $carga->hora2 ?? null,
+                    'hora_3' => $carga->hora3 ?? null,
+                    'izaje_1' => $cont->izaje1 ?? null,
+                    'izaje_2' => $cont->izaje2 ?? null,
+                    'valor_izaje_mt' => $cont->vizajemt ?? null,
+                    'valor_izaje_me' => $cont->vizajeme ?? null,
+                    'valor_almacenaje' => $cont->valmacenaje ?? null,
+                    'plazo_libre_exp' => $cont->plibreexp ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+            $procesados = 1;
+        } catch (\Throwable $e) {
+            $avisos[] = "configuraciones_tarifa: {$e->getMessage()}";
+            $procesados = 0;
+        }
+
+        $this->reporte['configuraciones_tarifa'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_tarconfigcarga')->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de acuerdos de tarifas: com_taracuerdos → tarifas_acuerdos.
+     * FKs validadas contra clientes/lugares/productos; idunidad → id_entidad.
+     */
+    public function migrarTarifasAcuerdos(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $omitidas = 0;
+
+        DB::connection('legacy')->table('com_taracuerdos')
+            ->orderBy('idtaracuerdos')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidas, &$avisos) {
+                foreach ($filas as $fila) {
+                    if (! DB::table('clientes')->where('id', $fila->idcliente)->exists()
+                        || ! DB::table('lugares')->where('id', $fila->idorigen)->exists()
+                        || ! DB::table('lugares')->where('id', $fila->iddestino)->exists()) {
+                        $omitidas++;
+
+                        continue;
+                    }
+
+                    try {
+                        DB::table('tarifas_acuerdos')->updateOrInsert(
+                            ['id' => $fila->idtaracuerdos],
+                            [
+                                'id_cliente' => $fila->idcliente,
+                                'id_origen' => $fila->idorigen,
+                                'id_destino' => $fila->iddestino,
+                                'id_producto' => ($fila->idproducto && DB::table('productos')->where('id', $fila->idproducto)->exists())
+                                    ? $fila->idproducto
+                                    : null,
+                                'tarifa_mt' => $fila->tarmt,
+                                'flete_mt' => $fila->fletemtt,
+                                'id_entidad' => $fila->idunidad ?: null,
+                                'origen_id' => $fila->idtaracuerdos,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "tarifas_acuerdos#{$fila->idtaracuerdos}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['tarifas_acuerdos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_taracuerdos')->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(["{$omitidas} acuerdos omitidos por cliente/origen/destino inexistente"], $avisos),
+        ];
+    }
+
     public function migrarTabla(string $nombre, int $chunk = 1000): void
     {
         $config = config("etl.tablas.{$nombre}");
@@ -2114,6 +2441,29 @@ $estados = [
         $resultado['bolsa'] = [
             'legacy' => (int) DB::connection('legacy')->table('rh_bolsa')->count(),
             'nueva' => (int) DB::table('bolsa')->count(),
+        ];
+        $resultado['facturas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_rfactura')
+                ->whereYear('ffactura', 2026)->count(),
+            'nueva' => (int) DB::table('facturas')->count(),
+        ];
+        $resultado['aforos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_aforo')
+                ->whereYear('fparte', 2026)->count(),
+            'nueva' => (int) DB::table('aforos')->count(),
+        ];
+        $resultado['tarifas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_tarifas46')->count()
+                + (int) DB::connection('legacy')->table('com_tarifas')->count(),
+            'nueva' => (int) DB::table('tarifas')->count(),
+        ];
+        $resultado['configuraciones_tarifa'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_tarconfigcarga')->count(),
+            'nueva' => (int) DB::table('configuraciones_tarifa')->count(),
+        ];
+        $resultado['tarifas_acuerdos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_taracuerdos')->count(),
+            'nueva' => (int) DB::table('tarifas_acuerdos')->count(),
         ];
 
         return $resultado;

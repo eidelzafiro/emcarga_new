@@ -118,8 +118,6 @@ function abrirCarta(item) {
   const cc = props.catalogosCarta || {}
   carta.value = {
     numero: '',
-    ingreso_mt: item.toneladas_pendientes ?? null,
-    toneladas: item.toneladas_pendientes ?? null,
     peso1: item.toneladas_pendientes ?? null,
     peso2: null,
     fecha_parte: fmtDate(new Date()),
@@ -148,7 +146,6 @@ function abrirCarta(item) {
 function registrarCarta() {
   if (!cartaSolicitud.value) return
   const payload = { ...carta.value }
-  delete payload.ingreso_mt
   router.post(route('solicitudes.carta-porte', cartaSolicitud.value.id), payload, {
     onSuccess: () => {
       showCarta.value = false

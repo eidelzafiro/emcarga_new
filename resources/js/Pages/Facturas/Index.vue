@@ -43,6 +43,16 @@ function confirmRefacturar(factura) {
     })
 }
 
+function cobrar(factura) {
+    const hoy = new Date().toISOString().split('T')[0]
+    confirm.require({
+        message: `¿Marcar factura ${factura.numero} como cobrada hoy?`,
+        header: 'Cobrar Factura',
+        icon: 'pi pi-dollar',
+        accept: () => router.post(route('facturas.cobrar', factura.id), { fecha_cobro_mn: hoy }, { preserveScroll: true })
+    })
+}
+
 function firmar(factura) {
     confirm.require({
         message: `¿Marcar factura ${factura.numero} como firmada?`,
@@ -57,7 +67,7 @@ function confirmEliminar(factura) {
         message: `¿Eliminar factura ${factura.numero}?`,
         header: 'Eliminar Factura',
         icon: 'pi pi-trash',
-        accept: () => factura.destroy()
+        accept: () => router.delete(route('facturas.destroy', factura.id), { preserveScroll: true })
     })
 }
 </script>
@@ -96,7 +106,7 @@ function confirmEliminar(factura) {
                         <div class="flex gap-1">
                             <Button icon="pi pi-eye" rounded text severity="info" @click="router.get(route('facturas.show', data.id))" v-tooltip.top="'Ver'" />
                             <Button v-if="data.estado === 'emitida'" icon="pi pi-check" rounded text severity="success" @click="firmar(data)" v-tooltip.top="'Firmar'" />
-                            <Button v-if="data.estado === 'emitida'" icon="pi pi-dollar" rounded text severity="warn" @click="router.post(route('facturas.cobrar', data.id))" v-tooltip.top="'Cobrar'" />
+                            <Button v-if="data.estado === 'emitida'" icon="pi pi-dollar" rounded text severity="warn" @click="cobrar(data)" v-tooltip.top="'Cobrar'" />
                             <Button v-if="data.estado === 'emitida'" icon="pi pi-refresh" rounded text severity="warn" @click="confirmRefacturar(data)" v-tooltip.top="'Refacturar'" />
                             <Button v-if="data.estado === 'emitida'" icon="pi pi-times" rounded text severity="danger" @click="confirmCancelar(data)" v-tooltip.top="'Cancelar'" />
                             <Button v-if="data.estado === 'emitida'" icon="pi pi-trash" rounded text severity="danger" @click="confirmEliminar(data)" v-tooltip.top="'Eliminar'" />

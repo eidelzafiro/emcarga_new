@@ -101,4 +101,24 @@ class SolicitudesServicio extends Model
     {
         return $this->hasMany(CartaPorte::class, 'id_solicitud');
     }
+
+    /**
+     * Recalcula el cumplimiento de toneladas (suma de las toneladas de las
+     * cartas de porte vigentes) y actualiza estado y fecha de ejecución.
+     * Se invoca al registrar, editar, cancelar o eliminar una carta.
+     */
+    public function recalcularEstado(): void
+    {
+        $total = (float) ($this->peso1 ?? 0) + (float) ($this->peso2 ?? 0);
+        $ejecutado = (float) $this->cartasPorte()
+            ->where('estado', '!=', 'cancelada')
+            ->sum('toneladas');
+
+        $realizada = $total > 0 && $ejecutado >= $total;
+
+        $this->update([
+            'fecha_ejecutada' => $realizada ? now()->toDateString() : null,
+            'estado' => $realizada ? 'ejecutada' : ($ejecutado > 0 ? 'en_proceso' : 'pendiente'),
+        ]);
+    }
 }

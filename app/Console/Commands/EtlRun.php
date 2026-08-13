@@ -99,6 +99,9 @@ class EtlRun extends Command
             if (in_array($tabla, ['gastos_orden', 'motores_movimientos', 'neumaticos_movimientos', 'control_lubricantes'])) {
                 continue;  // sin registros del año de negocio / catálogo sin encaje
             }
+            if ($tabla === 'tarifas') {
+                continue;  // migración dedicada abajo (com_tarifas46 → version 46 + com_tarifas → normal)
+            }
 
             $this->info("Migrando {$tabla}...");
             $etl->migrarTabla($tabla, $chunk);
@@ -238,6 +241,41 @@ class EtlRun extends Command
             $this->info('Migrando cartas de porte (girado, año 2026)...');
             $etl->migrarCartasPorte(2026, $chunk);
             $this->mostrarResultado($etl->getReporte(), 'cartas_porte');
+        }
+
+        // Facturas: com_rfactura solo 2026, numero re-numerado + numero_legacy
+        if (! $solo || $solo === 'facturas') {
+            $this->info('Migrando facturas (año 2026, numero re-numerado)...');
+            $etl->migrarFacturas(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'facturas');
+        }
+
+        // Aforos: com_aforo solo 2026, vinculados a facturas ya migradas
+        if (! $solo || $solo === 'aforos') {
+            $this->info('Migrando aforos (año 2026)...');
+            $etl->migrarAforos(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'aforos');
+        }
+
+        // Tarifas: com_tarifas46 (versión 46) + com_tarifas (versión normal, 117/118)
+        if (! $solo || $solo === 'tarifas') {
+            $this->info('Migrando tarifas (com_tarifas46 → versión 46, com_tarifas → normal)...');
+            $etl->migrarTarifas($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'tarifas');
+        }
+
+        // Configuraciones de tarifa: una fila unificada en configuraciones_tarifa
+        if (! $solo || $solo === 'configuraciones_tarifa') {
+            $this->info('Migrando configuraciones de tarifa (unificada)...');
+            $etl->migrarConfiguracionesTarifa();
+            $this->mostrarResultado($etl->getReporte(), 'configuraciones_tarifa');
+        }
+
+        // Acuerdos de tarifas: com_taracuerdos → tarifas_acuerdos (FKs validadas)
+        if (! $solo || $solo === 'tarifas_acuerdos') {
+            $this->info('Migrando acuerdos de tarifas (com_taracuerdos)...');
+            $etl->migrarTarifasAcuerdos($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'tarifas_acuerdos');
         }
 
         // Pivote multi-entidad: requiere usuarios + entidades ya migrados

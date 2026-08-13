@@ -252,7 +252,7 @@ class SolicitudesController extends Controller
             'fecha_parte' => $validated['fecha_parte'] ?? $fechaEmision,
             'peso1' => $validated['peso1'] ?? $validated['toneladas'] ?? $validated['ingreso_mt'] ?? 0,
             'peso2' => $validated['peso2'] ?? 0,
-            'toneladas' => $validated['toneladas'] ?? $validated['ingreso_mt'] ?? (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0),
+            'toneladas' => (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0),
             'ingreso_mt' => $validated['ingreso_mt'] ?? (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0),
             'distancia' => $validated['distancia'] ?? $solicitude->distancia,
             'flete_mt' => $solicitude->valor_mt,
@@ -262,13 +262,7 @@ class SolicitudesController extends Controller
             'estado' => 'emitida',
         ]);
 
-        $estaRealizada = $total > 0
-            && (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('toneladas') >= $total;
-
-        $solicitude->update([
-            'fecha_ejecutada' => $estaRealizada ? now()->toDateString() : null,
-            'estado' => $estaRealizada ? 'ejecutada' : 'en_proceso',
-        ]);
+        $solicitude->recalcularEstado();
 
         return redirect()->route('solicitudes.index')->with('success', "Carta de porte {$carta->numero} registrada correctamente.");
     }

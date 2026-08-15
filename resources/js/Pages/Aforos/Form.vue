@@ -431,6 +431,7 @@ function calcularIndicadores() {
 }
 
 // ---------- Totales ----------
+const almacenajeTotal = computed(() => Number(form.almacenaje_flete || 0))
 const fleteTotal = computed(() =>
     round2(lineas.reduce((s, l) => s + Number(l.flete_mt || 0), 0))
 )
@@ -438,12 +439,11 @@ const fleteMlcTotal = computed(() => round2(lineas.reduce((s, l) => s + Number(l
 const demoraTotal = computed(() => Number(form.flete_demora || 0))
 const demoraHorasTotal = computed(() => round2(Number(form.dem_carga || 0) + Number(form.dem_descarga || 0)))
 // Otros = recargos + almacenaje (el usuario indica que el almacenaje se suma a otros y al ingreso total)
-const otrosTotal = computed(() =>
-    round2(
-        Number(form.recargo_1) + Number(form.recargo_2) + Number(form.recargo_3) +
-        Number(form.recargo_4) + Number(form.recargo_5) + Number(form.almacenaje_flete || 0)
-    )
+const otrosSinAlmacenaje = computed(() =>
+    round2(Number(form.recargo_1) + Number(form.recargo_2) + Number(form.recargo_3) +
+        Number(form.recargo_4) + Number(form.recargo_5))
 )
+const otrosTotal = computed(() => round2(otrosSinAlmacenaje.value + almacenajeTotal.value))
 const ingresoTotal = computed(() => round2(fleteTotal.value + demoraTotal.value + otrosTotal.value))
 
 function calcularTotales() {
@@ -455,6 +455,11 @@ function calcularTotales() {
 }
 
 function onRecargo(k, valor) {
+    // Recargo 1 (INCUMPLIMIENTO): valor por rango de capacidad (paridad legacy 805/1680/2450)
+    if (k === 1 && valor === undefined) {
+        const cap = Number(capacidad.value || 0)
+        valor = cap <= 10 ? 805 : (cap <= 20 ? 1680 : 2450)
+    }
     form['recargo_' + k] = recargosCheck[mapRecargo(k)] ? valor : 0
     calcularTotales()
 }
@@ -901,11 +906,12 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Totales -->
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900">
+                <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900">
                     <div><label class="block mb-1 font-medium text-blue-800 dark:text-blue-300 text-sm">FLETE MN</label><InputNumber :model-value="fleteTotal" readonly class="w-full" /></div>
                     <div><label class="block mb-1 font-medium text-blue-800 dark:text-blue-300 text-sm">FLETE MLC</label><InputNumber :model-value="fleteMlcTotal" readonly class="w-full" /></div>
+                    <div><label class="block mb-1 font-medium text-blue-800 dark:text-blue-300 text-sm">ALMACENAJE</label><InputNumber :model-value="almacenajeTotal" readonly class="w-full" /></div>
                     <div><label class="block mb-1 font-medium text-blue-800 dark:text-blue-300 text-sm">DEMORA</label><InputNumber :model-value="demoraTotal" readonly class="w-full" /></div>
-                    <div><label class="block mb-1 font-medium text-blue-800 dark:text-blue-300 text-sm">OTROS</label><InputNumber :model-value="otrosTotal" readonly class="w-full" /></div>
+                    <div><label class="block mb-1 font-medium text-blue-800 dark:text-blue-300 text-sm">OTROS</label><InputNumber :model-value="otrosSinAlmacenaje" readonly class="w-full" /></div>
                     <div><label class="block mb-1 font-medium text-blue-800 dark:text-blue-300 text-sm">INGRESO (VENTAS)</label><InputNumber :model-value="ingresoTotal" readonly class="w-full" /></div>
                 </div>
 

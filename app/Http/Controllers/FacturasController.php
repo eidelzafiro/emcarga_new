@@ -48,7 +48,7 @@ class FacturasController extends Controller
             'clientes' => Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'codigo']),
             'tipos_ingreso' => TipoIngreso::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'siglas']),
             'siguiente_numero' => $this->siguienteNumero(),
-            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero', 'cartaPorte.cliente:id,nombre')
+            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero', 'cartaPorte.cliente')
                 ->whereNull('id_factura')
                 ->whereNull('id_prefactura')
                 ->where('ingreso_mt', '>', 0)
@@ -203,13 +203,13 @@ class FacturasController extends Controller
 
     public function aforosPendientes(Request $request)
     {
-        $query = Aforo::with('cartaPorte.cliente:id,nombre')
+        $query = Aforo::with('cartaPorte.cliente')
             ->whereNull('id_factura')
             ->whereNull('id_prefactura')
             ->where('ingreso_mt', '>', 0);
 
         if ($request->id_cliente) {
-            $query->whereHas('cartaPorte', fn ($q) => $q->where('id_cliente', $request->id_cliente));
+            $query->whereHas('cartaPorte.solicitud', fn ($q) => $q->where('id_cliente', $request->id_cliente));
         }
 
         return response()->json($query->orderBy('fecha_parte')->get());

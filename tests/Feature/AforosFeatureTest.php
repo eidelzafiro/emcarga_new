@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Cliente;
 use App\Models\CartaPorte;
+use App\Models\Cliente;
 use App\Models\Lugare;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -56,12 +56,13 @@ class AforosFeatureTest extends TestCase
     {
         $this->session(['fecha_operaciones' => now()->toDateString()]);
 
-        $tipo = TipoCarga::where('id', 3)->first() ?? TipoCarga::query()->forceCreate(['id' => 3, 'codigo' => '3', 'nombre' => 'Contenedor']);
-
+        // Fase 4d: el equipo/cliente/tipos/productos se derivan de la HR y la
+        // solicitud; la carta solo conserva lugares/fechas/pesos/distancia.
         return CartaPorte::create(array_merge([
             'numero' => 'CP-TEST-'.rand(1000, 9999),
-            'id_tipo_carga' => $tipo->id,
             'id_moneda' => 1,
+            'id_lugar_origen' => Lugare::first()?->id,
+            'id_lugar_destino' => Lugare::skip(1)->first()?->id,
             'distancia' => 100,
             'toneladas' => 10,
             'fecha_emision' => now()->toDateString(),
@@ -107,8 +108,7 @@ class AforosFeatureTest extends TestCase
     public function test_crear_aforo(): void
     {
         $this->catalogoMinimo();
-        $cliente = Cliente::create(['codigo' => 'CL-A', 'nombre' => 'Cliente Aforo']);
-        $carta = $this->cartaPendiente(['id_cliente' => $cliente->id]);
+        $carta = $this->cartaPendiente();
 
         $this->actingAs($this->usuarioComercial())
             ->post(route('aforos.store'), [

@@ -18,6 +18,7 @@ use App\Services\AforoCotizadorService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AforosController extends Controller
@@ -40,12 +41,12 @@ class AforosController extends Controller
         $mes = Carbon::parse($fechaOperaciones)->month;
 
         $query = Aforo::with([
-            'cartaPorte:id,numero,id_cliente,id_tractivo,id_hoja_ruta,distancia',
-            'cartaPorte.cliente:id,nombre',
-            'cartaPorte.tractivo:id,codigo,id_entidad',
+            'cartaPorte:id,numero,id_hoja_ruta,id_solicitud,distancia',
+            'cartaPorte.cliente',
+            'cartaPorte.tractivo',
             'cartaPorte.hojaRuta:id,numero,id_entidad',
-            'cartaPorte.lugarOrigen:id,nombre',
-            'cartaPorte.lugarDestino:id,nombre',
+            'cartaPorte.lugarOrigen',
+            'cartaPorte.lugarDestino',
             'factura:id,numero',
         ]);
 
@@ -61,9 +62,10 @@ class AforosController extends Controller
             });
         });
 
-        $query->when($request->cliente, fn ($q, $v) => $q->whereHas('cartaPorte', fn ($c) => $c->where('id_cliente', $v)));
-        $query->when($request->equipo, fn ($q, $v) => $q->whereHas('cartaPorte', fn ($c) => $c->where('id_tractivo', $v)));
-        $query->when($request->chofer, fn ($q, $v) => $q->whereHas('cartaPorte', fn ($c) => $c->where(fn ($c2) => $c2->where('id_chofer', $v)->orWhere('id_chofer2', $v))));
+        // Cliente desde la solicitud; equipo/choferes desde la hoja de ruta (Fase 4d)
+        $query->when($request->cliente, fn ($q, $v) => $q->whereHas('cartaPorte.solicitud', fn ($c) => $c->where('id_cliente', $v)));
+        $query->when($request->equipo, fn ($q, $v) => $q->whereHas('cartaPorte.hojaRuta', fn ($c) => $c->where('id_tractivo', $v)));
+        $query->when($request->chofer, fn ($q, $v) => $q->whereHas('cartaPorte.hojaRuta', fn ($c) => $c->where(fn ($c2) => $c2->where('id_chofer', $v)->orWhere('id_chofer2', $v))));
 
         $query->when($request->estado, function ($q, $v) {
             if ($v === 'pendiente') {
@@ -81,22 +83,26 @@ class AforosController extends Controller
                 ->unique()
                 ->values()
                 ->all();
-            $query->whereHas('cartaPorte.tractivo', fn ($q) => $q->whereIn('id_entidad', $ids));
+            $query->whereHas('cartaPorte.hojaRuta.tractivo', fn ($q) => $q->whereIn('id_entidad', $ids));
         }
 
         // Opciones para los filtros: solo de la entidad actual en el mes en curso
-        $base = Aforo::query()->with('cartaPorte:id,id_cliente,id_tractivo,id_chofer,id_chofer2')
+        $base = Aforo::query()->with([
+            'cartaPorte:id,id_hoja_ruta,id_solicitud',
+            'cartaPorte.hojaRuta:id,id_tractivo,id_chofer,id_chofer2',
+            'cartaPorte.solicitud:id,id_cliente',
+        ])
             ->whereYear('fecha_parte', $anio)->whereMonth('fecha_parte', $mes);
         if ($entidadId) {
             $ids = collect(Entidad::subEntidadesIds($entidadId))->push($entidadId)->unique()->values()->all();
-            $base->whereHas('cartaPorte.tractivo', fn ($q) => $q->whereIn('id_entidad', $ids));
+            $base->whereHas('cartaPorte.hojaRuta.tractivo', fn ($q) => $q->whereIn('id_entidad', $ids));
         }
 
         $cartasDelMes = (clone $base)->get()->pluck('cartaPorte')->filter();
 
-        $clientesIds = $cartasDelMes->pluck('id_cliente')->filter()->unique();
-        $tractivosIds = $cartasDelMes->pluck('id_tractivo')->filter()->unique();
-        $choferesIds = $cartasDelMes->flatMap(fn ($c) => [$c->id_chofer, $c->id_chofer2])->filter()->unique();
+        $clientesIds = $cartasDelMes->map(fn ($c) => $c->solicitud?->id_cliente)->filter()->unique();
+        $tractivosIds = $cartasDelMes->map(fn ($c) => $c->hojaRuta?->id_tractivo)->filter()->unique();
+        $choferesIds = $cartasDelMes->flatMap(fn ($c) => [$c->hojaRuta?->id_chofer, $c->hojaRuta?->id_chofer2])->filter()->unique();
 
         $filtros = [
             'clientes' => Cliente::select('id', 'nombre')->whereIn('id', $clientesIds)->orderBy('nombre')->get(),
@@ -118,14 +124,14 @@ class AforosController extends Controller
     public function show(Aforo $aforo)
     {
         $aforo->load([
-            'cartaPorte.cliente:id,nombre,codigo',
-            'cartaPorte.tractivo:id,codigo,placa,id_entidad',
-            'cartaPorte.chofer:id,nombre,apellidos',
-            'cartaPorte.chofer2:id,nombre,apellidos',
-            'cartaPorte.lugarOrigen:id,nombre',
-            'cartaPorte.lugarDestino:id,nombre',
-            'cartaPorte.producto:id,nombre',
-            'cartaPorte.tipoCarga:id,nombre',
+            'cartaPorte.cliente',
+            'cartaPorte.tractivo',
+            'cartaPorte.chofer',
+            'cartaPorte.chofer2',
+            'cartaPorte.lugarOrigen',
+            'cartaPorte.lugarDestino',
+            'cartaPorte.producto',
+            'cartaPorte.tipoCarga',
             'cartaPorte.hojaRuta:id,numero',
             'factura:id,numero,estado',
             'prefactura:id,numero,estado',
@@ -159,22 +165,23 @@ class AforosController extends Controller
     {
         abort_if($aforo->id_factura, 403, 'No es posible editar una carta de porte ya facturada.');
 
-        $aforo->load('cartaPorte.tractivo:id,id_entidad');
+        $aforo->load('cartaPorte.tractivo');
         $request = request();
 
         // Cargar la CP completa del aforo para poder editar sus datos generales
         $carta = $aforo->cartaPorte;
         $carta->load([
             'hojaRuta:id,numero,fecha_cierre,id_entidad',
-            'cliente:id,nombre',
-            'tractivo:id,codigo,capacidad_toneladas',
-            'arrastre:id,codigo,capacidad_toneladas',
-            'chofer:id,nombre,apellidos',
-            'chofer2:id,nombre,apellidos',
-            'lugarOrigen:id,nombre',
-            'lugarDestino:id,nombre',
-            'producto:id,nombre',
-            'tipoCarga:id,nombre',
+            'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
+            'cliente',
+            'tractivo',
+            'arrastre',
+            'chofer',
+            'chofer2',
+            'lugarOrigen',
+            'lugarDestino',
+            'producto',
+            'tipoCarga',
         ]);
 
         $data = $this->datosFormulario($request);
@@ -297,20 +304,21 @@ class AforosController extends Controller
         // no cancelada, por unidad.
         $cartasPendientes = CartaPorte::with([
             'hojaRuta:id,numero,fecha_cierre,id_entidad',
-            'cliente:id,nombre',
-            'tractivo:id,codigo,capacidad_toneladas',
-            'arrastre:id,codigo,capacidad_toneladas',
-            'chofer:id,nombre,apellidos',
-            'chofer2:id,nombre,apellidos',
-            'lugarOrigen:id,nombre',
-            'lugarDestino:id,nombre',
-            'producto:id,nombre',
-            'tipoCarga:id,nombre',
+            'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
+            'cliente',
+            'tractivo',
+            'arrastre',
+            'chofer',
+            'chofer2',
+            'lugarOrigen',
+            'lugarDestino',
+            'producto',
+            'tipoCarga',
         ])
             ->whereDoesntHave('aforos')
             ->where('cancelada', false)
             ->whereBetween('fecha_emision', [$inicioMes, $finMes])
-            ->when($entidadId, fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
+            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta.tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
             ->orderBy('numero')
             ->get();
 
@@ -319,15 +327,16 @@ class AforosController extends Controller
         if ($request->filled('carta')) {
             $cartaPreseleccionada = CartaPorte::with([
                 'hojaRuta:id,numero,fecha_cierre,id_entidad',
-                'cliente:id,nombre',
-                'tractivo:id,codigo,capacidad_toneladas',
-                'arrastre:id,codigo,capacidad_toneladas',
-                'chofer:id,nombre,apellidos',
-                'chofer2:id,nombre,apellidos',
-                'lugarOrigen:id,nombre',
-                'lugarDestino:id,nombre',
-                'producto:id,nombre',
-                'tipoCarga:id,nombre',
+                'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
+                'cliente',
+                'tractivo',
+                'arrastre',
+                'chofer',
+                'chofer2',
+                'lugarOrigen',
+                'lugarDestino',
+                'producto',
+                'tipoCarga',
             ])->find($request->integer('carta'));
         }
 
@@ -640,20 +649,17 @@ class AforosController extends Controller
     /**
      * Actualiza los datos generales editables de la carta de porte (momento de
      * corrección, paridad legacy: el aforo permite corregir el girado).
+     *
+     * Fase 4d: la carta ya no persiste cliente/equipo/tipos/productos/lugares/
+     * moneda. Esos valores se derivan de la solicitud (cliente/productos/tipos/
+     * lugares/moneda) y de la hoja de ruta (equipo/choferes). Por tanto, al
+     * corregirlos aquí se propagan a la solicitud y a la hoja de ruta (fuentes
+     * de derivación). Los campos que sí pertenecen a la carta
+     * (distancia/toneladas/conduce/fechas) se guardan directamente en la carta.
      */
     protected function actualizarDatosCarta(CartaPorte $carta, array $v): void
     {
-        $datos = [
-            'id_cliente' => $v['id_cliente'] ?? $carta->id_cliente,
-            'id_tractivo' => $v['id_tractivo'] ?? $carta->id_tractivo,
-            'id_arrastre' => $v['id_arrastre'] ?? $carta->id_arrastre,
-            'id_chofer' => $v['id_chofer'] ?? $carta->id_chofer,
-            'id_chofer2' => $v['id_chofer2'] ?? $carta->id_chofer2,
-            'id_lugar_origen' => $v['id_lugar_origen'] ?? $carta->id_lugar_origen,
-            'id_lugar_destino' => $v['id_lugar_destino'] ?? $carta->id_lugar_destino,
-            'id_producto' => $v['id_producto'] ?? $carta->id_producto,
-            'id_tipo_carga' => $v['id_tipo_carga'] ?? $carta->id_tipo_carga,
-            'id_moneda' => $v['id_moneda'] ?? $carta->id_moneda,
+        $datosCarta = [
             'distancia' => $v['distancia'] ?? $carta->distancia,
             'toneladas' => $v['toneladas'] ?? $carta->toneladas,
             'conduce' => $v['conduce'] ?? $carta->conduce,
@@ -661,7 +667,35 @@ class AforosController extends Controller
             'fecha_recepcion' => $v['fecha_recepcion'] ?? $carta->fecha_recepcion,
         ];
 
-        $carta->update($datos);
+        $carta->update($datosCarta);
+
+        // Cliente/productos/tipos/lugares/moneda → solicitud (fuente de derivación)
+        $solicitud = $carta->solicitud;
+        if ($solicitud) {
+            $datosSol = [];
+            foreach (['id_cliente', 'id_producto', 'id_producto2', 'id_tipo_carga', 'id_tipo_carga2', 'id_lugar_origen', 'id_lugar_destino', 'id_moneda'] as $campo) {
+                if (array_key_exists($campo, $v)) {
+                    $datosSol[$campo] = $v[$campo];
+                }
+            }
+            if ($datosSol) {
+                $solicitud->update($datosSol);
+            }
+        }
+
+        // Equipo/choferes → hoja de ruta (fuente de derivación)
+        $hoja = $carta->hojaRuta;
+        if ($hoja) {
+            $datosHoja = [];
+            foreach (['id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2'] as $campo) {
+                if (array_key_exists($campo, $v)) {
+                    $datosHoja[$campo] = $v[$campo];
+                }
+            }
+            if ($datosHoja) {
+                $hoja->update($datosHoja);
+            }
+        }
     }
 
     /**
@@ -685,7 +719,7 @@ class AforosController extends Controller
         }
 
         if (! empty($sinCalcular)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'lineas' => 'Debe calcular las tarifas de: '.implode(', ', $sinCalcular),
             ]);
         }

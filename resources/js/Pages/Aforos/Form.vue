@@ -59,18 +59,19 @@ const form = reactive({
     otros_mt: Number(props.aforo?.otros_mt ?? 0),
     ingreso_mt: Number(props.aforo?.ingreso_mt ?? 0),
 
-    // Datos generales editables de la CP
+    // Datos generales editables de la CP.
+    // Fase 4d: cliente/tipos/productos se derivan de la solicitud; equipo de la HR.
     id_hoja_ruta: props.cartaPreseleccionada?.id_hoja_ruta ?? null,
-    id_cliente: props.cartaPreseleccionada?.id_cliente ?? null,
-    id_tractivo: props.cartaPreseleccionada?.id_tractivo ?? null,
-    id_arrastre: props.cartaPreseleccionada?.id_arrastre ?? null,
-    id_chofer: props.cartaPreseleccionada?.id_chofer ?? null,
-    id_chofer2: props.cartaPreseleccionada?.id_chofer2 ?? null,
-    id_lugar_origen: props.cartaPreseleccionada?.id_lugar_origen ?? null,
-    id_lugar_destino: props.cartaPreseleccionada?.id_lugar_destino ?? null,
-    id_producto: props.cartaPreseleccionada?.id_producto ?? null,
-    id_tipo_carga: props.cartaPreseleccionada?.id_tipo_carga ?? null,
-    id_moneda: props.cartaPreseleccionada?.id_moneda ?? 1,
+    id_cliente: props.cartaPreseleccionada?.cliente?.id ?? props.cartaPreseleccionada?.solicitud?.id_cliente ?? null,
+    id_tractivo: props.cartaPreseleccionada?.hojaRuta?.id_tractivo ?? null,
+    id_arrastre: props.cartaPreseleccionada?.hojaRuta?.id_arrastre ?? null,
+    id_chofer: props.cartaPreseleccionada?.hojaRuta?.id_chofer ?? null,
+    id_chofer2: props.cartaPreseleccionada?.hojaRuta?.id_chofer2 ?? null,
+    id_lugar_origen: props.cartaPreseleccionada?.solicitud?.id_lugar_origen ?? props.cartaPreseleccionada?.lugar_origen?.id ?? null,
+    id_lugar_destino: props.cartaPreseleccionada?.solicitud?.id_lugar_destino ?? props.cartaPreseleccionada?.lugar_destino?.id ?? null,
+    id_producto: props.cartaPreseleccionada?.solicitud?.id_producto ?? null,
+    id_tipo_carga: props.cartaPreseleccionada?.solicitud?.id_tipo_carga ?? null,
+    id_moneda: props.cartaPreseleccionada?.solicitud?.id_moneda ?? 1,
     distancia: props.cartaPreseleccionada?.distancia ?? 0,
     toneladas: props.cartaPreseleccionada?.toneladas ?? 0,
     conduce: props.cartaPreseleccionada?.conduce ?? '',
@@ -207,16 +208,17 @@ function onSeleccionarCarta() {
     const sel = props.cartasPendientes?.find((c) => c.id === form.id_carta_porte)
     if (!sel) return
     form.id_hoja_ruta = sel.id_hoja_ruta ?? null
-    form.id_cliente = sel.id_cliente
-    form.id_tractivo = sel.id_tractivo
-    form.id_arrastre = sel.id_arrastre
-    form.id_chofer = sel.id_chofer
-    form.id_chofer2 = sel.id_chofer2
-    form.id_lugar_origen = sel.id_lugar_origen
-    form.id_lugar_destino = sel.id_lugar_destino
-    form.id_producto = sel.id_producto
-    form.id_tipo_carga = sel.id_tipo_carga
-    form.id_moneda = sel.id_moneda || 1
+    // Fase 4d: cliente/producto/tipo de la solicitud; equipo de la HR
+    form.id_cliente = sel.cliente?.id ?? sel.solicitud?.id_cliente ?? null
+    form.id_tractivo = sel.hojaRuta?.id_tractivo ?? null
+    form.id_arrastre = sel.hojaRuta?.id_arrastre ?? null
+    form.id_chofer = sel.hojaRuta?.id_chofer ?? null
+    form.id_chofer2 = sel.hojaRuta?.id_chofer2 ?? null
+    form.id_lugar_origen = sel.solicitud?.id_lugar_origen ?? null
+    form.id_lugar_destino = sel.solicitud?.id_lugar_destino ?? null
+    form.id_producto = sel.solicitud?.id_producto ?? sel.producto?.id ?? null
+    form.id_tipo_carga = sel.solicitud?.id_tipo_carga ?? sel.tipo_carga?.id ?? null
+    form.id_moneda = sel.solicitud?.id_moneda ?? 1
     form.distancia = Number(sel.distancia || 0)
     form.toneladas = Number(sel.toneladas || 0)
     form.conduce = sel.conduce || ''
@@ -227,7 +229,7 @@ function onSeleccionarCarta() {
         form.fecha_parte = props.fechaOperaciones ? toDate(props.fechaOperaciones) : new Date()
     }
     // Pre-carga línea 1
-    lineas[0].id_tipo_carga = sel.id_tipo_carga
+    lineas[0].id_tipo_carga = form.id_tipo_carga
     if (sel.distancia) lineas[0].distancia = Number(sel.distancia)
     if (sel.toneladas) lineas[0].peso_cobrar = Number(sel.toneladas)
     calcularTodas()
@@ -239,7 +241,7 @@ function onTractivo() {
 }
 
 // Al elegir la hoja de ruta se derivan tractivo/arrastre/choferes (solo lectura:
-// para cambiarlos habría que cambiar la HR)
+// para cambiarlos habría que cambiar la HR). El cliente viene de la solicitud.
 function onSeleccionarHojaRuta() {
     const hr = props.hojasRuta?.find((h) => h.id === form.id_hoja_ruta)
     if (!hr) return
@@ -248,7 +250,6 @@ function onSeleccionarHojaRuta() {
     form.id_chofer = hr.id_chofer ?? null
     form.id_chofer2 = hr.id_chofer2 ?? null
     form.toneladas = capacidad.value
-    if (hr.id_cliente) form.id_cliente = hr.id_cliente
     onTractivo()
     calcularTodas()
 }

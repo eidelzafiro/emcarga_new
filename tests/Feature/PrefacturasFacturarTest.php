@@ -45,7 +45,6 @@ class PrefacturasFacturarTest extends TestCase
         $cliente = $this->cliente();
         $cp = CartaPorte::create([
             'numero' => 'CP-'.uniqid(),
-            'id_cliente' => $cliente->id,
             'toneladas' => 10,
             'fecha_emision' => now()->toDateString(),
             'fecha_parte' => now()->toDateString(),

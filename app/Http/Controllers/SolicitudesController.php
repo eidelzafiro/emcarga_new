@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CartaPorte;
 use App\Models\Bolsa;
+use App\Models\CartaPorte;
 use App\Models\Cliente;
 use App\Models\HojasRuta;
 use App\Models\Lugare;
@@ -213,16 +213,8 @@ class SolicitudesController extends Controller
             'fecha_parte' => ['nullable', 'date'],
             'fecha_emision' => ['nullable', 'date'],
             'id_hoja_ruta' => ['nullable', 'exists:hojas_ruta,id'],
-            'id_tractivo' => ['nullable', 'exists:tractivos,id'],
-            'id_arrastre' => ['nullable', 'exists:tractivos,id'],
-            'id_chofer' => ['nullable', 'exists:bolsa,id'],
-            'id_chofer2' => ['nullable', 'exists:bolsa,id'],
             'id_lugar_origen' => ['nullable', 'exists:lugares,id'],
             'id_lugar_destino' => ['nullable', 'exists:lugares,id'],
-            'id_producto' => ['nullable', 'exists:productos,id'],
-            'id_producto2' => ['nullable', 'exists:productos,id'],
-            'id_tipo_carga' => ['nullable', 'exists:tipos_cargas,id'],
-            'id_tipo_carga2' => ['nullable', 'exists:tipos_cargas,id'],
             'distancia' => ['nullable', 'integer', 'min:0'],
             'conduce' => ['nullable', 'string', 'max:150'],
             'notas' => ['nullable', 'string', 'max:150'],
@@ -235,17 +227,8 @@ class SolicitudesController extends Controller
             'numero' => $validated['numero'],
             'id_hoja_ruta' => $validated['id_hoja_ruta'] ?? null,
             'id_solicitud' => $solicitude->id,
-            'id_cliente' => $solicitude->id_cliente,
-            'id_tractivo' => $validated['id_tractivo'] ?? null,
-            'id_arrastre' => $validated['id_arrastre'] ?? null,
-            'id_chofer' => $validated['id_chofer'] ?? null,
-            'id_chofer2' => $validated['id_chofer2'] ?? null,
             'id_lugar_origen' => $validated['id_lugar_origen'] ?? $solicitude->id_lugar_origen,
             'id_lugar_destino' => $validated['id_lugar_destino'] ?? $solicitude->id_lugar_destino,
-            'id_producto' => $validated['id_producto'] ?? $solicitude->id_producto,
-            'id_producto2' => $validated['id_producto2'] ?? $solicitude->id_producto2,
-            'id_tipo_carga' => $validated['id_tipo_carga'] ?? $solicitude->id_tipo_carga,
-            'id_tipo_carga2' => $validated['id_tipo_carga2'] ?? $solicitude->id_tipo_carga2,
             'id_moneda' => $solicitude->id_moneda,
             'id_user' => auth()->id(),
             'fecha_emision' => $fechaEmision,

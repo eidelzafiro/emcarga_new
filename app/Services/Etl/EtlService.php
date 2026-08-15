@@ -1673,8 +1673,10 @@ class EtlService
      * - numero = nrocp legacy (varchar numérico 5-6 dígitos) con sufijo -2/-3
      *   cuando nrocp está duplicado (columna UNIQUE en la tabla nueva).
      * - id preservado (FCKs entre tablas migradas resuelven directo).
-     * - id_solicitud: SOLO si la CP tiene solicitud legacy vinculada vía
-     *   com_solicitudes.idcartaporte = nrocp (73 en 2026). El resto queda NULL.
+     * - id_solicitud se vincula en `migrarSolicitudes()` (que corre después) vía
+     *   com_solicitudes.idcartaporte = cartas_porte.id.
+     * - Fase 4d: la carta NO persiste equipo/choferes/cliente/tipos/productos;
+     *   esos valores se derivan de la hoja de ruta y la solicitud.
      * - estado: 'cancelada' (cancelada=1) / 'recepcionada' (frecepcion) / 'emitida'.
      * - toneladas = peso1 + peso2; ingreso_mt se rellena igual (seguimiento).
      */
@@ -1687,13 +1689,6 @@ class EtlService
         $legacy = DB::connection('legacy');
 
         $idsHojas = DB::table('hojas_ruta')->pluck('id')->flip();
-        $idsTractivos = DB::table('tractivos')->pluck('id')->flip();
-        $idsArrastres = DB::table('tractivos')->where('id_grupo', 8)->pluck('id')->flip();
-        $idsChoferes = DB::table('bolsa')->pluck('id')->flip();
-        $idsClientes = DB::table('clientes')->pluck('id')->flip();
-        $idsLugares = DB::table('lugares')->pluck('id')->flip();
-        $idsProductos = DB::table('productos')->pluck('id')->flip();
-        $idsTiposCarga = DB::table('tipos_cargas')->pluck('id')->flip();
         $idsUsers = DB::table('users')->pluck('id')->flip();
 
         // nrocp duplicados en el año → sufijo -2, -3 (unique nueva).
@@ -1717,8 +1712,7 @@ class EtlService
             ->orderBy('idcartaporte')
             ->chunk($chunk, function ($filas) use (
                 &$procesados, &$canceladas, &$avisos, &$usosNrocp,
-                $idsHojas, $idsTractivos, $idsArrastres, $idsChoferes, $idsClientes,
-                $idsLugares, $idsProductos, $idsTiposCarga, $idsUsers,
+                $idsHojas, $idsUsers,
                 $dupNrocp, $fechaValida
             ) {
                 foreach ($filas as $fila) {
@@ -1733,10 +1727,6 @@ class EtlService
 
                     $laFechaEmision = $fechaValida($fila->femision);
 
-                    $idArr = (int) $fila->idarrastre;
-                    $idChofer2 = (int) $fila->idchofer2;
-                    $idProd2 = (int) $fila->idproducto2;
-                    $idTc2 = (int) $fila->idtipocarga2;
                     $idUserRec = (int) $fila->iduserrecepcion;
 
                     $toneladas = ((float) $fila->peso1 + (float) $fila->peso2) ?: 0;
@@ -1748,17 +1738,6 @@ class EtlService
                                 'numero' => $nrocp,
                                 'id_hoja_ruta' => (int) $fila->idhojaruta && isset($idsHojas[$fila->idhojaruta]) ? $fila->idhojaruta : null,
                                 'id_solicitud' => null,
-                                'id_tractivo' => (int) $fila->idtractivos && isset($idsTractivos[$fila->idtractivos]) ? $fila->idtractivos : null,
-                                'id_arrastre' => $idArr && isset($idsArrastres[$idArr]) ? $idArr : null,
-                                'id_cliente' => isset($idsClientes[$fila->idcliente]) ? $fila->idcliente : null,
-                                'id_producto' => (int) $fila->idproducto1 && isset($idsProductos[$fila->idproducto1]) ? $fila->idproducto1 : null,
-                                'id_producto2' => $idProd2 && isset($idsProductos[$idProd2]) ? $idProd2 : null,
-                                'id_tipo_carga' => (int) $fila->idtipocarga1 && isset($idsTiposCarga[$fila->idtipocarga1]) ? $fila->idtipocarga1 : null,
-                                'id_tipo_carga2' => $idTc2 && isset($idsTiposCarga[$idTc2]) ? $idTc2 : null,
-                                'id_chofer' => (int) $fila->idchofer && isset($idsChoferes[$fila->idchofer]) ? $fila->idchofer : null,
-                                'id_chofer2' => $idChofer2 && isset($idsChoferes[$idChofer2]) ? $idChofer2 : null,
-                                'id_lugar_origen' => isset($idsLugares[$fila->idorigen]) ? $fila->idorigen : null,
-                                'id_lugar_destino' => isset($idsLugares[$fila->iddestino]) ? $fila->iddestino : null,
                                 'fecha_emision' => $laFechaEmision,
                                 'fecha_parte' => $laFechaEmision,
                                 'fecha_recepcion' => $fechaValida($fila->frecepcion),
@@ -1767,7 +1746,6 @@ class EtlService
                                 'peso2' => $fila->peso2 ?: 0,
                                 'distancia' => (int) $fila->distancia ?: null,
                                 'conduce' => trim((string) $fila->conduce) ?: null,
-                                'ingreso_mt' => $toneladas,
                                 'estado' => (int) $fila->cancelada === 1
                                     ? 'cancelada'
                                     : ($fila->frecepcion ? 'recepcionada' : 'emitida'),
@@ -1776,12 +1754,6 @@ class EtlService
                                 'notas' => trim((string) $fila->notas) ?: null,
                                 'id_user' => (int) $fila->iduser && isset($idsUsers[$fila->iduser]) ? $fila->iduser : null,
                                 'id_user_recepcion' => $idUserRec && isset($idsUsers[$idUserRec]) ? $idUserRec : null,
-                                'id_turno' => null,
-                                'id_buque' => null,
-                                'id_moneda' => null,
-                                'tarifa_km' => null,
-                                'total_flete' => null,
-                                'flete_mt' => null,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]
@@ -1801,6 +1773,219 @@ class EtlService
             'nueva' => $procesados,
             'avisos' => array_merge(
                 ["{$canceladas} canceladas (estado 'cancelada')", "{$dupNrocp->count()} nrocp duplicados re-sufijados"],
+                $avisos
+            ),
+        ];
+    }
+
+    /**
+     * ETL de solicitudes de servicio: com_solicitudes → solicitudes_servicio.
+     * - Solo el año de negocio (2026).
+     * - Paso 1: migra las solicitudes legacy que tienen carta de porte vinculada
+     *   (com_solicitudes.idcartaporte = cartas_porte.id, 396 en 2026), preservando
+     *   el id legacy y generando numero correlativo SOL-YYYY-NNNNN. Vincula
+     *   cartas_porte.id_solicitud.
+     * - Paso 2: crea solicitudes agrupadas para las cartas que aún no tienen
+     *   solicitud, agrupadas por (cliente, origen, destino, productos, tipos de
+     *   carga, moneda, entidad) sumando las toneladas (peso1+peso2). Cada carta
+     *   del grupo se vincula a la solicitud resultante.
+     */
+    public function migrarSolicitudes(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesadasLegacy = 0;
+        $creadasGrupo = 0;
+        $vinculadasGrupo = 0;
+        $omitidasLegacy = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsCartas = DB::table('cartas_porte')->pluck('id')->flip();
+        $idsClientes = DB::table('clientes')->pluck('id')->flip();
+        $idsLugares = DB::table('lugares')->pluck('id')->flip();
+        $idsProductos = DB::table('productos')->pluck('id')->flip();
+        $idsTiposCarga = DB::table('tipos_cargas')->pluck('id')->flip();
+        $idsMonedas = DB::table('monedas')->pluck('id')->flip();
+        $idsUsers = DB::table('users')->pluck('id')->flip();
+        $idsEntidades = DB::table('entidades')->pluck('id')->flip();
+
+        // Entidad de cada carta (vía su hoja de ruta → tractivo) para agrupar solicitudes nuevas.
+        $entidadPorCarta = DB::table('cartas_porte as cp')
+            ->join('hojas_ruta as h', 'h.id', '=', 'cp.id_hoja_ruta')
+            ->join('tractivos as t', 't.id', '=', 'h.id_tractivo')
+            ->whereNotNull('t.id_entidad')
+            ->pluck('t.id_entidad', 'cp.id');
+
+        // Correlativo SOL-YYYY-NNNNN: continúa tras las solicitudes ya existentes.
+        $secuencia = 0;
+        $ultimoNumero = DB::table('solicitudes_servicio')
+            ->where('numero', 'like', "SOL-{$anio}-%")
+            ->orderByDesc('numero')
+            ->value('numero');
+        if ($ultimoNumero) {
+            $secuencia = (int) substr((string) $ultimoNumero, 9);
+        }
+
+        $numero = function () use (&$secuencia, $anio): string {
+            $secuencia++;
+
+            return 'SOL-'.$anio.'-'.str_pad((string) $secuencia, 5, '0', STR_PAD_LEFT);
+        };
+
+        $fechaValida = function (?string $f): ?string {
+            if (! $f || str_starts_with($f, '0000')) {
+                return null;
+            }
+
+            return substr($f, 0, 10);
+        };
+
+        // ----- Paso 1: solicitudes legacy con carta vinculada -----
+        // Idempotente: el `numero` es estable por id legacy. En re-ejecución solo se
+        // actualiza la solicitud (sin regenerar numero) y se re-vincula su carta.
+        $idsSolicitudes = DB::table('solicitudes_servicio')->pluck('id')->flip();
+
+        $legacy->table('com_solicitudes')
+            ->whereYear('fsolicitud', $anio)
+            ->where('idcartaporte', '>', 0)
+            ->orderBy('idsolicitud')
+            ->chunk($chunk, function ($filas) use (
+                &$procesadasLegacy, &$omitidasLegacy, &$avisos, &$secuencia, $numero, $fechaValida,
+                $idsCartas, $idsClientes, $idsLugares, $idsProductos, $idsTiposCarga, $idsUsers, $idsEntidades, $idsSolicitudes
+            ) {
+                foreach ($filas as $fila) {
+                    $idCarta = (int) $fila->idcartaporte;
+
+                    if (! isset($idsCartas[$idCarta])) {
+                        $omitidasLegacy++;
+                        $avisos[] = "solicitudes#{$fila->idsolicitud}: carta {$idCarta} no migrada, omitida";
+
+                        continue;
+                    }
+
+                    $idCliente = (int) $fila->idcliente;
+                    if (! isset($idsClientes[$idCliente])) {
+                        $omitidasLegacy++;
+                        $avisos[] = "solicitudes#{$fila->idsolicitud}: cliente {$idCliente} no migrado, omitida";
+
+                        continue;
+                    }
+
+                    $idEntidad = (int) $fila->idunidad && isset($idsEntidades[$fila->idunidad]) ? (int) $fila->idunidad : null;
+
+                    $fechaEjecutada = $fechaValida($fila->fejecutado);
+                    $estado = $fechaEjecutada ? 'ejecutada' : 'pendiente';
+
+                    $existe = isset($idsSolicitudes[$fila->idsolicitud]);
+
+                    $datos = [
+                        'id_entidad' => $idEntidad,
+                        'id_cliente' => $idCliente,
+                        'id_lugar_origen' => isset($idsLugares[$fila->idorigen]) ? (int) $fila->idorigen : null,
+                        'id_lugar_destino' => isset($idsLugares[$fila->iddestino]) ? (int) $fila->iddestino : null,
+                        'id_producto' => (int) $fila->idproducto1 && isset($idsProductos[$fila->idproducto1]) ? (int) $fila->idproducto1 : null,
+                        'id_producto2' => (int) $fila->idproducto2 && isset($idsProductos[$fila->idproducto2]) ? (int) $fila->idproducto2 : null,
+                        'id_tipo_carga' => (int) $fila->idtipocarga1 && isset($idsTiposCarga[$fila->idtipocarga1]) ? (int) $fila->idtipocarga1 : null,
+                        'id_tipo_carga2' => (int) $fila->idtipocarga2 && isset($idsTiposCarga[$fila->idtipocarga2]) ? (int) $fila->idtipocarga2 : null,
+                        'id_moneda' => null,
+                        'id_user' => (int) $fila->iduser && isset($idsUsers[$fila->iduser]) ? (int) $fila->iduser : null,
+                        'fecha_solicitud' => $fechaValida($fila->fsolicitud) ?? $anio.'-01-01',
+                        'fecha_planificada' => $fechaValida($fila->fplanificado),
+                        'fecha_ejecutada' => $fechaEjecutada,
+                        'valor_mt' => $fila->valor_mt ?: null,
+                        'valor_total' => null,
+                        'peso1' => $fila->peso1 ?: 0,
+                        'peso2' => $fila->peso2 ?: 0,
+                        'distancia' => (int) $fila->distancia ?: null,
+                        'notas' => trim((string) $fila->notas) ?: null,
+                        'estado' => $estado,
+                        'updated_at' => now(),
+                    ];
+
+                    try {
+                        if (! $existe) {
+                            // Preserva el id legacy (las cartas se vinculan por idsolicitud).
+                            $datos['id'] = $fila->idsolicitud;
+                            $datos['numero'] = $numero();
+                            $datos['created_at'] = now();
+                            DB::table('solicitudes_servicio')->insert($datos);
+                        } else {
+                            DB::table('solicitudes_servicio')->where('id', $fila->idsolicitud)->update($datos);
+                        }
+
+                        DB::table('cartas_porte')->where('id', $idCarta)->update(['id_solicitud' => $fila->idsolicitud]);
+                        $procesadasLegacy++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "solicitudes#{$fila->idsolicitud}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        // ----- Paso 2: solicitudes agrupadas para cartas sin solicitud -----
+        $cartasSinSolicitud = DB::table('cartas_porte')
+            ->whereNull('id_solicitud')
+            ->orderBy('fecha_emision')
+            ->orderBy('id')
+            ->get();
+
+        $grupos = $cartasSinSolicitud->groupBy(fn ($c) => implode('|', [
+            $c->id_cliente,
+            $c->id_lugar_origen,
+            $c->id_lugar_destino,
+            $c->id_producto,
+            $c->id_producto2,
+            $c->id_tipo_carga,
+            $c->id_tipo_carga2,
+            $c->id_moneda,
+            $entidadPorCarta[$c->id] ?? '',
+        ]));
+
+        foreach ($grupos as $cartasGrupo) {
+            $primera = $cartasGrupo->first();
+
+            try {
+                $idSolicitud = DB::table('solicitudes_servicio')->insertGetId([
+                    'numero' => $numero(),
+                    'id_entidad' => $entidadPorCarta[$primera->id] ?? null,
+                    'id_cliente' => $primera->id_cliente,
+                    'id_lugar_origen' => $primera->id_lugar_origen,
+                    'id_lugar_destino' => $primera->id_lugar_destino,
+                    'id_producto' => $primera->id_producto,
+                    'id_producto2' => $primera->id_producto2,
+                    'id_tipo_carga' => $primera->id_tipo_carga,
+                    'id_tipo_carga2' => $primera->id_tipo_carga2,
+                    'id_moneda' => $primera->id_moneda,
+                    'id_user' => null,
+                    'fecha_solicitud' => $primera->fecha_emision ?? $anio.'-01-01',
+                    'fecha_planificada' => null,
+                    'fecha_ejecutada' => null,
+                    'valor_mt' => null,
+                    'valor_total' => null,
+                    'peso1' => round($cartasGrupo->sum('peso1'), 2),
+                    'peso2' => round($cartasGrupo->sum('peso2'), 2),
+                    'distancia' => $primera->distancia,
+                    'notas' => null,
+                    'estado' => 'pendiente',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                foreach ($cartasGrupo as $carta) {
+                    DB::table('cartas_porte')->where('id', $carta->id)->update(['id_solicitud' => $idSolicitud]);
+                    $vinculadasGrupo++;
+                }
+                $creadasGrupo++;
+            } catch (\Throwable $e) {
+                $avisos[] = "solicitud agrupada (cliente {$primera->id_cliente}): {$e->getMessage()}";
+            }
+        }
+
+        $this->reporte['solicitudes'] = [
+            'legacy' => (int) $legacy->table('com_solicitudes')->whereYear('fsolicitud', $anio)->count(),
+            'nueva' => $procesadasLegacy,
+            'avisos' => array_merge(
+                ["{$omitidasLegacy} legacy omitidas (carta/cliente no migrado)"],
+                ["{$creadasGrupo} solicitudes agrupadas creadas ({$vinculadasGrupo} cartas vinculadas)"],
                 $avisos
             ),
         ];
@@ -2074,6 +2259,7 @@ class EtlService
 
                     if (! DB::table('cartas_porte')->where('id', $idCarta)->exists()) {
                         $avisos[] = "indicadores#{$idCarta}: carta_porte no existe, omitido";
+
                         continue;
                     }
 

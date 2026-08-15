@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CartaPorte extends Model
@@ -18,17 +19,6 @@ class CartaPorte extends Model
         'numero',
         'id_hoja_ruta',
         'id_solicitud',
-        'id_tractivo',
-        'id_arrastre',
-        'id_cliente',
-        'id_producto',
-        'id_producto2',
-        'id_tipo_carga',
-        'id_tipo_carga2',
-        'id_chofer',
-        'id_chofer2',
-        'id_lugar_origen',
-        'id_lugar_destino',
         'fecha_emision',
         'fecha_parte',
         'fecha_recepcion',
@@ -36,12 +26,6 @@ class CartaPorte extends Model
         'peso1',
         'peso2',
         'distancia',
-        'kms1',
-        'kms2',
-        'tarifa_km',
-        'total_flete',
-        'ingreso_mt',
-        'flete_mt',
         'conduce',
         'estado',
         'cancelada',
@@ -51,9 +35,6 @@ class CartaPorte extends Model
         'id_user',
         'id_user_recepcion',
         'id_user_cancelacion',
-        'id_buque',
-        'id_turno',
-        'id_moneda',
     ];
 
     protected function casts(): array
@@ -67,10 +48,6 @@ class CartaPorte extends Model
             'peso1' => 'decimal:2',
             'peso2' => 'decimal:2',
             'distancia' => 'integer',
-            'kms1' => 'integer',
-            'kms2' => 'integer',
-            'ingreso_mt' => 'decimal:2',
-            'flete_mt' => 'decimal:2',
             'cancelada' => 'boolean',
             'imprimir' => 'boolean',
         ];
@@ -103,59 +80,67 @@ class CartaPorte extends Model
         return $this->belongsTo(SolicitudesServicio::class, 'id_solicitud');
     }
 
-    public function tractivo(): BelongsTo
+    /**
+     * Equipo y choferes se derivan de la hoja de ruta (Fase 4d).
+     * Carta → HR → Tractivo/Bolsa.
+     */
+    public function tractivo(): HasOneThrough
     {
-        return $this->belongsTo(Tractivo::class, 'id_tractivo');
+        return $this->hasOneThrough(Tractivo::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_tractivo');
     }
 
-    public function arrastre(): BelongsTo
+    public function arrastre(): HasOneThrough
     {
-        return $this->belongsTo(Tractivo::class, 'id_arrastre');
+        return $this->hasOneThrough(Tractivo::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_arrastre');
     }
 
-    public function cliente(): BelongsTo
+    public function chofer(): HasOneThrough
     {
-        return $this->belongsTo(Cliente::class, 'id_cliente');
+        return $this->hasOneThrough(Bolsa::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_chofer');
     }
 
-    public function producto(): BelongsTo
+    public function chofer2(): HasOneThrough
     {
-        return $this->belongsTo(Producto::class, 'id_producto');
+        return $this->hasOneThrough(Bolsa::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_chofer2');
     }
 
-    public function producto2(): BelongsTo
+    /**
+     * Cliente, productos y tipos de carga se derivan de la solicitud (Fase 4d).
+     * Carta → Solicitud → Cliente/Producto/TipoCarga.
+     */
+    public function cliente(): HasOneThrough
     {
-        return $this->belongsTo(Producto::class, 'id_producto2');
+        return $this->hasOneThrough(Cliente::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_cliente');
     }
 
-    public function tipoCarga(): BelongsTo
+    public function producto(): HasOneThrough
     {
-        return $this->belongsTo(TipoCarga::class, 'id_tipo_carga');
+        return $this->hasOneThrough(Producto::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_producto');
     }
 
-    public function tipoCarga2(): BelongsTo
+    public function producto2(): HasOneThrough
     {
-        return $this->belongsTo(TipoCarga::class, 'id_tipo_carga2');
+        return $this->hasOneThrough(Producto::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_producto2');
     }
 
-    public function chofer(): BelongsTo
+    public function tipoCarga(): HasOneThrough
     {
-        return $this->belongsTo(Bolsa::class, 'id_chofer');
+        return $this->hasOneThrough(TipoCarga::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_tipo_carga');
     }
 
-    public function chofer2(): BelongsTo
+    public function tipoCarga2(): HasOneThrough
     {
-        return $this->belongsTo(Bolsa::class, 'id_chofer2');
+        return $this->hasOneThrough(TipoCarga::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_tipo_carga2');
     }
 
-    public function lugarOrigen(): BelongsTo
+    public function lugarOrigen(): HasOneThrough
     {
-        return $this->belongsTo(Lugare::class, 'id_lugar_origen');
+        return $this->hasOneThrough(Lugare::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_lugar_origen');
     }
 
-    public function lugarDestino(): BelongsTo
+    public function lugarDestino(): HasOneThrough
     {
-        return $this->belongsTo(Lugare::class, 'id_lugar_destino');
+        return $this->hasOneThrough(Lugare::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_lugar_destino');
     }
 
     public function user(): BelongsTo
@@ -173,18 +158,8 @@ class CartaPorte extends Model
         return $this->belongsTo(User::class, 'id_user_cancelacion');
     }
 
-    public function moneda(): BelongsTo
+    public function moneda(): HasOneThrough
     {
-        return $this->belongsTo(Moneda::class, 'id_moneda');
-    }
-
-    public function buque(): BelongsTo
-    {
-        return $this->belongsTo(Buque::class, 'id_buque');
-    }
-
-    public function turno(): BelongsTo
-    {
-        return $this->belongsTo(Turno::class, 'id_turno');
+        return $this->hasOneThrough(Moneda::class, SolicitudesServicio::class, 'id', 'id', 'id_solicitud', 'id_moneda');
     }
 }

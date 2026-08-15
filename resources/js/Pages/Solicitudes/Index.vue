@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -124,17 +124,8 @@ function abrirCarta(item) {
     fecha_emision: fmtDate(new Date()),
     id_hoja_ruta: null,
     id_solicitud: item.id,
-    id_cliente: item.id_cliente,
     id_lugar_origen: item.id_lugar_origen,
     id_lugar_destino: item.id_lugar_destino,
-    id_producto: item.id_producto,
-    id_producto2: item.id_producto2,
-    id_tipo_carga: item.id_tipo_carga,
-    id_tipo_carga2: item.id_tipo_carga2,
-    id_tractivo: null,
-    id_arrastre: null,
-    id_chofer: null,
-    id_chofer2: null,
     distancia: item.distancia ?? null,
     conduce: '',
     notas: '',
@@ -157,18 +148,7 @@ function registrarCarta() {
 
 const cc = () => props.catalogosCarta || {}
 const hojasCarta = () => (cc().hojasRuta || []).map(h => ({ ...h, label: `${h.numero}${h.tractivo_codigo ? ` (${h.tractivo_codigo})` : ''}${h.chofer_nombre ? ` • ${h.chofer_nombre}` : ''}` }))
-const choferesCarta = () => (cc().choferes || []).map(c => ({ ...c, label: `${c.nombre} ${c.apellidos || ''}`.trim() }))
-const tractivosCarta = () => cc().tractivos || []
-const arrastresCarta = () => cc().arrastres || []
-
-function aplicarHojaCarta(event) {
-  const hr = hojasCarta().find(h => h.id === event)
-  if (!hr) return
-  carta.value.id_chofer = hr.id_chofer || null
-  carta.value.id_chofer2 = hr.id_chofer2 || null
-  carta.value.id_tractivo = hr.id_tractivo || null
-  carta.value.id_arrastre = hr.id_arrastre || null
-}
+const hrCartaSeleccionada = computed(() => hojasCarta().find(h => h.id === carta.value.id_hoja_ruta) || null)
 
 function validarFolioCarta() {
   if (!carta.value.numero) return
@@ -455,27 +435,21 @@ const estadoBadge = (s) => ({
               </div>
               <div>
                 <label class="block mb-1 font-medium">Hoja de Ruta</label>
-                <Select v-model="carta.id_hoja_ruta" :options="hojasCarta()" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" @change="aplicarHojaCarta($event.value)" />
+                <Select v-model="carta.id_hoja_ruta" :options="hojasCarta()" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
               </div>
-              <div>
-                <label class="block mb-1 font-medium">Chofer</label>
-                <Select v-model="carta.id_chofer" :options="choferesCarta()" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">2do Chofer</label>
-                <Select v-model="carta.id_chofer2" :options="choferesCarta()" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
+              <div class="col-span-2 rounded-lg bg-gray-50 dark:bg-gray-700/40 p-2 text-xs text-gray-600 dark:text-gray-300">
+                <span class="font-semibold text-gray-500 dark:text-gray-400">Equipo (de la hoja de ruta):</span>
+                <span v-if="hrCartaSeleccionada" class="ml-2">
+                  <i class="pi pi-truck mr-1" />{{ hrCartaSeleccionada.tractivo_codigo || '—' }}
+                  <span v-if="hrCartaSeleccionada.arrastre_codigo" class="ml-2"><i class="pi pi-box mr-1" />{{ hrCartaSeleccionada.arrastre_codigo }}</span>
+                  <span v-if="hrCartaSeleccionada.chofer_nombre" class="ml-2"><i class="pi pi-user mr-1" />{{ hrCartaSeleccionada.chofer_nombre }}</span>
+                  <span v-if="hrCartaSeleccionada.chofer2_nombre" class="ml-2"><i class="pi pi-user mr-1" />{{ hrCartaSeleccionada.chofer2_nombre }}</span>
+                </span>
+                <span v-else class="ml-2 text-gray-400">No hay hoja de ruta seleccionada</span>
               </div>
               <div>
                 <label class="block mb-1 font-medium">Conduce</label>
                 <InputText v-model="carta.conduce" class="w-full" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Tractivo</label>
-                <Select v-model="carta.id_tractivo" :options="tractivosCarta()" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Arrastre</label>
-                <Select v-model="carta.id_arrastre" :options="arrastresCarta()" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
               </div>
             </div>
           </fieldset>
@@ -498,16 +472,8 @@ const estadoBadge = (s) => ({
             </div>
             <div class="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
               <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-                <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Carga 1</div>
+                <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Carga 1 <span class="normal-case">(tipo/producto de la solicitud)</span></div>
                 <div class="space-y-3">
-                  <div>
-                    <label class="block mb-1 font-medium">Tipo de carga</label>
-                    <Select v-model="carta.id_tipo_carga" :options="tiposCargas" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-                  </div>
-                  <div>
-                    <label class="block mb-1 font-medium">Producto</label>
-                    <Select v-model="carta.id_producto" :options="productos" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-                  </div>
                   <div>
                     <label class="block mb-1 font-medium">Peso (tns)</label>
                     <InputText v-model="carta.peso1" type="number" step="0.01" min="0" class="w-full" />
@@ -517,14 +483,6 @@ const estadoBadge = (s) => ({
               <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
                 <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Carga 2 <span class="font-normal normal-case">(opcional)</span></div>
                 <div class="space-y-3">
-                  <div>
-                    <label class="block mb-1 font-medium">Tipo de carga</label>
-                    <Select v-model="carta.id_tipo_carga2" :options="tiposCargas" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-                  </div>
-                  <div>
-                    <label class="block mb-1 font-medium">Producto</label>
-                    <Select v-model="carta.id_producto2" :options="productos" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-                  </div>
                   <div>
                     <label class="block mb-1 font-medium">Peso (tns)</label>
                     <InputText v-model="carta.peso2" type="number" step="0.01" min="0" class="w-full" />

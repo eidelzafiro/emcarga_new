@@ -57,7 +57,7 @@ class PreviewController extends Controller
 
         foreach ($solicitudes as $sol) {
             $total = (float) ($sol->peso1 ?? 0) + (float) ($sol->peso2 ?? 0);
-            $ejecutado = (float) $sol->cartasPorte->sum('ingreso_mt');
+            $ejecutado = (float) $sol->cartasPorte->sum('toneladas');
             $sol->toneladas_total = $total;
             $sol->toneladas_ejecutadas = $ejecutado;
             $sol->toneladas_pendientes = max(0, $total - $ejecutado);

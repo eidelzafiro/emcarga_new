@@ -98,27 +98,11 @@ const formInicial = () => ({
   fecha_parte: nowDate(),
   id_hoja_ruta: null,
   id_solicitud: null,
-  id_chofer: null,
-  id_chofer2: null,
-  id_tractivo: null,
-  id_arrastre: null,
-  id_cliente: null,
-  id_turno: null,
-  id_buque: null,
-  id_lugar_origen: null,
-  id_lugar_destino: null,
-  id_tipo_carga: null,
-  id_tipo_carga2: null,
-  id_producto: null,
-  id_producto2: null,
   peso1: null,
   peso2: null,
   toneladas: null,
-  kms1: null,
-  kms2: null,
   conduce: '',
   notas: '',
-  id_moneda: 1,
   imprimir: false,
   frecepcion: null,
 })
@@ -137,61 +121,36 @@ function openEdicion(carta) {
     fecha_parte: soloFecha(carta.fecha_parte),
     id_hoja_ruta: carta.id_hoja_ruta,
     id_solicitud: carta.id_solicitud,
-    id_chofer: carta.id_chofer,
-    id_chofer2: carta.id_chofer2,
-    id_tractivo: carta.id_tractivo,
-    id_arrastre: carta.id_arrastre,
-    id_cliente: carta.id_cliente,
-    id_turno: carta.id_turno,
-    id_buque: carta.id_buque,
-    id_lugar_origen: carta.id_lugar_origen,
-    id_lugar_destino: carta.id_lugar_destino,
-    id_tipo_carga: carta.id_tipo_carga,
-    id_tipo_carga2: carta.id_tipo_carga2,
-    id_producto: carta.id_producto,
-    id_producto2: carta.id_producto2,
     peso1: Number(carta.peso1) || null,
     peso2: Number(carta.peso2) || null,
     toneladas: Number(carta.toneladas) || null,
-    kms1: Number(carta.kms1) || null,
-    kms2: Number(carta.kms2) || null,
     conduce: carta.conduce || '',
     notas: carta.notas || '',
-    id_moneda: carta.id_moneda,
     imprimir: Boolean(carta.imprimir),
   }
   showEmision.value = true
 }
 
+// Equipo/choferes derivados de la HR; cliente/tipos/productos de la solicitud (Fase 4d)
+const hrSeleccionada = computed(() => hojasCat.value.find(h => h.id === form.value.id_hoja_ruta) || null)
+const solicitudesCat = computed(() => (props.catalogos?.solicitudes || []).map(s => ({ id: s.id, label: `${s.numero}${s.cliente_nombre ? ` • ${s.cliente_nombre}` : ''}` })))
+const solicitudSeleccionada = computed(() => (props.catalogos?.solicitudes || []).find(s => s.id === form.value.id_solicitud) || null)
+
 function aplicarHojaRuta(event) {
   const hr = hojasCat.value.find(h => h.id === event)
   if (!hr) return
-  form.value.id_chofer = hr.id_chofer || null
-  form.value.id_chofer2 = hr.id_chofer2 || null
-  form.value.id_tractivo = hr.id_tractivo || null
-  form.value.id_arrastre = hr.id_arrastre || null
-  if (!form.value.id_cliente && props.catalogos?.hojasRuta?.length) {
-    const src = props.catalogos.hojasRuta.find(h => h.id === event)
-    form.value.id_cliente = form.value.id_cliente || src?.id_cliente || null
-  }
+  // El equipo/choferes se derivan de la HR seleccionada (no se persisten en la carta)
+  hrEquipo.value = hr
 }
+
+const hrEquipo = ref(null)
 
 async function buscarDistancia() {
-  if (!form.value.id_lugar_origen || !form.value.id_lugar_destino) return
-  try {
-    const res = await fetch(route('carta-porte.obtener-distancia'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' },
-      body: JSON.stringify({ id_lugar_origen: form.value.id_lugar_origen, id_lugar_destino: form.value.id_lugar_destino }),
-    })
-    const json = await res.json()
-    if (json.distancia) form.value.kms1 = Number(json.distancia)
-  } catch (e) { /* silencioso */ }
-}
-
-watch([() => form.value.id_lugar_origen, () => form.value.id_lugar_destino], buscarDistancia)
-
-async function validarFolio() {  if (!form.value.numero || !form.value.fecha_emision) return
+  const sol = solicitudSeleccionada.value
+  const hr = hrSeleccionada.value
+  // La distancia se calcula de la HR (kms_disponible) o se deja manual
+  if (hr?.kms_disponible != null) form.value.distancia = Number(hr.kms_disponible)
+}async function validarFolio() {  if (!form.value.numero || !form.value.fecha_emision) return
   try {
     const res = await fetch(route('carta-porte.validar-folio'), {
       method: 'POST',
@@ -400,9 +359,6 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fec
                   <i class="pi pi-box text-xl" style="color:#7c3aed" />
                   <span class="text-lg font-black tracking-tight text-violet-800 dark:text-violet-300">{{ data.arrastre.codigo }}</span>
                 </span>
-                <span v-if="data.total_flete != null" class="ml-auto inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                  <i class="pi pi-dollar text-[11px]" />{{ fmtNum(data.total_flete) }}
-                </span>
               </div>
             </template>
           </div>
@@ -474,28 +430,28 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fec
               <Select v-model="form.id_hoja_ruta" :options="hojasCat" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" @change="aplicarHojaRuta($event.value)" />
             </div>
             <div>
-              <label class="block mb-1 font-medium">Chofer</label>
-              <Select v-model="form.id_chofer" :options="choferOptions" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">2do Chofer</label>
-              <Select v-model="form.id_chofer2" :options="choferOptions" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Cliente</label>
-              <Select v-model="form.id_cliente" :options="clientesCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Tractivo</label>
-              <Select v-model="form.id_tractivo" :options="tractivosCat" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Arrastre</label>
-              <Select v-model="form.id_arrastre" :options="arrastresCat" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
+              <label class="block mb-1 font-medium">Solicitud</label>
+              <Select v-model="form.id_solicitud" :options="solicitudesCat" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Conduce</label>
               <InputText v-model="form.conduce" class="w-full" />
+            </div>
+            <!-- Equipo/choferes derivados de la HR (solo lectura) -->
+            <div class="col-span-2 lg:col-span-3 rounded-lg bg-gray-50 dark:bg-gray-700/40 p-2 text-xs text-gray-600 dark:text-gray-300">
+              <span class="font-semibold text-gray-500 dark:text-gray-400">Equipo (de la hoja de ruta):</span>
+              <span v-if="hrSeleccionada" class="ml-2">
+                <i class="pi pi-truck mr-1" />{{ hrSeleccionada.tractivo_codigo || '—' }}
+                <span v-if="hrSeleccionada.arrastre_codigo" class="ml-2"><i class="pi pi-box mr-1" />{{ hrSeleccionada.arrastre_codigo }}</span>
+                <span v-if="hrSeleccionada.chofer_nombre" class="ml-2"><i class="pi pi-user mr-1" />{{ hrSeleccionada.chofer_nombre }}</span>
+                <span v-if="hrSeleccionada.chofer2_nombre" class="ml-2"><i class="pi pi-user mr-1" />{{ hrSeleccionada.chofer2_nombre }}</span>
+              </span>
+              <span v-else class="ml-2 text-gray-400">No hay hoja de ruta seleccionada</span>
+            </div>
+            <!-- Cliente derivado de la solicitud (solo lectura) -->
+            <div v-if="solicitudSeleccionada" class="col-span-2 lg:col-span-3 rounded-lg bg-gray-50 dark:bg-gray-700/40 p-2 text-xs text-gray-600 dark:text-gray-300">
+              <span class="font-semibold text-gray-500 dark:text-gray-400">Cliente (de la solicitud):</span>
+              <span class="ml-2">{{ solicitudSeleccionada.cliente_nombre || '—' }}</span>
             </div>
           </div>
         </fieldset>
@@ -505,46 +461,26 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fec
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="space-y-3">
               <div>
-                <label class="block mb-1 font-medium">Origen</label>
-                <Select v-model="form.id_lugar_origen" :options="lugaresCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Tipo de Carga 1</label>
-                <Select v-model="form.id_tipo_carga" :options="tiposCargasCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Producto 1</label>
-                <Select v-model="form.id_producto" :options="productosCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+                <label class="block mb-1 font-medium">Origen (de la solicitud)</label>
+                <InputText :model-value="solicitudSeleccionada?.lugar_origen_nombre || '—'" readonly class="w-full" />
               </div>
               <div>
                 <label class="block mb-1 font-medium">Peso 1</label>
                 <InputNumber v-model="form.peso1" :min="0" :max-fraction-digits="2" class="w-full" />
               </div>
               <div>
-                <label class="block mb-1 font-medium">KMS 1</label>
-                <InputNumber v-model="form.kms1" :min="0" :max-fraction-digits="2" class="w-full" />
+                <label class="block mb-1 font-medium">Distancia (kms)</label>
+                <InputNumber v-model="form.distancia" :min="0" :max-fraction-digits="2" class="w-full" />
               </div>
             </div>
             <div class="space-y-3">
               <div>
-                <label class="block mb-1 font-medium">Destino</label>
-                <Select v-model="form.id_lugar_destino" :options="lugaresCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Tipo de Carga 2 (opcional)</label>
-                <Select v-model="form.id_tipo_carga2" :options="tiposCargasCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Producto 2 (opcional)</label>
-                <Select v-model="form.id_producto2" :options="productosCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+                <label class="block mb-1 font-medium">Destino (de la solicitud)</label>
+                <InputText :model-value="solicitudSeleccionada?.lugar_destino_nombre || '—'" readonly class="w-full" />
               </div>
               <div>
                 <label class="block mb-1 font-medium">Peso 2 (opcional)</label>
                 <InputNumber v-model="form.peso2" :min="0" :max-fraction-digits="2" class="w-full" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">KMS 2 (opcional)</label>
-                <InputNumber v-model="form.kms2" :min="0" :max-fraction-digits="2" class="w-full" />
               </div>
             </div>
           </div>

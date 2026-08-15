@@ -152,8 +152,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $cartas = CartaPorte::with('cliente:id,nombre')
-            ->select('id', 'numero', 'fecha_emision', 'estado', 'cancelada', 'id_cliente')
+        $cartas = CartaPorte::with('cliente')
+            ->select('id', 'numero', 'fecha_emision', 'estado', 'cancelada')
             ->where('cancelada', false)
             ->whereNotNull('fecha_emision')
             ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))

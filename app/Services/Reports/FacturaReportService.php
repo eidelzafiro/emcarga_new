@@ -18,11 +18,11 @@ class FacturaReportService extends BaseReportService
             'cliente',
             'tipoIngreso',
             'entidad',
-            'aforos.cartaPorte.cliente:id,nombre',
-            'aforos.cartaPorte.tractivo:id,codigo',
+            'aforos.cartaPorte.cliente',
+            'aforos.cartaPorte.tractivo',
             'aforos.cartaPorte.lugarOrigen:id,nombre',
             'aforos.cartaPorte.lugarDestino:id,nombre',
-            'aforos.cartaPorte.producto:id,nombre',
+            'aforos.cartaPorte.producto',
         ])->findOrFail($id);
 
         $this->setTitle('Factura '.$factura->numero);
@@ -37,11 +37,11 @@ class FacturaReportService extends BaseReportService
         $prefactura = Prefactura::with([
             'cliente',
             'entidad',
-            'aforos.cartaPorte.cliente:id,nombre',
-            'aforos.cartaPorte.tractivo:id,codigo',
+            'aforos.cartaPorte.cliente',
+            'aforos.cartaPorte.tractivo',
             'aforos.cartaPorte.lugarOrigen:id,nombre',
             'aforos.cartaPorte.lugarDestino:id,nombre',
-            'aforos.cartaPorte.producto:id,nombre',
+            'aforos.cartaPorte.producto',
         ])->findOrFail($id);
 
         $this->setTitle('Prefactura '.$prefactura->numero);

@@ -18,7 +18,6 @@ use App\Models\Tractivo;
 use App\Models\Turno;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class CartaPorteController extends Controller
@@ -37,13 +36,13 @@ class CartaPorteController extends Controller
         $cartas = CartaPorte::with([
             'hojaRuta:id,numero,fecha_cierre,id_entidad',
             'hojaRuta.entidad:id,nombre,abreviatura',
-            'cliente:id,nombre',
-            'lugarOrigen:id,nombre',
-            'lugarDestino:id,nombre',
-            'chofer:id,nombre,apellidos',
-            'chofer2:id,nombre,apellidos',
-            'tractivo:id,codigo',
-            'arrastre:id,codigo',
+            'cliente',
+            'lugarOrigen',
+            'lugarDestino',
+            'chofer',
+            'chofer2',
+            'tractivo',
+            'arrastre',
             'solicitud:id,numero,id_lugar_origen,id_lugar_destino',
             'userCancelacion:id,name',
         ])
@@ -59,9 +58,10 @@ class CartaPorteController extends Controller
                 ->orWhereHas('chofer', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
                 ->orWhereHas('chofer', fn ($c) => $c->where('apellidos', 'like', "%{$s}%"))
                 ->orWhereHas('tractivo', fn ($c) => $c->where('codigo', 'like', "%{$s}%"))))
-            ->when($request->equipo, fn ($q, $v) => $q->where('id_tractivo', $v))
-            ->when($request->chofer, fn ($q, $v) => $q->where(fn ($q2) => $q2->where('id_chofer', $v)->orWhere('id_chofer2', $v)))
-            ->when($request->cliente, fn ($q, $v) => $q->where('id_cliente', $v))
+            // Equipo/choferes se derivan de la HR; cliente de la solicitud (Fase 4d)
+            ->when($request->equipo, fn ($q, $v) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_tractivo', $v)))
+            ->when($request->chofer, fn ($q, $v) => $q->whereHas('hojaRuta', fn ($h) => $h->where(fn ($h2) => $h2->where('id_chofer', $v)->orWhere('id_chofer2', $v))))
+            ->when($request->cliente, fn ($q, $v) => $q->whereHas('solicitud', fn ($s) => $s->where('id_cliente', $v)))
             ->orderByDesc('fecha_emision')
             ->paginate(20);
 
@@ -77,13 +77,13 @@ class CartaPorteController extends Controller
             $cartaEditar = CartaPorte::with([
                 'hojaRuta:id,numero,fecha_cierre,id_entidad',
                 'hojaRuta.entidad:id,nombre,abreviatura',
-                'cliente:id,nombre',
-                'lugarOrigen:id,nombre',
-                'lugarDestino:id,nombre',
-                'chofer:id,nombre,apellidos',
-                'chofer2:id,nombre,apellidos',
-                'tractivo:id,codigo',
-                'arrastre:id,codigo',
+                'cliente',
+                'lugarOrigen',
+                'lugarDestino',
+                'chofer',
+                'chofer2',
+                'tractivo',
+                'arrastre',
                 'solicitud:id,numero,id_lugar_origen,id_lugar_destino',
             ])
                 ->withExists('aforos')
@@ -113,25 +113,27 @@ class CartaPorteController extends Controller
             ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
             ->whereBetween('fecha_emision', [$inicioMes, $finMes]);
 
-        $clienteIds = (clone $base)->whereNotNull('id_cliente')->distinct()->pluck('id_cliente');
-        $tractivoIds = (clone $base)->whereNotNull('id_tractivo')->distinct()->pluck('id_tractivo');
-        $choferIds = (clone $base)->whereNotNull('id_chofer')->distinct()->pluck('id_chofer')
-            ->merge((clone $base)->whereNotNull('id_chofer2')->distinct()->pluck('id_chofer2'))
-            ->unique();
+        // Cliente desde la solicitud; equipo/choferes desde la hoja de ruta (Fase 4d)
+        $clienteIds = (clone $base)->whereHas('solicitud')->with('solicitud:id,id_cliente')->get()
+            ->map(fn ($c) => $c->solicitud?->id_cliente)->filter()->unique();
+        $tractivoIds = (clone $base)->whereHas('hojaRuta')->with('hojaRuta:id,id_tractivo')->get()
+            ->map(fn ($c) => $c->hojaRuta?->id_tractivo)->filter()->unique();
+        $choferIds = (clone $base)->whereHas('hojaRuta')->with('hojaRuta:id,id_chofer,id_chofer2')->get()
+            ->flatMap(fn ($c) => [$c->hojaRuta?->id_chofer, $c->hojaRuta?->id_chofer2])->filter()->unique();
 
         return [
             'clientes' => Cliente::select('id', 'nombre')->whereIn('id', $clienteIds)->orderBy('nombre')->get(),
             'tractivos' => Tractivo::select('id', 'codigo')->whereIn('id', $tractivoIds)->orderBy('codigo')->get(),
             'choferes' => Bolsa::select('id', 'nombre', 'apellidos')->whereIn('id', $choferIds)->orderBy('nombre')->get(),
-            // Combinaciones reales del mes para filtros encadenados
+            // Combinaciones reales del mes para filtros encadenados (Fase 4d)
             'combinaciones' => (clone $base)
-                ->select('id_cliente', 'id_chofer', 'id_chofer2', 'id_tractivo')
+                ->with(['hojaRuta:id,id_tractivo,id_arrastre,id_chofer,id_chofer2', 'solicitud:id,id_cliente'])
                 ->get()
                 ->map(fn ($c) => [
-                    'cliente' => $c->id_cliente,
-                    'chofer' => $c->id_chofer,
-                    'chofer2' => $c->id_chofer2,
-                    'tractivo' => $c->id_tractivo,
+                    'cliente' => $c->solicitud?->id_cliente,
+                    'chofer' => $c->hojaRuta?->id_chofer,
+                    'chofer2' => $c->hojaRuta?->id_chofer2,
+                    'tractivo' => $c->hojaRuta?->id_tractivo,
                 ]),
         ];
     }
@@ -144,7 +146,7 @@ class CartaPorteController extends Controller
         return [
             // Hojas de ruta emitidas en el mes, para el combo de la emisión y el filtro
             'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad', 'id_cliente')
-                ->with(['tractivo:id,codigo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos', 'chofer2:id,nombre,apellidos'])
+                ->with(['tractivo', 'arrastre', 'chofer', 'chofer2'])
                 ->selectRaw('COALESCE(fecha_cierre, fecha_emision) as ref_fecha')
                 ->where(fn ($q) => $q->whereNull('fecha_cierre')->orWhereBetween('fecha_cierre', [$inicioMes, $finMes]))
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
@@ -170,6 +172,19 @@ class CartaPorteController extends Controller
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('nombre')
                 ->get(),
+            'solicitudes' => SolicitudesServicio::select('id', 'numero', 'id_cliente', 'id_lugar_origen', 'id_lugar_destino')
+                ->with(['cliente:id,nombre', 'lugarOrigen:id,nombre', 'lugarDestino:id,nombre'])
+                ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+                ->orderByDesc('fecha_solicitud')
+                ->limit(300)
+                ->get()
+                ->map(fn ($s) => [
+                    'id' => $s->id,
+                    'numero' => $s->numero,
+                    'cliente_nombre' => $s->cliente?->nombre,
+                    'lugar_origen_nombre' => $s->lugarOrigen?->nombre,
+                    'lugar_destino_nombre' => $s->lugarDestino?->nombre,
+                ]),
             'lugares' => Lugare::select('id', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'productos' => Producto::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'tiposCargas' => TipoCarga::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
@@ -232,32 +247,9 @@ class CartaPorteController extends Controller
             $validated['toneladas'] = (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0);
         }
 
-        if (isset($validated['kms1']) || isset($validated['kms2'])) {
-            $kmsTotal = (float) ($validated['kms1'] ?? 0) + (float) ($validated['kms2'] ?? 0);
-            if ($kmsTotal > 0) {
-                $validated['distancia'] = $kmsTotal;
-            }
-        }
-
-        if (isset($validated['id_hoja_ruta'])) {
-            $hoja = HojasRuta::with('tractivo:id,id_entidad')->find($validated['id_hoja_ruta']);
-            // Si no se especificaron, hereda equipo/choferes/cliente de la hoja
-            $validated['id_tractivo'] = $validated['id_tractivo'] ?? $hoja?->id_tractivo;
-            $validated['id_arrastre'] = $validated['id_arrastre'] ?? $hoja?->id_arrastre;
-            $validated['id_chofer'] = $validated['id_chofer'] ?? $hoja?->id_chofer;
-            $validated['id_chofer2'] = $validated['id_chofer2'] ?? $hoja?->id_chofer2;
-            $validated['id_cliente'] = $validated['id_cliente'] ?? $hoja?->id_cliente;
-        }
-
-        if (isset($validated['id_lugar_origen'], $validated['id_lugar_destino']) && empty($validated['distancia'])) {
-            $validated['distancia'] = Distancia::where('id_lugar_origen', $validated['id_lugar_origen'])
-                ->where('id_lugar_destino', $validated['id_lugar_destino'])
-                ->value('distancia_km');
-        }
-
-        if (isset($validated['distancia'], $validated['tarifa_km'])) {
-            $validated['total_flete'] = round((float) $validated['distancia'] * (float) $validated['tarifa_km'], 2);
-        }
+        // Fase 4d: equipo/choferes/cliente/tipos/productos/lugares/moneda se
+        // derivan de la HR y la solicitud; los fletes viven en `aforos`. La
+        // carta solo persiste folio, HR/solicitud, fechas, pesos y distancia.
 
         $carta = CartaPorte::create($validated);
 
@@ -274,26 +266,6 @@ class CartaPorteController extends Controller
 
         if (empty($validated['toneladas'])) {
             $validated['toneladas'] = (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0);
-        }
-
-        if (isset($validated['kms1']) || isset($validated['kms2'])) {
-            $kmsTotal = (float) ($validated['kms1'] ?? 0) + (float) ($validated['kms2'] ?? 0);
-            if ($kmsTotal > 0) {
-                $validated['distancia'] = $kmsTotal;
-            }
-        }
-
-        if (isset($validated['id_lugar_origen'], $validated['id_lugar_destino'])) {
-            $distancia = Distancia::where('id_lugar_origen', $validated['id_lugar_origen'])
-                ->where('id_lugar_destino', $validated['id_lugar_destino'])
-                ->value('distancia_km');
-            if ($distancia) {
-                $validated['distancia'] = $distancia;
-            }
-        }
-
-        if (isset($validated['distancia'], $validated['tarifa_km']) && ! empty($validated['tarifa_km'])) {
-            $validated['total_flete'] = round((float) $validated['distancia'] * (float) $validated['tarifa_km'], 2);
         }
 
         $carta->update($validated);
@@ -405,7 +377,7 @@ class CartaPorteController extends Controller
             'estado' => 'recepcionada',
         ]);
 
-        return back()->with("success", "Carta de porte {$carta->numero} recepcionada.");
+        return back()->with('success', "Carta de porte {$carta->numero} recepcionada.");
     }
 
     private function validar(Request $request, ?CartaPorte $carta = null): array
@@ -428,30 +400,10 @@ class CartaPorteController extends Controller
             'fecha_recepcion' => ['nullable', 'date'],
             'id_hoja_ruta' => ['nullable', 'exists:hojas_ruta,id'],
             'id_solicitud' => ['nullable', 'exists:solicitudes_servicio,id'],
-            'id_tractivo' => ['nullable', 'exists:tractivos,id'],
-            'id_arrastre' => ['nullable', 'exists:tractivos,id'],
-            'id_cliente' => ['nullable', 'exists:clientes,id'],
-            'id_chofer' => ['nullable', 'exists:bolsa,id'],
-            'id_chofer2' => ['nullable', 'exists:bolsa,id'],
-            'id_lugar_origen' => ['nullable', 'exists:lugares,id'],
-            'id_lugar_destino' => ['nullable', 'exists:lugares,id'],
-            'id_producto' => ['nullable', 'exists:productos,id'],
-            'id_producto2' => ['nullable', 'exists:productos,id'],
-            'id_tipo_carga' => ['nullable', 'exists:tipos_cargas,id'],
-            'id_tipo_carga2' => ['nullable', 'exists:tipos_cargas,id'],
-            'id_buque' => ['nullable', 'exists:buques,id'],
-            'id_turno' => ['nullable', 'exists:turnos,id'],
-            'id_moneda' => ['nullable', 'exists:monedas,id'],
             'toneladas' => ['nullable', 'numeric', 'min:0'],
             'peso1' => ['nullable', 'numeric', 'min:0'],
             'peso2' => ['nullable', 'numeric', 'min:0'],
             'distancia' => ['nullable', 'integer', 'min:0'],
-            'kms1' => ['nullable', 'numeric', 'min:0'],
-            'kms2' => ['nullable', 'numeric', 'min:0'],
-            'tarifa_km' => ['nullable', 'numeric', 'min:0'],
-            'total_flete' => ['nullable', 'numeric', 'min:0'],
-            'ingreso_mt' => ['nullable', 'numeric', 'min:0'],
-            'flete_mt' => ['nullable', 'numeric', 'min:0'],
             'conduce' => ['nullable', 'string', 'max:150'],
             'notas' => ['nullable', 'string', 'max:150'],
             'imprimir' => ['sometimes', 'boolean'],

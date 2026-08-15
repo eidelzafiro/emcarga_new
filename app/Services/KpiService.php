@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Aforo;
 use App\Models\Bateria;
 use App\Models\Bolsa;
 use App\Models\Cargo;
@@ -26,10 +27,23 @@ class KpiService
             ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)));
     }
 
+    /**
+     * Ingresos del mes: se suman desde los aforos (los fletes viven en `aforos`,
+     * Fase 4d), con scoping de entidad vía carta → HR → tractivo.
+     */
+    private function ingresosDelMes(?int $entidadId = null): float
+    {
+        return Aforo::whereYear('fecha_parte', now()->year)
+            ->whereMonth('fecha_parte', now()->month)
+            ->when($entidadId, fn ($q) => $q->whereHas('cartaPorte.hojaRuta.tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
+            ->sum('ingreso_mt');
+    }
+
     private function fmtMoneda(mixed $valor): string
     {
         return '$'.number_format((float) $valor, 2, '.', ',');
     }
+
     public function calcular(?int $entidadId = null): array
     {
         return $this->paraRol('default', $entidadId);
@@ -149,16 +163,21 @@ class KpiService
     {
         $cartasMes = $this->cartasDelMes($entidadId);
         $cartas = (clone $cartasMes)->count();
-        $ingresos = (clone $cartasMes)->sum('ingreso_mt');
+        $ingresos = $this->ingresosDelMes($entidadId);
         $porRecepcionar = CartaPorte::where('cancelada', false)
             ->where('estado', 'emitida')
             ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
             ->count();
         $clientesActivos = CartaPorte::where('cancelada', false)
             ->whereBetween('fecha_emision', $this->periodoMes())
+            ->whereHas('solicitud')
             ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
-            ->distinct('id_cliente')
-            ->count('id_cliente');
+            ->with('solicitud:id,id_cliente')
+            ->get()
+            ->map(fn ($c) => $c->solicitud?->id_cliente)
+            ->filter()
+            ->unique()
+            ->count();
 
         return [
             [
@@ -194,7 +213,7 @@ class KpiService
 
     private function kpisContabilidad(?int $entidadId): array
     {
-        $ingresos = (clone $this->cartasDelMes($entidadId))->sum('ingreso_mt');
+        $ingresos = $this->ingresosDelMes($entidadId);
         $emitidasMes = (clone $this->cartasDelMes($entidadId))->count();
 
         return [
@@ -284,7 +303,7 @@ class KpiService
         $vehiculosEnRuta = (clone $hrAbiertas)->whereNotNull('id_tractivo')->distinct('id_tractivo')->count('id_tractivo');
         $cartasMes = $this->cartasDelMes($entidadId);
         $cartas = (clone $cartasMes)->count();
-        $toneladas = (clone $cartasMes)->sum('ingreso_mt');
+        $toneladas = (clone $cartasMes)->sum('toneladas');
 
         return [
             [
@@ -364,7 +383,7 @@ class KpiService
         $bolsaQuery = Bolsa::query();
         $this->scopeEntidad($bolsaQuery, $entidadId);
 
-        $ingresosMes = $this->cartasDelMes($entidadId)->sum('ingreso_mt');
+        $ingresosMes = $this->ingresosDelMes($entidadId);
         $pendientes = SolicitudesServicio::whereIn('estado', ['pendiente', 'en_proceso'])
             ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
             ->count();

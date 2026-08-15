@@ -243,6 +243,13 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'cartas_porte');
         }
 
+        // Solicitudes: com_solicitudes 2026 vinculadas + agrupadas para cartas sin solicitud
+        if (! $solo || $solo === 'solicitudes') {
+            $this->info('Migrando solicitudes (2026 + agrupadas para cartas sin solicitud)...');
+            $etl->migrarSolicitudes(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'solicitudes');
+        }
+
         // Facturas: com_rfactura solo 2026, numero re-numerado + numero_legacy
         if (! $solo || $solo === 'facturas') {
             $this->info('Migrando facturas (año 2026, numero re-numerado)...');

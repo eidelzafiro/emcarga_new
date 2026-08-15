@@ -37,6 +37,8 @@ import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Toast from 'primevue/toast';
 import ToastService from 'primevue/toastservice';
+import ConfirmDialog from 'primevue/confirmdialog';
+import ConfirmationService from 'primevue/confirmationservice';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
 import Password from 'primevue/password';
@@ -49,6 +51,7 @@ import Drawer from 'primevue/drawer';
 import Tooltip from 'primevue/tooltip';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import { formatDate, formatDateTime } from './Utils/date';
 
 const appName = import.meta.env.VITE_APP_NAME || 'EMCARGA';
 
@@ -107,7 +110,12 @@ createInertiaApp({
         });
 
         app.use(ToastService);
+        app.use(ConfirmationService);
         app.directive('tooltip', Tooltip);
+
+        // Helpers globales de formato de fecha (dd/mm/yyyy)
+        app.config.globalProperties.$formatDate = formatDate;
+        app.config.globalProperties.$formatDateTime = formatDateTime;
 
         app.component('Button', Button);
         app.component('InputText', InputText);

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -12,6 +13,7 @@ import Toolbar from 'primevue/toolbar'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
+import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ facturas: Object, filters: Object })
 const toast = useToast()
@@ -91,7 +93,7 @@ function confirmEliminar(factura) {
                 <Column field="numero" header="No. Factura" sortable />
                 <Column field="cliente.nombre" header="Cliente" sortable />
                 <Column field="fecha_emision" header="Fecha Emisión" sortable>
-                    <template #body="{ data }">{{ data.fecha_emision }}</template>
+                    <template #body="{ data }">{{ formatDate(data.fecha_emision) }}</template>
                 </Column>
                 <Column field="ingreso_mt" header="Total MN">
                     <template #body="{ data }">${{ Number(data.ingreso_mt).toLocaleString() }}</template>

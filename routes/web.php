@@ -304,8 +304,13 @@ Route::middleware('auth')->group(function () {
         Route::get('aforos-pendientes', [FacturasController::class, 'aforosPendientes'])->name('aforos.pendientes');
 
         Route::resource('aforos', AforosController::class)
-            ->only(['index', 'create', 'store', 'show']);
+            ->only(['index', 'create', 'store', 'edit', 'update', 'show']);
         Route::post('aforos/cotizar', [AforosController::class, 'cotizar'])->name('aforos.cotizar');
+        Route::post('aforos/cotizar-demora', [AforosController::class, 'cotizarDemora'])->name('aforos.cotizar-demora');
+        Route::post('aforos/cotizar-almacenaje', [AforosController::class, 'cotizarAlmacenaje'])->name('aforos.cotizar-almacenaje');
+        Route::post('aforos/cotizar-salario', [AforosController::class, 'cotizarSalario'])->name('aforos.cotizar-salario');
+        Route::post('aforos/cotizar-tiempos', [AforosController::class, 'cotizarTiempos'])->name('aforos.cotizar-tiempos');
+        Route::post('aforos/cotizar-indicadores', [AforosController::class, 'cotizarIndicadores'])->name('aforos.cotizar-indicadores');
 
         Route::resource('prefacturas', PrefacturasController::class)
             ->only(['index', 'create', 'store', 'update', 'destroy']);

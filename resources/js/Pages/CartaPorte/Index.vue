@@ -12,6 +12,7 @@ import Dialog from 'primevue/dialog'
 import Textarea from 'primevue/textarea'
 import Paginator from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
+import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ cartas: Object, catalogos: Object, filters: Object, filtros: Object, cartaEditar: Object })
 const toast = useToast()
@@ -275,9 +276,9 @@ function fmtNum(v) {
 }
 function fmtFcierre(carta) {
   if (!carta.hoja_ruta?.fecha_cierre) return 'S/CERRAR'
-  return soloFecha(carta.hoja_ruta.fecha_cierre)
+  return formatDate(carta.hoja_ruta.fecha_cierre)
 }
-function fechaRecep(carta) { return carta.fecha_recepcion ? soloFecha(carta.fecha_recepcion) : null }
+function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fecha_recepcion) : null }
 
 </script>
 
@@ -328,7 +329,7 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? soloFecha(carta.fech
                   :class="data.cancelada ? 'text-red-500 dark:text-red-400 line-through' : 'text-blue-800 dark:text-blue-300'"
                 >{{ data.numero }}</div>
                 <div class="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500">
-                  <i class="pi pi-calendar mr-1 text-[10px]" />{{ soloFecha(data.fecha_emision) }}
+                  <i class="pi pi-calendar mr-1 text-[10px]" />{{ formatDate(data.fecha_emision) }}
                 </div>
               </div>
               <div class="shrink-0 text-right">
@@ -359,7 +360,7 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? soloFecha(carta.fech
               <div v-if="data.cancelada" class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                 <i class="pi pi-user text-[10px]" />
                 <span>Cancelada por: <strong>{{ data.user_cancelacion?.name || '—' }}</strong></span>
-                <span v-if="data.fecha_cancelacion">· {{ soloFecha(data.fecha_cancelacion) }}</span>
+                <span v-if="data.fecha_cancelacion">· {{ formatDate(data.fecha_cancelacion) }}</span>
               </div>
               <template v-else>
                 <div class="truncate text-[16px] font-black tracking-tight text-gray-900 dark:text-white">{{ data.cliente?.nombre || '—' }}</div>

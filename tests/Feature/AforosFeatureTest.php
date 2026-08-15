@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Cliente;
+use App\Models\CartaPorte;
 use App\Models\Lugare;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -47,6 +48,29 @@ class AforosFeatureTest extends TestCase
         Producto::create(['codigo' => 'P1', 'nombre' => 'Producto 1', 'activo' => true]);
     }
 
+    /**
+     * Crea una carta de porte ya girada, del mes de operaciones y no aforada,
+     * para el formulario de aforo (paridad legacy: el aforo selecciona una CP).
+     */
+    private function cartaPendiente(array $attrs = []): CartaPorte
+    {
+        $this->session(['fecha_operaciones' => now()->toDateString()]);
+
+        $tipo = TipoCarga::where('id', 3)->first() ?? TipoCarga::query()->forceCreate(['id' => 3, 'codigo' => '3', 'nombre' => 'Contenedor']);
+
+        return CartaPorte::create(array_merge([
+            'numero' => 'CP-TEST-'.rand(1000, 9999),
+            'id_tipo_carga' => $tipo->id,
+            'id_moneda' => 1,
+            'distancia' => 100,
+            'toneladas' => 10,
+            'fecha_emision' => now()->toDateString(),
+            'fecha_parte' => now()->toDateString(),
+            'estado' => 'emitida',
+            'cancelada' => false,
+        ], $attrs));
+    }
+
     public function test_aforos_index(): void
     {
         $this->actingAs($this->usuarioComercial())
@@ -84,28 +108,24 @@ class AforosFeatureTest extends TestCase
     {
         $this->catalogoMinimo();
         $cliente = Cliente::create(['codigo' => 'CL-A', 'nombre' => 'Cliente Aforo']);
+        $carta = $this->cartaPendiente(['id_cliente' => $cliente->id]);
 
         $this->actingAs($this->usuarioComercial())
             ->post(route('aforos.store'), [
+                'id_carta_porte' => $carta->id,
                 'fecha_parte' => now()->toDateString(),
-                'id_cliente' => $cliente->id,
-                'id_tipo_carga' => 3,
-                'id_moneda' => 1,
-                'distancia' => 100,
-                'toneladas' => 10,
                 'flete_mt' => 500,
                 'ingreso_mt' => 500,
             ])
             ->assertRedirect(route('aforos.index'));
 
-        $this->assertDatabaseHas('cartas_porte', ['id_cliente' => $cliente->id]);
-        $this->assertDatabaseHas('aforos', ['flete_mt' => 500, 'ingreso_mt' => 500]);
+        $this->assertDatabaseHas('aforos', ['id_carta_porte' => $carta->id, 'flete_mt' => 500, 'ingreso_mt' => 500]);
     }
 
     public function test_crear_aforo_valida_campos_requeridos(): void
     {
         $this->actingAs($this->usuarioComercial())
             ->post(route('aforos.store'), [])
-            ->assertSessionHasErrors(['fecha_parte', 'id_cliente', 'flete_mt', 'ingreso_mt']);
+            ->assertSessionHasErrors(['id_carta_porte', 'fecha_parte', 'flete_mt', 'ingreso_mt']);
     }
 }

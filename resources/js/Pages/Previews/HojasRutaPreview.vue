@@ -2,12 +2,13 @@
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Button from 'primevue/button'
+import { formatDate } from '@/Utils/date'
 
 defineProps({ hojas: Array })
 
 const title = 'Vista previa · Hoja de Ruta'
 
-function soloFecha(v) { return v ? String(v).slice(0, 10) : '' }
+function soloFecha(v) { return formatDate(v) }
 function soloHora(v) { return v ? String(v).slice(0, 5) : '' }
 function choferNombre(c) { return c ? `${c.nombre} ${c.apellidos || ''}`.trim() : '—' }
 function iniciales(nombre) {

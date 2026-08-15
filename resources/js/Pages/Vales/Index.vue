@@ -13,6 +13,7 @@ import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
+import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ vales: Object, filters: Object, bolsa: Array, tractivos: Array })
 const toast = useToast()
@@ -85,7 +86,9 @@ function submit() {
                 <Column field="numero" header="Número" sortable />
                 <Column field="bolsa.nombre" header="Bolsa" />
                 <Column field="tractivo.descripcion" header="Tractivo" />
-                <Column field="fecha_emision" header="Fecha Emisión" sortable />
+                <Column field="fecha_emision" header="Fecha Emisión" sortable>
+                    <template #body="{ data }">{{ formatDate(data.fecha_emision) }}</template>
+                </Column>
                 <Column field="tipo" header="Tipo">
                     <template #body="{ data }">
                         <Tag :value="data.tipo" :severity="data.tipo === 'combustible' ? 'warn' : data.tipo === 'repuesto' ? 'info' : 'success'" />

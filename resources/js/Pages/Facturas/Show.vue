@@ -1,11 +1,13 @@
 <script setup>
 import { router } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ factura: Object })
 
@@ -18,7 +20,7 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold">Factura No. {{ factura.numero }}</h2>
-                    <p class="text-surface-500">{{ factura.fecha_emision }}</p>
+                    <p class="text-surface-500">{{ formatDate(factura.fecha_emision) }}</p>
                 </div>
                 <Tag :severity="severityMap[factura.estado] || 'info'" class="text-lg p-2">{{ factura.estado }}</Tag>
             </div>
@@ -42,10 +44,10 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
                 <Card>
                     <template #title>Fechas</template>
                     <template #content>
-                        <p>Firma: {{ factura.fecha_firma || 'Pendiente' }}</p>
-                        <p>Cobro MN: {{ factura.fecha_cobro_mn || 'Pendiente' }}</p>
-                        <p>Cobro MLC: {{ factura.fecha_cobro_mlc || 'Pendiente' }}</p>
-                        <p>Conciliación: {{ factura.fecha_conciliacion || 'Pendiente' }}</p>
+                        <p>Firma: {{ factura.fecha_firma ? formatDate(factura.fecha_firma) : 'Pendiente' }}</p>
+                        <p>Cobro MN: {{ factura.fecha_cobro_mn ? formatDate(factura.fecha_cobro_mn) : 'Pendiente' }}</p>
+                        <p>Cobro MLC: {{ factura.fecha_cobro_mlc ? formatDate(factura.fecha_cobro_mlc) : 'Pendiente' }}</p>
+                        <p>Conciliación: {{ factura.fecha_conciliacion ? formatDate(factura.fecha_conciliacion) : 'Pendiente' }}</p>
                     </template>
                 </Card>
             </div>
@@ -55,7 +57,9 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
                 <template #content>
                     <DataTable :value="factura.aforos || []" striped-rows>
                         <Column field="carta_porte.numero" header="CP" />
-                        <Column field="fecha_parte" header="Fecha" />
+                        <Column field="fecha_parte" header="Fecha">
+                            <template #body="{ data }">{{ formatDate(data.fecha_parte) }}</template>
+                        </Column>
                         <Column field="flete_mt" header="Flete MN">
                             <template #body="{ data }">${{ Number(data.flete_mt).toLocaleString() }}</template>
                         </Column>

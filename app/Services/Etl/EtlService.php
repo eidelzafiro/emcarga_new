@@ -1920,8 +1920,9 @@ class EtlService
         };
 
         DB::connection('legacy')->table('com_aforo')
-            ->whereYear('fparte', $anio)
-            ->orderBy('idcartaporte')
+            ->leftJoin('com_girado', 'com_girado.idcartaporte', '=', 'com_aforo.idcartaporte')
+            ->whereYear('com_aforo.fparte', $anio)
+            ->orderBy('com_aforo.idcartaporte')
             ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsFacturas, $fechaValida) {
                 foreach ($filas as $fila) {
                     $idFactura = (int) $fila->idfactura;
@@ -1942,6 +1943,56 @@ class EtlService
                                 'descuento' => (float) $fila->descuento,
                                 'refactura' => false,
                                 'id_user' => null,
+
+                                // Tarifas por línea
+                                'id_tipo_carga_1' => $fila->idtipocarga1, 'id_tipo_carga_2' => $fila->idtipocarga2,
+                                'id_tipo_carga_3' => $fila->idtipocarga3, 'id_tipo_carga_4' => $fila->idtipocarga4, 'id_tipo_carga_5' => $fila->idtipocarga5,
+                                'distancia_1' => $fila->distancia, 'distancia_2' => $fila->distancia2,
+                                'distancia_3' => $fila->distancia3, 'distancia_4' => $fila->distancia4, 'distancia_5' => $fila->distancia5,
+                                'tarifa_mt_1' => $fila->tarmn1, 'tarifa_mt_2' => $fila->tarmn2,
+                                'tarifa_mt_3' => $fila->tarmn3, 'tarifa_mt_4' => $fila->tarmn4, 'tarifa_mt_5' => $fila->tarmn5,                                'flete_mt_1' => $fila->fletemt1, 'flete_mt_2' => $fila->fletemt2,
+                                'flete_mt_3' => $fila->fletemt3, 'flete_mt_4' => $fila->fletemt4, 'flete_mt_5' => $fila->fletemt5,
+                                'flete_mlc_1' => $fila->fletemlc1, 'flete_mlc_2' => $fila->fletemlc2,
+                                'flete_mlc_3' => $fila->fletemlc3, 'flete_mlc_4' => $fila->fletemlc4, 'flete_mlc_5' => $fila->fletemlc5,
+                                'peso_cobrar_1' => $fila->pesocobrar1, 'peso_cobrar_2' => $fila->pesocobrar2,
+                                'peso_cobrar_3' => $fila->pesocobrar3, 'peso_cobrar_4' => $fila->pesocobrar4, 'peso_cobrar_5' => $fila->pesocobrar5,
+                                'desc_1' => $fila->desc1, 'desc_2' => $fila->desc2, 'desc_3' => $fila->desc3,
+                                'desc_4' => $fila->desc4, 'desc_5' => $fila->desc5, 'desc_6' => $fila->desc6,
+                                'desc_7' => $fila->desc7, 'desc_8' => $fila->desc8,
+
+                                // Almacenaje
+                                'almacenaje_peso' => $fila->almpeso, 'almacenaje_horas' => $fila->almhoras,
+                                'almacenaje_tarifa' => $fila->almtar, 'almacenaje_flete' => $fila->almflete,
+
+                                // Demora
+                                'tar_dem_1' => $fila->tardem1, 'tar_dem_2' => $fila->tardem2,
+                                'flete_dem_1' => $fila->fletedem1, 'flete_dem_2' => $fila->fletedem2,
+                                'dem_carga' => $fila->demcarga, 'dem_descarga' => $fila->demdescarga, 'dem_total' => $fila->demtotal,
+                                'fecha_carga' => $fechaValida($fila->fcarga), 'hora_carga_1' => $fila->hcarga1, 'hora_carga_2' => $fila->hcarga2,
+                                'fecha_descarga' => $fechaValida($fila->fdescarga), 'hora_descarga_1' => $fila->hdescarga1, 'hora_descarga_2' => $fila->hdescarga2,
+
+                                // Tiempos
+                                'tiempo_otros' => $fila->tperm, 'tiempo_movimiento' => $fila->tmov,
+                                'tiempo_carga' => $fila->tcarga, 'tiempo_descarga' => $fila->tdescarga,
+                                'tiempo_total' => $fila->ttotal, 'tiempo_feriado' => $fila->tferiado,
+
+                                // Recargos
+                                'recargo_1' => $fila->recargo1, 'recargo_2' => $fila->recargo2,
+                                'recargo_3' => $fila->recargo3, 'recargo_4' => $fila->recargo4, 'recargo_5' => $fila->recargo5,
+
+                                // Salario / coeficiente
+                                'id_tasa' => $fila->idtasa ?: null, 'tasa' => $fila->tasa, 'salario' => $fila->salario,
+
+                                // Indicadores filas 1-2 + totales
+                                'viajes' => $fila->viajes ?: 1, 'tipo_indicadores' => $fila->tipindicadores ?: 1,
+                                'tn_pos_1' => $fila->tnpos1, 'tn_pos_2' => $fila->tnpos2, 'tn_pos_total' => $fila->tnpos,
+                                'tn_real_1' => $fila->tnreal1, 'tn_real_2' => $fila->tnreal2, 'tn_real_total' => $fila->tnreal,
+                                'km_carga_1' => $fila->kmcarga1, 'km_carga_2' => $fila->kmcarga2, 'km_carga_total' => $fila->kmcarga,
+                                'km_vacio_1' => $fila->kmvacio1, 'km_vacio_2' => $fila->kmvacio2, 'km_vacio_total' => $fila->kmvacio,
+                                'km_total_1' => $fila->kmstot1, 'km_total_2' => $fila->kmstot2, 'km_total_total' => $fila->kmstot,
+                                'traf_pos_1' => $fila->trafpos1, 'traf_pos_2' => $fila->trafpos2, 'traf_pos_total' => $fila->trafpos,
+                                'traf_real_1' => $fila->trafreal1, 'traf_real_2' => $fila->trafreal2, 'traf_real_total' => $fila->trafreal,
+
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]
@@ -1957,6 +2008,109 @@ class EtlService
             'legacy' => (int) DB::connection('legacy')->table('com_aforo')->whereYear('fparte', $anio)->count(),
             'nueva' => $procesados,
             'avisos' => array_merge($avisos, ["{$idsFacturas->count()} facturas migradas disponibles para vincular"]),
+        ];
+    }
+
+    /**
+     * ETL de tasas de salario por rango: rh_tipotasas → tasas.
+     * Cada fila define el coeficiente (tasa/tasa2) para un tipo de carga dentro de
+     * un rango de distancia y de capacidad. Idempotente: upsert por id de legacy.
+     */
+    public function migrarTasas(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        DB::connection('legacy')->table('rh_tipotasas')
+            ->orderBy('idtasa')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos) {
+                foreach ($filas as $fila) {
+                    try {
+                        DB::table('tasas')->updateOrInsert(
+                            ['id' => $fila->idtasa],
+                            [
+                                'nombre' => $fila->nombtasa,
+                                'tasa' => $fila->tasa,
+                                'tasa2' => $fila->tasa2,
+                                'id_tipo_carga' => $fila->idtipocargas ?: null,
+                                'distancia_1' => $fila->dist1,
+                                'distancia_2' => $fila->dist2,
+                                'capacidad_1' => $fila->cap1,
+                                'capacidad_2' => $fila->cap2,
+                                'id_entidad' => $fila->idunidad ?: null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "tasas#{$fila->idtasa}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['tasas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_tipotasas')->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de indicadores: com_indicadores → indicadores (líneas 3-7).
+     * Paridad legacy: com_indicadores guarda SOLO las filas 3-7; las 1-2 y totales
+     * viven en com_aforo (aforos).
+     */
+    public function migrarIndicadores(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        DB::connection('legacy')->table('com_indicadores')
+            ->orderBy('idcartaporte')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos) {
+                foreach ($filas as $fila) {
+                    $idCarta = (int) $fila->idcartaporte;
+
+                    if (! DB::table('cartas_porte')->where('id', $idCarta)->exists()) {
+                        $avisos[] = "indicadores#{$idCarta}: carta_porte no existe, omitido";
+                        continue;
+                    }
+
+                    try {
+                        DB::table('indicadores')->updateOrInsert(
+                            ['id_carta_porte' => $idCarta],
+                            [
+                                'tn_pos_3' => $fila->tnpos3, 'tn_real_3' => $fila->tnreal3,
+                                'km_carga_3' => $fila->kmcarga3, 'km_vacio_3' => $fila->kmvacio3,
+                                'kms_total_3' => $fila->kmstot3, 'traf_real_3' => $fila->trafreal3, 'traf_pos_3' => $fila->trafpos3,
+                                'tn_pos_4' => $fila->tnpos4, 'tn_real_4' => $fila->tnreal4,
+                                'km_carga_4' => $fila->kmcarga4, 'km_vacio_4' => $fila->kmvacio4,
+                                'kms_total_4' => $fila->kmstot4, 'traf_real_4' => $fila->trafreal4, 'traf_pos_4' => $fila->trafpos4,
+                                'tn_pos_5' => $fila->tnpos5, 'tn_real_5' => $fila->tnreal5,
+                                'km_carga_5' => $fila->kmcarga5, 'km_vacio_5' => $fila->kmvacio5,
+                                'kms_total_5' => $fila->kmstot5, 'traf_real_5' => $fila->trafreal5, 'traf_pos_5' => $fila->trafpos5,
+                                'tn_pos_6' => $fila->tnpos6, 'tn_real_6' => $fila->tnreal6,
+                                'km_carga_6' => $fila->kmcarga6, 'km_vacio_6' => $fila->kmvacio6,
+                                'kms_total_6' => $fila->kmstot6, 'traf_real_6' => $fila->trafreal6, 'traf_pos_6' => $fila->trafpos6,
+                                'tn_pos_7' => $fila->tnpos7, 'tn_real_7' => $fila->tnreal7,
+                                'km_carga_7' => $fila->kmcarga7, 'km_vacio_7' => $fila->kmvacio7,
+                                'kms_total_7' => $fila->kmstot7, 'traf_real_7' => $fila->trafreal7, 'traf_pos_7' => $fila->trafpos7,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "indicadores#{$idCarta}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['indicadores'] = [
+            'legacy' => (int) DB::connection('legacy')->table('com_indicadores')->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
         ];
     }
 

@@ -2,12 +2,13 @@
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Button from 'primevue/button'
+import { formatDate } from '@/Utils/date'
 
 defineProps({ solicitudes: Array })
 
 const title = 'Vista previa · Solicitudes'
 
-function soloFecha(v) { return v ? String(v).slice(0, 10) : '' }
+function soloFecha(v) { return formatDate(v) }
 function fmtNum(v) {
   if (v === null || v === undefined || v === '') return '—'
   const n = Number(v)

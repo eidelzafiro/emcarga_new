@@ -13,6 +13,7 @@ import Paginator from 'primevue/paginator'
 
 import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
+import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ hojas: Object, catalogos: Object, filters: Object, filtros: Object })
 const toast = useToast()
@@ -426,9 +427,9 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
                   {{ h.numero }}
                 </div>
                 <div class="mt-1.5 flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">
-                  <i class="pi pi-calendar mr-0.5 text-[10px]" />{{ soloFecha(h.fecha_emision) }} {{ h.hora_emision ? `· ${soloHora(h.hora_emision)}` : '' }}
+                  <i class="pi pi-calendar mr-0.5 text-[10px]" />{{ formatDate(h.fecha_emision) }} {{ h.hora_emision ? `· ${soloHora(h.hora_emision)}` : '' }}
                   <i class="pi pi-arrow-right mx-1 text-[9px]" />
-                  <i class="pi pi-calendar-times mr-0.5 text-[10px]" />{{ h.fecha_cierre ? `${soloFecha(h.fecha_cierre)} ${h.hora_cierre ? `· ${soloHora(h.hora_cierre)}` : ''}` : 'abierta' }}
+                  <i class="pi pi-calendar-times mr-0.5 text-[10px]" />{{ h.fecha_cierre ? `${formatDate(h.fecha_cierre)} ${h.hora_cierre ? `· ${soloHora(h.hora_cierre)}` : ''}` : 'abierta' }}
                   <i v-if="tieneValor(h.tiempo_total)" class="pi pi-clock ml-1 text-[10px]" />
                   <span v-if="tieneValor(h.tiempo_total)" class="font-semibold">{{ fmtTiempo(h.tiempo_total) }} h</span>
                 </div>

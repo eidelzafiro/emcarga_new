@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -61,7 +62,7 @@ function submit() {
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Fecha</label>
-                        <DatePicker v-model="form.fecha" date-format="yy-mm-dd" class="w-full" />
+                        <DatePicker v-model="form.fecha" date-format="dd/mm/yy" class="w-full" />
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Cliente</label>

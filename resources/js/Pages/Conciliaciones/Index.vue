@@ -14,6 +14,7 @@ import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
+import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ conciliaciones: Object, filters: Object, facturas: Array })
 const toast = useToast()
@@ -84,7 +85,9 @@ function submit() {
             <DataTable :value="conciliaciones.data" striped-rows paginator :rows="20" :total-records="conciliaciones.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="numero" header="Número" sortable />
                 <Column field="factura.numero" header="Factura" />
-                <Column field="fecha_conciliacion" header="Fecha Conciliación" sortable />
+                <Column field="fecha_conciliacion" header="Fecha Conciliación" sortable>
+                    <template #body="{ data }">{{ formatDate(data.fecha_conciliacion) }}</template>
+                </Column>
                 <Column field="monto" header="Monto">
                     <template #body="{ data }">
                         {{ data.monto?.toLocaleString('es-CU', { minimumFractionDigits: 2 }) }}

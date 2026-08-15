@@ -7,8 +7,12 @@
           <Column field="numero" header="N° Orden" sortable />
           <Column field="tractivo.descripcion" header="Vehículo" />
           <Column field="tipoMantenimiento.nombre" header="Tipo Mtto." />
-          <Column field="fecha_ingreso" header="Ingreso" />
-          <Column field="fecha_salida_estimada" header="Salida Est." />
+          <Column field="fecha_ingreso" header="Ingreso">
+            <template #body="{ data }">{{ formatDate(data.fecha_ingreso) }}</template>
+          </Column>
+          <Column field="fecha_salida_estimada" header="Salida Est.">
+            <template #body="{ data }">{{ formatDate(data.fecha_salida_estimada) }}</template>
+          </Column>
           <Column field="kilometraje" header="KM" />
           <Column field="estado" header="Estado">
             <template #body="{ data }">
@@ -28,5 +32,6 @@
 </template>
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { formatDate } from '@/Utils/date';
 const props = defineProps({ ordenes: Object });
 </script>

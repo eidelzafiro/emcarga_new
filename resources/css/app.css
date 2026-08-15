@@ -141,3 +141,19 @@
 }
 
 .sortable-fallback { cursor: grabbing !important; }
+
+/* Campos de solo lectura: color de fondo distinto para indicar que no se modifican */
+.readonly-field .p-inputnumber-input,
+.readonly-field.p-inputnumber,
+.p-inputwrapper.readonly-field input {
+    background-color: #eef2f7;
+    color: #64748b;
+    font-weight: 500;
+    cursor: not-allowed;
+}
+.dark .readonly-field .p-inputnumber-input,
+.dark .readonly-field.p-inputnumber,
+.dark .p-inputwrapper.readonly-field input {
+    background-color: #1e293b;
+    color: #94a3b8;
+}

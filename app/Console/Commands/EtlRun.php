@@ -257,6 +257,20 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'aforos');
         }
 
+        // Tasas de salario por rango: rh_tipotasas → tasas
+        if (! $solo || $solo === 'tasas') {
+            $this->info('Migrando tasas de salario (rh_tipotasas, rangos)...');
+            $etl->migrarTasas($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'tasas');
+        }
+
+        // Indicadores: com_indicadores → indicadores (líneas 3-7)
+        if (! $solo || $solo === 'indicadores') {
+            $this->info('Migrando indicadores (com_indicadores)...');
+            $etl->migrarIndicadores($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'indicadores');
+        }
+
         // Tarifas: com_tarifas46 (versión 46) + com_tarifas (versión normal, 117/118)
         if (! $solo || $solo === 'tarifas') {
             $this->info('Migrando tarifas (com_tarifas46 → versión 46, com_tarifas → normal)...');

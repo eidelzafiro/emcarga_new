@@ -7,6 +7,7 @@ use App\Models\Tarifa;
 use App\Models\TarifaAcuerdo;
 use App\Models\Tasa;
 use App\Models\TipoCarga;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Motor de cálculo de aforo (cotización en vivo).
@@ -106,7 +107,7 @@ class AforoCotizadorService
      * El legacy usa `kms` como clave de fila y `tarifa_mt` como tarifa por tonelada.
      *
      * El tarifario corriente vive en `com_tarifas46` (versión `46`); los tipos
-     * especiales 117/118 viven en `com_tarifas` (versión `normal`).
+     * especiales 117/118 y el 18 (cereales) viven en `com_tarifas` (versión `normal`).
      */
     protected function tarifaRow(int $tipocarga, int $distancia, string $version = '46'): ?object
     {
@@ -142,9 +143,10 @@ class AforoCotizadorService
             return $arr;
         }
 
-        // Cereales (18): tarifa por km
+        // Cereales (18): tarifa por km.
+        // El dato vive en com_tarifas (versión `normal`), NO en com_tarifas46.
         if ($tipocarga === 18) {
-            $row = $this->tarifaRow($tipocarga, $distancia);
+            $row = $this->tarifaRow($tipocarga, $distancia, 'normal');
             if ($row) {
                 $arr['tarmt'] = round((float) $row->tarifa_mt / $distancia, 2);
                 $arr['fletemt'] = (float) $row->tarifa_mt;
@@ -243,6 +245,7 @@ class AforoCotizadorService
         // 10 / 5 / 114 / 115: TARIFA HORARIA
         if (in_array($tipocarga, [10, 5, 114, 115])) {
             $th = $this->calcularTh($tipocarga, $capacidad, $descuento, 1, $moneda, $tipocont);
+
             // Nota: el legacy llama calcularTH con las horas; aquí se usa la tarifa
             // horaria como tarmt y el flete por hora se aplica aparte.
             return ['tarmt' => $th['tarmt'], 'fletemt' => $th['fth'], 'fletemlc' => ''];
@@ -708,10 +711,8 @@ class AforoCotizadorService
     /**
      * Endpoint `salariochofer/obtener_tasas`: lista de tasas por entidad, ordenada
      * por tipo de carga y rango de capacidad/distancia (paridad mostrar_tasas).
-     *
-     * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function tasas(int $idEntidad): \Illuminate\Database\Eloquent\Collection
+    public function tasas(int $idEntidad): Collection
     {
         return Tasa::query()
             ->with('tipoCarga:id,nombre')

@@ -102,12 +102,24 @@ class AforoCotizadorServiceTest extends TestCase
     public function test_tarifa_cereales_es_tar_por_km(): void
     {
         $this->tipoCarga(18, 'Cereales');
-        $this->tarifa(18, 100, 3000); // tarifa total del recorrido
+        // El 18 (cereales) vive en com_tarifas → versión `normal`, NO en com_tarifas46.
+        $this->tarifa(18, 100, 3000, 'normal'); // tarifa total del recorrido
 
         $resultado = $this->servicio->tarifa(moneda: 1, tipocarga: 18, distancia: 100, peso: 10);
 
         $this->assertSame(30.0, $resultado['tarmt']);  // 3000/100
         $this->assertSame(3000.0, $resultado['fletemt']); // total
+    }
+
+    public function test_tarifa_cereales_no_devuelve_nada_si_no_hay_fila_en_normal(): void
+    {
+        $this->tipoCarga(18, 'Cereales');
+        $this->tarifa(18, 100, 3000, '46'); // simula el bug: fila en 46, no en normal
+
+        $resultado = $this->servicio->tarifa(moneda: 1, tipocarga: 18, distancia: 100, peso: 10);
+
+        $this->assertSame('', $resultado['tarmt']);
+        $this->assertSame('', $resultado['fletemt']);
     }
 
     public function test_tarifa_117_y_118_usan_tar_por_distancia(): void

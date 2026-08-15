@@ -26,6 +26,7 @@ const props = defineProps({
     arrastres: Array,
     cartasPendientes: Array,
     cartaPreseleccionada: Object,
+    hojasRuta: Array,
     tasas: Array,
     fechaOperaciones: String,
     aforo: Object,
@@ -59,6 +60,7 @@ const form = reactive({
     ingreso_mt: Number(props.aforo?.ingreso_mt ?? 0),
 
     // Datos generales editables de la CP
+    id_hoja_ruta: props.cartaPreseleccionada?.id_hoja_ruta ?? null,
     id_cliente: props.cartaPreseleccionada?.id_cliente ?? null,
     id_tractivo: props.cartaPreseleccionada?.id_tractivo ?? null,
     id_arrastre: props.cartaPreseleccionada?.id_arrastre ?? null,
@@ -188,9 +190,23 @@ const cp = computed(() => {
 const capacidad = computed(() => Number(cp.value.tractivo?.capacidad_toneladas || 0))
 const monedaCliente = computed(() => props.monedas?.find((m) => m.id === form.id_moneda) || null)
 
+// Derivación desde la hoja de ruta (tractivo/arrastre/choferes, solo lectura)
+const hrSeleccionada = computed(() => props.hojasRuta?.find((h) => h.id === form.id_hoja_ruta) || null)
+const tractivoCodigo = computed(() => {
+    if (hrSeleccionada.value?.tractivo_codigo) return hrSeleccionada.value.tractivo_codigo
+    return props.tractivos?.find((t) => t.id === form.id_tractivo)?.codigo || '—'
+})
+const arrastreCodigo = computed(() => {
+    if (hrSeleccionada.value?.arrastre_codigo) return hrSeleccionada.value.arrastre_codigo
+    return props.arrastres?.find((t) => t.id === form.id_arrastre)?.codigo || '—'
+})
+const choferNombre = computed(() => hrSeleccionada.value?.chofer_nombre || '—')
+const chofer2Nombre = computed(() => hrSeleccionada.value?.chofer2_nombre || '—')
+
 function onSeleccionarCarta() {
     const sel = props.cartasPendientes?.find((c) => c.id === form.id_carta_porte)
     if (!sel) return
+    form.id_hoja_ruta = sel.id_hoja_ruta ?? null
     form.id_cliente = sel.id_cliente
     form.id_tractivo = sel.id_tractivo
     form.id_arrastre = sel.id_arrastre
@@ -220,6 +236,21 @@ function onSeleccionarCarta() {
 function onTractivo() {
     const t = props.tractivos?.find((x) => x.id === form.id_tractivo)
     if (t?.capacidad_toneladas) form.toneladas = Number(t.capacidad_toneladas)
+}
+
+// Al elegir la hoja de ruta se derivan tractivo/arrastre/choferes (solo lectura:
+// para cambiarlos habría que cambiar la HR)
+function onSeleccionarHojaRuta() {
+    const hr = props.hojasRuta?.find((h) => h.id === form.id_hoja_ruta)
+    if (!hr) return
+    form.id_tractivo = hr.id_tractivo ?? null
+    form.id_arrastre = hr.id_arrastre ?? null
+    form.id_chofer = hr.id_chofer ?? null
+    form.id_chofer2 = hr.id_chofer2 ?? null
+    form.toneladas = capacidad.value
+    if (hr.id_cliente) form.id_cliente = hr.id_cliente
+    onTractivo()
+    calcularTodas()
 }
 
 // ---------- Cálculo ----------
@@ -515,7 +546,7 @@ function numeroLabel(n) {
             <h2 class="text-xl font-bold mb-4 text-surface-800 dark:text-surface-100">{{ esEdicion ? 'Editar Aforo' : 'Nuevo Aforo' }}</h2>
             <form @submit.prevent="submit" class="space-y-4">
                 <!-- Selección de CP (solo en creación) -->
-                <div v-if="!esEdicion" class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div v-if="!esEdicion" class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <i class="pi pi-file-check text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Carta de Porte (no aforada del mes)</h3>
@@ -528,7 +559,7 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- DATOS GENERALES: una sola sección, editables (momento de corregir) -->
-                <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <i class="pi pi-file-edit text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Datos Generales</h3>
@@ -538,6 +569,12 @@ function numeroLabel(n) {
                             <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex items-center gap-2">
                                 <label class="w-28 shrink-0 text-sm font-medium text-surface-600 dark:text-surface-300">CP No.</label>
                                 <InputText :model-value="cp?.numero || (esEdicion ? form.id_carta_porte : '')" readonly class="w-full readonly-field" />
+                            </div>
+                            <div class="min-w-0 xl:col-span-2">
+                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Hoja de Ruta</label>
+                                <Select v-model="form.id_hoja_ruta" :options="hojasRuta" option-value="id" option-label="numero"
+                                    :filter="true" filter-placeholder="Buscar HR..." placeholder="SELECCIONE HOJA DE RUTA..."
+                                    class="w-full" @change="onSeleccionarHojaRuta" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Fecha de Parte</label>
@@ -553,19 +590,19 @@ function numeroLabel(n) {
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Tractivo</label>
-                                <Select v-model="form.id_tractivo" :options="tractivos" option-value="id" option-label="codigo" filter placeholder="Tractivo..." class="w-full" @change="onTractivo" />
+                                <InputText :model-value="tractivoCodigo" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Arrastre</label>
-                                <Select v-model="form.id_arrastre" :options="arrastres" option-value="id" option-label="codigo" filter placeholder="Arrastre..." class="w-full" />
+                                <InputText :model-value="arrastreCodigo" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Chofer</label>
-                                <Select v-model="form.id_chofer" :options="choferes" option-value="id" option-label="nombre" filter placeholder="Chofer..." class="w-full" />
+                                <InputText :model-value="choferNombre" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Chofer 2</label>
-                                <Select v-model="form.id_chofer2" :options="choferes" option-value="id" option-label="nombre" filter placeholder="Chofer 2..." class="w-full" />
+                                <InputText :model-value="chofer2Nombre" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Origen</label>
@@ -596,7 +633,7 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Calculo de la Tarifas -->
-                <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <div class="flex items-center gap-2">
                             <i class="pi pi-table text-blue-700 dark:text-blue-400"></i>
@@ -648,7 +685,7 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Almacenaje -->
-                <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <i class="pi pi-box text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Almacenaje</h3>
@@ -676,7 +713,7 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Demora -->
-                <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <i class="pi pi-clock text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Demora</h3>
@@ -735,7 +772,7 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Recargos (van antes de Salario porque sus importes alimentan el salario) -->
-                <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <i class="pi pi-plus-circle text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Recargos</h3>
@@ -774,7 +811,7 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Salario (tiempos + feriado + coeficiente) -->
-                <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <i class="pi pi-money-bill text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Salario</h3>
@@ -813,7 +850,7 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Indicadores -->
-                <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
                     <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
                         <div class="flex items-center gap-2">
                             <i class="pi pi-chart-bar text-blue-700 dark:text-blue-400"></i>

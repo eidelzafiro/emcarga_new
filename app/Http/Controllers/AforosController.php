@@ -44,6 +44,8 @@ class AforosController extends Controller
             'cartaPorte.cliente:id,nombre',
             'cartaPorte.tractivo:id,codigo,id_entidad',
             'cartaPorte.hojaRuta:id,numero,id_entidad',
+            'cartaPorte.lugarOrigen:id,nombre',
+            'cartaPorte.lugarDestino:id,nombre',
             'factura:id,numero',
         ]);
 
@@ -344,6 +346,28 @@ class AforosController extends Controller
                 ->orderBy('codigo')->get(['id', 'codigo', 'capacidad_toneladas']),
             'arrastres' => Tractivo::whereNull('fecha_baja')->where('id_grupo', 8)
                 ->orderBy('codigo')->get(['id', 'codigo', 'capacidad_toneladas']),
+            'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad', 'id_cliente')
+                ->with(['tractivo:id,codigo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos', 'chofer2:id,nombre,apellidos'])
+                ->selectRaw('COALESCE(fecha_cierre, fecha_emision) as ref_fecha')
+                ->where(fn ($q) => $q->whereNull('fecha_cierre')->orWhereBetween('fecha_cierre', [$inicioMes, $finMes]))
+                ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+                ->orderByDesc('ref_fecha')
+                ->limit(200)
+                ->get()
+                ->map(fn ($hr) => [
+                    'id' => $hr->id,
+                    'numero' => $hr->numero,
+                    'fecha_cierre' => $hr->fecha_cierre,
+                    'id_chofer' => $hr->id_chofer,
+                    'id_chofer2' => $hr->id_chofer2,
+                    'id_tractivo' => $hr->id_tractivo,
+                    'id_arrastre' => $hr->id_arrastre,
+                    'tractivo_codigo' => $hr->tractivo?->codigo,
+                    'arrastre_codigo' => $hr->arrastre?->codigo,
+                    'chofer_nombre' => $hr->chofer ? trim($hr->chofer->nombre.' '.$hr->chofer->apellidos) : null,
+                    'chofer2_nombre' => $hr->chofer2 ? trim($hr->chofer2->nombre.' '.$hr->chofer2->apellidos) : null,
+                    'id_cliente' => $hr->id_cliente,
+                ]),
             'cartasPendientes' => $cartasPendientes,
             'cartaPreseleccionada' => $cartaPreseleccionada,
             'tasas' => $this->cotizador->tasas($entidadId),

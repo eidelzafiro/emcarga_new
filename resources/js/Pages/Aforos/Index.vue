@@ -30,6 +30,12 @@ function estadoDe(aforo) {
     return { label: 'Pendiente', severity: 'info' }
 }
 
+function iniciales(nombre) {
+    if (!nombre) return '—'
+    return nombre.split(' ').filter(Boolean).slice(0, 2).map((n) => n[0]).join('').toUpperCase()
+}
+function choferNombre(c) { return c ? `${c.nombre || ''} ${c.apellidos || ''}`.trim() : '—' }
+
 // Agrupación por fecha de parte (documentos procesados ese día)
 const grupos = computed(() => {
     const map = new Map()
@@ -58,7 +64,7 @@ watch([search, estado, cliente, chofer, equipo], () => {
 
 <template>
     <AppLayout :title="title">
-        <div class="card p-4 dark:bg-surface-900">
+        <div class="p-4">
             <Toolbar class="mb-4">
                 <template #start>
                     <h2 class="text-xl font-bold text-surface-800 dark:text-surface-100">Aforos</h2>
@@ -76,13 +82,14 @@ watch([search, estado, cliente, chofer, equipo], () => {
                 </template>
             </Toolbar>
 
-            <!-- Agrupación por fecha de parte -->
-            <div v-if="grupos.length === 0" class="text-center py-16 text-surface-500 dark:text-surface-400">
-                No hay aforos para el período.
+            <div v-if="grupos.length === 0" class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-16 text-center">
+                <i class="pi pi-inbox text-4xl text-gray-300 dark:text-gray-600" />
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">No hay aforos para el período.</p>
+                <Button label="Nuevo Aforo" icon="pi pi-plus" severity="success" @click="router.get(route('aforos.create'))" />
             </div>
 
+            <!-- Agrupación por fecha de parte -->
             <div v-for="grupo in grupos" :key="grupo.fecha" class="mb-6">
-                <!-- Cabecera de grupo (fecha de parte) -->
                 <div class="flex items-center gap-3 mb-2">
                     <div class="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg">
                         <i class="pi pi-calendar text-sm"></i>
@@ -91,67 +98,81 @@ watch([search, estado, cliente, chofer, equipo], () => {
                     <span class="text-sm text-surface-500 dark:text-surface-400">{{ grupo.aforos.length }} documento(s)</span>
                 </div>
 
-                <!-- Tarjetas: 4 por línea -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                    <div v-for="a in grupo.aforos" :key="a.id"
-                        class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
-                        @click="abrirAforo(a)">
-                        <!-- Encabezado tarjeta -->
-                        <div class="flex items-center justify-between p-2.5 border-b border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 rounded-t-xl">
-                            <div class="flex items-center gap-1.5 min-w-0">
-                                <span class="font-bold text-blue-700 dark:text-blue-400 text-sm truncate">CP {{ a.carta_porte?.numero }}</span>
-                                <span v-if="a.carta_porte?.tractivo?.codigo" class="text-[10px] bg-surface-200 dark:bg-surface-700 px-1.5 py-0.5 rounded-full truncate">{{ a.carta_porte.tractivo.codigo }}</span>
+                <!-- Grid de tarjetas (estilo Carta de Porte) -->
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    <article
+                        v-for="a in grupo.aforos"
+                        :key="a.id"
+                        class="cp-card relative flex flex-col overflow-hidden rounded-2xl border bg-white dark:bg-gray-800 shadow-sm transition-shadow hover:shadow-lg dark:border-gray-700 border-gray-200 cursor-pointer"
+                        @click="abrirAforo(a)"
+                    >
+                        <!-- Cabecera: CP protagonista + HR -->
+                        <header class="relative px-4 pt-3 pb-2.5 border-b border-gray-100 dark:border-gray-700/70 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/20 dark:to-gray-800">
+                            <div class="flex items-start gap-4">
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">Carta de porte</span>
+                                    <div class="cp-folio mt-1 text-[24px] font-black leading-none tracking-tight text-blue-800 dark:text-blue-300">CP {{ a.carta_porte?.numero }}</div>
+                                    <div class="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+                                        <i class="pi pi-calendar mr-1 text-[10px]" />{{ formatDate(a.fecha_parte) }}
+                                    </div>
+                                </div>
+                                <div class="shrink-0 text-right">
+                                    <span class="block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">Hoja de ruta</span>
+                                    <div class="cp-folio mt-1 text-[24px] font-black leading-none tracking-tight text-blue-700 dark:text-blue-300">{{ a.carta_porte?.hoja_ruta?.numero || '—' }}</div>
+                                    <div class="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+                                        <i class="pi pi-hashtag mr-1 text-[10px]" />{{ a.carta_porte?.tractivo?.codigo || '—' }}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1 pt-4 shrink-0">
+                                    <Tag :severity="estadoDe(a).severity" :value="estadoDe(a).label" />
+                                </div>
                             </div>
-                            <Tag :severity="estadoDe(a).severity" :value="estadoDe(a).label" />
+                        </header>
+
+                        <!-- Cuerpo -->
+                        <div class="flex flex-1 flex-col gap-3 px-4 py-3">
+                            <div class="min-w-0">
+                                <div class="truncate text-[16px] font-black tracking-tight text-gray-900 dark:text-white">{{ a.carta_porte?.cliente?.nombre || '—' }}</div>
+                                <div class="mt-0.5 h-1 w-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-300 dark:from-blue-400 dark:to-blue-600" />
+                                <div class="mt-1.5 flex items-center gap-1.5 text-sm">
+                                    <span class="inline-flex min-w-0 items-center gap-1.5 rounded-lg bg-gray-50 dark:bg-gray-700/50 px-2 py-1 text-gray-700 dark:text-gray-300">
+                                        <i class="pi pi-map-marker text-xs" style="color:#2563eb" />
+                                        <span class="truncate">{{ a.carta_porte?.lugar_origen?.nombre || '—' }}</span>
+                                    </span>
+                                    <i class="pi pi-arrow-right text-xs text-gray-400 shrink-0" />
+                                    <span class="inline-flex min-w-0 items-center gap-1.5 rounded-lg bg-gray-50 dark:bg-gray-700/50 px-2 py-1 text-gray-700 dark:text-gray-300">
+                                        <i class="pi pi-map-marker text-xs" style="color:#dc2626" />
+                                        <span class="truncate">{{ a.carta_porte?.lugar_destino?.nombre || '—' }}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Totales -->
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="inline-flex items-center gap-1 rounded-lg border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-950/30 px-2 py-1 text-xs font-bold text-blue-700 dark:text-blue-300">
+                                    <i class="pi pi-dollar text-[11px]" />{{ monet(produccion(a)) }}
+                                </span>
+                                <span v-if="Number(a.flete_mt)" class="inline-flex items-center gap-1 rounded-lg bg-gray-50 dark:bg-gray-700/50 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                    Flete {{ monet(a.flete_mt) }}
+                                </span>
+                                <span v-if="Number(a.flete_demora)" class="inline-flex items-center gap-1 rounded-lg bg-gray-50 dark:bg-gray-700/50 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                    Demora {{ monet(a.flete_demora) }}
+                                </span>
+                                <span v-if="Number(a.otros_mt)" class="inline-flex items-center gap-1 rounded-lg bg-gray-50 dark:bg-gray-700/50 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                    Otros {{ monet(a.otros_mt) }}
+                                </span>
+                                <span v-if="Number(a.salario)" class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                                    Sal {{ monet(a.salario) }}
+                                </span>
+                            </div>
                         </div>
 
-                        <!-- Cuerpo: solo campos con valor -->
-                        <div class="p-2.5 space-y-1 text-xs">
-                            <div v-if="a.carta_porte?.cliente?.nombre" class="flex items-center justify-between gap-2">
-                                <span class="text-surface-500 dark:text-surface-400 truncate">Cliente</span>
-                                <span class="font-medium text-right truncate max-w-[60%] text-surface-700 dark:text-surface-200">{{ a.carta_porte.cliente.nombre }}</span>
-                            </div>
-                            <div v-if="a.carta_porte?.hoja_ruta?.numero" class="flex items-center justify-between">
-                                <span class="text-surface-500 dark:text-surface-400">HR</span>
-                                <span class="font-medium text-surface-700 dark:text-surface-200">{{ a.carta_porte.hoja_ruta.numero }}</span>
-                            </div>
-                            <div v-if="a.carta_porte?.distancia" class="flex items-center justify-between">
-                                <span class="text-surface-500 dark:text-surface-400">Kms</span>
-                                <span class="font-medium text-surface-700 dark:text-surface-200">{{ a.carta_porte.distancia }}</span>
-                            </div>
-                            <div v-if="Number(a.flete_mt)" class="flex items-center justify-between">
-                                <span class="text-surface-500 dark:text-surface-400">Flete MN</span>
-                                <span class="font-semibold text-surface-700 dark:text-surface-100">{{ monet(a.flete_mt) }}</span>
-                            </div>
-                            <div v-if="Number(a.flete_demora)" class="flex items-center justify-between">
-                                <span class="text-surface-500 dark:text-surface-400">Demora</span>
-                                <span class="font-medium text-surface-700 dark:text-surface-200">{{ monet(a.flete_demora) }}</span>
-                            </div>
-                            <div v-if="Number(a.otros_mt)" class="flex items-center justify-between">
-                                <span class="text-surface-500 dark:text-surface-400">Otros</span>
-                                <span class="font-medium text-surface-700 dark:text-surface-200">{{ monet(a.otros_mt) }}</span>
-                            </div>
-                            <div v-if="Number(a.salario)" class="flex items-center justify-between">
-                                <span class="text-surface-500 dark:text-surface-400">Salario</span>
-                                <span class="font-medium text-surface-700 dark:text-surface-200">{{ monet(a.salario) }}</span>
-                            </div>
-                            <div v-if="a.factura" class="flex items-center justify-between">
-                                <span class="text-surface-500 dark:text-surface-400">Factura</span>
-                                <span class="font-medium text-emerald-600 dark:text-emerald-400">{{ a.factura.numero }}</span>
-                            </div>
+                        <!-- Pie: acciones -->
+                        <div class="mt-auto flex items-center justify-end gap-1 border-t border-gray-100 dark:border-gray-700/70 px-3 py-2 bg-gray-50/80 dark:bg-gray-700/30">
+                            <Button v-if="a.id_factura" icon="pi pi-eye" rounded text severity="info" size="small" @click.stop="router.get(route('aforos.show', a.id))" v-tooltip.top="'Ver'" />
+                            <Button v-else icon="pi pi-pencil" rounded text severity="warn" size="small" @click.stop="router.get(route('aforos.edit', a.id))" v-tooltip.top="'Editar'" />
                         </div>
-
-                        <!-- Total + acción -->
-                        <div class="flex items-center justify-between px-2.5 py-2 border-t border-surface-100 dark:border-surface-700">
-                            <div class="text-sm font-bold text-blue-700 dark:text-blue-400">
-                                {{ monet(produccion(a)) }}
-                            </div>
-                            <div class="flex gap-1">
-                                <Button v-if="a.id_factura" icon="pi pi-eye" rounded text severity="info" size="small" @click.stop="router.get(route('aforos.show', a.id))" v-tooltip.top="'Ver'" />
-                                <Button v-else icon="pi pi-pencil" rounded text severity="warn" size="small" @click.stop="router.get(route('aforos.edit', a.id))" v-tooltip.top="'Editar'" />
-                            </div>
-                        </div>
-                    </div>
+                    </article>
                 </div>
             </div>
 

@@ -103,22 +103,32 @@ class SolicitudesServicio extends Model
     }
 
     /**
-     * Recalcula el cumplimiento de toneladas (suma de las toneladas de las
-     * cartas de porte vigentes) y actualiza estado y fecha de ejecución.
-     * Se invoca al registrar, editar, cancelar o eliminar una carta.
+     * Recalcula el cumplimiento y estado de la solicitud a partir de sus cartas
+     * de porte vigentes:
+     *
+     * - `ejecutada`: al menos una carta está recepcionada o tiene aforo.
+     * - `en_proceso`: hay cartas emitidas pero ninguna recepcionada/aforada.
+     * - `pendiente`: no hay cartas vigentes.
+     *
+     * La fecha de ejecución es la de la PRIMERA carta de porte generada
+     * (más antigua), no la de recepción.
      */
     public function recalcularEstado(): void
     {
-        $total = (float) ($this->peso1 ?? 0) + (float) ($this->peso2 ?? 0);
-        $ejecutado = (float) $this->cartasPorte()
+        $cartas = $this->cartasPorte()
             ->where('estado', '!=', 'cancelada')
-            ->sum('toneladas');
+            ->orderBy('fecha_emision')
+            ->orderBy('id')
+            ->get();
 
-        $realizada = $total > 0 && $ejecutado >= $total;
+        $primera = $cartas->first();
+        $fechaEjecutada = $primera?->fecha_emision;
+
+        $ejecutada = $cartas->contains(fn ($c) => $c->estado === 'recepcionada' || $c->aforos()->exists());
 
         $this->update([
-            'fecha_ejecutada' => $realizada ? now()->toDateString() : null,
-            'estado' => $realizada ? 'ejecutada' : ($ejecutado > 0 ? 'en_proceso' : 'pendiente'),
+            'fecha_ejecutada' => $ejecutada ? ($fechaEjecutada ?: now()->toDateString()) : null,
+            'estado' => $ejecutada ? 'ejecutada' : ($cartas->isNotEmpty() ? 'en_proceso' : 'pendiente'),
         ]);
     }
 }

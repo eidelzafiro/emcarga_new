@@ -13,6 +13,7 @@ use App\Models\HojasRuta;
 use App\Models\Lugare;
 use App\Models\Moneda;
 use App\Models\Producto;
+use App\Models\SolicitudesServicio;
 use App\Models\TipoCarga;
 use App\Models\Tractivo;
 use App\Services\AforoCotizadorService;
@@ -37,9 +38,10 @@ class AforosController extends Controller
     {
         $entidadId = (int) session('entidad_activa_id');
 
+        // Mes/año de la fecha de parte a revisar (default: mes de operaciones).
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
-        $anio = Carbon::parse($fechaOperaciones)->year;
-        $mes = Carbon::parse($fechaOperaciones)->month;
+        $anio = (int) ($request->input('anio') ?: Carbon::parse($fechaOperaciones)->year);
+        $mes = (int) ($request->input('mes') ?: Carbon::parse($fechaOperaciones)->month);
 
         $query = Aforo::with([
             'cartaPorte:id,numero,id_hoja_ruta,id_solicitud,distancia',
@@ -51,7 +53,7 @@ class AforosController extends Controller
             'factura:id,numero',
         ]);
 
-        // Solo el mes en curso de operaciones
+        // Solo el mes/año seleccionado de fecha de parte
         $query->whereYear('fecha_parte', $anio)->whereMonth('fecha_parte', $mes);
 
         $query->when($request->search, function ($q, $s) {
@@ -68,16 +70,6 @@ class AforosController extends Controller
         $query->when($request->equipo, fn ($q, $v) => $q->whereHas('cartaPorte.hojaRuta', fn ($c) => $c->where('id_tractivo', $v)));
         $query->when($request->chofer, fn ($q, $v) => $q->whereHas('cartaPorte.hojaRuta', fn ($c) => $c->where(fn ($c2) => $c2->where('id_chofer', $v)->orWhere('id_chofer2', $v))));
 
-        $query->when($request->estado, function ($q, $v) {
-            if ($v === 'pendiente') {
-                $q->whereNull('id_factura')->whereNull('id_prefactura');
-            } elseif ($v === 'facturado') {
-                $q->whereNotNull('id_factura');
-            } elseif ($v === 'prefacturado') {
-                $q->whereNull('id_factura')->whereNotNull('id_prefactura');
-            }
-        });
-
         if ($entidadId) {
             $ids = collect(Entidad::subEntidadesIds($entidadId))
                 ->push($entidadId)
@@ -87,7 +79,7 @@ class AforosController extends Controller
             $query->whereHas('cartaPorte.hojaRuta.tractivo', fn ($q) => $q->whereIn('id_entidad', $ids));
         }
 
-        // Opciones para los filtros: solo de la entidad actual en el mes en curso
+        // Opciones para los filtros: solo de la entidad actual en el mes/año seleccionado
         $base = Aforo::query()->with([
             'cartaPorte:id,id_hoja_ruta,id_solicitud',
             'cartaPorte.hojaRuta:id,id_tractivo,id_chofer,id_chofer2',
@@ -116,9 +108,11 @@ class AforosController extends Controller
         return Inertia::render('Aforos/Index', [
             'title' => 'Aforos',
             'aforos' => $aforos,
-            'filters' => $request->only(['search', 'estado', 'cliente', 'chofer', 'equipo']),
+            'filters' => $request->only(['search', 'cliente', 'chofer', 'equipo', 'mes', 'anio']),
             'filtros' => $filtros,
             'fechaOperaciones' => $fechaOperaciones,
+            'mesSeleccionado' => $mes,
+            'anioSeleccionado' => $anio,
         ]);
     }
 
@@ -550,10 +544,20 @@ class AforosController extends Controller
 
         $this->validarLineasCalculadas($request);
 
-        $carta = CartaPorte::whereKey($validated['id_carta_porte'])
-            ->where('cancelada', false)
-            ->whereDoesntHave('aforos')
-            ->firstOrFail();
+        $carta = null;
+        if ($validated['id_carta_porte'] ?? null) {
+            $carta = CartaPorte::whereKey($validated['id_carta_porte'])
+                ->where('cancelada', false)
+                ->whereDoesntHave('aforos')
+                ->firstOrFail();
+        } else {
+            // Aforo "desde cero": se crea la carta de porte (con su solicitud)
+            // a partir de los datos generales del formulario.
+            $carta = $this->crearCartaDesdeCero($validated);
+        }
+
+        // El aforo siempre apunta a una carta existente (creada o seleccionada).
+        $validated['id_carta_porte'] = $carta->id;
 
         $entidadId = (int) session('entidad_activa_id');
         if (! $entidadId) {
@@ -581,6 +585,9 @@ class AforosController extends Controller
 
                 $this->guardarLineas($aforo, collect($request->input('lineas', [])));
                 $this->guardarIndicadoresFilas($aforo, $request->input('indicadoresFilas', []));
+
+                // Al aforar, la solicitud pasa a ejecutada (si la carta se aforó).
+                $carta->solicitud?->recalcularEstado();
             });
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => 'No se pudo guardar el aforo: '.$e->getMessage()]);
@@ -623,12 +630,80 @@ class AforosController extends Controller
 
                 $this->guardarLineas($aforo, collect($request->input('lineas', [])));
                 $this->guardarIndicadoresFilas($aforo, $request->input('indicadoresFilas', []));
+
+                $aforo->cartaPorte?->solicitud?->recalcularEstado();
             });
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => 'No se pudo actualizar el aforo: '.$e->getMessage()]);
         }
 
         return redirect()->route('aforos.index')->with('success', 'Aforo actualizado correctamente.');
+    }
+
+    /**
+     * Crea una carta de porte "desde cero" (aforo sin CP previa): genera la
+     * solicitud con los datos generales y la carta vinculada a ella.
+     */
+    protected function crearCartaDesdeCero(array $v): CartaPorte
+    {
+        $fecha = $v['fecha_emision'] ?? $v['fecha_parte'] ?? now()->toDateString();
+
+        $solicitud = SolicitudesServicio::create([
+            'numero' => $this->siguienteNumeroSolicitud($fecha),
+            'id_entidad' => session('entidad_activa_id') ?: null,
+            'id_user' => auth()->id(),
+            'fecha_solicitud' => $fecha,
+            'estado' => 'pendiente',
+            'id_cliente' => $v['id_cliente'] ?? null,
+            'id_lugar_origen' => $v['id_lugar_origen'] ?? null,
+            'id_lugar_destino' => $v['id_lugar_destino'] ?? null,
+            'id_producto' => $v['id_producto'] ?? null,
+            'id_tipo_carga' => $v['id_tipo_carga'] ?? null,
+            'id_moneda' => $v['id_moneda'] ?? null,
+            'peso1' => $v['peso1'] ?? 0,
+            'peso2' => $v['peso2'] ?? 0,
+            'distancia' => $v['distancia'] ?? null,
+        ]);
+
+        return CartaPorte::create([
+            'numero' => $v['numero_carta'] ?? $this->siguienteNumeroCarta(),
+            'id_hoja_ruta' => $v['id_hoja_ruta'] ?? null,
+            'id_solicitud' => $solicitud->id,
+            'fecha_emision' => $fecha,
+            'fecha_parte' => $v['fecha_parte'] ?? $fecha,
+            'toneladas' => (float) ($v['peso1'] ?? 0) + (float) ($v['peso2'] ?? 0),
+            'peso1' => $v['peso1'] ?? 0,
+            'peso2' => $v['peso2'] ?? 0,
+            'distancia' => $v['distancia'] ?? null,
+            'conduce' => $v['conduce'] ?? null,
+            'estado' => 'emitida',
+            'cancelada' => false,
+            'id_user' => auth()->id(),
+        ]);
+    }
+
+    private function siguienteNumeroSolicitud(string $fecha): string
+    {
+        $anio = substr($fecha, 0, 4);
+        $base = 'SOL-'.$anio.'-';
+        $ultimo = SolicitudesServicio::where('numero', 'like', $base.'%')
+            ->orderBy('numero', 'desc')
+            ->value('numero');
+        $sec = $ultimo ? ((int) substr($ultimo, strlen($base))) + 1 : 1;
+
+        return $base.str_pad((string) $sec, 5, '0', STR_PAD_LEFT);
+    }
+
+    private function siguienteNumeroCarta(): string
+    {
+        $anio = now()->year;
+        $base = 'CP-'.$anio.'-';
+        $ultimo = CartaPorte::where('numero', 'like', $base.'%')
+            ->orderBy('numero', 'desc')
+            ->value('numero');
+        $sec = $ultimo ? ((int) substr($ultimo, strlen($base))) + 1 : 1;
+
+        return $base.str_pad((string) $sec, 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -713,7 +788,8 @@ class AforosController extends Controller
     protected function validar(Request $request): array
     {
         return $request->validate([
-            'id_carta_porte' => 'required|exists:cartas_porte,id',
+            'id_carta_porte' => 'nullable|exists:cartas_porte,id',
+            'numero_carta' => 'nullable|string|max:20',
             'fecha_parte' => 'required|date',
             'fecha_emision' => 'nullable|date',
             'fecha_recepcion' => 'nullable|date',

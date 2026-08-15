@@ -25,6 +25,7 @@ const props = defineProps({
 })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
+const estado = ref(props.filters?.estado || 'activas')
 const showForm = ref(false)
 const editing = ref(null)
 const form = ref({})
@@ -73,11 +74,14 @@ function baseForm() {
 }
 
 watch(search, () => {
-  router.get(route('solicitudes.index'), { search: search.value }, { preserveState: true, replace: true })
+  router.get(route('solicitudes.index'), { search: search.value, estado: estado.value }, { preserveState: true, replace: true })
+})
+watch(estado, () => {
+  router.get(route('solicitudes.index'), { search: search.value, estado: estado.value }, { preserveState: true, replace: true })
 })
 
 function onPage(event) {
-  router.get(route('solicitudes.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true })
+  router.get(route('solicitudes.index'), { page: event.page + 1, search: search.value, estado: estado.value }, { preserveState: true, replace: true })
 }
 
 function openCreate() {
@@ -212,10 +216,19 @@ const estadoBadge = (s) => ({
             {{ solicitudes.total }} solicitudes
           </span>
         </div>
-        <span class="relative">
-          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-          <InputText v-model="search" placeholder="Buscar por N° o cliente..." class="w-56 !pl-9" />
-        </span>
+        <div class="flex items-center gap-2">
+          <Select v-model="estado" :options="[
+            { value: 'activas', label: 'Pendientes / En proceso' },
+            { value: 'ejecutada', label: 'Ejecutadas' },
+            { value: 'pendiente', label: 'Solo pendientes' },
+            { value: 'en_proceso', label: 'Solo en proceso' },
+            { value: 'all', label: 'Todas' },
+          ]" optionLabel="label" optionValue="value" class="w-52" />
+          <span class="relative">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <InputText v-model="search" placeholder="Buscar por N° o cliente..." class="w-56 !pl-9" />
+          </span>
+        </div>
       </div>
 
       <!-- Grid de tarjetas -->

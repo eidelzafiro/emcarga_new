@@ -98,6 +98,15 @@ const formInicial = () => ({
   fecha_parte: nowDate(),
   id_hoja_ruta: null,
   id_solicitud: null,
+  // Datos generales (se sincronizan con la solicitud)
+  id_cliente: null,
+  id_lugar_origen: null,
+  id_lugar_destino: null,
+  id_producto: null,
+  id_producto2: null,
+  id_tipo_carga: null,
+  id_tipo_carga2: null,
+  id_moneda: 1,
   peso1: null,
   peso2: null,
   toneladas: null,
@@ -115,12 +124,21 @@ function openEmision() {
 
 function openEdicion(carta) {
   editandoId.value = carta.id
+  const sol = props.catalogos?.solicitudes?.find(s => s.id === carta.id_solicitud)
   form.value = {
     numero: carta.numero,
     fecha_emision: soloFecha(carta.fecha_emision),
     fecha_parte: soloFecha(carta.fecha_parte),
     id_hoja_ruta: carta.id_hoja_ruta,
     id_solicitud: carta.id_solicitud,
+    id_cliente: sol?.id_cliente ?? carta.cliente?.id ?? null,
+    id_lugar_origen: sol?.id_lugar_origen ?? null,
+    id_lugar_destino: sol?.id_lugar_destino ?? null,
+    id_producto: sol?.id_producto ?? null,
+    id_producto2: sol?.id_producto2 ?? null,
+    id_tipo_carga: sol?.id_tipo_carga ?? null,
+    id_tipo_carga2: sol?.id_tipo_carga2 ?? null,
+    id_moneda: sol?.id_moneda ?? carta.id_moneda ?? 1,
     peso1: Number(carta.peso1) || null,
     peso2: Number(carta.peso2) || null,
     toneladas: Number(carta.toneladas) || null,
@@ -135,6 +153,20 @@ function openEdicion(carta) {
 const hrSeleccionada = computed(() => hojasCat.value.find(h => h.id === form.value.id_hoja_ruta) || null)
 const solicitudesCat = computed(() => (props.catalogos?.solicitudes || []).map(s => ({ id: s.id, label: `${s.numero}${s.cliente_nombre ? ` • ${s.cliente_nombre}` : ''}` })))
 const solicitudSeleccionada = computed(() => (props.catalogos?.solicitudes || []).find(s => s.id === form.value.id_solicitud) || null)
+
+// Al elegir una solicitud se rellenan los datos generales editables.
+function aplicarSolicitud() {
+  const sol = solicitudSeleccionada.value
+  if (!sol) return
+  form.value.id_cliente = sol.id_cliente ?? null
+  form.value.id_lugar_origen = sol.id_lugar_origen ?? null
+  form.value.id_lugar_destino = sol.id_lugar_destino ?? null
+  form.value.id_producto = sol.id_producto ?? null
+  form.value.id_producto2 = sol.id_producto2 ?? null
+  form.value.id_tipo_carga = sol.id_tipo_carga ?? null
+  form.value.id_tipo_carga2 = sol.id_tipo_carga2 ?? null
+  form.value.id_moneda = sol.id_moneda ?? 1
+}
 
 function aplicarHojaRuta(event) {
   const hr = hojasCat.value.find(h => h.id === event)
@@ -431,7 +463,7 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fec
             </div>
             <div>
               <label class="block mb-1 font-medium">Solicitud</label>
-              <Select v-model="form.id_solicitud" :options="solicitudesCat" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
+              <Select v-model="form.id_solicitud" :options="solicitudesCat" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" @change="aplicarSolicitud" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Conduce</label>
@@ -448,40 +480,53 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fec
               </span>
               <span v-else class="ml-2 text-gray-400">No hay hoja de ruta seleccionada</span>
             </div>
-            <!-- Cliente derivado de la solicitud (solo lectura) -->
-            <div v-if="solicitudSeleccionada" class="col-span-2 lg:col-span-3 rounded-lg bg-gray-50 dark:bg-gray-700/40 p-2 text-xs text-gray-600 dark:text-gray-300">
-              <span class="font-semibold text-gray-500 dark:text-gray-400">Cliente (de la solicitud):</span>
-              <span class="ml-2">{{ solicitudSeleccionada.cliente_nombre || '—' }}</span>
+          </div>
+        </fieldset>
+
+        <fieldset class="border rounded p-3">
+          <legend class="font-semibold px-2">DATOS GENERALES</legend>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <div>
+              <label class="block mb-1 font-medium">Cliente</label>
+              <Select v-model="form.id_cliente" :options="clientesCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Origen</label>
+              <Select v-model="form.id_lugar_origen" :options="lugaresCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Destino</label>
+              <Select v-model="form.id_lugar_destino" :options="lugaresCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Producto</label>
+              <Select v-model="form.id_producto" :options="productosCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Tipo de Carga</label>
+              <Select v-model="form.id_tipo_carga" :options="tiposCargasCat" optionLabel="nombre" optionValue="id" filter class="w-full" :showClear="true" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Moneda</label>
+              <Select v-model="form.id_moneda" :options="(props.catalogos?.monedas || [])" optionLabel="nombre" optionValue="id" class="w-full" />
             </div>
           </div>
         </fieldset>
 
         <fieldset class="border rounded p-3">
           <legend class="font-semibold px-2">DATOS DE LA TRANSPORTACION</legend>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div class="space-y-3">
-              <div>
-                <label class="block mb-1 font-medium">Origen (de la solicitud)</label>
-                <InputText :model-value="solicitudSeleccionada?.lugar_origen_nombre || '—'" readonly class="w-full" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Peso 1</label>
-                <InputNumber v-model="form.peso1" :min="0" :max-fraction-digits="2" class="w-full" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Distancia (kms)</label>
-                <InputNumber v-model="form.distancia" :min="0" :max-fraction-digits="2" class="w-full" />
-              </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <div>
+              <label class="block mb-1 font-medium">Peso 1 (tns)</label>
+              <InputNumber v-model="form.peso1" :min="0" :max-fraction-digits="2" class="w-full" />
             </div>
-            <div class="space-y-3">
-              <div>
-                <label class="block mb-1 font-medium">Destino (de la solicitud)</label>
-                <InputText :model-value="solicitudSeleccionada?.lugar_destino_nombre || '—'" readonly class="w-full" />
-              </div>
-              <div>
-                <label class="block mb-1 font-medium">Peso 2 (opcional)</label>
-                <InputNumber v-model="form.peso2" :min="0" :max-fraction-digits="2" class="w-full" />
-              </div>
+            <div>
+              <label class="block mb-1 font-medium">Peso 2 (opcional)</label>
+              <InputNumber v-model="form.peso2" :min="0" :max-fraction-digits="2" class="w-full" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Distancia (kms)</label>
+              <InputNumber v-model="form.distancia" :min="0" :max-fraction-digits="2" class="w-full" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-4">

@@ -21,6 +21,18 @@ class SolicitudesController extends Controller
     {
         $entidadId = (int) session('entidad_activa_id');
 
+        // Por defecto se muestran SOLO pendientes y en proceso. Las ejecutadas
+        // solo cuando el usuario las solicita explícitamente (?estado=ejecutada
+        // o ?estado=all).
+        $filtroEstado = $request->input('estado', 'activas');
+        $estadosQuery = match ($filtroEstado) {
+            'ejecutada' => ['ejecutada'],
+            'pendiente' => ['pendiente'],
+            'en_proceso' => ['en_proceso'],
+            'all' => null,
+            default => ['pendiente', 'en_proceso'],
+        };
+
         $solicitudes = SolicitudesServicio::with([
             'cliente:id,nombre',
             'lugarOrigen:id,nombre',
@@ -35,6 +47,7 @@ class SolicitudesController extends Controller
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%")
                 ->orWhereHas('cliente', fn ($q2) => $q2->where('nombre', 'like', "%{$s}%")))
             ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->when($estadosQuery, fn ($q, $estados) => $q->whereIn('estado', $estados))
             ->orderBy('fecha_planificada', 'asc')
             ->orderBy('numero', 'asc')
             ->paginate(20);
@@ -75,7 +88,7 @@ class SolicitudesController extends Controller
             'monedas' => Moneda::where('activo', true)
                 ->orderBy('codigo')
                 ->get(['id', 'codigo', 'nombre', 'simbolo']),
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'estado']),
             'catalogosCarta' => $this->catalogosCarta($entidadId),
         ]);
     }

@@ -172,7 +172,7 @@ class CartaPorteController extends Controller
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('nombre')
                 ->get(),
-            'solicitudes' => SolicitudesServicio::select('id', 'numero', 'id_cliente', 'id_lugar_origen', 'id_lugar_destino')
+            'solicitudes' => SolicitudesServicio::select('id', 'numero', 'id_cliente', 'id_lugar_origen', 'id_lugar_destino', 'id_producto', 'id_producto2', 'id_tipo_carga', 'id_tipo_carga2', 'id_moneda')
                 ->with(['cliente:id,nombre', 'lugarOrigen:id,nombre', 'lugarDestino:id,nombre'])
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderByDesc('fecha_solicitud')
@@ -184,6 +184,14 @@ class CartaPorteController extends Controller
                     'cliente_nombre' => $s->cliente?->nombre,
                     'lugar_origen_nombre' => $s->lugarOrigen?->nombre,
                     'lugar_destino_nombre' => $s->lugarDestino?->nombre,
+                    'id_cliente' => $s->id_cliente,
+                    'id_lugar_origen' => $s->id_lugar_origen,
+                    'id_lugar_destino' => $s->id_lugar_destino,
+                    'id_producto' => $s->id_producto,
+                    'id_producto2' => $s->id_producto2,
+                    'id_tipo_carga' => $s->id_tipo_carga,
+                    'id_tipo_carga2' => $s->id_tipo_carga2,
+                    'id_moneda' => $s->id_moneda,
                 ]),
             'lugares' => Lugare::select('id', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'productos' => Producto::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
@@ -247,9 +255,12 @@ class CartaPorteController extends Controller
             $validated['toneladas'] = (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0);
         }
 
-        // Fase 4d: equipo/choferes/cliente/tipos/productos/lugares/moneda se
-        // derivan de la HR y la solicitud; los fletes viven en `aforos`. La
-        // carta solo persiste folio, HR/solicitud, fechas, pesos y distancia.
+        // Fase 4d: equipo/choferes se derivan de la HR; los fletes viven en
+        // `aforos`. La carta persiste folio, HR, fechas, pesos y distancia.
+        // Los datos generales (cliente/lugares/productos/tipos/moneda) se
+        // sincronizan con la solicitud (se crea si la CP va "desde cero").
+
+        $validated['id_solicitud'] = $this->sincronizarSolicitud($validated);
 
         $carta = CartaPorte::create($validated);
 
@@ -267,6 +278,9 @@ class CartaPorteController extends Controller
         if (empty($validated['toneladas'])) {
             $validated['toneladas'] = (float) ($validated['peso1'] ?? 0) + (float) ($validated['peso2'] ?? 0);
         }
+
+        // Sincroniza los datos generales con la solicitud (la actualiza o la crea).
+        $validated['id_solicitud'] = $this->sincronizarSolicitud($validated);
 
         $carta->update($validated);
 
@@ -377,7 +391,75 @@ class CartaPorteController extends Controller
             'estado' => 'recepcionada',
         ]);
 
+        $this->recalcularSolicitud($carta);
+
         return back()->with('success', "Carta de porte {$carta->numero} recepcionada.");
+    }
+
+    /**
+     * Sincroniza los datos generales de la carta de porte con su solicitud.
+     *
+     * - Si la CP tiene `id_solicitud`: actualiza la solicitud con los datos
+     *   generales editables (cliente, lugares, productos, tipos, moneda, pesos).
+     * - Si no la tiene: crea una solicitud nueva con esos datos y la devuelve
+     *   para asignarla a la carta. Así, una CP emitida "desde cero" genera su
+     *   solicitud automáticamente.
+     *
+     * @return int|null id de la solicitud vinculada
+     */
+    private function sincronizarSolicitud(array $v): ?int
+    {
+        $idSolicitud = $v['id_solicitud'] ?? null;
+        $solicitud = $idSolicitud ? SolicitudesServicio::find($idSolicitud) : null;
+
+        $datos = [
+            'id_cliente' => $v['id_cliente'] ?? null,
+            'id_lugar_origen' => $v['id_lugar_origen'] ?? null,
+            'id_lugar_destino' => $v['id_lugar_destino'] ?? null,
+            'id_producto' => $v['id_producto'] ?? null,
+            'id_producto2' => $v['id_producto2'] ?? null,
+            'id_tipo_carga' => $v['id_tipo_carga'] ?? null,
+            'id_tipo_carga2' => $v['id_tipo_carga2'] ?? null,
+            'id_moneda' => $v['id_moneda'] ?? null,
+            'peso1' => $v['peso1'] ?? 0,
+            'peso2' => $v['peso2'] ?? 0,
+            'distancia' => $v['distancia'] ?? null,
+        ];
+
+        // Solo los campos que llegan en la petición (para no pisar datos al editar).
+        $datos = array_filter($datos, fn ($valor, $clave) => array_key_exists($clave, $v), ARRAY_FILTER_USE_BOTH);
+
+        if ($solicitud) {
+            if ($datos) {
+                $solicitud->update($datos);
+            }
+
+            return $solicitud->id;
+        }
+
+        // No hay solicitud vinculada: se crea una nueva con los datos generales.
+        $fechaEmision = $v['fecha_emision'] ?? now()->toDateString();
+        $nueva = SolicitudesServicio::create(array_merge($datos, [
+            'numero' => $this->siguienteNumeroSolicitud($fechaEmision),
+            'id_entidad' => auth()->user()?->entidad_activa_id ?? session('entidad_activa_id') ?: null,
+            'id_user' => auth()->id(),
+            'fecha_solicitud' => $fechaEmision,
+            'estado' => 'pendiente',
+        ]));
+
+        return $nueva->id;
+    }
+
+    private function siguienteNumeroSolicitud(string $fecha): string
+    {
+        $anio = substr($fecha, 0, 4);
+        $base = 'SOL-'.$anio.'-';
+        $ultimo = SolicitudesServicio::where('numero', 'like', $base.'%')
+            ->orderBy('numero', 'desc')
+            ->value('numero');
+        $sec = $ultimo ? ((int) substr($ultimo, strlen($base))) + 1 : 1;
+
+        return $base.str_pad((string) $sec, 5, '0', STR_PAD_LEFT);
     }
 
     private function validar(Request $request, ?CartaPorte $carta = null): array
@@ -408,6 +490,16 @@ class CartaPorteController extends Controller
             'notas' => ['nullable', 'string', 'max:150'],
             'imprimir' => ['sometimes', 'boolean'],
             'estado' => ['nullable', 'string', 'in:emitida,recepcionada,facturada,cancelada'],
+
+            // Datos generales de la solicitud (se crea o actualiza al guardar)
+            'id_cliente' => ['nullable', 'exists:clientes,id'],
+            'id_lugar_origen' => ['nullable', 'exists:lugares,id'],
+            'id_lugar_destino' => ['nullable', 'exists:lugares,id'],
+            'id_producto' => ['nullable', 'exists:productos,id'],
+            'id_producto2' => ['nullable', 'exists:productos,id'],
+            'id_tipo_carga' => ['nullable', 'exists:tipos_cargas,id'],
+            'id_tipo_carga2' => ['nullable', 'exists:tipos_cargas,id'],
+            'id_moneda' => ['nullable', 'exists:monedas,id'],
         ]);
     }
 }

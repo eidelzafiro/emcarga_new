@@ -52,6 +52,7 @@ function toDate(v) {
 
 const form = reactive({
     id_carta_porte: props.aforo?.id_carta_porte || props.cartaPreseleccionada?.id || null,
+    numero_carta: '',
     fecha_parte: toDate(props.aforo?.fecha_parte || props.fechaOperaciones) || new Date(),
     flete_mt: Number(props.aforo?.flete_mt ?? 0),
     flete_mlc: Number(props.aforo?.flete_mlc ?? 0),
@@ -165,8 +166,12 @@ const indFilaDesde = (i) => {
 const indFilas = reactive(Array.from({ length: 7 }, (_, i) => indFilaDesde(i)))
 
 // ---------- Visibilidad de filas extra (3-5) ----------
-const mostrarLineasExtra = ref(false)
-const mostrarIndExtra = ref(false)
+// En edición, si hay filas 3+ con datos, se muestran automáticamente.
+const hayLineasExtra = computed(() => (props.aforo?.lineas || []).some((l, i) => i >= 2 && (Number(l.tarifa_mt) || Number(l.flete_mt))))
+const hayIndExtra = computed(() => (props.aforo?.indFilas || []).some((f, i) => i >= 2 && (Number(f.tn_pos) || Number(f.km_carga) || Number(f.tn_real))))
+
+const mostrarLineasExtra = ref(hayLineasExtra.value)
+const mostrarIndExtra = ref(hayIndExtra.value)
 
 // Solo las filas 1-2 visibles por defecto; 3-5 opcionales
 const lineasVisibles = computed(() => mostrarLineasExtra.value ? lineas : lineas.slice(0, 2))
@@ -174,19 +179,24 @@ const indFilasVisibles = computed(() => mostrarIndExtra.value ? indFilas : indFi
 
 // ---------- Datos de la CP seleccionada ----------
 const cpOpciones = computed(() =>
-    (props.cartasPendientes || []).map((c) => ({
-        id: c.id,
-        numero: c.numero,
-        cliente: c.cliente?.nombre,
-        tractivo: c.tractivo?.codigo,
-        hr: c.hoja_ruta?.numero,
-    }))
+    [{ id: null, numero: '+ Crear nueva carta de porte...', cliente: '', tractivo: '', hr: '' }]
+    .concat(
+        (props.cartasPendientes || []).map((c) => ({
+            id: c.id,
+            numero: c.numero,
+            cliente: c.cliente?.nombre,
+            tractivo: c.tractivo?.codigo,
+            hr: c.hoja_ruta?.numero,
+        }))
+    )
 )
 
 const cp = computed(() => {
     if (esEdicion.value) return props.cartaPreseleccionada || {}
     return props.cartasPendientes?.find((c) => c.id === form.id_carta_porte) || {}
 })
+
+const esNuevaCp = computed(() => !esEdicion.value && form.id_carta_porte === null)
 
 const capacidad = computed(() => Number(cp.value.tractivo?.capacidad_toneladas || 0))
 const monedaCliente = computed(() => props.monedas?.find((m) => m.id === form.id_moneda) || null)
@@ -578,7 +588,8 @@ function numeroLabel(n) {
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex items-center gap-2">
                                 <label class="w-28 shrink-0 text-sm font-medium text-surface-600 dark:text-surface-300">CP No.</label>
-                                <InputText :model-value="cp?.numero || (esEdicion ? form.id_carta_porte : '')" readonly class="w-full readonly-field" />
+                                <InputText v-if="esNuevaCp" v-model="form.numero_carta" placeholder="Folio de la nueva CP (opcional)" class="w-full" />
+                                <InputText v-else :model-value="cp?.numero || (esEdicion ? form.id_carta_porte : '')" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0 xl:col-span-2">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Hoja de Ruta</label>
@@ -666,12 +677,12 @@ function numeroLabel(n) {
                             </Column>
                             <Column field="distancia" header="Kms">
                                 <template #body="{ data }">
-                                    <InputNumber v-model="data.distancia" :min="0" class="w-full text-right" @blur="cotizarLinea(data)" @keydown.enter.prevent="calcularLineaConEnter(data)" />
+                                    <InputNumber v-model="data.distancia" :min="0" :max-fraction-digits="2" locale="en-US" class="w-full text-right" @blur="cotizarLinea(data)" @keydown.enter.prevent="calcularLineaConEnter(data)" />
                                 </template>
                             </Column>
                             <Column field="peso_cobrar" header="Peso (t)">
                                 <template #body="{ data }">
-                                    <InputNumber v-model="data.peso_cobrar" :min="0" class="w-full text-right" @blur="cotizarLinea(data)" @keydown.enter.prevent="calcularLineaConEnter(data)" />
+                                    <InputNumber v-model="data.peso_cobrar" :min="0" :max-fraction-digits="2" locale="en-US" class="w-full text-right" @blur="cotizarLinea(data)" @keydown.enter.prevent="calcularLineaConEnter(data)" />
                                 </template>
                             </Column>
                             <Column field="tarifa_mt" header="Tar" class="text-right">
@@ -704,11 +715,11 @@ function numeroLabel(n) {
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div>
                                 <label class="text-xs text-surface-500 block mb-1">Peso</label>
-                                <InputNumber v-model="form.almacenaje_peso" :min="0" placeholder="PESO..." class="w-full text-right" @blur="calcularAlmacenaje" @keydown.enter.prevent="calcularAlmacenajeEnter" />
+                                <InputNumber v-model="form.almacenaje_peso" :min="0" :max-fraction-digits="2" locale="en-US" placeholder="PESO..." class="w-full text-right" @blur="calcularAlmacenaje" @keydown.enter.prevent="calcularAlmacenajeEnter" />
                             </div>
                             <div>
                                 <label class="text-xs text-surface-500 block mb-1">Horas</label>
-                                <InputNumber v-model="form.almacenaje_horas" :min="0" placeholder="HORAS..." class="w-full text-right" @blur="calcularAlmacenaje" @keydown.enter.prevent="calcularAlmacenajeEnter" />
+                                <InputNumber v-model="form.almacenaje_horas" :min="0" :max-fraction-digits="2" locale="en-US" placeholder="HORAS..." class="w-full text-right" @blur="calcularAlmacenaje" @keydown.enter.prevent="calcularAlmacenajeEnter" />
                             </div>
                             <div>
                                 <label class="text-xs text-surface-500 block mb-1">Tarifa</label>
@@ -752,7 +763,7 @@ function numeroLabel(n) {
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                             <div>
                                 <label class="text-xs text-surface-500 block mb-1">Horas carga</label>
-                                <InputNumber v-model="form.dem_carga" :min="0" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" class="w-full" />
+                                <InputNumber v-model="form.dem_carga" :min="0" :max-fraction-digits="2" locale="en-US" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" class="w-full" />
                             </div>
                             <div>
                                 <label class="text-xs text-surface-500 block mb-1">Flete carga</label>
@@ -760,7 +771,7 @@ function numeroLabel(n) {
                             </div>
                             <div>
                                 <label class="text-xs text-surface-500 block mb-1">Horas descarga</label>
-                                <InputNumber v-model="form.dem_descarga" :min="0" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" class="w-full" />
+                                <InputNumber v-model="form.dem_descarga" :min="0" :max-fraction-digits="2" locale="en-US" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" class="w-full" />
                             </div>
                             <div>
                                 <label class="text-xs text-surface-500 block mb-1">Flete descarga</label>
@@ -886,16 +897,16 @@ function numeroLabel(n) {
                         </div>
                         <DataTable :value="indFilasVisibles" size="small" striped-rows>
                             <Column field="tn_pos" header="TNPOS">
-                                <template #body="{ data }"><InputNumber v-model="data.tn_pos" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
+                                <template #body="{ data }"><InputNumber v-model="data.tn_pos" :max-fraction-digits="2" locale="en-US" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
                             </Column>
                             <Column field="tn_real" header="TNREAL">
-                                <template #body="{ data }"><InputNumber v-model="data.tn_real" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
+                                <template #body="{ data }"><InputNumber v-model="data.tn_real" :max-fraction-digits="2" locale="en-US" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
                             </Column>
                             <Column field="km_carga" header="CARGA">
-                                <template #body="{ data }"><InputNumber v-model="data.km_carga" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
+                                <template #body="{ data }"><InputNumber v-model="data.km_carga" :max-fraction-digits="2" locale="en-US" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
                             </Column>
                             <Column field="km_vacio" header="VACIO">
-                                <template #body="{ data }"><InputNumber v-model="data.km_vacio" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
+                                <template #body="{ data }"><InputNumber v-model="data.km_vacio" :max-fraction-digits="2" locale="en-US" class="w-full" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" /></template>
                             </Column>
                             <Column field="km_total" header="TOTAL">
                                 <template #body="{ data }">{{ data.km_total }}</template>

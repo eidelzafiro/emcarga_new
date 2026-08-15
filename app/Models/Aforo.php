@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Aforo extends Model
 {
@@ -97,11 +96,6 @@ class Aforo extends Model
     public function tasa(): BelongsTo
     {
         return $this->belongsTo(Tasa::class, 'id_tasa');
-    }
-
-    public function indicadores(): HasOne
-    {
-        return $this->hasOne(Indicadore::class, 'id_carta_porte', 'id_carta_porte');
     }
 
     /**

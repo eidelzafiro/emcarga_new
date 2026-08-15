@@ -52,7 +52,6 @@ use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
 use App\Http\Controllers\HojasRutaController;
 use App\Http\Controllers\IncidenciasController;
-use App\Http\Controllers\IndicadoresController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\LubricantesController;
 use App\Http\Controllers\LugaresController;
@@ -272,9 +271,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('alertas', AlertasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('indicadores', IndicadoresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('demandas', DemandasController::class)

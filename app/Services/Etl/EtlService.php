@@ -2277,65 +2277,6 @@ class EtlService
     }
 
     /**
-     * ETL de indicadores: com_indicadores → indicadores (líneas 3-7).
-     * Paridad legacy: com_indicadores guarda SOLO las filas 3-7; las 1-2 y totales
-     * viven en com_aforo (aforos).
-     */
-    public function migrarIndicadores(int $chunk = 1000): void
-    {
-        $avisos = [];
-        $procesados = 0;
-
-        DB::connection('legacy')->table('com_indicadores')
-            ->orderBy('idcartaporte')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos) {
-                foreach ($filas as $fila) {
-                    $idCarta = (int) $fila->idcartaporte;
-
-                    if (! DB::table('cartas_porte')->where('id', $idCarta)->exists()) {
-                        $avisos[] = "indicadores#{$idCarta}: carta_porte no existe, omitido";
-
-                        continue;
-                    }
-
-                    try {
-                        DB::table('indicadores')->updateOrInsert(
-                            ['id_carta_porte' => $idCarta],
-                            [
-                                'tn_pos_3' => $fila->tnpos3, 'tn_real_3' => $fila->tnreal3,
-                                'km_carga_3' => $fila->kmcarga3, 'km_vacio_3' => $fila->kmvacio3,
-                                'kms_total_3' => $fila->kmstot3, 'traf_real_3' => $fila->trafreal3, 'traf_pos_3' => $fila->trafpos3,
-                                'tn_pos_4' => $fila->tnpos4, 'tn_real_4' => $fila->tnreal4,
-                                'km_carga_4' => $fila->kmcarga4, 'km_vacio_4' => $fila->kmvacio4,
-                                'kms_total_4' => $fila->kmstot4, 'traf_real_4' => $fila->trafreal4, 'traf_pos_4' => $fila->trafpos4,
-                                'tn_pos_5' => $fila->tnpos5, 'tn_real_5' => $fila->tnreal5,
-                                'km_carga_5' => $fila->kmcarga5, 'km_vacio_5' => $fila->kmvacio5,
-                                'kms_total_5' => $fila->kmstot5, 'traf_real_5' => $fila->trafreal5, 'traf_pos_5' => $fila->trafpos5,
-                                'tn_pos_6' => $fila->tnpos6, 'tn_real_6' => $fila->tnreal6,
-                                'km_carga_6' => $fila->kmcarga6, 'km_vacio_6' => $fila->kmvacio6,
-                                'kms_total_6' => $fila->kmstot6, 'traf_real_6' => $fila->trafreal6, 'traf_pos_6' => $fila->trafpos6,
-                                'tn_pos_7' => $fila->tnpos7, 'tn_real_7' => $fila->tnreal7,
-                                'km_carga_7' => $fila->kmcarga7, 'km_vacio_7' => $fila->kmvacio7,
-                                'kms_total_7' => $fila->kmstot7, 'traf_real_7' => $fila->trafreal7, 'traf_pos_7' => $fila->trafpos7,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]
-                        );
-                        $procesados++;
-                    } catch (\Throwable $e) {
-                        $avisos[] = "indicadores#{$idCarta}: {$e->getMessage()}";
-                    }
-                }
-            });
-
-        $this->reporte['indicadores'] = [
-            'legacy' => (int) DB::connection('legacy')->table('com_indicadores')->count(),
-            'nueva' => $procesados,
-            'avisos' => $avisos,
-        ];
-    }
-
-    /**
      * ETL de tarifas: com_tarifas46 + com_tarifas → tarifas.
      *
      * - `com_tarifas46` (tarifario corriente, 8 tipos base) → version='46'.

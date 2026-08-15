@@ -271,13 +271,8 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'tasas');
         }
 
-        // Indicadores: com_indicadores → indicadores (líneas 3-7)
-        if (! $solo || $solo === 'indicadores') {
-            $this->info('Migrando indicadores (com_indicadores)...');
-            $etl->migrarIndicadores($chunk);
-            $this->mostrarResultado($etl->getReporte(), 'indicadores');
-        }
-
+        // Indicadores: ahora se migran en migrarAforos → aforo_indicadores (D1);
+        // la tabla legacy `indicadores` quedó en desuso y se elimina.
         // Tarifas: com_tarifas46 (versión 46) + com_tarifas (versión normal, 117/118)
         if (! $solo || $solo === 'tarifas') {
             $this->info('Migrando tarifas (com_tarifas46 → versión 46, com_tarifas → normal)...');

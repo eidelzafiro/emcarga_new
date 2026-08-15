@@ -12,7 +12,6 @@ class Factura extends Model
         'id_entidad', 'numero',
         'fecha_emision',
         'id_cliente',
-        'id_unidad',
         'id_user',
         'flete_mt',
         'flete_mlc',

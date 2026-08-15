@@ -78,7 +78,6 @@ class FacturasController extends Controller
         $validated['numero'] ??= $this->siguienteNumero();
         $validated['id_entidad'] = session('entidad_activa_id') ?: null;
         $validated['id_user'] = auth()->id();
-        $validated['id_unidad'] = auth()->user()->id_unidad ?? null;
         $validated['cancelada'] = false;
         $validated['refacturada'] = false;
         $validated['estado'] = 'emitida';

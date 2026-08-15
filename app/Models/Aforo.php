@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Aforo extends Model
@@ -22,12 +23,8 @@ class Aforo extends Model
         'refactura',
         'id_user',
 
-        // Tarifas por línea (1-5)
-        'tarifa_mt_1', 'tarifa_mt_2', 'tarifa_mt_3', 'tarifa_mt_4', 'tarifa_mt_5',
-        'flete_mt_1', 'flete_mt_2', 'flete_mt_3', 'flete_mt_4', 'flete_mt_5',
-        'flete_mlc_1', 'flete_mlc_2', 'flete_mlc_3', 'flete_mlc_4', 'flete_mlc_5',
-        'peso_cobrar_1', 'peso_cobrar_2', 'peso_cobrar_3', 'peso_cobrar_4', 'peso_cobrar_5',
-        'desc_1', 'desc_2', 'desc_3', 'desc_4', 'desc_5', 'desc_6', 'desc_7', 'desc_8',
+        // Desc. de almacenaje/demora (únicos, no por línea)
+        'desc_6', 'desc_7', 'desc_8',
 
         // Almacenaje
         'almacenaje_peso', 'almacenaje_horas', 'almacenaje_tarifa', 'almacenaje_flete',
@@ -48,17 +45,11 @@ class Aforo extends Model
         // Salario / coeficiente
         'id_tasa', 'tasa', 'salario',
 
-        // Indicadores (filas 1-2 + totales; 3-5 en `indicadores`)
+        // Indicadores: tipo/viajes + totales (las filas viven en aforo_indicadores)
         'viajes', 'tipo_indicadores',
-        'id_tipo_carga_1', 'id_tipo_carga_2', 'id_tipo_carga_3', 'id_tipo_carga_4', 'id_tipo_carga_5',
-        'distancia_1', 'distancia_2', 'distancia_3', 'distancia_4', 'distancia_5',
-        'tn_pos_1', 'tn_pos_2', 'tn_pos_total',
-        'tn_real_1', 'tn_real_2', 'tn_real_total',
-        'km_carga_1', 'km_carga_2', 'km_carga_total',
-        'km_vacio_1', 'km_vacio_2', 'km_vacio_total',
-        'km_total_1', 'km_total_2', 'km_total_total',
-        'traf_pos_1', 'traf_pos_2', 'traf_pos_total',
-        'traf_real_1', 'traf_real_2', 'traf_real_total',
+        'tn_pos_total', 'tn_real_total',
+        'km_carga_total', 'km_vacio_total', 'km_total_total',
+        'traf_pos_total', 'traf_real_total',
         'fecha_aforada',
     ];
 
@@ -111,5 +102,18 @@ class Aforo extends Model
     public function indicadores(): HasOne
     {
         return $this->hasOne(Indicadore::class, 'id_carta_porte', 'id_carta_porte');
+    }
+
+    /**
+     * Líneas de tarifa (1-5) y filas de indicadores (1-7), normalizados (D1).
+     */
+    public function lineas(): HasMany
+    {
+        return $this->hasMany(AforoLinea::class, 'id_aforo')->orderBy('posicion');
+    }
+
+    public function indicadoresFilas(): HasMany
+    {
+        return $this->hasMany(AforoIndicadore::class, 'id_aforo')->orderBy('posicion');
     }
 }

@@ -148,7 +148,7 @@ const lineaDesde = (i) => {
 
 const lineas = reactive(Array.from({ length: 5 }, (_, i) => lineaDesde(i)))
 
-// ---------- Indicadores 5 filas (precargadas si se edita) ----------
+// ---------- Indicadores 7 filas (precargadas si se edita) ----------
 const indFilaDesde = (i) => {
     const f = props.aforo?.indFilas?.[i] || {}
     return {
@@ -162,7 +162,7 @@ const indFilaDesde = (i) => {
     }
 }
 
-const indFilas = reactive(Array.from({ length: 5 }, (_, i) => indFilaDesde(i)))
+const indFilas = reactive(Array.from({ length: 7 }, (_, i) => indFilaDesde(i)))
 
 // ---------- Visibilidad de filas extra (3-5) ----------
 const mostrarLineasExtra = ref(false)
@@ -515,16 +515,20 @@ function submit() {
             flete_mt: l.flete_mt,
             flete_mlc: l.flete_mlc,
         })),
+        // Filas de indicadores normalizadas en `aforo_indicadores` (D1)
+        indicadoresFilas: indFilas.map((f) => ({
+            tn_pos: f.tn_pos,
+            tn_real: f.tn_real,
+            km_carga: f.km_carga,
+            km_vacio: f.km_vacio,
+            km_total: f.km_total,
+            traf_pos: f.traf_pos,
+            traf_real: f.traf_real,
+        })),
         indicadores: {
             viajes: form.viajes,
             tipo: form.tipo_indicadores,
             valores: 0,
-            ...Object.fromEntries(indFilas.flatMap((f, i) => [
-                [`tn_pos_${i + 1}`, f.tn_pos], [`tn_real_${i + 1}`, f.tn_real],
-                [`km_carga_${i + 1}`, f.km_carga], [`km_vacio_${i + 1}`, f.km_vacio],
-                [`km_total_${i + 1}`, f.km_total], [`traf_pos_${i + 1}`, f.traf_pos],
-                [`traf_real_${i + 1}`, f.traf_real],
-            ])),
             ...tot,
         },
     }

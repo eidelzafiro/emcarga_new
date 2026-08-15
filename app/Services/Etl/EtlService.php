@@ -2046,7 +2046,6 @@ class EtlService
                                 'numero_legacy' => (string) $fila->factura,
                                 'fecha_emision' => $fechaValida($fila->ffactura) ?? '1970-01-01',
                                 'id_cliente' => $idCliente,
-                                'id_unidad' => $idEntidad ?: null,
                                 'id_entidad' => $idEntidad && isset($idsEntidades[$idEntidad]) ? $idEntidad : null,
                                 'id_user' => (int) $fila->iduser && isset($idsUsers[$fila->iduser]) ? $fila->iduser : null,
                                 'flete_mt' => $fila->fletemtt,
@@ -2094,6 +2093,7 @@ class EtlService
         $avisos = [];
         $procesados = 0;
 
+        $legacy = DB::connection('legacy');
         $idsFacturas = DB::table('facturas')->pluck('id')->flip();
 
         $fechaValida = function (?string $f): ?string {
@@ -2108,7 +2108,7 @@ class EtlService
             ->leftJoin('com_girado', 'com_girado.idcartaporte', '=', 'com_aforo.idcartaporte')
             ->whereYear('com_aforo.fparte', $anio)
             ->orderBy('com_aforo.idcartaporte')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsFacturas, $fechaValida) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsFacturas, $fechaValida, $legacy) {
                 foreach ($filas as $fila) {
                     $idFactura = (int) $fila->idfactura;
 
@@ -2128,22 +2128,6 @@ class EtlService
                                 'descuento' => (float) $fila->descuento,
                                 'refactura' => false,
                                 'id_user' => null,
-
-                                // Tarifas por línea
-                                'id_tipo_carga_1' => $fila->idtipocarga1, 'id_tipo_carga_2' => $fila->idtipocarga2,
-                                'id_tipo_carga_3' => $fila->idtipocarga3, 'id_tipo_carga_4' => $fila->idtipocarga4, 'id_tipo_carga_5' => $fila->idtipocarga5,
-                                'distancia_1' => $fila->distancia, 'distancia_2' => $fila->distancia2,
-                                'distancia_3' => $fila->distancia3, 'distancia_4' => $fila->distancia4, 'distancia_5' => $fila->distancia5,
-                                'tarifa_mt_1' => $fila->tarmn1, 'tarifa_mt_2' => $fila->tarmn2,
-                                'tarifa_mt_3' => $fila->tarmn3, 'tarifa_mt_4' => $fila->tarmn4, 'tarifa_mt_5' => $fila->tarmn5,                                'flete_mt_1' => $fila->fletemt1, 'flete_mt_2' => $fila->fletemt2,
-                                'flete_mt_3' => $fila->fletemt3, 'flete_mt_4' => $fila->fletemt4, 'flete_mt_5' => $fila->fletemt5,
-                                'flete_mlc_1' => $fila->fletemlc1, 'flete_mlc_2' => $fila->fletemlc2,
-                                'flete_mlc_3' => $fila->fletemlc3, 'flete_mlc_4' => $fila->fletemlc4, 'flete_mlc_5' => $fila->fletemlc5,
-                                'peso_cobrar_1' => $fila->pesocobrar1, 'peso_cobrar_2' => $fila->pesocobrar2,
-                                'peso_cobrar_3' => $fila->pesocobrar3, 'peso_cobrar_4' => $fila->pesocobrar4, 'peso_cobrar_5' => $fila->pesocobrar5,
-                                'desc_1' => $fila->desc1, 'desc_2' => $fila->desc2, 'desc_3' => $fila->desc3,
-                                'desc_4' => $fila->desc4, 'desc_5' => $fila->desc5, 'desc_6' => $fila->desc6,
-                                'desc_7' => $fila->desc7, 'desc_8' => $fila->desc8,
 
                                 // Almacenaje
                                 'almacenaje_peso' => $fila->almpeso, 'almacenaje_horas' => $fila->almhoras,
@@ -2168,20 +2152,71 @@ class EtlService
                                 // Salario / coeficiente
                                 'id_tasa' => $fila->idtasa ?: null, 'tasa' => $fila->tasa, 'salario' => $fila->salario,
 
-                                // Indicadores filas 1-2 + totales
+                                // Indicadores: viajes/tipo + totales (las filas viven en aforo_indicadores, D1)
                                 'viajes' => $fila->viajes ?: 1, 'tipo_indicadores' => $fila->tipindicadores ?: 1,
-                                'tn_pos_1' => $fila->tnpos1, 'tn_pos_2' => $fila->tnpos2, 'tn_pos_total' => $fila->tnpos,
-                                'tn_real_1' => $fila->tnreal1, 'tn_real_2' => $fila->tnreal2, 'tn_real_total' => $fila->tnreal,
-                                'km_carga_1' => $fila->kmcarga1, 'km_carga_2' => $fila->kmcarga2, 'km_carga_total' => $fila->kmcarga,
-                                'km_vacio_1' => $fila->kmvacio1, 'km_vacio_2' => $fila->kmvacio2, 'km_vacio_total' => $fila->kmvacio,
-                                'km_total_1' => $fila->kmstot1, 'km_total_2' => $fila->kmstot2, 'km_total_total' => $fila->kmstot,
-                                'traf_pos_1' => $fila->trafpos1, 'traf_pos_2' => $fila->trafpos2, 'traf_pos_total' => $fila->trafpos,
-                                'traf_real_1' => $fila->trafreal1, 'traf_real_2' => $fila->trafreal2, 'traf_real_total' => $fila->trafreal,
+                                'tn_pos_total' => $fila->tnpos, 'tn_real_total' => $fila->tnreal,
+                                'km_carga_total' => $fila->kmcarga, 'km_vacio_total' => $fila->kmvacio,
+                                'km_total_total' => $fila->kmstot, 'traf_pos_total' => $fila->trafpos, 'traf_real_total' => $fila->trafreal,
 
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]
                         );
+
+                        // Líneas de tarifa (1-5) → aforo_lineas (D1)
+                        foreach ([1 => 'fletemt', 2 => 'fletemt2', 3 => 'fletemt3', 4 => 'fletemt4', 5 => 'fletemt5'] as $pos => $campoFlete) {
+                            if ((float) $fila->$campoFlete != 0) {
+                                DB::table('aforo_lineas')->updateOrInsert(
+                                    ['id_aforo' => $fila->idcartaporte, 'posicion' => $pos],
+                                    [
+                                        'id_tipo_carga' => $fila->{"idtipocarga{$pos}"} ?: null,
+                                        'distancia' => $pos === 1 ? $fila->distancia : ($fila->{"distancia{$pos}"} ?: null),
+                                        'peso_cobrar' => $fila->{"pesocobrar{$pos}"} ?: null,
+                                        'descuento' => $fila->{"desc{$pos}"} ?: null,
+                                        'tarifa_mt' => $fila->{"tarmn{$pos}"} ?: null,
+                                        'flete_mt' => $fila->$campoFlete ?: null,
+                                        'flete_mlc' => $fila->{"fletemlc{$pos}"} ?: null,
+                                        'updated_at' => now(),
+                                    ]
+                                );
+                            }
+                        }
+
+                        // Filas de indicadores (1-7) → aforo_indicadores (D1).
+                        // Filas 1-2 desde com_aforo (tnpos1..), filas 3-7 desde com_indicadores.
+                        $indFilas = [
+                            1 => ['tn_pos' => $fila->tnpos1, 'tn_real' => $fila->tnreal1, 'km_carga' => $fila->kmcarga1, 'km_vacio' => $fila->kmvacio1, 'km_total' => $fila->kmstot1, 'traf_pos' => $fila->trafpos1, 'traf_real' => $fila->trafreal1],
+                            2 => ['tn_pos' => $fila->tnpos2, 'tn_real' => $fila->tnreal2, 'km_carga' => $fila->kmcarga2, 'km_vacio' => $fila->kmvacio2, 'km_total' => $fila->kmstot2, 'traf_pos' => $fila->trafpos2, 'traf_real' => $fila->trafreal2],
+                        ];
+
+                        $indLegacy = $legacy->table('com_indicadores')->where('idcartaporte', $fila->idcartaporte)->first();
+                        for ($pos = 3; $pos <= 7; $pos++) {
+                            if ($indLegacy) {
+                                $indFilas[$pos] = [
+                                    'tn_pos' => $indLegacy->{"tnpos{$pos}"} ?? null, 'tn_real' => $indLegacy->{"tnreal{$pos}"} ?? null,
+                                    'km_carga' => $indLegacy->{"kmcarga{$pos}"} ?? null, 'km_vacio' => $indLegacy->{"kmvacio{$pos}"} ?? null,
+                                    'km_total' => $indLegacy->{"kmstot{$pos}"} ?? null, 'traf_pos' => $indLegacy->{"trafpos{$pos}"} ?? null, 'traf_real' => $indLegacy->{"trafreal{$pos}"} ?? null,
+                                ];
+                            }
+                        }
+
+                        foreach ($indFilas as $pos => $f) {
+                            $tieneValor = collect($f)->contains(fn ($v) => $v !== null && $v != 0);
+                            if (! $tieneValor) {
+                                continue;
+                            }
+
+                            DB::table('aforo_indicadores')->updateOrInsert(
+                                ['id_aforo' => $fila->idcartaporte, 'posicion' => $pos],
+                                [
+                                    'tn_pos' => $f['tn_pos'], 'tn_real' => $f['tn_real'],
+                                    'km_carga' => $f['km_carga'], 'km_vacio' => $f['km_vacio'],
+                                    'km_total' => $f['km_total'], 'traf_pos' => $f['traf_pos'], 'traf_real' => $f['traf_real'],
+                                    'updated_at' => now(),
+                                ]
+                            );
+                        }
+
                         $procesados++;
                     } catch (\Throwable $e) {
                         $avisos[] = "aforos#{$fila->idcartaporte}: {$e->getMessage()}";

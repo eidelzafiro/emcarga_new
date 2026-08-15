@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aforo;
+use App\Models\AforoIndicadore;
+use App\Models\AforoLinea;
 use App\Models\Bolsa;
 use App\Models\CartaPorte;
 use App\Models\Cliente;
 use App\Models\Entidad;
 use App\Models\HojasRuta;
-use App\Models\Indicadore;
 use App\Models\Lugare;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -187,40 +188,39 @@ class AforosController extends Controller
         $data = $this->datosFormulario($request);
         $data['cartaPreseleccionada'] = $carta;
 
-        // Líneas de tarifa desde el desglose guardado
-        $lineas = collect(range(1, 5))->map(fn ($n) => [
-            'id_tipo_carga' => $aforo->{"id_tipo_carga_{$n}"} ?? null,
-            'peso_cobrar' => (float) $aforo->{"peso_cobrar_{$n}"},
-            'distancia' => (float) $aforo->{"distancia_{$n}"},
-            'descuento' => (float) $aforo->{"desc_{$n}"},
-            'tarifa_mt' => (float) $aforo->{"tarifa_mt_{$n}"},
-            'flete_mt' => (float) $aforo->{"flete_mt_{$n}"},
-            'flete_mlc' => (float) $aforo->{"flete_mlc_{$n}"},
-        ])->values();
+        // Líneas de tarifa desde la tabla hija `aforo_lineas` (D1)
+        $aforo->load('lineas');
+        $lineasPorPos = $aforo->lineas->keyBy('posicion');
 
-        // Indicadores filas 3-5 desde la tabla `indicadores`
-        $ind = $aforo->indicadores;
-        $indFilas = collect(range(1, 5))->map(function ($n) use ($aforo, $ind) {
-            if ($n <= 2) {
-                return [
-                    'tn_pos' => (float) $aforo->{"tn_pos_{$n}"},
-                    'tn_real' => (float) $aforo->{"tn_real_{$n}"},
-                    'km_carga' => (float) $aforo->{"km_carga_{$n}"},
-                    'km_vacio' => (float) $aforo->{"km_vacio_{$n}"},
-                    'km_total' => (float) $aforo->{"km_total_{$n}"},
-                    'traf_pos' => (float) $aforo->{"traf_pos_{$n}"},
-                    'traf_real' => (float) $aforo->{"traf_real_{$n}"},
-                ];
-            }
+        $lineas = collect(range(1, 5))->map(function ($n) use ($lineasPorPos) {
+            $l = $lineasPorPos->get($n);
 
             return [
-                'tn_pos' => (float) ($ind?->{"tn_pos_{$n}"} ?? 0),
-                'tn_real' => (float) ($ind?->{"tn_real_{$n}"} ?? 0),
-                'km_carga' => (float) ($ind?->{"km_carga_{$n}"} ?? 0),
-                'km_vacio' => (float) ($ind?->{"km_vacio_{$n}"} ?? 0),
-                'km_total' => (float) ($ind?->{"kms_total_{$n}"} ?? 0),
-                'traf_pos' => (float) ($ind?->{"traf_pos_{$n}"} ?? 0),
-                'traf_real' => (float) ($ind?->{"traf_real_{$n}"} ?? 0),
+                'id_tipo_carga' => $l?->id_tipo_carga,
+                'peso_cobrar' => (float) ($l?->peso_cobrar ?? 0),
+                'distancia' => (float) ($l?->distancia ?? 0),
+                'descuento' => (float) ($l?->descuento ?? 0),
+                'tarifa_mt' => (float) ($l?->tarifa_mt ?? 0),
+                'flete_mt' => (float) ($l?->flete_mt ?? 0),
+                'flete_mlc' => (float) ($l?->flete_mlc ?? 0),
+            ];
+        })->values();
+
+        // Indicadores desde la tabla hija `aforo_indicadores` (posiciones 1-7, D1)
+        $aforo->load('indicadoresFilas');
+        $indPorPos = $aforo->indicadoresFilas->keyBy('posicion');
+
+        $indFilas = collect(range(1, 7))->map(function ($n) use ($indPorPos) {
+            $f = $indPorPos->get($n);
+
+            return [
+                'tn_pos' => (float) ($f?->tn_pos ?? 0),
+                'tn_real' => (float) ($f?->tn_real ?? 0),
+                'km_carga' => (float) ($f?->km_carga ?? 0),
+                'km_vacio' => (float) ($f?->km_vacio ?? 0),
+                'km_total' => (float) ($f?->km_total ?? 0),
+                'traf_pos' => (float) ($f?->traf_pos ?? 0),
+                'traf_real' => (float) ($f?->traf_real ?? 0),
             ];
         })->values();
 
@@ -579,16 +579,8 @@ class AforosController extends Controller
 
                 $aforo = Aforo::create($data);
 
-                // Indicadores (filas 3-5) en la tabla `indicadores`
-                $indicadores = $request->input('indicadores', []);
-                if (! empty($indicadores) && ($indicadores['valores'] ?? 0) > 0) {
-                    Indicadore::updateOrCreate(
-                        ['id_carta_porte' => $aforo->id_carta_porte],
-                        $this->armarDataIndicadores($indicadores),
-                    );
-                } else {
-                    Indicadore::where('id_carta_porte', $aforo->id_carta_porte)->delete();
-                }
+                $this->guardarLineas($aforo, collect($request->input('lineas', [])));
+                $this->guardarIndicadoresFilas($aforo, $request->input('indicadoresFilas', []));
             });
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => 'No se pudo guardar el aforo: '.$e->getMessage()]);
@@ -629,15 +621,8 @@ class AforosController extends Controller
 
                 $aforo->update($data);
 
-                $indicadores = $request->input('indicadores', []);
-                if (! empty($indicadores) && ($indicadores['valores'] ?? 0) > 0) {
-                    Indicadore::updateOrCreate(
-                        ['id_carta_porte' => $aforo->id_carta_porte],
-                        $this->armarDataIndicadores($indicadores),
-                    );
-                } else {
-                    Indicadore::where('id_carta_porte', $aforo->id_carta_porte)->delete();
-                }
+                $this->guardarLineas($aforo, collect($request->input('lineas', [])));
+                $this->guardarIndicadoresFilas($aforo, $request->input('indicadoresFilas', []));
             });
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => 'No se pudo actualizar el aforo: '.$e->getMessage()]);
@@ -774,17 +759,6 @@ class AforosController extends Controller
             'tipo_indicadores' => $v['tipo_indicadores'] ?? 1,
         ];
 
-        foreach (range(1, 5) as $n) {
-            $linea = $lineas->get($n - 1) ?? [];
-            $data["id_tipo_carga_{$n}"] = $linea['id_tipo_carga'] ?? null;
-            $data["distancia_{$n}"] = (float) ($linea['distancia'] ?? 0);
-            $data["tarifa_mt_{$n}"] = (float) ($linea['tarifa_mt'] ?? 0);
-            $data["flete_mt_{$n}"] = (float) ($linea['flete_mt'] ?? 0);
-            $data["flete_mlc_{$n}"] = (float) ($linea['flete_mlc'] ?? 0);
-            $data["peso_cobrar_{$n}"] = (float) ($linea['peso_cobrar'] ?? 0);
-            $data["desc_{$n}"] = (float) ($linea['descuento'] ?? 0);
-        }
-
         // desc_6 (almacenaje), desc_7 (demora carga), desc_8 (demora descarga)
         $data['desc_6'] = (float) ($v['desc_6'] ?? 0);
         $data['desc_7'] = (float) ($v['desc_7'] ?? 0);
@@ -824,30 +798,79 @@ class AforosController extends Controller
             $data["recargo_{$n}"] = (float) ($v["recargo_{$n}"] ?? 0);
         }
 
-        // Indicadores filas 1-2 + totales
+        // Totales de indicadores (resumen denormalizado para grids). Las filas
+        // individuales (1-7) viven en la tabla hija `aforo_indicadores` (D1).
         $ind = $v['indicadores'] ?? [];
         foreach (['tn_pos', 'tn_real', 'km_carga', 'km_vacio', 'km_total', 'traf_pos', 'traf_real'] as $campo) {
-            $data["{$campo}_1"] = (float) ($ind["{$campo}_1"] ?? 0);
-            $data["{$campo}_2"] = (float) ($ind["{$campo}_2"] ?? 0);
             $data["{$campo}_total"] = (float) ($ind["{$campo}_total"] ?? 0);
         }
 
         return $data;
     }
 
-    protected function armarDataIndicadores(array $ind): array
+    /**
+     * Guarda las líneas de tarifa (1-5) en `aforo_lineas` (D1). Reemplaza las
+     * filas existentes del aforo (delete + insert) para reflejar la edición.
+     */
+    protected function guardarLineas(Aforo $aforo, $lineas): void
     {
-        $data = [];
-        foreach (range(3, 5) as $n) {
-            $data["tn_pos_{$n}"] = (float) ($ind["tn_pos_{$n}"] ?? 0);
-            $data["tn_real_{$n}"] = (float) ($ind["tn_real_{$n}"] ?? 0);
-            $data["km_carga_{$n}"] = (float) ($ind["km_carga_{$n}"] ?? 0);
-            $data["km_vacio_{$n}"] = (float) ($ind["km_vacio_{$n}"] ?? 0);
-            $data["kms_total_{$n}"] = (float) ($ind["km_total_{$n}"] ?? 0);
-            $data["traf_real_{$n}"] = (float) ($ind["traf_real_{$n}"] ?? 0);
-            $data["traf_pos_{$n}"] = (float) ($ind["traf_pos_{$n}"] ?? 0);
-        }
+        AforoLinea::where('id_aforo', $aforo->id)->delete();
 
-        return $data;
+        foreach ($lineas as $i => $linea) {
+            $posicion = $i + 1;
+            $tc = $linea['id_tipo_carga'] ?? null;
+            $dist = (float) ($linea['distancia'] ?? 0);
+            $tar = (float) ($linea['tarifa_mt'] ?? 0);
+            $fletemt = (float) ($linea['flete_mt'] ?? 0);
+            $peso = (float) ($linea['peso_cobrar'] ?? 0);
+
+            // Línea vacía (todo 0) → se omite.
+            if (($tc ?? 0) == 0 && $dist == 0 && $tar == 0 && $fletemt == 0 && $peso == 0) {
+                continue;
+            }
+
+            AforoLinea::create([
+                'id_aforo' => $aforo->id,
+                'posicion' => $posicion,
+                'id_tipo_carga' => $tc ?: null,
+                'distancia' => $dist ?: null,
+                'peso_cobrar' => $peso ?: null,
+                'descuento' => (float) ($linea['descuento'] ?? 0) ?: null,
+                'tarifa_mt' => $tar ?: null,
+                'flete_mt' => $fletemt ?: null,
+                'flete_mlc' => (float) ($linea['flete_mlc'] ?? 0) ?: null,
+            ]);
+        }
+    }
+
+    /**
+     * Guarda las filas de indicadores (1-7) en `aforo_indicadores` (D1).
+     */
+    protected function guardarIndicadoresFilas(Aforo $aforo, array $filas): void
+    {
+        AforoIndicadore::where('id_aforo', $aforo->id)->delete();
+
+        foreach ($filas as $i => $fila) {
+            $posicion = $i + 1;
+            $datos = [
+                'tn_pos' => (float) ($fila['tn_pos'] ?? 0),
+                'tn_real' => (float) ($fila['tn_real'] ?? 0),
+                'km_carga' => (float) ($fila['km_carga'] ?? 0),
+                'km_vacio' => (float) ($fila['km_vacio'] ?? 0),
+                'km_total' => (float) ($fila['km_total'] ?? 0),
+                'traf_pos' => (float) ($fila['traf_pos'] ?? 0),
+                'traf_real' => (float) ($fila['traf_real'] ?? 0),
+            ];
+
+            if (! collect($datos)->contains(fn ($v) => $v != 0)) {
+                continue;
+            }
+
+            AforoIndicadore::create([
+                'id_aforo' => $aforo->id,
+                'posicion' => $posicion,
+                ...$datos,
+            ]);
+        }
     }
 }

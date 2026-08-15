@@ -447,7 +447,7 @@ CREATE TABLE `cartas_porte` (
   `total_flete` decimal(12,2) DEFAULT NULL,
   `estado` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'emitida',
   `notas` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `re Facturacion` tinyint(1) NOT NULL DEFAULT '0',
+  `refacturacion` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,

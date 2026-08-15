@@ -127,7 +127,6 @@ class PrefacturasController extends Controller
                     'id_cliente' => $prefactura->id_cliente,
                     'id_entidad' => $prefactura->id_entidad,
                     'id_user' => auth()->id(),
-                    'id_unidad' => auth()->user()->id_unidad ?? null,
                     'flete_mt' => $prefactura->flete_mt,
                     'flete_mlc' => $prefactura->flete_mlc,
                     'flete_demora' => $prefactura->flete_demora,

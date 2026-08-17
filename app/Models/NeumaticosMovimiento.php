@@ -12,6 +12,7 @@ class NeumaticosMovimiento extends Model
     protected $fillable = [
         'id_neumatico', 'id_tractivo', 'fecha_montaje', 'fecha_retiro',
         'km_instalado', 'km_retirado', 'posicion', 'id_destino', 'observaciones',
+        'id_entidad',
     ];
 
     protected function casts(): array

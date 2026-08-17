@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Services\Reports\AforoReportService;
 use App\Services\Reports\CatalogoReportService;
 use App\Services\Reports\CartaPorteReportService;
+use App\Services\Reports\ControlLubricanteReportService;
 use App\Services\Reports\FacturaReportService;
 use App\Services\Reports\HojaRutaReportService;
 use App\Services\Reports\NominaReportService;
+use App\Services\Reports\OrdenTallerReportService;
+use App\Services\Reports\PlanBajasNeumaticoReportService;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -66,5 +69,24 @@ class ReportController extends Controller
     public function pdfAforo(int $id)
     {
         return app(AforoReportService::class)->pdfAforo($id);
+    }
+
+    // === Módulo Técnico ===
+
+    public function pdfPlanBajasNeumaticos(Request $request)
+    {
+        return app(PlanBajasNeumaticoReportService::class)
+            ->pdfPlanBajas($request->integer('tipo', 1), (int) session('entidad_activa_id') ?: null);
+    }
+
+    public function pdfControlLubricante(Request $request)
+    {
+        return app(ControlLubricanteReportService::class)
+            ->pdfControlLubricante($request->input('desde'), $request->input('hasta'), (int) session('entidad_activa_id') ?: null);
+    }
+
+    public function pdfOrdenTaller(int $id)
+    {
+        return app(OrdenTallerReportService::class)->pdfOrdenTaller($id);
     }
 }

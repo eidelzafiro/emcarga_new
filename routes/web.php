@@ -23,8 +23,7 @@ use App\Http\Controllers\ColoresController;
 use App\Http\Controllers\CombustibleCargasController;
 use App\Http\Controllers\CombustibleDescargasController;
 use App\Http\Controllers\TarjetasController;
-use App\Http\Controllers\CombustiblesLubricantesController;
-use App\Http\Controllers\ConciliacionesController;
+use App\Http\Controllers\CombustiblesLubricantesController;use App\Http\Controllers\ConciliacionesController;
 use App\Http\Controllers\ConfiguracionesModeloController;
 use App\Http\Controllers\ConsecutivosController;
 use App\Http\Controllers\ContenedoresController;
@@ -55,6 +54,7 @@ use App\Http\Controllers\HojasRutaController;
 use App\Http\Controllers\IncidenciasController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\LubricantesController;
+use App\Http\Controllers\ControlLubricanteController;
 use App\Http\Controllers\LugaresController;
 use App\Http\Controllers\MarcasController;
 use App\Http\Controllers\MedidasNeumaticosController;
@@ -198,11 +198,24 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('baterias', BateriasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('baterias/{bateria}/movimiento', [BateriasController::class, 'registrarMovimiento'])
+            ->name('baterias.movimiento');
+        Route::post('baterias/{bateria}/baja', [BateriasController::class, 'darDeBaja'])
+            ->name('baterias.baja');
 
         Route::resource('neumaticos', NeumaticosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('neumaticos/{neumatico}/movimiento', [NeumaticosController::class, 'registrarMovimiento'])
+            ->name('neumaticos.movimiento');
+        Route::post('neumaticos/{neumatico}/retirar', [NeumaticosController::class, 'retirar'])
+            ->name('neumaticos.retirar');
+        Route::get('neumaticos/{neumatico}/movimientos', [NeumaticosController::class, 'movimientos'])
+            ->name('neumaticos.movimientos');
 
         Route::resource('lubricantes', LubricantesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('control-lubricante', ControlLubricanteController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('otros-agregados', OtrosAgregadosController::class)
@@ -211,6 +224,16 @@ Route::middleware('auth')->group(function () {
         // Módulo Taller
         Route::resource('taller', TallerController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('taller/{ordene}/cerrar', [TallerController::class, 'cerrar'])
+            ->name('taller.cerrar');
+        Route::post('taller/{ordene}/cancelar', [TallerController::class, 'cancelar'])
+            ->name('taller.cancelar');
+        Route::post('taller/{ordene}/operaciones', [TallerController::class, 'agregarOperacion'])
+            ->name('taller.operaciones');
+        Route::post('taller/{ordene}/gastos', [TallerController::class, 'agregarGasto'])
+            ->name('taller.gastos');
+        Route::post('taller/{ordene}/movimientos', [TallerController::class, 'agregarMovimiento'])
+            ->name('taller.movimientos');
 
         // Módulo Comercial
         Route::resource('clientes', ClientesController::class)
@@ -496,6 +519,10 @@ Route::middleware('auth')->group(function () {
             Route::get('carta-porte/{carta}', [ReportController::class, 'pdfCartaPorte'])->name('carta-porte.imprimir');
             Route::get('hoja-ruta/{hoja}', [ReportController::class, 'pdfHojaRuta'])->name('hojas-ruta.imprimir');
             Route::get('aforo/{aforo}', [ReportController::class, 'pdfAforo'])->name('aforos.imprimir');
+            // Módulo Técnico
+            Route::get('plan-bajas-neumaticos', [ReportController::class, 'pdfPlanBajasNeumaticos'])->name('plan-bajas-neumaticos.imprimir');
+            Route::get('control-lubricante', [ReportController::class, 'pdfControlLubricante'])->name('control-lubricante.imprimir');
+            Route::get('orden-taller/{id}', [ReportController::class, 'pdfOrdenTaller'])->name('orden-taller.imprimir');
         });
 
         // Módulo Contabilidad (Fase 5.6)

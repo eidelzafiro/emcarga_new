@@ -190,11 +190,32 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'historial_tractivos');
         }
 
-        // Órdenes de taller: solo el año de negocio (2026), idtipomtto 0 → SIN TIPO
+        // Órdenes de taller: cabecera completa (todas las filas, no solo 2026)
         if (! $solo || $solo === 'ordenes_taller') {
-            $this->info('Migrando órdenes de taller (año 2026)...');
-            $etl->migrarOrdenesTaller(2026, $chunk);
+            $this->info('Migrando órdenes de taller (cabecera completa)...');
+            $etl->migrarOrdenesTallerCompleto($chunk);
             $this->mostrarResultado($etl->getReporte(), 'ordenes_taller');
+        }
+
+        // Gastos/piezas de almacén por OT (requiere OT migradas)
+        if (! $solo || $solo === 'gastos_orden') {
+            $this->info('Migrando gastos/piezas de almacén por OT...');
+            $etl->migrarGastosOrden($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'gastos_orden');
+        }
+
+        // Control de lubricantes CT-7 (módulo Taller)
+        if (! $solo || $solo === 'control_lubricantes') {
+            $this->info('Migrando control de lubricantes CT-7...');
+            $etl->migrarControlLubricantes($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'control_lubricantes');
+        }
+
+        // Movimientos de neumáticos (requiere neumáticos migrados)
+        if (! $solo || $solo === 'neumaticos_movimientos') {
+            $this->info('Migrando movimientos de neumáticos...');
+            $etl->migrarNeumaticosMovimientos($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'neumaticos_movimientos');
         }
 
         // Arrastres: regla idgrupo=8 (grupo ARRASTRES), ficha desde tec_tipoarrastres

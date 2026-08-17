@@ -874,9 +874,14 @@ class EtlService
 
         $codigosUsados = [];
 
+        $lubIds = DB::table('lubricantes')->pluck('id')->flip();
+        $paisIds = DB::table('paises')->pluck('id')->flip();
+        $lubFk = fn ($v) => (int) $v && isset($lubIds[(int) $v]) ? (int) $v : null;
+        $paisFk = fn ($v) => (int) $v && isset($paisIds[(int) $v]) ? (int) $v : null;
+
         $legacy->table('tec_cajas')
             ->orderBy('idcajas')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $modelos, $estados, &$codigosUsados) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $modelos, $estados, &$codigosUsados, $lubFk, $paisFk) {
                 foreach ($filas as $fila) {
                     $numeroSerie = trim((string) ($fila->nroserie ?? '')) ?: null;
                     $marca = $marcas[$fila->idmarca] ?? null;
@@ -915,6 +920,15 @@ class EtlService
                             'numero_serie' => $numeroSerie,
                             'id_tractivo' => $fila->idtractivos ?: null,
                             'estado' => $estado,
+                            'durabilidad' => $fila->durabilidad ?: null,
+                            'velocidades' => $fila->velocidades ?: null,
+                            'cantidad_lubricante' => $fila->cantlub ?: null,
+                            'kms_acumulados' => $fila->kacumulados ?: null,
+                            'capacidad_carter' => $fila->cajcapcarter ?: null,
+                            'id_lubricante' => $lubFk($fila->idlubricantes),
+                            'id_pais' => $paisFk($fila->idpaises),
+                            'fecha_instalacion' => $fila->finstalada,
+                            'fecha_baja' => $fila->fbaja,
                             'id_entidad' => $fila->idunidad ?: null,
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -1294,7 +1308,14 @@ class EtlService
                             'id_tractivo' => $fila->idtractivos ?: null,
                             'fecha_instalacion' => $finstalada,
                             'fecha_retiro' => $fbaja,
+                            'fecha_movimiento' => $fila->fmovimiento,
                             'estado' => $fbaja === null ? 'activa' : 'baja',
+                            'voltaje' => $fila->batvoltaje ?: null,
+                            'amperaje' => $fila->batamperaje ?: null,
+                            'precio_mn' => $fila->batpreciomn ?: null,
+                            'precio_me' => $fila->batpreciome ?: null,
+                            'id_motivo_baja' => (int) $fila->idmotbajabat ?: null,
+                            'id_destino' => (int) $fila->iddestagregados ?: null,
                             'id_entidad' => $fila->idunidad ?: null,
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -1357,6 +1378,7 @@ class EtlService
                             'tiempo_trabajo' => $fila->tiempotrabajo ?: null,
                             'observaciones' => trim((string) ($fila->observacion ?? '')) ?: null,
                             'id_destino' => $fila->iddestagregados ?: null,
+                            'id_entidad' => $fila->idunidad ?: null,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]
@@ -3200,6 +3222,311 @@ class EtlService
         $this->reporte['jerarquia_entidades'] = [
             'legacy' => (int) DB::table('entidades')->count(),
             'nueva' => (int) DB::table('entidades')->count(),
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de control de lubricantes CT-7: tec_controllubricante → control_lubricantes.
+     *
+     * El legacy registra el consumo por sistema del vehículo (motor, transmisión,
+     * dirección, hidráulico, frenos, agua, grasas rollete/copillas) con el tipo de
+     * lubricante de cada sistema (FK a lubricantes) y un tipo de operación
+     * (RELLENO/MTTO/O.CAUSAS). Los ids de lubricantes se preservan (1:1).
+     */
+    public function migrarControlLubricantes(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $legacy = DB::connection('legacy');
+
+        $lubIds = DB::table('lubricantes')->pluck('id')->flip();
+        $lubFk = function ($v) use ($lubIds): ?int {
+            $v = (int) $v;
+
+            return $v && isset($lubIds[$v]) ? $v : null;
+        };
+
+        $legacy->table('tec_controllubricante')
+            ->orderBy('idcontrollubricante')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $lubFk) {
+                foreach ($filas as $fila) {
+                    $fecha = $fila->fconfeccion;
+                    if (is_string($fecha) && str_starts_with($fecha, '0000-00-00')) {
+                        $fecha = null;
+                    }
+
+                    DB::table('control_lubricantes')->updateOrInsert(
+                        ['id' => $fila->idcontrollubricante],
+                        [
+                            'id_tractivo' => (int) $fila->idtractivos ?: null,
+                            'id_unidad' => (int) $fila->idunidad ?: null,
+                            'fecha_cambio' => $fecha,
+                            'tipo_operacion' => $fila->tipooperacion ?: 'RELLENO',
+                            'litros_motor' => $fila->litrosmotor ?: 0,
+                            'litros_transmision' => $fila->litrostransmision ?: 0,
+                            'litros_direccion' => $fila->litrosdireccion ?: 0,
+                            'litros_hidraulico' => $fila->litroshidraulico ?: 0,
+                            'liquido_freno' => $fila->liquidofreno ?: 0,
+                            'agua_refrigerada' => $fila->aguarefrigerada ?: 0,
+                            'grasa_rollete' => $fila->grasarollete ?: 0,
+                            'grasa_copillas' => $fila->grasacopillas ?: 0,
+                            'id_lub_motor' => $lubFk($fila->idlubmotor),
+                            'id_lub_transmision' => $lubFk($fila->idlubtransmision),
+                            'id_lub_hidraulico' => $lubFk($fila->idlubhidraulico),
+                            'id_lub_direccion' => $lubFk($fila->idlubdireccion),
+                            'id_grasa_rollete' => $lubFk($fila->idgrasar),
+                            'id_grasa_copillas' => $lubFk($fila->idgrasac),
+                            'id_liquido_freno' => $lubFk($fila->idliqfreno),
+                            'id_agua' => $lubFk($fila->idagua),
+                            'id_entidad' => (int) $fila->idunidad ?: null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                    $procesados++;
+                }
+            });
+
+        $this->reporte['control_lubricantes'] = [
+            'legacy' => (int) $legacy->table('tec_controllubricante')->count(),
+            'nueva' => (int) DB::table('control_lubricantes')->count(),
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de movimientos de neumáticos: tec_neumaticosmov → neumaticos_movimientos.
+     *
+     * Cada cambio de vehículo/posición/destino de un neumático genera un movimiento
+     * (montaje → retiro). El cabezal `neumaticos` ya migró en migrarNeumaticos().
+     */
+    public function migrarNeumaticosMovimientos(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $legacy = DB::connection('legacy');
+
+        $legacy->table('tec_neumaticosmov')
+            ->orderBy('idneumaticosmov')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos) {
+                foreach ($filas as $fila) {
+                    $fmontado = $fila->fmontado;
+                    if (is_string($fmontado) && str_starts_with($fmontado, '0000-00-00')) {
+                        $fmontado = null;
+                    }
+                    $fretirado = $fila->fretirado;
+                    if (is_string($fretirado) && str_starts_with($fretirado, '0000-00-00')) {
+                        $fretirado = null;
+                    }
+
+                    if (! DB::table('neumaticos')->where('id', $fila->idneumaticos)->exists()) {
+                        $avisos[] = "movneum#{$fila->idneumaticosmov}: neumático legacy {$fila->idneumaticos} inexistente, omitido";
+
+                        continue;
+                    }
+
+                    DB::table('neumaticos_movimientos')->updateOrInsert(
+                        ['id' => $fila->idneumaticosmov],
+                        [
+                            'id_neumatico' => $fila->idneumaticos,
+                            'id_tractivo' => (int) $fila->idtractivos ?: null,
+                            'fecha_montaje' => $fmontado,
+                            'fecha_retiro' => $fretirado,
+                            'km_instalado' => $fila->kminstalado ?: 0,
+                            'km_retirado' => $fila->kmretirado ?: null,
+                            'posicion' => (int) $fila->idposicion ?: null,
+                            'id_destino' => (int) $fila->iddestagregados ?: null,
+                            'observaciones' => trim((string) ($fila->observacion ?? '')) ?: null,
+                            'id_entidad' => (int) $fila->idunidad ?: null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                    $procesados++;
+                }
+            });
+
+        $this->reporte['neumaticos_movimientos'] = [
+            'legacy' => (int) $legacy->table('tec_neumaticosmov')->count(),
+            'nueva' => (int) DB::table('neumaticos_movimientos')->count(),
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL completo de órdenes de taller: tec_ordentaller → ordenes_taller.
+     *
+     * Amplía el ETL previo (solo año 2026 con tipo de mantenimiento válido) para
+     * migrar TODAS las órdenes con los campos de la cabecera legacy (horas,
+     * motivo de entrada, clasificación, plan de mantenimiento, prueba de motor,
+     * paralización, taller exterior). Se preservan los ids legacy.
+     */
+    public function migrarOrdenesTallerCompleto(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $legacy = DB::connection('legacy');
+
+        // Lookups de ids válidos en las tablas destino (los FKs legacy pueden
+        // apuntar a ids que no existen o que cambiaron).
+        $ids = [
+            'bolsa' => DB::table('bolsa')->pluck('id')->flip(),
+            'motores' => DB::table('motores')->pluck('id')->flip(),
+            'talleres' => DB::table('talleres')->pluck('id')->flip(),
+            'entidades' => DB::table('entidades')->pluck('id')->flip(),
+            'motivos_entrada' => DB::table('motivos_entrada_taller')->pluck('id')->flip(),
+            'clasificaciones' => DB::table('clasificaciones_ordenes_taller')->pluck('id')->flip(),
+            'tipos_mantenimiento' => DB::table('tipos_mantenimiento')->pluck('id')->flip(),
+            'tractivos' => DB::table('tractivos')->pluck('id')->flip(),
+        ];
+        $fk = function (string $key, $v) use ($ids): ?int {
+            $v = (int) $v;
+
+            return $v && isset($ids[$key][$v]) ? $v : null;
+        };
+
+        $legacy->table('tec_ordentaller')
+            ->orderBy('idordentaller')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $fk) {
+                foreach ($filas as $fila) {
+                    $fentrada = $fila->fentrada;
+                    if (is_string($fentrada) && str_starts_with($fentrada, '0000-00-00')) {
+                        $fentrada = null;
+                    }
+                    $fsalida = $fila->fsalida;
+                    if (is_string($fsalida) && str_starts_with($fsalida, '0000-00-00')) {
+                        $fsalida = null;
+                    }
+                    $idEntidad = $fk('entidades', $fila->idunidad);
+
+                    DB::table('ordenes_taller')->updateOrInsert(
+                        ['id' => $fila->idordentaller],
+                        [
+                            'numero' => $fila->ordentaller,
+                            'id_tractivo' => $fk('tractivos', $fila->idtractivos),
+                            'id_tipo_mantenimiento' => $fk('tipos_mantenimiento', $fila->idtipomtto),
+                            'fecha_ingreso' => $fentrada,
+                            'hora_ingreso' => $fila->hentrada ?: null,
+                            'fecha_salida' => $fsalida,
+                            'hora_salida' => $fila->hsalida ?: null,
+                            'ottiempo' => $fila->ottiempo ?: 0,
+                            'id_user' => $fk('bolsa', $fila->iduser),
+                            'id_motivo_entrada' => $fk('motivos_entrada', $fila->idmotentrada),
+                            'id_clasificacion' => $fk('clasificaciones', $fila->idtipoclasificacion),
+                            'cant_clasificacion' => $fila->cantclasif ?: null,
+                            'id_reporte' => $fk('bolsa', $fila->idreportado),
+                            'id_confeccionado' => $fk('bolsa', $fila->idconfeccionado),
+                            'id_operario' => $fk('bolsa', $fila->idoperario),
+                            'notas' => trim((string) ($fila->notas ?? '')) ?: null,
+                            'cancelada' => (bool) $fila->cancelada,
+                            'tipo_mtto' => $fila->tipomtto ?: null,
+                            'km_mtto' => (int) $fila->kmmtto ?: null,
+                            'planificacion' => (int) $fila->planificacion ?: null,
+                            'km_mtto_prox' => (int) $fila->kmmttoprox ?: null,
+                            'ot_paralizado' => $fila->otparalizado ?: null,
+                            'ot_rotura_en_linea' => $fila->otroturaenlinea ?: null,
+                            'ot_largo_plazo' => $fila->otlargoplazo ?: null,
+                            'comb_taller' => $fila->combtaller ?: 0,
+                            'id_motor' => $fk('motores', $fila->idmotores),
+                            'id_taller' => $fk('talleres', $fila->idtalleres),
+                            'id_unidad' => $idEntidad,
+                            'id_entidad' => $idEntidad,
+                            'pl_cons_comb' => $fila->plconscomb ?: null,
+                            'pl_cons_aceite' => $fila->plconsaceite ?: null,
+                            'pl_cil1' => $fila->plcil1 ?: null,
+                            'pl_cil2' => $fila->plcil2 ?: null,
+                            'pl_cil3' => $fila->plcil3 ?: null,
+                            'pl_cil4' => $fila->plcil4 ?: null,
+                            'pl_cil5' => $fila->plcil5 ?: null,
+                            'pl_cil6' => $fila->plcil6 ?: null,
+                            'pl_cil7' => $fila->plcil7 ?: null,
+                            'pl_cil8' => $fila->plcil8 ?: null,
+                            'pl_presion_aceite_baja' => $fila->plpresionaceitebaja ?: null,
+                            'pl_presion_aceite_alta' => $fila->plpresionaceitealta ?: null,
+                            'pl_temp_agua' => $fila->pltempagua ?: null,
+                            'pl_temp_aceite' => $fila->pltempaceite ?: null,
+                            'pl_observacion' => $fila->plobservacion ?: null,
+                            'fecha_salida_estimada' => $fsalida,
+                            'fecha_salida_real' => $fsalida,
+                            'kilometraje' => $fila->kmmtto ?: null,
+                            'estado' => $fila->cancelada ? 'cancelada' : ($fsalida ? 'cerrada' : 'abierta'),
+                            'diagnostico' => null,
+                            'observaciones' => trim((string) ($fila->notas ?? '')) ?: null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                    $procesados++;
+                }
+            });
+
+        $this->reporte['ordenes_taller'] = [
+            'legacy' => (int) $legacy->table('tec_ordentaller')->count(),
+            'nueva' => (int) DB::table('ordenes_taller')->count(),
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de gastos/piezas de almacén por OT: tec_otgasto → gastos_orden.
+     *
+     * El legacy registra los recursos de almacén (piezas) de cada orden de taller:
+     * vale, código de pieza, tipo de agregado, nombre, cantidad, motivo y el motor
+     * del tractivo (para trazabilidad de agregados por motor).
+     */
+    public function migrarGastosOrden(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $legacy = DB::connection('legacy');
+
+        $ids = [
+            'motores' => DB::table('motores')->pluck('id')->flip(),
+            'tipos_agregados' => DB::table('tipos_agregados')->pluck('id')->flip(),
+            'ordenes' => DB::table('ordenes_taller')->pluck('id')->flip(),
+            'entidades' => DB::table('entidades')->pluck('id')->flip(),
+        ];
+        $fk = function (string $key, $v) use ($ids): ?int {
+            $v = (int) $v;
+
+            return $v && isset($ids[$key][$v]) ? $v : null;
+        };
+
+        $legacy->table('tec_otgasto')
+            ->orderBy('idotgasto')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $fk) {
+                foreach ($filas as $fila) {
+                    if (! $fk('ordenes', $fila->idordentaller)) {
+                        $avisos[] = "otgasto#{$fila->idotgasto}: OT legacy {$fila->idordentaller} inexistente, omitido";
+
+                        continue;
+                    }
+
+                    DB::table('gastos_orden')->updateOrInsert(
+                        ['id' => $fila->idotgasto],
+                        [
+                            'id_orden_taller' => $fila->idordentaller,
+                            'importe_me' => $fila->importeme ?: 0,
+                            'vale' => $fila->otgastovale ?: null,
+                            'id_tipo_agregado' => $fk('tipos_agregados', $fila->idtipoagregados),
+                            'nombre' => $fila->otgastonombre ?: null,
+                            'cantidad' => $fila->otgastocant ?: 0,
+                            'codigo_pieza' => $fila->otgastocodpieza ?: null,
+                            'motivo' => $fila->otgastomotivo ?: null,
+                            'id_motor' => $fk('motores', $fila->idmotores),
+                            'id_entidad' => $fk('entidades', $fila->idunidad),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                    $procesados++;
+                }
+            });
+
+        $this->reporte['gastos_orden'] = [
+            'legacy' => (int) $legacy->table('tec_otgasto')->count(),
+            'nueva' => (int) DB::table('gastos_orden')->count(),
             'avisos' => $avisos,
         ];
     }

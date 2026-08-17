@@ -12,6 +12,7 @@ class BateriasMovimiento extends Model
     protected $fillable = [
         'id_bateria', 'id_tractivo', 'fecha_movimiento', 'tipo',
         'fecha_retiro', 'tiempo_trabajo', 'observaciones', 'id_destino',
+        'id_entidad',
     ];
 
     protected function casts(): array

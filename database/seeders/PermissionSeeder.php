@@ -35,6 +35,8 @@ class PermissionSeeder extends Seeder
 
             'lubricantes.ver', 'lubricantes.crear', 'lubricantes.editar', 'lubricantes.eliminar',
 
+            'control-lubricante.ver', 'control-lubricante.crear', 'control-lubricante.editar', 'control-lubricante.eliminar',
+
             'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
 
             'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
@@ -234,7 +236,10 @@ class PermissionSeeder extends Seeder
                 'diferenciales.ver', 'diferenciales.crear', 'diferenciales.editar', 'diferenciales.eliminar',
                 'baterias.ver', 'baterias.crear', 'baterias.editar', 'baterias.eliminar',
                 'neumaticos.ver', 'neumaticos.crear', 'neumaticos.editar', 'neumaticos.eliminar',
-                'lubricantes.ver', 'lubricantes.crear', 'lubricantes.editar', 'lubricantes.eliminar',
+            'lubricantes.ver', 'lubricantes.crear', 'lubricantes.editar', 'lubricantes.eliminar',
+
+            'control-lubricante.ver', 'control-lubricante.crear', 'control-lubricante.editar', 'control-lubricante.eliminar',
+
                 'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
                 'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
 

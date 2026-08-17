@@ -401,11 +401,13 @@ return [
             'pk' => 'idservicentros',
             'columnas' => [
                 'servicentros' => 'nombre',
+                'idprovincias' => 'id_provincia',
             ],
             'defaults' => [
                 'activo' => true,
                 'nombre' => '',
             ],
+            'cero_a_null' => ['id_provincia'],
         ],
 
         'tipos_conceptos' => [
@@ -865,18 +867,6 @@ return [
             ],
         ],
 
-        'acciones_hotkeys' => [
-            'legacy' => 'tec_hotkeyacciones',
-            'pk' => 'idaccion',
-            'columnas' => [
-                'codigo' => 'codigo',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
-
         // Arrastres: el legacy NO tiene tabla de arrastres (tec_naves está vacía).
         // Los arrastres son tractivos idgrupo=8 (grupo ARRASTRES), unificados en
         // `tractivos`. Migración dedicada migrarArrastres() re-asocia tipo y entidad;
@@ -1072,19 +1062,6 @@ return [
                 'indice' => 'indice',
                 'indiceac' => 'indice_acumulado',
                 'plancomb' => 'plan_combustible',
-            ],
-        ],
-
-        'hotkeys' => [
-            'legacy' => 'tec_hotkeys',
-            'pk' => 'idhotkeys',
-            'columnas' => [
-                'idaccion' => 'id_accion',
-                'tipo' => 'tipo',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'combinacion' => '',
             ],
         ],
 
@@ -1443,6 +1420,11 @@ return [
             'pk' => 'idtipocombustibles',
             'columnas' => [
                 'tipocombustibles' => 'nombre',
+                'preciomn' => 'preciomn',
+                'elementomn' => 'elementomn',
+                'factor' => 'factor',
+                'existfincmn' => 'existfincmn',
+                'indice' => 'indice',
             ],
             'defaults' => [
                 'activo' => true,

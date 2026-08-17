@@ -102,6 +102,9 @@ class EtlRun extends Command
             if ($tabla === 'tarifas') {
                 continue;  // migración dedicada abajo (com_tarifas46 → version 46 + com_tarifas → normal)
             }
+            if ($tabla === 'tarjetas') {
+                continue;  // migración dedicada abajo (combustible: cont_tarjetas → tarjetas)
+            }
 
             $this->info("Migrando {$tabla}...");
             $etl->migrarTabla($tabla, $chunk);
@@ -234,6 +237,34 @@ class EtlRun extends Command
             $this->info('Migrando hojas de ruta (año 2026)...');
             $etl->migrarHojasRuta(2026, $chunk);
             $this->mostrarResultado($etl->getReporte(), 'hojas_ruta');
+        }
+
+        // Combustible: tarjetas (catálogo completo) + cargas/descargas/cierres/dietas
+        // del año de negocio. Las descargas requieren las hojas de ruta ya migradas.
+        if (! $solo || $solo === 'tarjetas') {
+            $this->info('Migrando tarjetas de combustible (cont_tarjetas, 224)...');
+            $etl->migrarTarjetas($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'tarjetas');
+        }
+        if (! $solo || $solo === 'combustible_cargas') {
+            $this->info('Migrando cargas de combustible (año 2026, cabecera + detalle)...');
+            $etl->migrarCargasCombustible(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'combustible_cargas');
+        }
+        if (! $solo || $solo === 'combustible_descargas') {
+            $this->info('Migrando descargas de combustible (año 2026, vía hoja de ruta)...');
+            $etl->migrarDescargasCombustible(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'combustible_descargas');
+        }
+        if (! $solo || $solo === 'cierre_tarjetas') {
+            $this->info('Migrando cierres de tarjetas (cont_htarjetas, año 2026)...');
+            $etl->migrarCierreTarjetas(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'cierre_tarjetas');
+        }
+        if (! $solo || $solo === 'dietas') {
+            $this->info('Migrando dietas (cont_dietas, año 2026)...');
+            $etl->migrarDietas(2026, $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'dietas');
         }
 
         // Cartas de porte (girado): com_girado solo 2026, numero = nrocp

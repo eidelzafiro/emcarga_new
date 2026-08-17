@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class HistorialTractivo extends Model
 {
@@ -13,5 +14,10 @@ class HistorialTractivo extends Model
     protected function casts(): array
     {
         return ['activo' => 'boolean'];
+    }
+
+    public function tractivo(): BelongsTo
+    {
+        return $this->belongsTo(Tractivo::class, 'id_tractivo');
     }
 }

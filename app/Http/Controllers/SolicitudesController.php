@@ -12,23 +12,27 @@ use App\Models\Producto;
 use App\Models\SolicitudesServicio;
 use App\Models\TipoCarga;
 use App\Models\Tractivo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class SolicitudesController extends Controller
 {
+    use EntidadScoping;
+
+
     public function index(Request $request)
     {
         $entidadId = (int) session('entidad_activa_id');
 
         // Por defecto se muestran SOLO pendientes y en proceso. Las ejecutadas
-        // solo cuando el usuario las solicita explícitamente (?estado=ejecutada
-        // o ?estado=all).
+        // y canceladas solo cuando el usuario las solicita explícitamente.
         $filtroEstado = $request->input('estado', 'activas');
         $estadosQuery = match ($filtroEstado) {
             'ejecutada' => ['ejecutada'],
             'pendiente' => ['pendiente'],
             'en_proceso' => ['en_proceso'],
+            'cancelada' => ['cancelada'],
             'all' => null,
             default => ['pendiente', 'en_proceso'],
         };
@@ -46,32 +50,29 @@ class SolicitudesController extends Controller
         ])
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%")
                 ->orWhereHas('cliente', fn ($q2) => $q2->where('nombre', 'like', "%{$s}%")))
-            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->when($estadosQuery, fn ($q, $estados) => $q->whereIn('estado', $estados))
             ->orderBy('fecha_planificada', 'asc')
             ->orderBy('numero', 'asc')
             ->paginate(20);
 
         // Seguimiento de toneladas: suma de las toneladas (pesos) de las
-        // cartas de porte vigentes. Una solicitud solo se marca realizada
-        // cuando hay meta definida (peso1+peso2 > 0) y está cubierta.
+        // cartas de porte vigentes. El estado de la tarjeta y el filtro usan la
+        // columna `estado` real (pendiente/en_proceso/ejecutada), mantenida por
+        // `recalcularEstado()`.
         foreach ($solicitudes as $sol) {
             $total = (float) ($sol->peso1 ?? 0) + (float) ($sol->peso2 ?? 0);
             $ejecutado = (float) $sol->cartasPorte->sum('toneladas');
             $sol->toneladas_total = $total;
             $sol->toneladas_ejecutadas = $ejecutado;
             $sol->toneladas_pendientes = max(0, $total - $ejecutado);
-            $sol->estado_cumplimiento = match (true) {
-                $total <= 0 => 'pendiente',
-                $ejecutado <= 0 => 'pendiente',
-                $sol->toneladas_pendientes > 0 => 'en_proceso',
-                default => 'realizada',
-            };
+            $sol->estado_cumplimiento = $sol->estado;
         }
 
         return Inertia::render('Solicitudes/Index', [
             'title' => 'Solicitudes de Servicio',
             'solicitudes' => $solicitudes,
+            'fechaOperaciones' => $this->fechaOperaciones(),
             'clientes' => Cliente::where('activo', true)
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('nombre')
@@ -102,7 +103,7 @@ class SolicitudesController extends Controller
         $hoy = now()->toDateString();
 
         return [
-            'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad', 'id_cliente')
+            'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad')
                 ->with(['tractivo:id,codigo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos', 'chofer2:id,nombre,apellidos'])
                 ->where(fn ($q) => $q->whereNull('fecha_cierre')->orWhereBetween('fecha_cierre', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()]))
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
@@ -121,7 +122,6 @@ class SolicitudesController extends Controller
                     'arrastre_codigo' => $hr->arrastre?->codigo,
                     'chofer_nombre' => $hr->chofer ? trim($hr->chofer->nombre.' '.$hr->chofer->apellidos) : null,
                     'chofer2_nombre' => $hr->chofer2 ? trim($hr->chofer2->nombre.' '.$hr->chofer2->apellidos) : null,
-                    'id_cliente' => $hr->id_cliente,
                 ]),
             'tractivos' => Tractivo::with('grupo:id,nombre')
                 ->select('id', 'codigo', 'marca', 'modelo', 'placa', 'id_grupo')
@@ -162,6 +162,7 @@ class SolicitudesController extends Controller
 
     public function update(Request $request, SolicitudesServicio $solicitude)
     {
+        $this->autorizarEntidad($solicitude->id_entidad);
         $validated = $this->validar($request, $solicitude);
         $solicitude->update($validated);
 
@@ -170,6 +171,8 @@ class SolicitudesController extends Controller
 
     public function destroy(SolicitudesServicio $solicitude)
     {
+        $this->autorizarEntidad($solicitude->id_entidad);
+
         if ($solicitude->fecha_ejecutada) {
             return redirect()->route('solicitudes.index')->with('error', 'No se puede eliminar una solicitud ejecutada.');
         }
@@ -180,11 +183,51 @@ class SolicitudesController extends Controller
     }
 
     /**
+     * Cancela una solicitud de servicio que NO tenga cartas de porte asociadas.
+     * Las solicitudes con cartas vigentes no se pueden cancelar (se cancelan
+     * a través de sus cartas).
+     */
+    public function cancelar(Request $request, SolicitudesServicio $solicitude)
+    {
+        $this->autorizarEntidad($solicitude->id_entidad);
+
+        $tieneCartas = $solicitude->cartasPorte()
+            ->where('estado', '!=', 'cancelada')
+            ->exists();
+
+        if ($tieneCartas) {
+            return redirect()->route('solicitudes.index')
+                ->with('error', 'No se puede cancelar una solicitud con cartas de porte asociadas.');
+        }
+
+        if ($solicitude->fecha_cancelacion) {
+            return redirect()->route('solicitudes.index')
+                ->with('error', 'La solicitud ya estaba cancelada.');
+        }
+
+        $validated = $request->validate([
+            'motivo_cancelacion' => 'nullable|string|max:255',
+        ]);
+
+        $solicitude->update([
+            'estado' => 'cancelada',
+            'fecha_cancelacion' => now(),
+            'id_user_cancelacion' => auth()->id(),
+            'motivo_cancelacion' => $validated['motivo_cancelacion'] ?? null,
+        ]);
+
+        return redirect()->route('solicitudes.index')
+            ->with('success', 'Solicitud cancelada correctamente.');
+    }
+
+    /**
      * Duplica una solicitud con los mismos datos excepto el número, que se
      * regenera con el siguiente secuencial del año.
      */
     public function duplicar(SolicitudesServicio $solicitude)
     {
+        $this->autorizarEntidad($solicitude->id_entidad);
+
         $copia = SolicitudesServicio::create($solicitude->only([
             'id_entidad', 'id_cliente', 'id_lugar_origen', 'id_lugar_destino',
             'id_producto', 'id_producto2', 'id_tipo_carga', 'id_tipo_carga2',
@@ -205,6 +248,8 @@ class SolicitudesController extends Controller
      */
     public function registrarCartaPorte(Request $request, SolicitudesServicio $solicitude)
     {
+        $this->autorizarEntidad($solicitude->id_entidad);
+
         $total = (float) ($solicitude->peso1 ?? 0) + (float) ($solicitude->peso2 ?? 0);
         $ejecutado = (float) CartaPorte::where('id_solicitud', $solicitude->id)->where('estado', '!=', 'cancelada')->sum('toneladas');
         $pendientes = max(0, $total - $ejecutado);
@@ -285,6 +330,11 @@ class SolicitudesController extends Controller
             'valor_mt' => 'nullable|numeric|min:0',
             'valor_total' => 'nullable|numeric|min:0',
         ]);
+    }
+
+    private function fechaOperaciones(): string
+    {
+        return session('fecha_operaciones') ?? now()->toDateString();
     }
 
     private function generarNumero(string $fechaSolicitud): string

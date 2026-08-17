@@ -11,8 +11,10 @@ import Select from 'primevue/select'
 import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
+import { useConfirm } from 'primevue/useconfirm'
 
 const props = defineProps({ title: String, cajas: Object, filters: Object })
+const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
@@ -79,8 +81,15 @@ function submit() {
 }
 
 function destroy(item) {
-  if (!confirm(`¿Eliminar la caja ${item.codigo ?? item.id}?`)) return
-  router.delete(route('cajas.destroy', { caja: item.id }))
+  confirmDialog.require({
+    message: `¿Eliminar la caja ${item.codigo ?? item.id}?`,
+    header: 'Eliminar Caja',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => router.delete(route('cajas.destroy', { caja: item.id })),
+  })
 }
 </script>
 

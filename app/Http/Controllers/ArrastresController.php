@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tractivo;
 use App\Models\Grupo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,13 +21,15 @@ use Inertia\Inertia;
  */
 class ArrastresController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $query = Tractivo::query()->where('id_grupo', 8);
 
-        $entidadId = (int) session('entidad_activa_id');
-        if ($entidadId) {
-            $query->where('id_entidad', $entidadId);
+        $entidades = $this->entidadesPermitidas();
+        if (! empty($entidades)) {
+            $query->whereIn('id_entidad', $entidades);
         }
 
         if ($request->search) {
@@ -76,6 +79,8 @@ class ArrastresController extends Controller
             abort(404);
         }
 
+        $this->autorizarEntidad($tractivo->id_entidad);
+
         $validated = $request->validate($this->reglas($tractivo->id));
         $this->aplicarFichaTipo($validated);
         $tractivo->update($validated);
@@ -89,6 +94,8 @@ class ArrastresController extends Controller
         if ((int) $tractivo->id_grupo !== 8) {
             abort(404);
         }
+
+        $this->autorizarEntidad($tractivo->id_entidad);
 
         $tractivo->delete();
 

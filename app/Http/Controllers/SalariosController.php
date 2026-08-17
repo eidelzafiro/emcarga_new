@@ -6,11 +6,14 @@ use App\Models\Area;
 use App\Models\Bolsa;
 use App\Models\Cargo;
 use App\Models\Salario;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class SalariosController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $salarios = Salario::with(['bolsa', 'area', 'cargo', 'user'])
@@ -18,9 +21,9 @@ class SalariosController extends Controller
             ->when($request->mes, fn ($q, $v) => $q->where('mes', $v))
             ->when($request->ano, fn ($q, $v) => $q->where('ano', $v))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -63,6 +66,8 @@ class SalariosController extends Controller
 
     public function update(Request $request, Salario $salario)
     {
+        $this->autorizarEntidad($salario->id_entidad);
+
         $validated = $request->validate([
             'mes' => 'required|integer|min:1|max:12',
             'ano' => 'required|integer|min:2000',
@@ -79,6 +84,8 @@ class SalariosController extends Controller
 
     public function destroy(Salario $salario)
     {
+        $this->autorizarEntidad($salario->id_entidad);
+
         $salario->delete();
 
         return redirect()->route('salarios.index')->with('success', 'Salario eliminado correctamente.');

@@ -5,20 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\Moneda;
 use App\Models\Organismo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ClientesController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
-
         $clientes = Cliente::with('organismo:id,nombre,abreviatura', 'moneda:id,codigo,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")
                 ->orWhere('codigo', 'like', "%{$s}%")
                 ->orWhere('nrocontrato', 'like', "%{$s}%"))
-            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->orderBy('nombre')
             ->paginate(20);
 
@@ -43,6 +44,8 @@ class ClientesController extends Controller
 
     public function update(Request $request, Cliente $cliente)
     {
+        $this->autorizarEntidad($cliente->id_entidad);
+
         $validated = $this->validar($request, $cliente);
         $cliente->update($validated);
 
@@ -51,6 +54,8 @@ class ClientesController extends Controller
 
     public function destroy(Cliente $cliente)
     {
+        $this->autorizarEntidad($cliente->id_entidad);
+
         $cliente->delete();
 
         return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente.');

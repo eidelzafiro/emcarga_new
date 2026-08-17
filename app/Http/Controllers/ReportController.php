@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Reports\AforoReportService;
 use App\Services\Reports\CatalogoReportService;
+use App\Services\Reports\CartaPorteReportService;
 use App\Services\Reports\FacturaReportService;
+use App\Services\Reports\HojaRutaReportService;
 use App\Services\Reports\NominaReportService;
 use Illuminate\Http\Request;
 
@@ -48,5 +51,20 @@ class ReportController extends Controller
     public function pdfPrefactura(int $id)
     {
         return app(FacturaReportService::class)->pdfPrefactura($id);
+    }
+
+    public function pdfCartaPorte(int $id)
+    {
+        return app(CartaPorteReportService::class)->pdfCartaPorte($id);
+    }
+
+    public function pdfHojaRuta(int $id)
+    {
+        return app(HojaRutaReportService::class)->pdfHojaRuta($id);
+    }
+
+    public function pdfAforo(int $id)
+    {
+        return app(AforoReportService::class)->pdfAforo($id);
     }
 }

@@ -5,17 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Bolsa;
 use App\Models\Incidencia;
 use App\Models\TipoIncidencia;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class IncidenciasController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidades = $this->entidadesPermitidas();
 
         $query = Incidencia::with(['bolsa', 'tipoIncidencia'])
-            ->when($entidadId, fn ($q) => $q->whereHas('bolsa', fn ($sq) => $sq->where('id_entidad', $entidadId)))
+            ->when(! empty($entidades), fn ($q) => $q->whereHas('bolsa', fn ($sq) => $sq->whereIn('id_entidad', $entidades)))
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->whereHas('bolsa', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%"))
                     ->orWhereHas('tipoIncidencia', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%"));
@@ -24,7 +27,7 @@ class IncidenciasController extends Controller
             ->orderBy('id', 'desc');
 
         $items = $query->paginate(20);
-        $empleados = Bolsa::when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+        $empleados = Bolsa::when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
             ->orderBy('nombre')
             ->get();
         $tipos = TipoIncidencia::where('activo', true)->select('id', 'nombre')->orderBy('nombre')->get();
@@ -49,6 +52,8 @@ class IncidenciasController extends Controller
             'importe' => 'required|numeric|min:0',
         ]);
 
+        $this->autorizarEntidad(Bolsa::find($data['id_bolsa'])?->id_entidad);
+
         Incidencia::create($data);
 
         return redirect()->back()->with('success', 'Incidencia registrada correctamente.');
@@ -56,6 +61,8 @@ class IncidenciasController extends Controller
 
     public function update(Request $request, Incidencia $incidencia)
     {
+        $this->autorizarEntidad($incidencia->bolsa?->id_entidad);
+
         $data = $request->validate([
             'id_bolsa' => 'required|exists:bolsa,id',
             'id_tipo_incidencia' => 'required|exists:tipos_incidencias,id',
@@ -72,6 +79,8 @@ class IncidenciasController extends Controller
 
     public function destroy(Incidencia $incidencia)
     {
+        $this->autorizarEntidad($incidencia->bolsa?->id_entidad);
+
         $incidencia->delete();
 
         return redirect()->back()->with('success', 'Incidencia eliminada correctamente.');

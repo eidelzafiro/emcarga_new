@@ -75,7 +75,7 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
             </Card>
 
             <div class="flex gap-2">
-                <Button label="PDF" icon="pi pi-file-pdf" severity="danger" @click="window.open(route('reportes.factura', factura.id), '_blank')" />
+                <Button label="PDF" icon="pi pi-file-pdf" severity="danger" @click="window.open(route('facturas.imprimir', factura.id), '_blank')" />
                 <Button label="Volver" icon="pi pi-arrow-left" severity="secondary" @click="router.get(route('facturas.index'))" />
             </div>
         </div>

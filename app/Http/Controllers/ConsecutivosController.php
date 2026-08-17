@@ -26,6 +26,11 @@ class ConsecutivosController extends Controller
         return 'Consecutivos';
     }
 
+    protected function isEntityScoped(): bool
+    {
+        return true;
+    }
+
     protected function getSortField(): string
     {
         return 'codigo';
@@ -50,9 +55,9 @@ class ConsecutivosController extends Controller
 
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidades = $this->entidadesPermitidas();
 
-        $query = Consecutivo::where('id_entidad', $entidadId);
+        $query = Consecutivo::when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades));
         $search = $request->get('search');
 
         if ($search) {
@@ -111,6 +116,9 @@ class ConsecutivosController extends Controller
     public function update(Request $request, $id)
     {
         $item = Consecutivo::findOrFail($id);
+
+        $this->autorizarEntidad($item->id_entidad ?? null);
+
         $data = $request->validate($this->getValidationRules($id));
 
         $data['descripcion'] = $data['nombre'];
@@ -125,6 +133,9 @@ class ConsecutivosController extends Controller
     public function destroy($id)
     {
         $item = Consecutivo::findOrFail($id);
+
+        $this->autorizarEntidad($item->id_entidad ?? null);
+
         $item->delete();
 
         return redirect()->back()->with('success', 'Eliminado correctamente');

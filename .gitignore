@@ -34,6 +34,12 @@ docker/mysql/*.data
 # Salvas de la BD nueva (datos de produccion, no versionar)
 /database/backups/
 
+# Cache de fuentes de dompdf (se regenera en AppServiceProvider::boot)
+/storage/fonts/
+
+# Scripts y dumps de auditoría BD (herramienta interna, no versionar)
+/database/audit/
+
 # Archivos temporales / backup no versionados
 consulta.php
 .env.testing.bak

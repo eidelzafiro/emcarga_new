@@ -11,21 +11,19 @@ class DetalleCargaCombustible extends Model
 
     protected $fillable = [
         'id_carga',
-        'id_tractivo',
-        'id_bolsa',
-        'fecha_movimiento',
-        'comprobante',
-        'importe_mn',
-        'importe_mlc',
-        'observaciones',
+        'id_tarjeta',
+        'fcarga',
+        'folio',
+        'saldo_mon',
+        'saldo_lts',
     ];
 
     protected function casts(): array
     {
         return [
-            'fecha_movimiento' => 'date',
-            'importe_mn' => 'decimal:2',
-            'importe_mlc' => 'decimal:2',
+            'fcarga' => 'date',
+            'saldo_mon' => 'decimal:2',
+            'saldo_lts' => 'decimal:2',
         ];
     }
 
@@ -34,13 +32,8 @@ class DetalleCargaCombustible extends Model
         return $this->belongsTo(CombustibleCarga::class, 'id_carga');
     }
 
-    public function tractivo(): BelongsTo
+    public function tarjeta(): BelongsTo
     {
-        return $this->belongsTo(Tractivo::class, 'id_tractivo');
-    }
-
-    public function bolsa(): BelongsTo
-    {
-        return $this->belongsTo(Bolsa::class, 'id_bolsa');
+        return $this->belongsTo(Tarjeta::class, 'id_tarjeta');
     }
 }

@@ -13,13 +13,18 @@ class CombustibleDescarga extends Model
     protected $table = 'combustible_descargas';
 
     protected $fillable = [
-        'id_carga',
-        'id_tractivo',
-        'fecha_descarga',
-        'cantidad_litros',
-        'kilometraje',
-        'tipo_combustible',
-        'observaciones',
+        'id_tarjeta',
+        'fdescarga',
+        'folio',
+        'saldo_mon',
+        'saldo_lts',
+        'id_hoja_ruta',
+        'id_comprobante',
+        'hora_descarga',
+        'id_servicentro',
+        'f_chip',
+        'kms',
+        'id_entidad',
         'estado',
         'id_user',
     ];
@@ -27,20 +32,32 @@ class CombustibleDescarga extends Model
     protected function casts(): array
     {
         return [
-            'fecha_descarga' => 'date',
-            'cantidad_litros' => 'decimal:2',
-            'kilometraje' => 'decimal:2',
+            'fdescarga' => 'date',
+            'saldo_mon' => 'decimal:2',
+            'saldo_lts' => 'decimal:2',
+            'f_chip' => 'date',
+            'kms' => 'decimal:2',
         ];
     }
 
-    public function carga(): BelongsTo
+    public function tarjeta(): BelongsTo
     {
-        return $this->belongsTo(CombustibleCarga::class, 'id_carga');
+        return $this->belongsTo(Tarjeta::class, 'id_tarjeta');
     }
 
-    public function tractivo(): BelongsTo
+    public function hojaRuta(): BelongsTo
     {
-        return $this->belongsTo(Tractivo::class, 'id_tractivo');
+        return $this->belongsTo(HojasRuta::class, 'id_hoja_ruta');
+    }
+
+    public function servicentro(): BelongsTo
+    {
+        return $this->belongsTo(Servicentro::class, 'id_servicentro');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 
     public function user(): BelongsTo

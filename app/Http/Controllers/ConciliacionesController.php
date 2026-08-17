@@ -3,20 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conciliacione;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ConciliacionesController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $conciliaciones = Conciliacione::with('factura')
             ->when($request->search, fn ($q, $s) => $q->where('concepto', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $e) => $q->where('estado', $e))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -48,6 +51,8 @@ class ConciliacionesController extends Controller
 
     public function update(Request $request, Conciliacione $conciliacione)
     {
+        $this->autorizarEntidad($conciliacione->id_entidad);
+
         $validated = $request->validate([
             'id_factura' => 'required|exists:facturas,id',
             'fecha' => 'required|date',
@@ -62,6 +67,8 @@ class ConciliacionesController extends Controller
 
     public function destroy(Conciliacione $conciliacione)
     {
+        $this->autorizarEntidad($conciliacione->id_entidad);
+
         $conciliacione->delete();
 
         return redirect()->route('conciliaciones.index')->with('success', 'Conciliación eliminada correctamente.');

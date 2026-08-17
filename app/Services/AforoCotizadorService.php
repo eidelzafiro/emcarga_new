@@ -238,25 +238,24 @@ class AforoCotizadorService
         if ($tipocarga === 110) {
             return ['tarmt' => 130, 'fletemt' => $this->redondeado(130 * $distancia, 2), 'fletemlc' => ''];
         }
-        // 7 / 14: KMS VACIOS
+        // 7 / 14: KMS VACIOS. En el nuevo formulario los kms se escriben en el
+        // campo Kms (distancia); la tarifa depende de la capacidad del tractivo.
         if ($tipocarga === 7 || $tipocarga === 14) {
-            return $this->calcularKmsVacios($tipocarga, $moneda, $distancia, $kms_vacio_tarifa_previa, $peso, $mlc, $descuento);
+            return $this->calcularKmsVacios($tipocarga, $moneda, (int) $distancia, $kms_vacio_tarifa_previa, $capacidad, $mlc, $descuento);
         }
-        // 10 / 5 / 114 / 115: TARIFA HORARIA
+        // 10 / 5 / 114 / 115: TARIFA HORARIA (el legacy usa el peso de la línea como horas: aforoCalcularTH $horas=cpapesoN)
         if (in_array($tipocarga, [10, 5, 114, 115])) {
-            $th = $this->calcularTh($tipocarga, $capacidad, $descuento, 1, $moneda, $tipocont);
+            $th = $this->calcularTh($tipocarga, $capacidad, $descuento, (int) $peso, $moneda, $tipocont);
 
-            // Nota: el legacy llama calcularTH con las horas; aquí se usa la tarifa
-            // horaria como tarmt y el flete por hora se aplica aparte.
             return ['tarmt' => $th['tarmt'], 'fletemt' => $th['fth'], 'fletemlc' => ''];
         }
         // 8 / 116: KMS ADICIONALES
         if ($tipocarga === 8 || $tipocarga === 116) {
             return $this->calcularKmsAdicionales($tipocarga, $distancia, $mlc, $capacidad, $descuento);
         }
-        // 15: TH EFECTOS
+        // 15: TH EFECTOS (el legacy usa el peso de la línea como horas)
         if ($tipocarga === 15) {
-            return $this->calcularThEfectos($tipocarga, $capacidad, $descuento, 1);
+            return $this->calcularThEfectos($tipocarga, $capacidad, $descuento, (int) $peso);
         }
         // 17: ESTIBADORES (% del flete por piso)
         if ($tipocarga === 17) {
@@ -553,7 +552,11 @@ class AforoCotizadorService
             $arr['tarmt'] = $tarkvaciosmn1;
         }
 
-        $arr['fletemt'] = round($kms * $arr['tarmt'], 2);
+        if (! $kms || $arr['tarmt'] === '' || $arr['tarmt'] === null) {
+            return $this->normalizar($arr);
+        }
+
+        $arr['fletemt'] = round($kms * (float) $arr['tarmt'], 2);
         $arr['fletemlc'] = round(($arr['fletemt'] / 24) * ($mlc / 100), 2);
 
         $alm_descuento = round($arr['fletemt'] * ($descuento / 100), 2);

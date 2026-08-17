@@ -8,6 +8,7 @@ use App\Models\Grupo;
 use App\Models\HojasRuta;
 use App\Models\Lugare;
 use App\Models\Tractivo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use App\Services\HojasRutaService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ use Inertia\Inertia;
 
 class HojasRutaController extends Controller
 {
+    use EntidadScoping;
+
     public function __construct(private readonly HojasRutaService $service) {}
 
     public function index(Request $request)
@@ -31,7 +34,7 @@ class HojasRutaController extends Controller
         $hojas = HojasRuta::with(['tractivo:id,codigo,id_entidad,id_grupo,indice_consumo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos,ci,categorias_licencia', 'chofer2:id,nombre,apellidos,ci,categorias_licencia', 'entidad:id,nombre', 'parqueo:id,nombre', 'grupo:id,nombre', 'cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')->select('id', 'id_hoja_ruta', 'numero', 'estado', 'imprimir')])
             ->withCount(['cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')])
             // Entidad activa por el tractivo de la hoja de ruta
-            ->when($entidadId, fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
             // Vigentes: sin cierre o cerradas dentro del mes de operaciones
             ->where(fn ($q) => $q
                 ->whereNull('fecha_cierre')
@@ -154,6 +157,7 @@ class HojasRutaController extends Controller
             'filters' => $request->only(['search', 'estado', 'equipo', 'chofer', 'grupo']),
             'catalogos' => $catalogos,
             'filtros' => $this->filtrosHojas($entidadId, $inicioMes, $finMes),
+            'fechaOperaciones' => $fechaOperaciones,
         ]);
     }
 
@@ -166,7 +170,7 @@ class HojasRutaController extends Controller
     private function filtrosHojas(?int $entidadId, string $inicioMes, string $finMes): array
     {
         $base = HojasRuta::query()
-            ->when($entidadId, fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->where(fn ($q) => $q
                 ->whereNull('fecha_cierre')
                 ->orWhereBetween('fecha_cierre', [$inicioMes, $finMes]));
@@ -198,6 +202,8 @@ class HojasRutaController extends Controller
     {
         $datos = $this->validarApertura($request);
 
+        $this->autorizarTractivo($datos['id_tractivo'] ?? null);
+
         $this->service->abrir($datos, $request->user()->id);
 
         return back()->with('success', 'Hoja de Ruta abierta correctamente.');
@@ -205,6 +211,9 @@ class HojasRutaController extends Controller
 
     public function update(Request $request, int $hoja)
     {
+        $hojaModel = HojasRuta::findOrFail($hoja);
+        $this->autorizarEntidad($hojaModel->id_entidad);
+
         if ($request->input('operacion') === 'cierre-con-siguiente') {
             $datos = $this->validarCierre($request, true);
             $nueva = $this->service->cerrarYCrearSiguiente($hoja, $datos, $request->user()->id);
@@ -220,6 +229,7 @@ class HojasRutaController extends Controller
         }
 
         $datos = $this->validarModificacion($request, $hoja);
+        $this->autorizarTractivo($datos['id_tractivo'] ?? null);
         $this->service->modificar($hoja, $datos, $request->user()->id);
 
         return back()->with('success', 'Hoja de Ruta actualizada correctamente.');
@@ -227,6 +237,9 @@ class HojasRutaController extends Controller
 
     public function destroy(Request $request, int $hoja)
     {
+        $hojaModel = HojasRuta::findOrFail($hoja);
+        $this->autorizarEntidad($hojaModel->id_entidad);
+
         if ($request->input('operacion') === 'cancelar') {
             try {
                 $this->service->cancelar($hoja, $request->user()->id, session('fecha_operaciones'));
@@ -244,6 +257,18 @@ class HojasRutaController extends Controller
         }
 
         return back()->with('success', 'Hoja de Ruta eliminada correctamente.');
+    }
+
+    /**
+     * Autoriza operar sobre un tractivo: debe pertenecer a una entidad permitida.
+     */
+    private function autorizarTractivo(?int $idTractivo): void
+    {
+        if (! $idTractivo) {
+            return;
+        }
+
+        $this->autorizarEntidad(Tractivo::find($idTractivo)?->id_entidad, 'No tiene permiso para operar con este tractivo.');
     }
 
     private function validarApertura(Request $request): array
@@ -298,9 +323,9 @@ class HojasRutaController extends Controller
             'hora_emision' => ['nullable', 'string', 'max:15'],
             'fecha_cierre' => ['nullable', 'date'],
             'hora_cierre' => ['nullable', 'string', 'max:15'],
-            'id_tractivo' => ['nullable', 'exists:tractivos,id'],
+            'id_tractivo' => ['required', 'exists:tractivos,id'],
             'id_arrastre' => ['nullable', 'exists:tractivos,id'],
-            'id_chofer' => ['nullable', 'exists:bolsa,id'],
+            'id_chofer' => ['required', 'exists:bolsa,id'],
             'id_chofer2' => ['nullable', 'exists:bolsa,id'],
             'id_parqueo' => ['nullable', 'exists:lugares,id'],
             'id_grupo' => ['nullable', 'exists:grupos,id'],

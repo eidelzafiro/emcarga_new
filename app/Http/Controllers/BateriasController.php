@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bateria;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class BateriasController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $baterias = Bateria::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%"))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -51,6 +54,8 @@ class BateriasController extends Controller
 
     public function update(Request $request, Bateria $bateria)
     {
+        $this->autorizarEntidad($bateria->id_entidad);
+
         $validated = $request->validate([
             'folio' => 'required|unique:baterias,folio,'.$bateria->id,
             'marca' => 'nullable|string|max:100',
@@ -69,6 +74,8 @@ class BateriasController extends Controller
 
     public function destroy(Bateria $bateria)
     {
+        $this->autorizarEntidad($bateria->id_entidad);
+
         $bateria->delete();
 
         return redirect()->route('baterias.index')

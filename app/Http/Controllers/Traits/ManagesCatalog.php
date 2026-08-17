@@ -9,6 +9,9 @@ use Inertia\Inertia;
 
 trait ManagesCatalog
 {
+    use EntidadScoping;
+
+
     abstract protected function getModelClass(): string;
 
     abstract protected function getRouteName(): string;
@@ -32,7 +35,10 @@ trait ManagesCatalog
 
     protected function applyEntityScope($query, int $entidadId): void
     {
-        if ($entidadId > 0) {
+        $ids = $this->entidadesPermitidas();
+        if (! empty($ids)) {
+            $query->whereIn('id_entidad', $ids);
+        } elseif ($entidadId > 0) {
             $query->where('id_entidad', $entidadId);
         }
     }
@@ -186,6 +192,11 @@ trait ManagesCatalog
     {
         $model = $this->getModelClass();
         $item = $model::findOrFail($id);
+
+        if ($this->isEntityScoped()) {
+            $this->autorizarEntidad($item->id_entidad ?? null);
+        }
+
         $data = $request->validate($this->getValidationRules($id));
 
         $item->update($data);
@@ -207,6 +218,10 @@ trait ManagesCatalog
     {
         $model = $this->getModelClass();
         $item = $model::findOrFail($id);
+
+        if ($this->isEntityScoped()) {
+            $this->autorizarEntidad($item->id_entidad ?? null);
+        }
 
         $bloqueos = $this->referenciasEnUso($model, $item->getKey());
 

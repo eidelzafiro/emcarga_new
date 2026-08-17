@@ -26,6 +26,11 @@ class TiposModeloController extends Controller
         return 'Tipos Modelo';
     }
 
+    protected function isEntityScoped(): bool
+    {
+        return true;
+    }
+
     protected function getSearchFields(): array
     {
         return ['nombre', 'codigo'];
@@ -57,9 +62,9 @@ class TiposModeloController extends Controller
     public function index(Request $request)
     {
         $model = $this->getModelClass();
-        $entidadId = (int) session('entidad_activa_id');
+        $entidades = $this->entidadesPermitidas();
 
-        $query = $entidadId > 0 ? $model::where('id_entidad', $entidadId) : $model::query();
+        $query = ! empty($entidades) ? $model::whereIn('id_entidad', $entidades) : $model::query();
         $search = $request->get('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -104,6 +109,9 @@ class TiposModeloController extends Controller
     {
         $modelClass = $this->getModelClass();
         $item = $modelClass::findOrFail($id);
+
+        $this->autorizarEntidad($item->id_entidad ?? null);
+
         $data = $request->validate($this->getValidationRules($id));
 
         $item->update($data);

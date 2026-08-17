@@ -12,22 +12,37 @@ import InputNumber from 'primevue/inputnumber'
 import DatePicker from 'primevue/datepicker'
 import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
+import Textarea from 'primevue/textarea'
 import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
-const props = defineProps({ cargas: Object, filters: Object, tarjetas: Array, tractivos: Array })
+const props = defineProps({ cargas: Object, filters: Object, tiposCombustibles: Array, monedas: Array, filtros: Object, fechaOperaciones: String })
 const toast = useToast()
+const confirm = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
-const form = ref({ numero: '', id_tarjeta: null, id_tractivo: null, fecha_carga: null, cantidad_litros: null, precio_litro: null, total: null, tipo_combustible: null, lugar: '' })
-const title = 'Cargas de Combustible'
+const form = ref(emptyForm())
+const title = 'Carga Combustible'
 
-const tiposCombustible = [
-    { label: 'Diesel', value: 'diesel' },
-    { label: 'Gasolina', value: 'gasolina' },
-    { label: 'Gas', value: 'gas' },
-]
+function emptyForm() {
+    return {
+        fcarga: new Date(props.fechaOperaciones || new Date()),
+        folio: '',
+        saldocargado: null,
+        saldoxtarjeta: null,
+        id_monedas: null,
+        id_tipo_combustibles: null,
+        id_responsable: null,
+        notas: '',
+        detalles: [],
+    }
+}
+
+function nuevoDetalle() {
+    return { id: null, id_tarjeta: null, saldo_mon: null }
+}
 
 watch(search, () => {
     router.get(route('combustible-cargas.index'), { search: search.value }, { preserveState: true, replace: true })
@@ -35,24 +50,33 @@ watch(search, () => {
 
 function openCreate() {
     editing.value = null
-    form.value = { numero: '', id_tarjeta: null, id_tractivo: null, fecha_carga: null, cantidad_litros: null, precio_litro: null, total: null, tipo_combustible: null, lugar: '' }
+    form.value = emptyForm()
+    form.value.detalles = [nuevoDetalle()]
     showForm.value = true
 }
 
 function openEdit(item) {
     editing.value = item
     form.value = {
-        numero: item.numero,
-        id_tarjeta: item.id_tarjeta,
-        id_tractivo: item.id_tractivo,
-        fecha_carga: item.fecha_carga ? new Date(item.fecha_carga) : null,
-        cantidad_litros: item.cantidad_litros,
-        precio_litro: item.precio_litro,
-        total: item.total,
-        tipo_combustible: item.tipo_combustible,
-        lugar: item.lugar || '',
+        fcarga: new Date(item.fcarga),
+        folio: item.folio,
+        saldocargado: Number(item.saldocargado),
+        saldoxtarjeta: Number(item.saldoxtarjeta),
+        id_monedas: item.id_monedas,
+        id_tipo_combustibles: item.id_tipo_combustibles,
+        id_responsable: item.id_responsable,
+        notas: item.notas || '',
+        detalles: (item.detalles || []).map((d) => ({ id: d.id, id_tarjeta: d.id_tarjeta, saldo_mon: Number(d.saldo_mon) })),
     }
     showForm.value = true
+}
+
+function addDetalle() {
+    form.value.detalles.push(nuevoDetalle())
+}
+
+function removeDetalle(idx) {
+    form.value.detalles.splice(idx, 1)
 }
 
 function submit() {
@@ -63,6 +87,21 @@ function submit() {
         onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
     })
 }
+
+function confirmDelete(item) {
+    confirm.require({
+        message: `¿Eliminar la carga ${item.folio}?`,
+        header: 'Confirmar eliminación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, eliminar',
+        rejectLabel: 'Cancelar',
+        accept: () => router.delete(route('combustible-cargas.destroy', item.id), {
+            onSuccess: () => toast.add({ severity: 'success', summary: 'Eliminada', life: 3000 }),
+        }),
+    })
+}
+
+const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 </script>
 
 <template>
@@ -73,83 +112,96 @@ function submit() {
                     <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
                 </template>
                 <template #end>
-                    <InputText v-model="search" placeholder="Buscar..." />
+                    <div class="flex gap-2 items-center">
+                        <Select v-model="filters.id_tipo_combustible" :options="[{id:null,nombre:'Todos'}, ...tiposCombustibles]" optionLabel="nombre" optionValue="id" placeholder="Tipo" class="w-48" @change="router.get(route('combustible-cargas.index'), { id_tipo_combustible: filters.id_tipo_combustible }, { preserveState: true, replace: true })" />
+                        <InputText v-model="search" placeholder="Buscar folio/tarjeta..." />
+                    </div>
                 </template>
             </Toolbar>
 
             <DataTable :value="cargas.data" striped-rows paginator :rows="20" :total-records="cargas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
-                <Column field="numero" header="Número" sortable />
-                <Column field="tarjeta.numero" header="Tarjeta" />
-                <Column field="tractivo.descripcion" header="Tractivo" />
-                <Column field="fecha_carga" header="Fecha Carga" sortable />
-                <Column field="cantidad_litros" header="Litros" />
-                <Column field="precio_litro" header="Precio/Litro">
+                <Column field="fcarga" header="Fecha" sortable />
+                <Column field="folio" header="Folio" sortable />
+                <Column field="tipoCombustible.nombre" header="Combustible" />
+                <Column field="moneda.codigo" header="Moneda" />
+                <Column field="responsable.nombre" header="Responsable">
+                    <template #body="{ data }">{{ data.responsable?.nombre }} {{ data.responsable?.apellidos }}</template>
+                </Column>
+                <Column field="saldocargado" header="Saldo Cargado">
+                    <template #body="{ data }">{{ fmt(data.saldocargado) }}</template>
+                </Column>
+                <Column field="saldoxtarjeta" header="Saldo x Tarjeta">
+                    <template #body="{ data }">{{ fmt(data.saldoxtarjeta) }}</template>
+                </Column>
+                <Column header="Tarjetas">
                     <template #body="{ data }">
-                        {{ data.precio_litro?.toLocaleString('es-CU', { minimumFractionDigits: 2 }) }}
+                        <div class="flex flex-wrap gap-1">
+                            <Tag v-for="d in data.detalles" :key="d.id" :value="`${d.tarjeta?.numero}: ${fmt(d.saldo_mon)} (${fmt(d.saldo_lts)} L)`" severity="info" />
+                        </div>
                     </template>
                 </Column>
-                <Column field="total" header="Total">
+                <Column field="estado" header="Estado">
                     <template #body="{ data }">
-                        {{ data.total?.toLocaleString('es-CU', { minimumFractionDigits: 2 }) }}
+                        <Tag :value="data.estado" :severity="data.estado === 'registrada' ? 'success' : 'warn'" />
                     </template>
                 </Column>
-                <Column field="tipo_combustible" header="Tipo">
-                    <template #body="{ data }">
-                        <Tag :value="data.tipo_combustible" :severity="data.tipo_combustible === 'diesel' ? 'warn' : data.tipo_combustible === 'gasolina' ? 'info' : 'success'" />
-                    </template>
-                </Column>
-                <Column field="lugar" header="Lugar" />
                 <Column header="Acciones" style="width: 120px">
                     <template #body="{ data }">
                         <div class="flex gap-1">
                             <Button icon="pi pi-pencil" rounded text severity="info" @click="openEdit(data)" />
-                            <Button icon="pi pi-trash" rounded text severity="danger" @click="router.delete(route('combustible-cargas.destroy', data.id))" />
+                            <Button icon="pi pi-trash" rounded text severity="danger" @click="confirmDelete(data)" />
                         </div>
                     </template>
                 </Column>
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="showForm" :header="editing ? 'Editar Carga' : 'Nueva Carga'" modal style="width: 600px">
+        <Dialog v-model:visible="showForm" :header="editing ? 'Editar Carga' : 'Nueva Carga'" modal style="width: 720px">
             <form @submit.prevent="submit" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div>
-                        <label class="block mb-1 font-medium">Número</label>
-                        <InputText v-model="form.numero" class="w-full" required />
+                        <label class="block mb-1 font-medium">Fecha</label>
+                        <DatePicker v-model="form.fcarga" dateFormat="dd/mm/yy" class="w-full" />
                     </div>
                     <div>
-                        <label class="block mb-1 font-medium">Tarjeta</label>
-                        <Select v-model="form.id_tarjeta" :options="tarjetas" optionLabel="numero" optionValue="id" placeholder="Seleccione..." class="w-full" />
+                        <label class="block mb-1 font-medium">Folio</label>
+                        <InputText v-model="form.folio" class="w-full" required />
                     </div>
                     <div>
-                        <label class="block mb-1 font-medium">Tractivo</label>
-                        <Select v-model="form.id_tractivo" :options="tractivos" optionLabel="descripcion" optionValue="id" placeholder="Seleccione..." class="w-full" />
+                        <label class="block mb-1 font-medium">Combustible</label>
+                        <Select v-model="form.id_tipo_combustibles" :options="tiposCombustibles" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
                     </div>
                     <div>
-                        <label class="block mb-1 font-medium">Fecha Carga</label>
-                        <DatePicker v-model="form.fecha_carga" dateFormat="dd/mm/yy" class="w-full" />
+                        <label class="block mb-1 font-medium">Moneda</label>
+                        <Select v-model="form.id_monedas" :options="monedas" optionLabel="codigo" optionValue="id" placeholder="Seleccione..." class="w-full" />
                     </div>
                     <div>
-                        <label class="block mb-1 font-medium">Cantidad (Litros)</label>
-                        <InputNumber v-model="form.cantidad_litros" :minFractionDigits="2" :maxFractionDigits="2" class="w-full" />
+                        <label class="block mb-1 font-medium">Responsable</label>
+                        <Select v-model="form.id_responsable" :options="filtros.empleados" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
                     </div>
                     <div>
-                        <label class="block mb-1 font-medium">Precio por Litro</label>
-                        <InputNumber v-model="form.precio_litro" :minFractionDigits="2" :maxFractionDigits="4" class="w-full" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Total</label>
-                        <InputNumber v-model="form.total" :minFractionDigits="2" :maxFractionDigits="2" class="w-full" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Tipo Combustible</label>
-                        <Select v-model="form.tipo_combustible" :options="tiposCombustible" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Lugar</label>
-                        <InputText v-model="form.lugar" class="w-full" />
+                        <label class="block mb-1 font-medium">Saldo Cargado</label>
+                        <InputNumber v-model="form.saldocargado" :minFractionDigits="2" :maxFractionDigits="2" class="w-full" />
                     </div>
                 </div>
+
+                <div class="border rounded p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="font-medium">Detalle por tarjeta</label>
+                        <Button label="Añadir tarjeta" icon="pi pi-plus" size="small" severity="info" @click="addDetalle" />
+                    </div>
+                    <div v-for="(d, idx) in form.detalles" :key="idx" class="flex gap-2 items-center mb-2">
+                        <Select v-model="d.id_tarjeta" :options="filtros.tarjetas" optionLabel="numero" optionValue="id" placeholder="Tarjeta" class="flex-1" />
+                        <InputNumber v-model="d.saldo_mon" :minFractionDigits="2" :maxFractionDigits="2" placeholder="Saldo (MN)" class="w-40" />
+                        <Button icon="pi pi-times" rounded text severity="danger" @click="removeDetalle(idx)" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block mb-1 font-medium">Notas</label>
+                    <Textarea v-model="form.notas" rows="2" class="w-full" />
+                </div>
+
                 <div class="flex gap-2 justify-end">
                     <Button label="Cancelar" severity="secondary" @click="showForm = false" />
                     <Button label="Guardar" type="submit" icon="pi pi-save" />

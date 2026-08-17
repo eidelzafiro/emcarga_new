@@ -224,6 +224,9 @@ class CargosController extends Controller
     {
         $model = $this->getModelClass();
         $item = $model::findOrFail($id);
+
+        $this->autorizarEntidad($item->id_entidad ?? null);
+
         $data = $request->validate($this->getValidationRules($id));
 
         $data['salario_escala'] = $this->calcularSalario($data);

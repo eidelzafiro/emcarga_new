@@ -13,12 +13,15 @@ use App\Models\TipoArrastre;
 use App\Models\TipoServicio;
 use App\Models\TipoTractivo;
 use App\Models\Tractivo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TractivosController extends Controller
 {
+    use EntidadScoping;
+
     /**
      * Display a listing of tractivos.
      */
@@ -33,9 +36,9 @@ class TractivosController extends Controller
                     ->orWhere('placa', 'like', "%{$search}%");
             })
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -167,6 +170,8 @@ class TractivosController extends Controller
      */
     public function update(Request $request, Tractivo $tractivo)
     {
+        $this->autorizarEntidad($tractivo->id_entidad);
+
         $validated = $request->validate($this->reglas($tractivo->id));
 
         $tractivo->update($validated);
@@ -245,6 +250,8 @@ class TractivosController extends Controller
      */
     public function destroy(Tractivo $tractivo)
     {
+        $this->autorizarEntidad($tractivo->id_entidad);
+
         $tractivo->delete();
 
         return redirect()->route('tractivos.index')

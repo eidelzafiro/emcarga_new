@@ -17,24 +17,6 @@ const cliente = ref(props.filters?.cliente || '')
 const chofer = ref(props.filters?.chofer || '')
 const equipo = ref(props.filters?.equipo || '')
 
-// Filtro de fecha de parte: mes y año
-const ahora = new Date()
-const anio = ref(Number(props.filters?.anio) || Number(props.anioSeleccionado) || ahora.getFullYear())
-const mes = ref(Number(props.filters?.mes) || Number(props.mesSeleccionado) || (ahora.getMonth() + 1))
-
-const meses = [
-    { value: 1, label: 'Enero' }, { value: 2, label: 'Febrero' }, { value: 3, label: 'Marzo' },
-    { value: 4, label: 'Abril' }, { value: 5, label: 'Mayo' }, { value: 6, label: 'Junio' },
-    { value: 7, label: 'Julio' }, { value: 8, label: 'Agosto' }, { value: 9, label: 'Septiembre' },
-    { value: 10, label: 'Octubre' }, { value: 11, label: 'Noviembre' }, { value: 12, label: 'Diciembre' },
-]
-const anios = computed(() => {
-    const base = Number(props.anioSeleccionado) || ahora.getFullYear()
-    const lista = []
-    for (let y = base - 2; y <= base + 1; y++) lista.push({ value: y, label: String(y) })
-    return lista
-})
-
 const monet = (v) => '$' + Number(v || 0).toLocaleString()
 
 function produccion(aforo) {
@@ -74,11 +56,15 @@ function abrirAforo(a) {
     }
 }
 
-function navegar() {
-    router.get(route('aforos.index'), { search: search.value, cliente: cliente.value, chofer: chofer.value, equipo: equipo.value, mes: mes.value, anio: anio.value }, { preserveState: true, replace: true })
+function imprimir(a) {
+    window.open(route('aforos.imprimir', { aforo: a.id }), '_blank')
 }
 
-watch([search, cliente, chofer, equipo, mes, anio], navegar)
+function navegar() {
+    router.get(route('aforos.index'), { search: search.value, cliente: cliente.value, chofer: chofer.value, equipo: equipo.value }, { preserveState: true, replace: true })
+}
+
+watch([search, cliente, chofer, equipo], navegar)
 </script>
 
 <template>
@@ -92,8 +78,6 @@ watch([search, cliente, chofer, equipo, mes, anio], navegar)
                 <template #end>
                     <div class="flex gap-2 flex-wrap">
                         <Button label="Nuevo Aforo" icon="pi pi-plus" @click="router.get(route('aforos.create'))" />
-                        <Select v-model="mes" :options="meses" option-value="value" option-label="label" placeholder="Mes" class="w-36" />
-                        <Select v-model="anio" :options="anios" option-value="value" option-label="label" placeholder="Año" class="w-28" />
                         <InputText v-model="search" placeholder="Buscar CP o HR..." />
                         <Select v-model="cliente" :options="filtros?.clientes || []" option-value="id" option-label="nombre" placeholder="Cliente" show-clear filter class="w-44" />
                         <Select v-model="chofer" :options="filtros?.choferes || []" option-value="id" option-label="nombre" placeholder="Chofer" show-clear filter class="w-44" />
@@ -124,8 +108,14 @@ watch([search, cliente, chofer, equipo, mes, anio], navegar)
                         v-for="a in grupo.aforos"
                         :key="a.id"
                         class="cp-card relative flex flex-col overflow-hidden rounded-xl border bg-white dark:bg-gray-800 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 border-gray-200 cursor-pointer"
+                        :class="a.id_factura ? 'border-emerald-300 dark:border-emerald-800/60' : ''"
                         @click="abrirAforo(a)"
                     >
+                        <!-- Sello de facturada -->
+                        <div v-if="a.id_factura" class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+                            <span class="rotate-[-14deg] border-[3px] border-emerald-500/70 text-emerald-600/80 dark:border-emerald-400/70 dark:text-emerald-300/80 rounded-lg px-4 py-1 text-xl font-black uppercase tracking-[0.22em]">Facturada</span>
+                        </div>
+
                         <!-- Cabecera: folio CP + HR + equipo -->
                         <header class="relative px-3 pt-2 pb-1.5 border-b border-gray-100 dark:border-gray-700/70 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/20 dark:to-gray-800">
                             <div class="flex items-start gap-2">
@@ -176,6 +166,7 @@ watch([search, cliente, chofer, equipo, mes, anio], navegar)
                             </div>
                             <Button v-if="a.id_factura" icon="pi pi-eye" rounded text severity="info" size="small" @click.stop="router.get(route('aforos.show', a.id))" v-tooltip.top="'Ver'" />
                             <Button v-else icon="pi pi-pencil" rounded text severity="warn" size="small" @click.stop="router.get(route('aforos.edit', a.id))" v-tooltip.top="'Editar'" />
+                            <Button icon="pi pi-print" rounded text severity="success" size="small" @click.stop="imprimir(a)" v-tooltip.top="'Imprimir'" />
                         </div>
                     </article>
                 </div>

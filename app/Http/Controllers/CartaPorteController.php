@@ -16,12 +16,15 @@ use App\Models\SolicitudesServicio;
 use App\Models\TipoCarga;
 use App\Models\Tractivo;
 use App\Models\Turno;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class CartaPorteController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $entidadId = session('entidad_activa_id');
@@ -45,11 +48,12 @@ class CartaPorteController extends Controller
             'arrastre',
             'solicitud:id,numero,id_lugar_origen,id_lugar_destino',
             'userCancelacion:id,name',
+            'aforos:id,id_carta_porte,id_factura',
         ])
             ->withExists('aforos')
             ->withExists('facturas')
             // Entidad activa por la hoja de ruta de la carta
-            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->whereIn('id_entidad', $this->entidadesPermitidas())))
             // Emitidas dentro del mes de operaciones
             ->whereBetween('fecha_emision', [$inicioMes, $finMes])
             ->when($request->search, fn ($q, $s) => $q->where(fn ($q2) => $q2
@@ -88,6 +92,7 @@ class CartaPorteController extends Controller
             ])
                 ->withExists('aforos')
                 ->withExists('facturas')
+                ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->whereIn('id_entidad', $this->entidadesPermitidas())))
                 ->find($request->integer('editar'));
         }
 
@@ -98,6 +103,7 @@ class CartaPorteController extends Controller
             'catalogos' => $catalogos,
             'filtros' => $filtros,
             'cartaEditar' => $cartaEditar,
+            'fechaOperaciones' => $fechaOperaciones,
         ]);
     }
 
@@ -110,7 +116,7 @@ class CartaPorteController extends Controller
     private function filtrosCartas(?int $entidadId, string $inicioMes, string $finMes): array
     {
         $base = CartaPorte::query()
-            ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->whereBetween('fecha_emision', [$inicioMes, $finMes]);
 
         // Cliente desde la solicitud; equipo/choferes desde la hoja de ruta (Fase 4d)
@@ -145,7 +151,7 @@ class CartaPorteController extends Controller
     {
         return [
             // Hojas de ruta emitidas en el mes, para el combo de la emisión y el filtro
-            'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad', 'id_cliente')
+            'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad')
                 ->with(['tractivo', 'arrastre', 'chofer', 'chofer2'])
                 ->selectRaw('COALESCE(fecha_cierre, fecha_emision) as ref_fecha')
                 ->where(fn ($q) => $q->whereNull('fecha_cierre')->orWhereBetween('fecha_cierre', [$inicioMes, $finMes]))
@@ -165,7 +171,6 @@ class CartaPorteController extends Controller
                     'arrastre_codigo' => $hr->arrastre?->codigo,
                     'chofer_nombre' => $hr->chofer ? trim($hr->chofer->nombre.' '.$hr->chofer->apellidos) : null,
                     'chofer2_nombre' => $hr->chofer2 ? trim($hr->chofer2->nombre.' '.$hr->chofer2->apellidos) : null,
-                    'id_cliente' => $hr->id_cliente,
                 ]),
             'clientes' => Cliente::select('id', 'codigo', 'nombre')
                 ->where('activo', true)
@@ -245,6 +250,14 @@ class CartaPorteController extends Controller
     {
         $validated = $this->validar($request);
 
+        // La hoja de ruta / solicitud usadas deben pertenecer a la entidad permitida.
+        if (! empty($validated['id_hoja_ruta'])) {
+            $this->autorizarEntidad(HojasRuta::find($validated['id_hoja_ruta'])?->id_entidad);
+        }
+        if (! empty($validated['id_solicitud'])) {
+            $this->autorizarEntidad(SolicitudesServicio::find($validated['id_solicitud'])?->id_entidad);
+        }
+
         $validated['id_user'] = auth()->id();
         $validated['estado'] = 'emitida';
         $validated['fecha_emision'] = $validated['fecha_emision'] ?? now()->toDateString();
@@ -269,6 +282,8 @@ class CartaPorteController extends Controller
 
     public function update(Request $request, CartaPorte $carta)
     {
+        $this->autorizarEntidadCarta($carta);
+
         if ($carta->cancelada) {
             return back()->with('error', 'No es posible modificar una carta de porte cancelada.');
         }
@@ -291,6 +306,8 @@ class CartaPorteController extends Controller
 
     public function destroy(Request $request, CartaPorte $carta)
     {
+        $this->autorizarEntidadCarta($carta);
+
         if ($request->input('operacion') === 'cancelar') {
             if ($carta->cancelada) {
                 return back()->with('error', 'La carta de porte ya estaba cancelada.');
@@ -320,6 +337,17 @@ class CartaPorteController extends Controller
         $this->recalcularSolicitud($idSolicitud);
 
         return back()->with('success', "Carta de porte {$numero} eliminada.");
+    }
+
+    /**
+     * Autoriza el acceso a una carta de porte. La entidad de la CP se deriva de
+     * su hoja de ruta; si no tiene, de su solicitud de servicio.
+     */
+    private function autorizarEntidadCarta(CartaPorte $carta): void
+    {
+        $idEntidad = $carta->hojaRuta?->id_entidad ?? $carta->solicitud?->id_entidad;
+
+        $this->autorizarEntidad($idEntidad, 'No tiene permiso para acceder a esta carta de porte.');
     }
 
     /**
@@ -381,6 +409,8 @@ class CartaPorteController extends Controller
      */
     public function recepcionar(Request $request, CartaPorte $carta)
     {
+        $this->autorizarEntidadCarta($carta);
+
         if ($carta->cancelada) {
             return back()->with('error', 'No es posible recepcionar una carta de porte cancelada.');
         }
@@ -411,6 +441,10 @@ class CartaPorteController extends Controller
     {
         $idSolicitud = $v['id_solicitud'] ?? null;
         $solicitud = $idSolicitud ? SolicitudesServicio::find($idSolicitud) : null;
+
+        if ($solicitud) {
+            $this->autorizarEntidad($solicitud->id_entidad);
+        }
 
         $datos = [
             'id_cliente' => $v['id_cliente'] ?? null,
@@ -466,6 +500,21 @@ class CartaPorteController extends Controller
     {
         $mes = fn () => $request->input('fecha_emision') ? Carbon::parse($request->input('fecha_emision'))->format('Y-m') : now()->format('Y-m');
 
+        // Las fechas deben quedar dentro del mes de operaciones en curso.
+        $mesOperaciones = function (?string $fecha = null): \Closure {
+            return function (string $attribute, mixed $value, \Closure $fail) use ($fecha): void {
+                if (! $value) {
+                    return;
+                }
+                $referencia = $fecha ?? session('fecha_operaciones') ?? now()->toDateString();
+                $fechaVal = Carbon::parse($value);
+                $ref = Carbon::parse($referencia);
+                if ($fechaVal->format('Y-m') !== $ref->format('Y-m')) {
+                    $fail('La fecha debe estar dentro del mes de operaciones ('.ucfirst($ref->translatedFormat('F Y')).').');
+                }
+            };
+        };
+
         return $request->validate([
             'numero' => ['required', 'string', 'max:20', function (string $attribute, mixed $value, \Closure $fail) use ($carta): void {
                 $existe = CartaPorte::where('numero', trim((string) $value))
@@ -477,8 +526,8 @@ class CartaPorteController extends Controller
                     $fail('El folio ya está registrado. Verifique antes de emitirlo.');
                 }
             }],
-            'fecha_emision' => ['nullable', 'date'],
-            'fecha_parte' => ['nullable', 'date'],
+            'fecha_emision' => ['nullable', 'date', $mesOperaciones()],
+            'fecha_parte' => ['nullable', 'date', $mesOperaciones()],
             'fecha_recepcion' => ['nullable', 'date'],
             'id_hoja_ruta' => ['nullable', 'exists:hojas_ruta,id'],
             'id_solicitud' => ['nullable', 'exists:solicitudes_servicio,id'],

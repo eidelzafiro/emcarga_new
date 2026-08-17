@@ -5,12 +5,32 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CatalogoItemRequest;
 use App\Models\CatalogoItem;
 use App\Models\CatalogoTipo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use App\Support\CatalogoSchema;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class CatalogoController extends Controller
 {
+    use EntidadScoping;
+
+    /** Tipos de catálogo cuyo alcance es por-entidad (id_entidad en el JSON extra). */
+    protected function esCatalogoPorEntidad(string $tipo): bool
+    {
+        return in_array($tipo, ['tipos_modelo']);
+    }
+
+    /** Autoriza si el ítem pertenece a una entidad permitida (catálogos por-entidad). */
+    protected function autorizarItemCatalogo(CatalogoItem $item, string $tipo): void
+    {
+        if (! $this->esCatalogoPorEntidad($tipo)) {
+            return;
+        }
+
+        $entidad = (int) ($item->extra['id_entidad'] ?? 0);
+        $this->autorizarEntidad($entidad ?: null, 'No tiene permiso para acceder a este elemento del catálogo.');
+    }
+
     protected function getTitle(string $tipo): string
     {
         return CatalogoTipo::where('tipo', $tipo)->value('titulo') ?? $tipo;
@@ -90,11 +110,15 @@ class CatalogoController extends Controller
         }
 
         // Catálogos por-entidad: los ítems guardan id_entidad en el JSON `extra`
-        // (no hay columna dedicada). Se filtran por la entidad activa.
-        if (in_array($tipo, ['tipos_modelo'])) {
-            $entidadId = (int) session('entidad_activa_id');
-            if ($entidadId) {
-                $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(extra, '$.id_entidad')) = ?", [$entidadId]);
+        // (no hay columna dedicada). Se filtran por las entidades permitidas.
+        if ($this->esCatalogoPorEntidad($tipo)) {
+            $entidades = $this->entidadesPermitidas();
+            if (! empty($entidades)) {
+                $query->where(function ($q) use ($entidades) {
+                    foreach ($entidades as $e) {
+                        $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(extra, '$.id_entidad')) = ?", [(string) $e]);
+                    }
+                });
             }
         }
 
@@ -163,9 +187,11 @@ class CatalogoController extends Controller
     {
         $item = CatalogoItem::tipo($tipo)->findOrFail($id);
 
+        $this->autorizarItemCatalogo($item, $tipo);
+
         $itemData = $request->itemData();
 
-        if (in_array($tipo, ['tipos_modelo'])) {
+        if ($this->esCatalogoPorEntidad($tipo)) {
             $extra = $item->extra ?? [];
             if (! isset($extra['id_entidad'])) {
                 $extra['id_entidad'] = (int) session('entidad_activa_id');
@@ -182,6 +208,9 @@ class CatalogoController extends Controller
     public function destroy(string $tipo, $id)
     {
         $item = CatalogoItem::tipo($tipo)->findOrFail($id);
+
+        $this->autorizarItemCatalogo($item, $tipo);
+
         $item->delete();
 
         return redirect()->back()->with('success', 'Eliminado correctamente');

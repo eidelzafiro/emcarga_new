@@ -18,10 +18,8 @@ class HojasRuta extends Model
         'id_solicitud',
         'id_tractivo',
         'id_entidad',
-        'id_cliente',
         'fecha_emision',
         'hora_emision',
-        'fecha_salida',
         'fecha_cierre',
         'hora_cierre',
         'id_hr_anterior',
@@ -57,7 +55,6 @@ class HojasRuta extends Model
         return [
             'cancelada' => 'boolean',
             'fecha_emision' => 'date',
-            'fecha_salida' => 'date',
             'fecha_cierre' => 'date',
             'kms_disponible' => 'decimal:2',
             'kms_disponibles_adicionales' => 'decimal:2',

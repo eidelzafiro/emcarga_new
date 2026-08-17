@@ -7,11 +7,14 @@ use App\Models\Cliente;
 use App\Models\Entidad;
 use App\Models\Factura;
 use App\Models\TipoIngreso;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class FacturasController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $facturas = Factura::with('cliente:id,nombre', 'tipoIngreso:id,nombre')
@@ -43,18 +46,45 @@ class FacturasController extends Controller
 
     public function create()
     {
+        $aforosPendientes = Aforo::with('cartaPorte:id,numero,id_solicitud', 'cartaPorte.cliente', 'cartaPorte.solicitud:id,id_cliente')
+            ->whereNull('id_factura')
+            ->whereNull('id_prefactura')
+            ->where('ingreso_mt', '>', 0)
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('cartaPorte', fn ($c) => $this->whereCartaEntidad($c)))
+            ->orderBy('fecha_parte')
+            ->get();
+
+        // Clientes que tienen CP aforadas pendientes de facturar (de la entidad activa).
+        $idsClientes = $aforosPendientes
+            ->map(fn ($a) => $a->cartaPorte?->solicitud?->id_cliente ?? $a->cartaPorte?->cliente?->id)
+            ->filter()
+            ->unique();
+
         return Inertia::render('Facturas/Form', [
             'title' => 'Nueva Factura',
-            'clientes' => Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'codigo']),
+            'clientes' => Cliente::where('activo', true)
+                ->whereIn('id', $idsClientes)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'codigo']),
             'tipos_ingreso' => TipoIngreso::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'siglas']),
             'siguiente_numero' => $this->siguienteNumero(),
-            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero', 'cartaPorte.cliente')
-                ->whereNull('id_factura')
-                ->whereNull('id_prefactura')
-                ->where('ingreso_mt', '>', 0)
-                ->orderBy('fecha_parte')
-                ->get(),
+            'aforos_pendientes' => $aforosPendientes,
+            'fechaOperaciones' => session('fecha_operaciones') ?? now()->toDateString(),
         ]);
+    }
+
+    /**
+     * Restringe una consulta de cartas de porte a las entidades permitidas
+     * (entidad de la CP vía hoja de ruta / tractivo / solicitud).
+     */
+    private function whereCartaEntidad($q): void
+    {
+        $ids = $this->entidadesPermitidas();
+        $q->where(function ($w) use ($ids) {
+            $w->whereHas('hojaRuta', fn ($h) => $h->whereIn('id_entidad', $ids))
+                ->orWhereHas('hojaRuta.tractivo', fn ($t) => $t->whereIn('id_entidad', $ids))
+                ->orWhereHas('solicitud', fn ($s) => $s->whereIn('id_entidad', $ids));
+        });
     }
 
     public function store(Request $request)
@@ -88,6 +118,7 @@ class FacturasController extends Controller
             Aforo::whereIn('id', $request->aforos_ids)
                 ->whereNull('id_factura')
                 ->whereNull('id_prefactura')
+                ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('cartaPorte.hojaRuta.tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
                 ->update(['id_factura' => $factura->id]);
         }
 
@@ -107,6 +138,8 @@ class FacturasController extends Controller
 
     public function show(Factura $factura)
     {
+        $this->autorizarEntidad($factura->id_entidad);
+
         $factura->load('cliente', 'tipoIngreso', 'aforos.cartaPorte', 'user');
 
         return Inertia::render('Facturas/Show', [
@@ -117,6 +150,8 @@ class FacturasController extends Controller
 
     public function update(Request $request, Factura $factura)
     {
+        $this->autorizarEntidad($factura->id_entidad);
+
         $validated = $request->validate([
             'fecha_firma' => 'nullable|date',
             'fecha_cobro_mn' => 'nullable|date',
@@ -134,6 +169,8 @@ class FacturasController extends Controller
 
     public function destroy(Factura $factura)
     {
+        $this->autorizarEntidad($factura->id_entidad);
+
         Aforo::where('id_factura', $factura->id)->update(['id_factura' => null]);
         $factura->delete();
 
@@ -142,6 +179,8 @@ class FacturasController extends Controller
 
     public function cancelar(Factura $factura)
     {
+        $this->autorizarEntidad($factura->id_entidad);
+
         $factura->update([
             'cancelada' => true,
             'estado' => 'cancelada',
@@ -161,6 +200,8 @@ class FacturasController extends Controller
 
     public function refacturar(Factura $factura)
     {
+        $this->autorizarEntidad($factura->id_entidad);
+
         $factura->update(['refacturada' => true, 'estado' => 'refacturada']);
 
         Aforo::where('id_factura', $factura->id)->update([
@@ -173,6 +214,8 @@ class FacturasController extends Controller
 
     public function firmar(Factura $factura)
     {
+        $this->autorizarEntidad($factura->id_entidad);
+
         $factura->update([
             'fecha_firma' => now(),
             'estado' => 'firmada',
@@ -183,6 +226,8 @@ class FacturasController extends Controller
 
     public function cobrar(Request $request, Factura $factura)
     {
+        $this->autorizarEntidad($factura->id_entidad);
+
         $validated = $request->validate([
             'fecha_cobro_mn' => 'nullable|date',
             'fecha_cobro_mlc' => 'nullable|date',
@@ -205,7 +250,8 @@ class FacturasController extends Controller
         $query = Aforo::with('cartaPorte.cliente')
             ->whereNull('id_factura')
             ->whereNull('id_prefactura')
-            ->where('ingreso_mt', '>', 0);
+            ->where('ingreso_mt', '>', 0)
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('cartaPorte.hojaRuta.tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())));
 
         if ($request->id_cliente) {
             $query->whereHas('cartaPorte.solicitud', fn ($q) => $q->where('id_cliente', $request->id_cliente));

@@ -22,6 +22,7 @@ use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\ColoresController;
 use App\Http\Controllers\CombustibleCargasController;
 use App\Http\Controllers\CombustibleDescargasController;
+use App\Http\Controllers\TarjetasController;
 use App\Http\Controllers\CombustiblesLubricantesController;
 use App\Http\Controllers\ConciliacionesController;
 use App\Http\Controllers\ConfiguracionesModeloController;
@@ -231,6 +232,8 @@ Route::middleware('auth')->group(function () {
             ->name('solicitudes.duplicar');
         Route::post('solicitudes/{solicitude}/carta-porte', [SolicitudesController::class, 'registrarCartaPorte'])
             ->name('solicitudes.carta-porte');
+        Route::post('solicitudes/{solicitude}/cancelar', [SolicitudesController::class, 'cancelar'])
+            ->name('solicitudes.cancelar');
 
         Route::resource('carta-porte', CartaPorteController::class, ['parameters' => ['carta-porte' => 'carta']])
             ->only(['index', 'store', 'update', 'destroy']);
@@ -306,6 +309,7 @@ Route::middleware('auth')->group(function () {
         Route::post('aforos/cotizar-almacenaje', [AforosController::class, 'cotizarAlmacenaje'])->name('aforos.cotizar-almacenaje');
         Route::post('aforos/cotizar-salario', [AforosController::class, 'cotizarSalario'])->name('aforos.cotizar-salario');
         Route::post('aforos/cotizar-tiempos', [AforosController::class, 'cotizarTiempos'])->name('aforos.cotizar-tiempos');
+        Route::post('aforos/cotizar-dif-horas', [AforosController::class, 'cotizarDifHoras'])->name('aforos.cotizar-dif-horas');
         Route::post('aforos/cotizar-indicadores', [AforosController::class, 'cotizarIndicadores'])->name('aforos.cotizar-indicadores');
 
         Route::resource('prefacturas', PrefacturasController::class)
@@ -482,8 +486,16 @@ Route::middleware('auth')->group(function () {
             Route::get('paises', [ReportController::class, 'pdfPaises'])->name('paises');
             Route::get('salario-prenomina', [ReportController::class, 'pdfSalarioPrenomina'])->name('salario-prenomina');
             Route::get('salario-choferes', [ReportController::class, 'pdfSalarioChoferes'])->name('salario-choferes');
-            Route::get('factura/{factura}', [ReportController::class, 'pdfFactura'])->name('factura');
-            Route::get('prefactura/{prefactura}', [ReportController::class, 'pdfPrefactura'])->name('prefactura');
+        });
+
+        // Impresión de documentos: permiso del módulo del recurso (carta-porte.ver,
+        // hojas-ruta.ver, facturas.ver, prefacturas.ver) en vez de reportes.ver.
+        Route::prefix('reportes')->group(function () {
+            Route::get('factura/{factura}', [ReportController::class, 'pdfFactura'])->name('facturas.imprimir');
+            Route::get('prefactura/{prefactura}', [ReportController::class, 'pdfPrefactura'])->name('prefacturas.imprimir');
+            Route::get('carta-porte/{carta}', [ReportController::class, 'pdfCartaPorte'])->name('carta-porte.imprimir');
+            Route::get('hoja-ruta/{hoja}', [ReportController::class, 'pdfHojaRuta'])->name('hojas-ruta.imprimir');
+            Route::get('aforo/{aforo}', [ReportController::class, 'pdfAforo'])->name('aforos.imprimir');
         });
 
         // Módulo Contabilidad (Fase 5.6)
@@ -497,6 +509,9 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('combustible-cargas', CombustibleCargasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('tarjetas', TarjetasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('combustible-descargas', CombustibleDescargasController::class)
@@ -520,6 +535,12 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('reportes-costos', ReportesCostosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::post('reportes-costos/recalcular', [ReportesCostosController::class, 'recalcular'])
+            ->name('reportes-costos.recalcular');
+
+        Route::post('reportes-costos/recalcular-todos', [ReportesCostosController::class, 'recalcularTodos'])
+            ->name('reportes-costos.recalcular-todos');
 
         Route::resource('estados-tarjetas', EstadosTarjetasController::class)
             ->only(['index', 'store', 'update', 'destroy']);

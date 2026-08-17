@@ -7,12 +7,15 @@ use App\Models\Cliente;
 use App\Models\Entidad;
 use App\Models\Factura;
 use App\Models\Prefactura;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PrefacturasController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $prefacturas = Prefactura::with('cliente:id,nombre')
@@ -43,15 +46,19 @@ class PrefacturasController extends Controller
 
     public function create()
     {
+        $aforosPendientes = Aforo::with('cartaPorte:id,numero')
+            ->whereNull('id_prefactura')
+            ->whereNull('id_factura')
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('cartaPorte.hojaRuta.tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
+            ->orderBy('fecha_parte')
+            ->get();
+
         return Inertia::render('Prefacturas/Form', [
             'title' => 'Nueva Prefactura',
             'clientes' => Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'codigo']),
             'siguiente_numero' => $this->siguienteNumero(),
-            'aforos_pendientes' => Aforo::with('cartaPorte:id,numero')
-                ->whereNull('id_prefactura')
-                ->whereNull('id_factura')
-                ->orderBy('fecha_parte')
-                ->get(),
+            'aforos_pendientes' => $aforosPendientes,
+            'fechaOperaciones' => session('fecha_operaciones') ?? now()->toDateString(),
         ]);
     }
 
@@ -82,6 +89,7 @@ class PrefacturasController extends Controller
             Aforo::whereIn('id', $request->aforos_ids)
                 ->whereNull('id_prefactura')
                 ->whereNull('id_factura')
+                ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('cartaPorte.hojaRuta.tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
                 ->update(['id_prefactura' => $prefactura->id]);
         }
 
@@ -111,6 +119,8 @@ class PrefacturasController extends Controller
      */
     public function facturar(Request $request, Prefactura $prefactura)
     {
+        $this->autorizarEntidad($prefactura->id_entidad);
+
         if ($prefactura->estado !== 'pendiente') {
             return back()->withErrors(['error' => "Solo se pueden facturar prefacturas pendientes (estado actual: {$prefactura->estado})."]);
         }
@@ -169,6 +179,8 @@ class PrefacturasController extends Controller
 
     public function update(Request $request, Prefactura $prefactura)
     {
+        $this->autorizarEntidad($prefactura->id_entidad);
+
         $validated = $request->validate([
             'fecha' => 'required|date',
             'notas' => 'nullable|string',
@@ -182,6 +194,8 @@ class PrefacturasController extends Controller
 
     public function destroy(Prefactura $prefactura)
     {
+        $this->autorizarEntidad($prefactura->id_entidad);
+
         Aforo::where('id_prefactura', $prefactura->id)->update(['id_prefactura' => null]);
         $prefactura->delete();
 

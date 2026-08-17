@@ -13,6 +13,7 @@ class Servicentro extends Model
         'nombre',
         'codigo',
         'ubicacion',
+        'id_provincia',
         'activo',
     ];
 
@@ -21,5 +22,10 @@ class Servicentro extends Model
         return [
             'activo' => 'boolean',
         ];
+    }
+
+    public function provincia()
+    {
+        return $this->belongsTo(Provincia::class, 'id_provincia');
     }
 }

@@ -8,13 +8,18 @@ import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
-import DatePicker from 'primevue/datepicker'
+import DatePickerMes from '@/Components/DatePickerMes.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ clientes: Array, siguiente_numero: String, aforos_pendientes: Array })
+const props = defineProps({ clientes: Array, siguiente_numero: String, aforos_pendientes: Array, fechaOperaciones: String })
 const toast = useToast()
+
+// Rango del mes de la fecha de operaciones activa para los selectores de fecha.
+const fechaOp = () => (props.fechaOperaciones ? new Date(props.fechaOperaciones.slice(0, 10)) : new Date())
+const minFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth(), 1)
+const maxFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth() + 1, 0)
 
 const form = ref({
     numero: props.siguiente_numero ?? '',
@@ -62,7 +67,7 @@ function submit() {
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Fecha</label>
-                        <DatePicker v-model="form.fecha" date-format="dd/mm/yy" class="w-full" />
+                        <DatePickerMes v-model="form.fecha" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Cliente</label>

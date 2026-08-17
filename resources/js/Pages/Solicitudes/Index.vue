@@ -6,12 +6,13 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import DatePicker from 'primevue/datepicker'
+import DatePickerMes from '@/Components/DatePickerMes.vue'
 import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import Paginator from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const props = defineProps({
   solicitudes: Object,
@@ -22,8 +23,10 @@ const props = defineProps({
   monedas: Array,
   catalogosCarta: Object,
   filters: Object,
+  fechaOperaciones: String,
 })
 const toast = useToast()
+const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const estado = ref(props.filters?.estado || 'activas')
 const showForm = ref(false)
@@ -35,6 +38,11 @@ const cartaSolicitud = ref(null)
 const title = 'Solicitudes de Servicio'
 
 const pad = (n) => String(n).padStart(2, '0')
+
+// Rango del mes de la fecha de operaciones activa para los selectores de fecha.
+const fechaOp = () => (props.fechaOperaciones ? new Date(props.fechaOperaciones.slice(0, 10)) : new Date())
+const minFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth(), 1)
+const maxFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth() + 1, 0)
 
 function toDate(v) {
   if (!v) return null
@@ -112,9 +120,14 @@ function openEdit(item) {
 }
 
 function duplicar(item) {
-  if (window.confirm(`¿Duplicar la solicitud ${item.numero}?`)) {
-    router.post(route('solicitudes.duplicar', item.id))
-  }
+  confirmDialog.require({
+    message: `¿Duplicar la solicitud ${item.numero}?`,
+    header: 'Duplicar Solicitud',
+    icon: 'pi pi-copy',
+    acceptLabel: 'Duplicar',
+    rejectLabel: 'Volver',
+    accept: () => router.post(route('solicitudes.duplicar', item.id)),
+  })
 }
 
 function abrirCarta(item) {
@@ -181,12 +194,41 @@ function submit() {
 }
 
 function eliminar(item) {
-  if (window.confirm(`¿Eliminar la solicitud ${item.numero}?`)) {
-    router.delete(route('solicitudes.destroy', item.id))
-  }
+  confirmDialog.require({
+    message: `¿Eliminar la solicitud ${item.numero}?`,
+    header: 'Eliminar Solicitud',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => router.delete(route('solicitudes.destroy', item.id)),
+  })
 }
 
-const cumplimiento = (s) => s.estado_cumplimiento ?? 'pendiente'
+const showCancelar = ref(false)
+const cancelarSolicitud = ref(null)
+const motivoCancelacion = ref('')
+
+function openCancelar(item) {
+  cancelarSolicitud.value = item
+  motivoCancelacion.value = ''
+  showCancelar.value = true
+}
+
+function confirmCancelar() {
+  if (!cancelarSolicitud.value) return
+  const id = cancelarSolicitud.value.id
+  showCancelar.value = false
+  router.post(route('solicitudes.cancelar', id), {
+    motivo_cancelacion: motivoCancelacion.value,
+  })
+}
+
+function puedeCancelar(item) {
+  return cumplimiento(item) === 'pendiente' && (!item.cartas_porte || item.cartas_porte.length === 0)
+}
+
+const cumplimiento = (s) => s.estado_cumplimiento ?? s.estado ?? 'pendiente'
 const fmtNum = (v) => {
   if (v === null || v === undefined || v === '') return '—'
   const n = Number(v)
@@ -200,7 +242,8 @@ const pct = (ejec, total) => {
 const estadoBadge = (s) => ({
   pendiente: { label: 'Pendiente', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' },
   en_proceso: { label: 'En proceso', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
-  realizada: { label: 'Realizada', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
+  ejecutada: { label: 'Ejecutada', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
+  cancelada: { label: 'Cancelada', cls: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300' },
 })[s] || { label: s, cls: 'bg-gray-100 text-gray-600 dark:bg-gray-500/15 dark:text-gray-300' }
 </script>
 
@@ -222,6 +265,7 @@ const estadoBadge = (s) => ({
             { value: 'ejecutada', label: 'Ejecutadas' },
             { value: 'pendiente', label: 'Solo pendientes' },
             { value: 'en_proceso', label: 'Solo en proceso' },
+            { value: 'cancelada', label: 'Canceladas' },
             { value: 'all', label: 'Todas' },
           ]" optionLabel="label" optionValue="value" class="w-52" />
           <span class="relative">
@@ -316,7 +360,8 @@ const estadoBadge = (s) => ({
             </div>
             <div class="mt-1.5 flex items-center justify-end gap-1">
               <Button icon="pi pi-copy" rounded text severity="secondary" title="Duplicar solicitud" @click="duplicar(s)" />
-              <Button icon="pi pi-truck" rounded text severity="info" title="Registrar carta de porte" :disabled="cumplimiento(s) === 'realizada'" @click="abrirCarta(s)" />
+              <Button icon="pi pi-truck" rounded text severity="info" title="Registrar carta de porte" :disabled="cumplimiento(s) === 'ejecutada'" @click="abrirCarta(s)" />
+              <Button v-if="puedeCancelar(s)" icon="pi pi-ban" rounded text severity="warning" title="Cancelar solicitud" @click="openCancelar(s)" />
               <Button icon="pi pi-pencil" rounded text severity="info" title="Editar" @click="openEdit(s)" />
               <Button icon="pi pi-trash" rounded text severity="danger" title="Eliminar" @click="eliminar(s)" />
             </div>
@@ -358,11 +403,11 @@ const estadoBadge = (s) => ({
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block mb-1 font-medium text-sm">Fecha de solicitud</label>
-            <DatePicker v-model="form.fecha_solicitud" dateFormat="yy-mm-dd" showIcon class="w-full" required />
+            <DatePickerMes v-model="form.fecha_solicitud" dateFormat="yy-mm-dd" showIcon class="w-full" required :min-date="minFecha" :max-date="maxFecha" />
           </div>
           <div>
             <label class="block mb-1 font-medium text-sm">Fecha planificada</label>
-            <DatePicker v-model="form.fecha_planificada" dateFormat="yy-mm-dd" showIcon class="w-full" />
+            <DatePickerMes v-model="form.fecha_planificada" dateFormat="yy-mm-dd" showIcon class="w-full" :min-date="minFecha" :max-date="maxFecha" />
           </div>
           <div class="col-span-2">
             <label class="block mb-1 font-medium text-sm">Cliente</label>
@@ -440,7 +485,7 @@ const estadoBadge = (s) => ({
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <label class="block mb-1 font-medium">Fecha</label>
-                <DatePicker v-model="carta.fecha_emision" dateFormat="yy-mm-dd" showIcon class="w-full" @date-select="validarFolioCarta" />
+                <DatePickerMes v-model="carta.fecha_emision" dateFormat="yy-mm-dd" showIcon class="w-full" :min-date="minFecha" :max-date="maxFecha" @date-select="validarFolioCarta" />
               </div>
               <div>
                 <label class="block mb-1 font-medium">Folio</label>
@@ -517,6 +562,22 @@ const estadoBadge = (s) => ({
             <Button label="Registrar" type="submit" icon="pi pi-check" />
           </div>
         </form>
+      </div>
+    </Dialog>
+
+    <Dialog v-model:visible="showCancelar" :header="`Cancelar Solicitud ${cancelarSolicitud?.numero || ''}`" modal :style="{ width: '480px' }">
+      <div class="space-y-3">
+        <p class="text-sm text-gray-600 dark:text-gray-300">
+          Va a cancelar la solicitud <strong>{{ cancelarSolicitud?.numero }}</strong>. Esta acción no se puede deshacer.
+        </p>
+        <div>
+          <label class="block mb-1 font-medium">Motivo de la cancelación</label>
+          <Textarea v-model="motivoCancelacion" rows="3" class="w-full" placeholder="Escriba el motivo (opcional)..." />
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <Button label="No, volver" severity="secondary" type="button" @click="showCancelar = false" />
+          <Button label="Cancelar solicitud" icon="pi pi-ban" severity="danger" @click="confirmCancelar" />
+        </div>
       </div>
     </Dialog>
   </AppLayout>

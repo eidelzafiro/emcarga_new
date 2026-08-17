@@ -3,20 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Motore;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class MotoresController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $motores = Motore::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%")
                 ->orWhere('codigo', 'like', "%{$s}%"))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -52,6 +55,8 @@ class MotoresController extends Controller
 
     public function update(Request $request, Motore $motore)
     {
+        $this->autorizarEntidad($motore->id_entidad);
+
         $validated = $request->validate([
             'codigo' => 'required|string|max:50|unique:motores,codigo,'.$motore->id,
             'descripcion' => 'required|string|max:255',
@@ -70,6 +75,8 @@ class MotoresController extends Controller
 
     public function destroy(Motore $motore)
     {
+        $this->autorizarEntidad($motore->id_entidad);
+
         $motore->delete();
 
         return redirect()->route('motores.index')

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EstadisticasExplotacion extends Model
 {
@@ -13,5 +14,10 @@ class EstadisticasExplotacion extends Model
     protected function casts(): array
     {
         return ['activo' => 'boolean'];
+    }
+
+    public function hojaRuta(): BelongsTo
+    {
+        return $this->belongsTo(HojasRuta::class, 'id_hoja_ruta');
     }
 }

@@ -74,7 +74,7 @@ function facturar(prefactura) {
                 <Column header="Acciones" style="width: 200px">
                     <template #body="{ data }">
                         <div class="flex gap-1">
-                            <Button icon="pi pi-file-pdf" rounded text severity="danger" @click="window.open(route('reportes.prefactura', data.id), '_blank')" v-tooltip.top="'PDF'" />
+                            <Button icon="pi pi-file-pdf" rounded text severity="danger" @click="window.open(route('prefacturas.imprimir', data.id), '_blank')" v-tooltip.top="'PDF'" />
                             <Button icon="pi pi-arrow-right" rounded text severity="success" :disabled="data.estado !== 'pendiente'" @click="facturar(data)" v-tooltip.top="'Facturar'" />
                             <Button icon="pi pi-trash" rounded text severity="danger" @click="router.delete(route('prefacturas.destroy', data.id))" v-tooltip.top="'Eliminar'" />
                         </div>

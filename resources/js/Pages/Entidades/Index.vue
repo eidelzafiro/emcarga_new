@@ -21,9 +21,11 @@ import TabPanel from 'primevue/tabpanel'
 import Checkbox from 'primevue/checkbox'
 import DatePicker from 'primevue/datepicker'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const props = defineProps({ items: { type: Object, default: null }, filters: { type: Object, default: () => ({}) }, provincias: { type: Array, default: () => [] }, municipios: { type: Array, default: () => [] }, sistemas: { type: Array, default: () => [] }, entidadesPadre: { type: Array, default: () => [] }, soloEntidad: { type: Object, default: null }, lugares: { type: Array, default: () => [] } })
 const toast = useToast()
+const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
@@ -163,11 +165,19 @@ function submit() {
 }
 
 function destroyItem(id) {
-  if (confirm('¿Eliminar esta entidad?')) {
-    router.delete(route('entidades.destroy', id), {
-      onSuccess: () => toast.add({ severity: 'success', summary: 'Eliminado', life: 3000 }),
-    })
-  }
+  confirmDialog.require({
+    message: '¿Eliminar esta entidad?',
+    header: 'Eliminar Entidad',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      router.delete(route('entidades.destroy', id), {
+        onSuccess: () => toast.add({ severity: 'success', summary: 'Eliminado', life: 3000 }),
+      })
+    },
+  })
 }
 
 function exportExcel() {

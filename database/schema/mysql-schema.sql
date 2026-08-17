@@ -4,21 +4,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-DROP TABLE IF EXISTS `acciones_hotkeys`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `acciones_hotkeys` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `nombre` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descripcion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `activo` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `acciones_hotkeys_codigo_unique` (`codigo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `acuerdos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1924,12 +1909,7 @@ CREATE TABLE `hojas_ruta` (
   `numero` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_solicitud` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
-  `id_cliente` bigint unsigned DEFAULT NULL,
-  `fecha_salida` date NOT NULL,
-  `fecha_llegada_estimada` date DEFAULT NULL,
-  `fecha_llegada_real` date DEFAULT NULL,
   `estado` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_transito',
-  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
@@ -1968,8 +1948,6 @@ CREATE TABLE `hojas_ruta` (
   KEY `hojas_ruta_id_solicitud_index` (`id_solicitud`),
   KEY `hojas_ruta_id_tractivo_index` (`id_tractivo`),
   KEY `hojas_ruta_estado_index` (`estado`),
-  KEY `hojas_ruta_fecha_salida_index` (`fecha_salida`),
-  KEY `hojas_ruta_id_cliente_foreign` (`id_cliente`),
   KEY `hojas_ruta_id_arrastre_foreign` (`id_arrastre`),
   KEY `hojas_ruta_id_chofer2_foreign` (`id_chofer2`),
   KEY `hojas_ruta_id_hr_anterior_foreign` (`id_hr_anterior`),
@@ -1982,7 +1960,6 @@ CREATE TABLE `hojas_ruta` (
   CONSTRAINT `hojas_ruta_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `tractivos` (`id`) ON DELETE CASCADE,
   CONSTRAINT `hojas_ruta_id_chofer2_foreign` FOREIGN KEY (`id_chofer2`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `hojas_ruta_id_chofer_foreign` FOREIGN KEY (`id_chofer`) REFERENCES `bolsa` (`id`),
-  CONSTRAINT `hojas_ruta_id_cliente_foreign` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id`) ON DELETE SET NULL,
   CONSTRAINT `hojas_ruta_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
   CONSTRAINT `hojas_ruta_id_grupo_foreign` FOREIGN KEY (`id_grupo`) REFERENCES `grupos` (`id`),
   CONSTRAINT `hojas_ruta_id_hr_anterior_foreign` FOREIGN KEY (`id_hr_anterior`) REFERENCES `hojas_ruta` (`id`),
@@ -1990,25 +1967,6 @@ CREATE TABLE `hojas_ruta` (
   CONSTRAINT `hojas_ruta_id_solicitud_foreign` FOREIGN KEY (`id_solicitud`) REFERENCES `solicitudes` (`id`),
   CONSTRAINT `hojas_ruta_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
   CONSTRAINT `hojas_ruta_id_user_foreign` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `hotkeys`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `hotkeys` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `combinacion` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Ej: Ctrl+Shift+F',
-  `id_accion` bigint unsigned NOT NULL,
-  `id_usuario` bigint unsigned DEFAULT NULL,
-  `tipo` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'A' COMMENT 'A=accion, R=reporte',
-  `activo` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `hotkeys_id_accion_foreign` (`id_accion`),
-  KEY `hotkeys_id_usuario_foreign` (`id_usuario`),
-  CONSTRAINT `hotkeys_id_accion_foreign` FOREIGN KEY (`id_accion`) REFERENCES `acciones_hotkeys` (`id`),
-  CONSTRAINT `hotkeys_id_usuario_foreign` FOREIGN KEY (`id_usuario`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `importes_gps`;

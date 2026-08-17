@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Diferenciale;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DiferencialesController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $diferenciales = Diferenciale::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%"))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -59,6 +62,8 @@ class DiferencialesController extends Controller
 
     public function update(Request $request, Diferenciale $diferencial)
     {
+        $this->autorizarEntidad($diferencial->id_entidad);
+
         $validated = $request->validate([
             'codigo' => 'required|unique:diferenciales,codigo,'.$diferencial->id,
             'descripcion' => 'required|string|max:255',
@@ -85,6 +90,8 @@ class DiferencialesController extends Controller
 
     public function destroy(Diferenciale $diferencial)
     {
+        $this->autorizarEntidad($diferencial->id_entidad);
+
         $diferencial->delete();
 
         return redirect()->route('diferenciales.index')

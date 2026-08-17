@@ -4,27 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\ConfiguracioneModelo;
 use App\Models\TipoModelo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ConfiguracionesModeloController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $user = $request->user();
-        $entidadId = session('entidad_activa_id', $user->id_entidad);
+        $entidades = $this->entidadesPermitidas();
 
         $query = ConfiguracioneModelo::with('tipoModelo');
 
         if ($user->hasRole('SUPERADMIN')) {
-            $query->where(function ($q) use ($entidadId) {
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId)->orWhereNull('id_entidad');
+            $query->where(function ($q) use ($entidades) {
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades)->orWhereNull('id_entidad');
                 }
             });
         } else {
-            if ($entidadId) {
-                $query->where('id_entidad', $entidadId);
+            if (! empty($entidades)) {
+                $query->whereIn('id_entidad', $entidades);
             }
         }
 
@@ -39,8 +42,8 @@ class ConfiguracionesModeloController extends Controller
         $items = $query->orderBy('nombre')->paginate(20);
 
         $tiposQuery = TipoModelo::select('codigo', 'nombre')->orderBy('nombre');
-        if ($entidadId) {
-            $tiposQuery->where('id_entidad', $entidadId);
+        if (! empty($entidades)) {
+            $tiposQuery->whereIn('id_entidad', $entidades);
         }
         $tiposModelo = $tiposQuery->get()
             ->map(fn ($t) => ['value' => $t->codigo, 'label' => $t->nombre]);
@@ -71,6 +74,8 @@ class ConfiguracionesModeloController extends Controller
 
     public function update(Request $request, ConfiguracioneModelo $configuracionesModelo)
     {
+        $this->autorizarEntidad($configuracionesModelo->id_entidad);
+
         $validated = $request->validate([
             'nombre' => 'required|max:30',
             'codigo_tipo_modelo' => 'nullable|exists:tipos_modelo,codigo',
@@ -85,6 +90,8 @@ class ConfiguracionesModeloController extends Controller
 
     public function destroy(ConfiguracioneModelo $configuracionesModelo)
     {
+        $this->autorizarEntidad($configuracionesModelo->id_entidad);
+
         $configuracionesModelo->delete();
 
         return redirect()->route('configuraciones-modelo.index')->with('success', 'Configuración eliminada correctamente.');

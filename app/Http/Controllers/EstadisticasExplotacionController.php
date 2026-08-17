@@ -3,14 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\EstadisticasExplotacion;
+use App\Models\HojasRuta;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class EstadisticasExplotacionController extends Controller
 {
+    use EntidadScoping;
+
     public function index()
     {
-        $items = EstadisticasExplotacion::orderBy('id')->paginate(50);
+        $items = EstadisticasExplotacion::query()
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->whereIn('id_entidad', $this->entidadesPermitidas())))
+            ->orderBy('id')->paginate(50);
 
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
@@ -41,6 +47,7 @@ class EstadisticasExplotacionController extends Controller
     public function show($id)
     {
         $item = EstadisticasExplotacion::findOrFail($id);
+        $this->autorizarEntidad($item->hojaRuta?->id_entidad);
 
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
@@ -52,6 +59,7 @@ class EstadisticasExplotacionController extends Controller
     public function edit($id)
     {
         $item = EstadisticasExplotacion::findOrFail($id);
+        $this->autorizarEntidad($item->hojaRuta?->id_entidad);
 
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
@@ -67,6 +75,7 @@ class EstadisticasExplotacionController extends Controller
         ]);
 
         $item = EstadisticasExplotacion::findOrFail($id);
+        $this->autorizarEntidad($item->hojaRuta?->id_entidad);
         $item->update($validated);
 
         return redirect()->route('estadisticas-explotacion.index')->with('success', 'Estadística de explotación actualizada.');
@@ -75,6 +84,7 @@ class EstadisticasExplotacionController extends Controller
     public function destroy($id)
     {
         $item = EstadisticasExplotacion::findOrFail($id);
+        $this->autorizarEntidad($item->hojaRuta?->id_entidad);
         $item->delete();
 
         return redirect()->route('estadisticas-explotacion.index')->with('success', 'Estadística de explotación eliminada.');

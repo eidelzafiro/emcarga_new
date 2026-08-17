@@ -12,11 +12,18 @@ import Dialog from 'primevue/dialog'
 import Textarea from 'primevue/textarea'
 import Paginator from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import { formatDate } from '@/Utils/date'
 
-const props = defineProps({ cartas: Object, catalogos: Object, filters: Object, filtros: Object, cartaEditar: Object })
+const props = defineProps({ cartas: Object, catalogos: Object, filters: Object, filtros: Object, cartaEditar: Object, fechaOperaciones: String })
 const toast = useToast()
+const confirmDialog = useConfirm()
 const title = 'Carta de Porte'
+
+// Rango del mes de la fecha de operaciones activa para los selectores de fecha.
+const fechaOp = () => (props.fechaOperaciones ? new Date(props.fechaOperaciones.slice(0, 10)) : new Date())
+const minFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth(), 1)
+const maxFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth() + 1, 0)
 
 const search = ref(props.filters?.search || '')
 const equipo = ref(props.filters?.equipo || null)
@@ -205,6 +212,17 @@ watch([search, equipo, chofer, cliente], () => {
 })
 
 function submitEmision() {
+  const ref = fechaOp()
+  const enMes = (v) => {
+    if (!v) return true
+    const d = new Date(v.slice(0, 10))
+    return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth()
+  }
+  if (!enMes(form.value.fecha_emision) || !enMes(form.value.fecha_parte)) {
+    const mes = String(ref.getMonth() + 1).padStart(2, '0')
+    toast.add({ severity: 'warn', summary: 'Fecha fuera del mes', detail: `Las fechas deben estar dentro del mes de operaciones (${ref.getFullYear()}-${mes}).`, life: 5000 })
+    return
+  }
   if (editandoId.value) {
     router.put(route('carta-porte.update', { carta: editandoId.value }), form.value, { preserveScroll: true })
   } else {
@@ -244,9 +262,17 @@ function cancelar(carta) {
 }
 
 function eliminar(carta) {
-  if (window.confirm(`¿Desea eliminar la carta de porte ${carta.numero}?`)) {
-    router.delete(route('carta-porte.destroy', { carta: carta.id }), { data: { operacion: 'eliminar' }, preserveScroll: true })
-  }
+  confirmDialog.require({
+    message: `¿Desea eliminar la carta de porte ${carta.numero}?`,
+    header: 'Eliminar Carta de Porte',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      router.delete(route('carta-porte.destroy', { carta: carta.id }), { data: { operacion: 'eliminar' }, preserveScroll: true })
+    },
+  })
 }
 
 function soloFecha(v) { return v ? String(v).slice(0, 10) : '' }
@@ -270,6 +296,31 @@ function fmtFcierre(carta) {
   return formatDate(carta.hoja_ruta.fecha_cierre)
 }
 function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fecha_recepcion) : null }
+
+// Aforo de una carta de porte:
+// - Facturada: solo ver/imprimir (no modificar).
+// - Aforada (sin facturar): ir a edición del aforo.
+// - Sin aforar: ir al formulario de nuevo aforo con la carta preseleccionada.
+function irAforar(carta) {
+  const aforoId = carta.aforos?.[0]?.id
+  if (aforoId) {
+    router.visit(route('aforos.edit', aforoId))
+  } else {
+    router.visit(route('aforos.create', { carta: carta.id }))
+  }
+}
+
+function imprimirCarta(carta) {
+  window.open(route('carta-porte.imprimir', { carta: carta.id }), '_blank')
+}
+
+function verAforo(carta) {
+  const aforoId = carta.aforos?.[0]?.id
+  if (aforoId) router.visit(route('aforos.show', aforoId))
+}
+
+const cartaFacturada = (c) => Boolean(c.facturas_exists)
+const cartaAforada = (c) => Boolean(c.aforos_exists)
 
 </script>
 
@@ -397,10 +448,23 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fec
 
           <!-- Pie: acciones -->
           <div class="mt-auto flex items-center justify-end gap-1 border-t border-gray-100 dark:border-gray-700/70 px-3 py-2 bg-gray-50/80 dark:bg-gray-700/30">
-            <Button v-if="!data.cancelada" icon="pi pi-pencil" rounded text severity="info" title="Editar" @click="openEdicion(data)" />
-            <Button v-if="!data.cancelada && !fechaRecep(data)" icon="pi pi-star" rounded text severity="success" title="Recepcionar" @click="recepcionar(data)" />
-            <Button v-if="!data.cancelada" icon="pi pi-ban" rounded text severity="warning" title="Cancelar" @click="cancelar(data)" />
-            <Button icon="pi pi-trash" rounded text severity="danger" title="Eliminar" @click="eliminar(data)" />
+            <template v-if="cartaFacturada(data)">
+              <Button icon="pi pi-eye" rounded text severity="info" title="Ver" @click="verAforo(data)" />
+            </template>
+            <template v-else-if="!data.cancelada">
+              <Button
+                icon="pi pi-file-edit"
+                rounded
+                :severity="cartaAforada(data) ? 'info' : 'success'"
+                :title="cartaAforada(data) ? 'Editar aforo' : 'Aforar'"
+                @click="irAforar(data)"
+              />
+              <Button v-if="!data.cancelada" icon="pi pi-pencil" rounded text severity="info" title="Editar" @click="openEdicion(data)" />
+              <Button v-if="!data.cancelada && !fechaRecep(data)" icon="pi pi-star" rounded text severity="success" title="Recepcionar" @click="recepcionar(data)" />
+              <Button v-if="!data.cancelada" icon="pi pi-ban" rounded text severity="warning" title="Cancelar" @click="cancelar(data)" />
+            </template>
+            <Button v-if="!data.cancelada" icon="pi pi-print" rounded text severity="success" title="Imprimir" @click="imprimirCarta(data)" />
+            <Button v-if="!cartaFacturada(data)" icon="pi pi-trash" rounded text severity="danger" title="Eliminar" @click="eliminar(data)" />
           </div>
         </article>
       </div>
@@ -451,7 +515,7 @@ function fechaRecep(carta) { return carta.fecha_recepcion ? formatDate(carta.fec
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
             <div>
               <label class="block mb-1 font-medium">Fecha</label>
-              <input v-model="form.fecha_emision" type="date" class="w-full border rounded p-2" required @blur="validarFolio" />
+              <input v-model="form.fecha_emision" type="date" class="w-full border rounded p-2" required @blur="validarFolio" :min="soloFecha(minFecha)" :max="soloFecha(maxFecha)" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Folio</label>

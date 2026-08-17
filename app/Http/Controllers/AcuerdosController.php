@@ -6,15 +6,16 @@ use App\Models\Acuerdo;
 use App\Models\Cliente;
 use App\Models\Lugare;
 use App\Models\Producto;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AcuerdosController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
-
         $acuerdos = Acuerdo::with(['cliente:id,nombre', 'origen:id,nombre', 'destino:id,nombre', 'producto:id,nombre'])
             ->when($request->search, function ($q, $s) {
                 $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
@@ -22,7 +23,7 @@ class AcuerdosController extends Controller
                     ->orWhereHas('destino', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
                     ->orWhereHas('producto', fn ($c) => $c->where('nombre', 'like', "%{$s}%"));
             })
-            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->paginate(20);
 
         return Inertia::render('Acuerdos/Index', [
@@ -47,6 +48,8 @@ class AcuerdosController extends Controller
 
     public function update(Request $request, Acuerdo $acuerdo)
     {
+        $this->autorizarEntidad($acuerdo->id_entidad);
+
         $validated = $this->validar($request);
         $acuerdo->update($validated);
 
@@ -55,6 +58,8 @@ class AcuerdosController extends Controller
 
     public function destroy(Acuerdo $acuerdo)
     {
+        $this->autorizarEntidad($acuerdo->id_entidad);
+
         $acuerdo->delete();
 
         return redirect()->route('acuerdos.index')->with('success', 'Acuerdo eliminado correctamente.');

@@ -505,7 +505,8 @@ class EtlService
                                 'numero_caja' => $cajas[$fila->idcajas] ?? null,
                                 'capacidad_toneladas' => $fila->capacidad,
                                 // Físico / capacidad de combustible
-                                'tara' => $fila->tara ?: null,
+                                // tara > 99.999.999 no cabe en decimal(10,2): valores corruptos legacy → null
+                                'tara' => $fila->tara && $fila->tara < 100000000 ? $fila->tara : null,
                                 'cap_deposito' => $fila->captanque ?: null,
                                 'cap_hidraulico' => $fila->caphidraulico ?: null,
                                 'cta_combustible' => trim((string) ($fila->ctacomb ?? '')) ?: null,
@@ -538,6 +539,10 @@ class EtlService
                                 'f_reconstruccion' => $fecha($fila->fureconstruccion),
                                 'gps' => $fila->gps ?: null,
                                 'id_entidad' => $fila->idunidad ?: null,
+                                // Costos (amortización y chapa por tractivo)
+                                'amortmn' => $fila->amortmn ?? 0,
+                                'amortme' => $fila->amortme ?? 0,
+                                'vchapa' => $fila->vchapa ?? 0,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]
@@ -1646,8 +1651,6 @@ class EtlService
                                 'dias_trabajados' => $fila->dtrabajados,
                                 'cancelada' => $cancelada,
                                 'estado' => $estado,
-                                'fecha_salida' => $fila->femision,
-                                'observaciones' => $fila->analisis,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]
@@ -1989,6 +1992,58 @@ class EtlService
                 $avisos
             ),
         ];
+
+        // Recalcula el estado de TODAS las solicitudes según sus cartas vigentes
+        // (ejecutada si alguna está recepcionada o tiene aforo; en_proceso si hay
+        // cartas no canceladas sin recepción/aforo; pendiente si no hay cartas).
+        $this->recalcularEstadosSolicitudes();
+    }
+
+    /**
+     * Recalcula el estado de todas las solicitudes a partir de sus cartas de
+     * porte vigentes, replicando `SolicitudesServicio::recalcularEstado()`.
+     * Idempotente; actualiza también la fecha de ejecución (primera carta).
+     */
+    private function recalcularEstadosSolicitudes(): void
+    {
+        $conEjecucion = DB::table('solicitudes_servicio as s')
+            ->join('cartas_porte as c', 'c.id_solicitud', '=', 's.id')
+            ->where('c.estado', '!=', 'cancelada')
+            ->where(function ($q) {
+                $q->where('c.estado', 'recepcionada')
+                    ->orWhereExists(function ($a) {
+                        $a->selectRaw('1')->from('aforos as af')->whereColumn('af.id_carta_porte', 'c.id');
+                    });
+            })
+            ->select('s.id', DB::raw('MIN(c.fecha_emision) as fe'))
+            ->groupBy('s.id')
+            ->get();
+
+        foreach ($conEjecucion as $fila) {
+            DB::table('solicitudes_servicio')->where('id', $fila->id)->update([
+                'estado' => 'ejecutada',
+                'fecha_ejecutada' => $fila->fe ?: now()->toDateString(),
+            ]);
+        }
+
+        $idsEjecutadas = $conEjecucion->pluck('id');
+
+        $conCartas = DB::table('solicitudes_servicio as s')
+            ->join('cartas_porte as c', 'c.id_solicitud', '=', 's.id')
+            ->where('c.estado', '!=', 'cancelada')
+            ->when($idsEjecutadas->isNotEmpty(), fn ($q) => $q->whereNotIn('s.id', $idsEjecutadas))
+            ->distinct()
+            ->pluck('s.id');
+
+        DB::table('solicitudes_servicio')
+            ->when($idsEjecutadas->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $idsEjecutadas))
+            ->update(['estado' => 'pendiente', 'fecha_ejecutada' => null]);
+
+        if ($conCartas->isNotEmpty()) {
+            DB::table('solicitudes_servicio')
+                ->whereIn('id', $conCartas)
+                ->update(['estado' => 'en_proceso']);
+        }
     }
 
     /**
@@ -2623,6 +2678,458 @@ class EtlService
     }
 
     /**
+     * ETL de tarjetas de combustible: cont_tarjetas → tarjetas.
+     * - ids preservados (las FKs de cargas/descargas/cierres apuntan directo).
+     * - numero = codtm legacy (UNIQUE en la nueva).
+     * - id_entidad desde idunidad (cero → null).
+     * - idempleado/idchofer/idtractivos solo si existen en bolsa/tractivos.
+     */
+    public function migrarTarjetas(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsBolsa = DB::table('bolsa')->pluck('id')->flip();
+        $idsTractivos = DB::table('tractivos')->pluck('id')->flip();
+        $idsEntidades = DB::table('entidades')->pluck('id')->flip();
+
+        $legacy->table('cont_tarjetas')
+            ->orderBy('idtarjeta')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsBolsa, $idsTractivos, $idsEntidades) {
+                foreach ($filas as $fila) {
+                    $idEntidad = (int) $fila->idunidad;
+                    if (! isset($idsEntidades[$idEntidad])) {
+                        $idEntidad = null;
+                    }
+
+                    $idEmpleado = (int) $fila->idempleado;
+                    if (! $idEmpleado || ! isset($idsBolsa[$idEmpleado])) {
+                        $idEmpleado = null;
+                    }
+
+                    $idChofer = (int) $fila->idchofer;
+                    if (! $idChofer || ! isset($idsBolsa[$idChofer])) {
+                        $idChofer = null;
+                    }
+
+                    $idTractivo = (int) $fila->idtractivos;
+                    if (! $idTractivo || ! isset($idsTractivos[$idTractivo])) {
+                        $idTractivo = null;
+                    }
+
+                    try {
+                        DB::table('tarjetas')->updateOrInsert(
+                            ['id' => $fila->idtarjeta],
+                            [
+                                'numero' => $fila->codtm,
+                                'descripcion' => '',
+                                'saldo_actual' => $fila->saldoactualmon,
+                                'fcompra' => $fila->fcompra,
+                                'fvence' => $fila->fvence,
+                                'saldoinicialmon' => $fila->saldoinicialmon,
+                                'saldoiniciallts' => $fila->saldoiniciallts,
+                                'saldoactuallts' => $fila->saldoactuallts,
+                                'saldotransferenciamon' => $fila->saldotransferenciamon,
+                                'saldotransferencialts' => $fila->saldotransferencialts,
+                                'idmonedas' => $fila->idmonedas,
+                                'idtipocombustibles' => $fila->idtipocombustibles,
+                                'idempleado' => $idEmpleado,
+                                'idtractivos' => $idTractivo,
+                                'idchofer' => $idChofer,
+                                'cancelado' => $fila->cancelado,
+                                'inactiva' => $fila->inactiva,
+                                'fmovimiento' => $fila->fmovimiento,
+                                'fcancelado' => $fila->fcancelado,
+                                'fcierre' => $fila->fcierre,
+                                'id_entidad' => $idEntidad,
+                                'estado' => ((int) $fila->cancelado === 1) ? 'cancelada' : ((int) $fila->inactiva === 1 ? 'inactiva' : 'activa'),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "tarjetas#{$fila->idtarjeta}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['tarjetas'] = [
+            'legacy' => (int) $legacy->table('cont_tarjetas')->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de cargas de combustible: cont_combcarga → combustible_cargas
+     * (cabecera) y cont_combdetallecarga → detalles_carga_combustible
+     * (detalle por tarjeta). Solo el año de negocio (2026).
+     * - La cabecera lleva fcarga, saldocargado, saldoxtarjeta y moneda/
+     *   tipo/responsable; el detalle lleva saldo_mon y saldo_lts por tarjeta.
+     * - Se omiten cabeceras con idresponsable fuera de bolsa o detalle sin
+     *   cabecera/tarjeta migrada.
+     */
+    public function migrarCargasCombustible(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsBolsa = DB::table('bolsa')->pluck('id')->flip();
+        $idsEntidades = DB::table('entidades')->pluck('id')->flip();
+        $idsTarjetas = DB::table('tarjetas')->pluck('id')->flip();
+        $idsMonedas = DB::table('monedas')->pluck('id')->flip();
+        $idsTiposComb = DB::table('tipos_combustibles')->pluck('id')->flip();
+
+        $idsCargas = DB::table('combustible_cargas')->pluck('id')->flip();
+
+        $legacy->table('cont_combcarga')
+            ->whereYear('fcarga', $anio)
+            ->orderBy('idcarga')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, &$idsCargas, $idsBolsa, $idsEntidades, $idsMonedas, $idsTiposComb) {
+                foreach ($filas as $fila) {
+                    $idResponsable = (int) $fila->idresponsable;
+                    if (! isset($idsBolsa[$idResponsable])) {
+                        $avisos[] = "combustible_cargas#{$fila->idcarga}: idresponsable {$idResponsable} fuera de bolsa, omitida";
+                        continue;
+                    }
+
+                    $idEntidad = (int) $fila->idunidad;
+                    if (! isset($idsEntidades[$idEntidad])) {
+                        $idEntidad = null;
+                    }
+
+                    try {
+                        DB::table('combustible_cargas')->updateOrInsert(
+                            ['id' => $fila->idcarga],
+                            [
+                                'fcarga' => $fila->fcarga,
+                                'saldocargado' => $fila->saldocargado,
+                                'saldoxtarjeta' => $fila->saldoxtarjeta,
+                                'id_monedas' => isset($idsMonedas[(int) $fila->idmonedas]) ? $fila->idmonedas : null,
+                                'id_tipo_combustibles' => isset($idsTiposComb[(int) $fila->idtipocombustibles]) ? $fila->idtipocombustibles : null,
+                                'id_responsable' => $idResponsable,
+                                'folio' => $fila->folio,
+                                'notas' => $fila->notas,
+                                'id_entidad' => $idEntidad,
+                                'estado' => 'registrada',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                        $idsCargas->put((int) $fila->idcarga, true);
+                    } catch (\Throwable $e) {
+                        $avisos[] = "combustible_cargas#{$fila->idcarga}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        // Detalle de carga por tarjeta (cont_combdetallecarga)
+        $procesadosDetalle = 0;
+        $avisosDetalle = [];
+
+        $legacy->table('cont_combdetallecarga')
+            ->whereYear('fcarga', $anio)
+            ->orderBy('idmovimiento')
+            ->chunk($chunk, function ($filas) use (&$procesadosDetalle, &$avisosDetalle, $idsCargas, $idsTarjetas) {
+                foreach ($filas as $fila) {
+                    $idCarga = (int) $fila->idcarga;
+                    if (! isset($idsCargas[$idCarga])) {
+                        $avisosDetalle[] = "detalles_carga_combustible#{$fila->idmovimiento}: cabecera {$idCarga} no migrada, omitido";
+                        continue;
+                    }
+                    $idTarjeta = (int) $fila->idtarjeta;
+                    if (! isset($idsTarjetas[$idTarjeta])) {
+                        $avisosDetalle[] = "detalles_carga_combustible#{$fila->idmovimiento}: tarjeta {$idTarjeta} no migrada, omitido";
+                        continue;
+                    }
+
+                    try {
+                        DB::table('detalles_carga_combustible')->updateOrInsert(
+                            ['id' => $fila->idmovimiento],
+                            [
+                                'id_carga' => $idCarga,
+                                'id_tarjeta' => $idTarjeta,
+                                'fcarga' => $fila->fcarga,
+                                'folio' => $fila->folio,
+                                'saldo_mon' => $fila->saldomon,
+                                'saldo_lts' => $fila->saldolts,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesadosDetalle++;
+                    } catch (\Throwable $e) {
+                        $avisosDetalle[] = "detalles_carga_combustible#{$fila->idmovimiento}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['combustible_cargas'] = [
+            'legacy' => (int) $legacy->table('cont_combcarga')->whereYear('fcarga', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+        $this->reporte['detalles_carga_combustible'] = [
+            'legacy' => (int) $legacy->table('cont_combdetallecarga')->whereYear('fcarga', $anio)->count(),
+            'nueva' => $procesadosDetalle,
+            'avisos' => $avisosDetalle,
+        ];
+    }
+
+    /**
+     * ETL de descargas de combustible: cont_combdescarga → combustible_descargas.
+     * Solo el año de negocio (2026).
+     * - id_entidad se deriva de la hoja de ruta migrada (hojas_ruta.id_entidad).
+     * - Se omiten las descargas sin hoja de ruta migrada o sin tarjeta migrada.
+     * - id_comprobante se conserva como columna suelta (sin FK: no existe
+     *   tabla `comprobantes` en el esquema nuevo).
+     */
+    public function migrarDescargasCombustible(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsHojas = DB::table('hojas_ruta')->pluck('id')->flip();
+        $idsTarjetas = DB::table('tarjetas')->pluck('id')->flip();
+        $idsServicentros = DB::table('servicentros')->pluck('id')->flip();
+
+        $entidadPorHoja = DB::table('hojas_ruta')
+            ->whereNotNull('id_entidad')
+            ->pluck('id_entidad', 'id');
+
+        $legacy->table('cont_combdescarga')
+            ->whereYear('fdescarga', $anio)
+            ->orderBy('iddescarga')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsHojas, $idsTarjetas, $idsServicentros, $entidadPorHoja) {
+                foreach ($filas as $fila) {
+                    $idHoja = (int) $fila->idhojaruta;
+                    if (! $idHoja || ! isset($idsHojas[$idHoja])) {
+                        $avisos[] = "combustible_descargas#{$fila->iddescarga}: hoja de ruta {$idHoja} no migrada, omitida";
+                        continue;
+                    }
+                    $idTarjeta = (int) $fila->idtarjeta;
+                    if (! isset($idsTarjetas[$idTarjeta])) {
+                        $avisos[] = "combustible_descargas#{$fila->iddescarga}: tarjeta {$idTarjeta} no migrada, omitida";
+                        continue;
+                    }
+
+                    $idServicentro = (int) $fila->idservicentros;
+                    if (! isset($idsServicentros[$idServicentro])) {
+                        $idServicentro = null;
+                    }
+
+                    try {
+                        DB::table('combustible_descargas')->updateOrInsert(
+                            ['id' => $fila->iddescarga],
+                            [
+                                'id_tarjeta' => $idTarjeta,
+                                'fdescarga' => $fila->fdescarga,
+                                'folio' => $fila->folio,
+                                'saldo_mon' => $fila->saldomon,
+                                'saldo_lts' => $fila->saldolts,
+                                'id_hoja_ruta' => $idHoja,
+                                'id_comprobante' => $fila->idcomprobante ?: null,
+                                'hora_descarga' => $fila->hdescarga,
+                                'id_servicentro' => $idServicentro,
+                                'f_chip' => $fila->fchip,
+                                'kms' => $fila->kms,
+                                'id_entidad' => $entidadPorHoja[$idHoja] ?? null,
+                                'estado' => 'registrada',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "combustible_descargas#{$fila->iddescarga}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['combustible_descargas'] = [
+            'legacy' => (int) $legacy->table('cont_combdescarga')->whereYear('fdescarga', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de cierres mensuales de tarjetas: cont_htarjetas → cierre_tarjetas.
+     * Solo el año de negocio (2026). Los ids legacy se preservan; id_tarjeta
+     * solo si la tarjeta fue migrada (resto se omite).
+     */
+    public function migrarCierreTarjetas(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsTarjetas = DB::table('tarjetas')->pluck('id')->flip();
+        $idsEntidades = DB::table('entidades')->pluck('id')->flip();
+        $idsMonedas = DB::table('monedas')->pluck('id')->flip();
+        $idsTiposComb = DB::table('tipos_combustibles')->pluck('id')->flip();
+
+        $legacy->table('cont_htarjetas')
+            ->whereYear('ftrabajo', $anio)
+            ->orderBy('idhtarjeta')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsTarjetas, $idsEntidades, $idsMonedas, $idsTiposComb) {
+                foreach ($filas as $fila) {
+                    $idTarjeta = (int) $fila->idtarjeta;
+                    if (! isset($idsTarjetas[$idTarjeta])) {
+                        $avisos[] = "cierre_tarjetas#{$fila->idhtarjeta}: tarjeta {$idTarjeta} no migrada, omitido";
+                        continue;
+                    }
+
+                    $idEntidad = (int) $fila->idunidad;
+                    if (! isset($idsEntidades[$idEntidad])) {
+                        $idEntidad = null;
+                    }
+
+                    try {
+                        DB::table('cierre_tarjetas')->updateOrInsert(
+                            ['id' => $fila->idhtarjeta],
+                            [
+                                'ftrabajo' => $fila->ftrabajo,
+                                'id_tarjeta' => $idTarjeta,
+                                'codtm' => $fila->codtm,
+                                'saldoinicialmon' => $fila->saldoinicialmon,
+                                'saldoiniciallts' => $fila->saldoiniciallts,
+                                'id_monedas' => isset($idsMonedas[(int) $fila->idmonedas]) ? $fila->idmonedas : null,
+                                'id_tipo_combustibles' => isset($idsTiposComb[(int) $fila->idtipocombustibles]) ? $fila->idtipocombustibles : null,
+                                'preciomn' => $fila->preciomn,
+                                'saldocargadomon' => $fila->saldocargadomon,
+                                'saldocargadolts' => $fila->saldocargadolts,
+                                'saldodescargadomon' => $fila->saldodescargadomon,
+                                'saldodescargadolts' => $fila->saldodescargadolts,
+                                'saldotransferenciamon' => $fila->saldotransferenciamon,
+                                'saldotransferencialts' => $fila->saldotransferencialts,
+                                'saldoactualmon' => $fila->saldoactualmon,
+                                'saldoactuallts' => $fila->saldoactuallts,
+                                'id_entidad' => $idEntidad,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "cierre_tarjetas#{$fila->idhtarjeta}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['cierre_tarjetas'] = [
+            'legacy' => (int) $legacy->table('cont_htarjetas')->whereYear('ftrabajo', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * ETL de dietas: cont_dietas → dietas. Solo el año de negocio (2026).
+     * - id_bolsa/id_hoja_ruta son NOT NULL en la tabla nueva; se omiten las
+     *   dietas sin empleado en bolsa o sin hoja de ruta migrada.
+     * - idmonedas legacy viene en 0 → null (monedas solo 1=MN, 2=CL).
+     * - id_entidad se deriva de la hoja de ruta.
+     */
+    public function migrarDietas(int $anio = 2026, int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        $legacy = DB::connection('legacy');
+
+        $idsBolsa = DB::table('bolsa')->pluck('id')->flip();
+        $idsHojas = DB::table('hojas_ruta')->pluck('id')->flip();
+        $idsTractivos = DB::table('tractivos')->pluck('id')->flip();
+        $idsMonedas = DB::table('monedas')->pluck('id')->flip();
+        $idsReembolsos = DB::table('reembolsos')->pluck('id')->flip();
+
+        $entidadPorHoja = DB::table('hojas_ruta')
+            ->whereNotNull('id_entidad')
+            ->pluck('id_entidad', 'id');
+
+        $legacy->table('cont_dietas')
+            ->whereYear('fcostodietas', $anio)
+            ->orderBy('idcostodietas')
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $idsBolsa, $idsHojas, $idsTractivos, $idsMonedas, $idsReembolsos, $entidadPorHoja) {
+                foreach ($filas as $fila) {
+                    $idBolsa = (int) $fila->idempleado;
+                    if (! isset($idsBolsa[$idBolsa])) {
+                        $avisos[] = "dietas#{$fila->idcostodietas}: empleado {$idBolsa} fuera de bolsa, omitida";
+                        continue;
+                    }
+                    $idHoja = (int) $fila->idhojaruta;
+                    if (! isset($idsHojas[$idHoja])) {
+                        $avisos[] = "dietas#{$fila->idcostodietas}: hoja de ruta {$idHoja} no migrada, omitida";
+                        continue;
+                    }
+
+                    $idTractivo = (int) $fila->idtractivos;
+                    if (! isset($idsTractivos[$idTractivo])) {
+                        $idTractivo = null;
+                    }
+
+                    $idReembolso = (int) $fila->idreembolso;
+                    if (! $idReembolso || ! isset($idsReembolsos[$idReembolso])) {
+                        $idReembolso = null;
+                    }
+
+                    $idMonedas = (int) $fila->idmonedas;
+                    if (! isset($idsMonedas[$idMonedas])) {
+                        $idMonedas = null;
+                    }
+
+                    try {
+                        DB::table('dietas')->updateOrInsert(
+                            ['id' => $fila->idcostodietas],
+                            [
+                                'id_bolsa' => $idBolsa,
+                                'id_hoja_ruta' => $idHoja,
+                                'folio' => $fila->folio,
+                                'fecha' => $fila->fcostodietas,
+                                'monto' => $fila->total,
+                                'anticipo' => $fila->anticipo,
+                                'f_anticipo' => $fila->fanticipo,
+                                'alimentos' => $fila->alimentos,
+                                'hospedaje' => $fila->hospedaje,
+                                'otros' => $fila->otros,
+                                'id_monedas' => $idMonedas,
+                                'id_tractivo' => $idTractivo,
+                                'id_reembolso' => $idReembolso,
+                                'f_liquidacion' => $fila->fliquidacion,
+                                'folio_caja' => $fila->foliocaja ?: null,
+                                'cancelada' => (int) $fila->cancelada === 1,
+                                'id_entidad' => $entidadPorHoja[$idHoja] ?? null,
+                                'tipo_dieta' => 'viático',
+                                'estado' => (int) $fila->cancelada === 1 ? 'cancelada' : 'registrada',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "dietas#{$fila->idcostodietas}: {$e->getMessage()}";
+                    }
+                }
+            });
+
+        $this->reporte['dietas'] = [
+            'legacy' => (int) $legacy->table('cont_dietas')->whereYear('fcostodietas', $anio)->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
      * ORDEN ORGANIZATIVA (jerarquía de entidades).
      *
      * Regla de negocio: la OFICINA CENTRAL (entidad con abreviatura
@@ -2780,6 +3287,37 @@ class EtlService
         $resultado['tarifas_acuerdos'] = [
             'legacy' => (int) DB::connection('legacy')->table('com_taracuerdos')->count(),
             'nueva' => (int) DB::table('tarifas_acuerdos')->count(),
+        ];
+
+        // Combustible (solo año de negocio 2026)
+        $legacy = DB::connection('legacy');
+        $resultado['tarjetas'] = [
+            'legacy' => (int) $legacy->table('cont_tarjetas')->count(),
+            'nueva' => (int) DB::table('tarjetas')->count(),
+        ];
+        $resultado['combustible_cargas'] = [
+            'legacy' => (int) $legacy->table('cont_combcarga')->whereYear('fcarga', 2026)->count(),
+            'nueva' => (int) DB::table('combustible_cargas')->count(),
+        ];
+        $resultado['detalles_carga_combustible'] = [
+            'legacy' => (int) $legacy->table('cont_combdetallecarga')->whereYear('fcarga', 2026)->count(),
+            'nueva' => (int) DB::table('detalles_carga_combustible')->count(),
+        ];
+        $resultado['combustible_descargas'] = [
+            'legacy' => (int) $legacy->table('cont_combdescarga')->whereYear('fdescarga', 2026)->count(),
+            'nueva' => (int) DB::table('combustible_descargas')->count(),
+        ];
+        $resultado['cierre_tarjetas'] = [
+            'legacy' => (int) $legacy->table('cont_htarjetas')->whereYear('ftrabajo', 2026)->count(),
+            'nueva' => (int) DB::table('cierre_tarjetas')->count(),
+        ];
+        $resultado['dietas'] = [
+            'legacy' => (int) $legacy->table('cont_dietas')->whereYear('fcostodietas', 2026)->count(),
+            'nueva' => (int) DB::table('dietas')->count(),
+        ];
+        $resultado['indirectos_mensuales'] = [
+            'legacy' => (int) $legacy->table('cont_contabilidad')->count(),
+            'nueva' => (int) DB::table('indirectos_mensuales')->count(),
         ];
 
         return $resultado;

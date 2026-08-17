@@ -8,15 +8,20 @@ import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
-import DatePicker from 'primevue/datepicker'
+import DatePickerMes from '@/Components/DatePickerMes.vue'
 import Checkbox from 'primevue/checkbox'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ clientes: Array, tipos_ingreso: Array, siguiente_numero: Number, aforos_pendientes: Array })
+const props = defineProps({ clientes: Array, tipos_ingreso: Array, siguiente_numero: Number, aforos_pendientes: Array, fechaOperaciones: String })
 const toast = useToast()
+
+// Rango del mes de la fecha de operaciones activa para los selectores de fecha.
+const fechaOp = () => (props.fechaOperaciones ? new Date(props.fechaOperaciones.slice(0, 10)) : new Date())
+const minFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth(), 1)
+const maxFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth() + 1, 0)
 
 const form = ref({
     numero: props.siguiente_numero ?? '',
@@ -36,6 +41,15 @@ const form = ref({
 const selectedAforos = ref([])
 const totalFlete = computed(() => form.value.flete_mt + form.value.flete_demora + form.value.otros_mt)
 
+// Aforos pendientes filtrados por el cliente seleccionado.
+const aforosPorCliente = computed(() => {
+    if (!form.value.id_cliente) return props.aforos_pendientes || []
+    return (props.aforos_pendientes || []).filter((a) =>
+        a.carta_porte?.solicitud?.id_cliente === form.value.id_cliente ||
+        a.carta_porte?.cliente?.id === form.value.id_cliente
+    )
+})
+
 function onAforosSelect(aforos) {
     form.value.aforos_ids = aforos.map(a => a.id)
     form.value.flete_mt = aforos.reduce((s, a) => s + Number(a.flete_mt), 0)
@@ -43,6 +57,16 @@ function onAforosSelect(aforos) {
     form.value.flete_demora = aforos.reduce((s, a) => s + Number(a.flete_demora), 0)
     form.value.otros_mt = aforos.reduce((s, a) => s + Number(a.otros_mt), 0)
     form.value.ingreso_mt = aforos.reduce((s, a) => s + Number(a.ingreso_mt), 0)
+}
+
+function onClienteChange() {
+    selectedAforos.value = []
+    form.value.aforos_ids = []
+    form.value.flete_mt = 0
+    form.value.flete_mlc = 0
+    form.value.flete_demora = 0
+    form.value.otros_mt = 0
+    form.value.ingreso_mt = 0
 }
 
 function submit() {
@@ -66,11 +90,11 @@ function submit() {
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Fecha Emisión</label>
-                        <DatePicker v-model="form.fecha_emision" date-format="dd/mm/yy" class="w-full" />
+                        <DatePickerMes v-model="form.fecha_emision" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Cliente</label>
-                        <Select v-model="form.id_cliente" :options="clientes" option-value="id" option-label="nombre" placeholder="Seleccione cliente" class="w-full" />
+                        <Select v-model="form.id_cliente" :options="clientes" option-value="id" option-label="nombre" placeholder="Seleccione cliente" class="w-full" @change="onClienteChange" />
                     </div>
                 </div>
 
@@ -86,9 +110,9 @@ function submit() {
                     </div>
                 </div>
 
-                <div v-if="!form.oventas && aforos_pendientes.length" class="border rounded-lg p-4">
+                <div v-if="!form.oventas && aforosPorCliente.length" class="border rounded-lg p-4">
                     <h3 class="font-medium mb-2">Cartas Porte pendientes de facturar</h3>
-                    <DataTable v-model:selection="selectedAforos" :value="aforos_pendientes" selection-mode="multiple" data-key="id" @update:selection="onAforosSelect" striped-rows>
+                    <DataTable v-model:selection="selectedAforos" :value="aforosPorCliente" selection-mode="multiple" data-key="id" @update:selection="onAforosSelect" striped-rows>
                         <Column selection-mode="multiple" header-style="width: 3rem" />
                         <Column field="carta_porte.numero" header="CP" />
                         <Column field="fecha_parte" header="Fecha" />
@@ -102,7 +126,7 @@ function submit() {
                             <template #body="{ data }">${{ Number(data.ingreso_mt).toLocaleString() }}</template>
                         </Column>
                     </DataTable>
-                    <div class="text-xs text-surface-400 pt-1">Total: {{ aforos_pendientes.length }} registros</div>
+                    <div class="text-xs text-surface-400 pt-1">Total: {{ aforosPorCliente.length }} registros</div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

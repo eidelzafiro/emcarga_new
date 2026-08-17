@@ -280,6 +280,7 @@ import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useConfirm } from 'primevue/useconfirm';
 import { debounce } from 'lodash';
 
 const props = defineProps({
@@ -287,6 +288,8 @@ const props = defineProps({
   filters: Object,
   catalogos: Object,
 });
+
+const confirmDialog = useConfirm();
 
 const clasificaciones = [
   { label: 'Tractivos', value: 1 },
@@ -382,8 +385,14 @@ const submit = () => {
 };
 
 const confirmDelete = (tractivo) => {
-  if (confirm('¿Está seguro de eliminar este vehículo?')) {
-    router.delete(route('tractivos.destroy', tractivo.id));
-  }
+  confirmDialog.require({
+    message: '¿Está seguro de eliminar este vehículo?',
+    header: 'Eliminar Vehículo',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => router.delete(route('tractivos.destroy', tractivo.id)),
+  });
 };
 </script>

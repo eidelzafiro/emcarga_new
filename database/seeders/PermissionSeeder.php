@@ -86,6 +86,8 @@ class PermissionSeeder extends Seeder
 
             'combustible-cargas.ver', 'combustible-cargas.crear', 'combustible-cargas.editar', 'combustible-cargas.eliminar',
 
+            'tarjetas.ver', 'tarjetas.crear', 'tarjetas.editar', 'tarjetas.eliminar',
+
             'combustible-descargas.ver', 'combustible-descargas.crear', 'combustible-descargas.editar', 'combustible-descargas.eliminar',
 
             'inventario.ver', 'inventario.crear', 'inventario.editar', 'inventario.eliminar',
@@ -367,6 +369,7 @@ class PermissionSeeder extends Seeder
                 'tipos-conceptos.ver', 'tipos-conceptos.crear', 'tipos-conceptos.editar', 'tipos-conceptos.eliminar',
                 'otros-gastos.ver', 'otros-gastos.crear', 'otros-gastos.editar', 'otros-gastos.eliminar',
                 'combustible-cargas.ver', 'combustible-cargas.crear', 'combustible-cargas.editar', 'combustible-cargas.eliminar',
+                'tarjetas.ver', 'tarjetas.crear', 'tarjetas.editar', 'tarjetas.eliminar',
                 'combustible-descargas.ver', 'combustible-descargas.crear', 'combustible-descargas.editar', 'combustible-descargas.eliminar',
                 'inventario.ver', 'inventario.crear', 'inventario.editar', 'inventario.eliminar',
                 'vales.ver', 'vales.crear', 'vales.editar', 'vales.eliminar',

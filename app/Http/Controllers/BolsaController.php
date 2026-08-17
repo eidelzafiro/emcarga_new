@@ -7,6 +7,7 @@ use App\Models\Cargo;
 use App\Models\Area;
 use App\Models\Entidad;
 use App\Models\User;
+use App\Http\Controllers\Traits\EntidadScoping;
 use App\Services\NotificarDocumentosChofer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,8 @@ use Spatie\Permission\Models\Role;
 
 class BolsaController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $items = Bolsa::with(['cargo', 'area', 'entidad'])
@@ -25,7 +28,7 @@ class BolsaController extends Controller
             }))
             ->when($request->id_cargo, fn ($q, $c) => $q->where('id_cargo', $c))
             ->when($request->id_area, fn ($q, $a) => $q->where('id_area', $a))
-            ->when($entidadId = session('entidad_activa_id'), fn ($q) => $q->where('id_entidad', $entidadId))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->orderBy('nombre')
             ->paginate(20);
 
@@ -81,6 +84,8 @@ class BolsaController extends Controller
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
 
+        $this->autorizarEntidad($bolsa->id_entidad);
+
         $validated = $request->validate($this->rules($bolsa->id));
 
         $validated['id_entidad'] ??= session('entidad_activa_id');
@@ -97,6 +102,8 @@ class BolsaController extends Controller
         if (! $request->user()->hasRole('SUPERADMIN')) {
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
+
+        $this->autorizarEntidad($bolsa->id_entidad);
 
         $bolsa->delete();
 

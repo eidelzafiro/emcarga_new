@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <Toast position="top-right" />
+    <ConfirmDialog />
 
     <div
       v-if="sidebarOpen && isMobile"
@@ -231,6 +232,7 @@ import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 const appName = computed(() => usePage().props.appName || 'Zafiro');
 import { route } from 'ziggy-js';
 import { useToast } from 'primevue/usetoast';
+import ConfirmDialog from 'primevue/confirmdialog';
 import Menubar from 'primevue/menubar';
 
 const page = usePage();

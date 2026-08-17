@@ -13,11 +13,18 @@ import Paginator from 'primevue/paginator'
 
 import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import { formatDate } from '@/Utils/date'
 
-const props = defineProps({ hojas: Object, catalogos: Object, filters: Object, filtros: Object })
+const props = defineProps({ hojas: Object, catalogos: Object, filters: Object, filtros: Object, fechaOperaciones: String })
 const toast = useToast()
+const confirmDialog = useConfirm()
 const title = 'Hoja de Ruta'
+
+// Rango del mes de la fecha de operaciones activa para los selectores de fecha.
+const fechaOp = () => (props.fechaOperaciones ? new Date(props.fechaOperaciones.slice(0, 10)) : new Date())
+const minFecha = soloFecha(new Date(fechaOp().getFullYear(), fechaOp().getMonth(), 1))
+const maxFecha = soloFecha(new Date(fechaOp().getFullYear(), fechaOp().getMonth() + 1, 0))
 const search = ref(props.filters?.search || '')
 const estado = ref(props.filters?.estado || 'todas')
 const equipo = ref(props.filters?.equipo || null)
@@ -278,19 +285,41 @@ function submitEdicion() {
 }
 
 function cancelar(row) {
-  if (!confirm(`¿Cancelar la Hoja de Ruta ${row.numero}?`)) return
-  router.post(route('hojas-ruta.destroy', row.id), { operacion: 'cancelar', _method: 'delete' }, {
-    onSuccess: () => toast.add({ severity: 'success', summary: 'Cancelada', life: 3000 }),
-    onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
+  confirmDialog.require({
+    message: `¿Cancelar la Hoja de Ruta ${row.numero}?`,
+    header: 'Cancelar Hoja de Ruta',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Cancelar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      router.post(route('hojas-ruta.destroy', row.id), { operacion: 'cancelar', _method: 'delete' }, {
+        onSuccess: () => toast.add({ severity: 'success', summary: 'Cancelada', life: 3000 }),
+        onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
+      })
+    },
   })
 }
 
 function eliminar(row) {
-  if (!confirm(`¿Eliminar la Hoja de Ruta ${row.numero}?`)) return
-  router.delete(route('hojas-ruta.destroy', row.id), {
-    onSuccess: () => toast.add({ severity: 'success', summary: 'Eliminada', life: 3000 }),
-    onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
+  confirmDialog.require({
+    message: `¿Eliminar la Hoja de Ruta ${row.numero}?`,
+    header: 'Eliminar Hoja de Ruta',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      router.delete(route('hojas-ruta.destroy', row.id), {
+        onSuccess: () => toast.add({ severity: 'success', summary: 'Eliminada', life: 3000 }),
+        onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
+      })
+    },
   })
+}
+
+function imprimir(row) {
+  window.open(route('hojas-ruta.imprimir', { hoja: row.id }), '_blank')
 }
 
 function choferNombre(c) { return c ? `${c.nombre} ${c.apellidos || ''}`.trim() : '—' }
@@ -494,6 +523,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
               <span>{{ h.parqueo?.nombre || '—' }}</span>
             </div>
             <div class="mt-1.5 flex items-center justify-end gap-1">
+              <Button v-if="!h.cancelada" icon="pi pi-print" rounded text severity="success" title="Imprimir" @click="imprimir(h)" />
               <Button v-if="!h.cancelada && !h.fecha_cierre" icon="pi pi-check" rounded text severity="success" title="Cerrar" @click="openCierre(h)" />
               <Button v-if="!h.cancelada" icon="pi pi-pencil" rounded text severity="info" title="Editar" @click="openEdicion(h)" />
               <Button v-if="!h.cancelada" icon="pi pi-ban" rounded text severity="warning" title="Cancelar" @click="cancelar(h)" />
@@ -541,7 +571,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           </div>
           <div>
             <label class="block mb-1 font-medium">Fecha emisión</label>
-            <input v-model="apertura.fecha_emision" type="date" class="w-full border rounded p-2" required />
+            <input v-model="apertura.fecha_emision" type="date" class="w-full border rounded p-2" required :min="minFecha" :max="maxFecha" />
           </div>
           <div>
             <label class="block mb-1 font-medium">Hora emisión</label>
@@ -565,7 +595,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 items-end">
             <div>
               <label class="block mb-1 font-medium">Código</label>
-              <Select v-model="apertura.id_tractivo" :options="tractivosCat" optionLabel="codigo" optionValue="id" filter placeholder="Seleccione el tractivo" class="w-full" :showClear="true" />
+              <Select v-model="apertura.id_tractivo" :options="tractivosCat" optionLabel="codigo" optionValue="id" filter placeholder="Seleccione el tractivo" class="w-full" required />
             </div>
             <div>
               <label class="block mb-1 font-medium">Marca-Modelo</label>
@@ -612,7 +642,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           <div class="border rounded-lg p-4 bg-surface-50">
             <span class="font-semibold block mb-2">Chofer</span>
             <div class="space-y-2">
-              <Select v-model="apertura.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
+              <Select v-model="apertura.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" required />
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block mb-1 font-medium">CI</label>
@@ -656,7 +686,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block mb-1 font-medium">Fecha cierre</label>
-            <input v-model="cierre.fecha_cierre" type="date" class="w-full border rounded p-2" required />
+            <input v-model="cierre.fecha_cierre" type="date" class="w-full border rounded p-2" required :min="minFecha" :max="maxFecha" />
           </div>
           <div>
             <label class="block mb-1 font-medium">Hora cierre</label>
@@ -733,7 +763,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
         <div class="col-span-2 grid grid-cols-4 gap-3 border rounded-lg p-3 bg-surface-50">
           <div>
             <label class="block mb-1 font-medium">Fecha emisión</label>
-            <input v-model="edicion.fecha_emision" type="date" class="w-full border rounded p-2" required />
+            <input v-model="edicion.fecha_emision" type="date" class="w-full border rounded p-2" required :min="minFecha" :max="maxFecha" />
           </div>
           <div>
             <label class="block mb-1 font-medium">Hora emisión</label>
@@ -741,7 +771,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           </div>
           <div>
             <label class="block mb-1 font-medium">Fecha cierre</label>
-            <input v-model="edicion.fecha_cierre" type="date" class="w-full border rounded p-2" />
+            <input v-model="edicion.fecha_cierre" type="date" class="w-full border rounded p-2" :min="minFecha" :max="maxFecha" />
           </div>
           <div>
             <label class="block mb-1 font-medium">Hora cierre</label>
@@ -750,7 +780,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
         </div>
         <div>
           <label class="block mb-1 font-medium">Tractivo</label>
-          <Select v-model="edicion.id_tractivo" :options="catalogos.tractivos" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
+          <Select v-model="edicion.id_tractivo" :options="catalogos.tractivos" optionLabel="codigo" optionValue="id" filter class="w-full" required />
         </div>
         <div>
           <label class="block mb-1 font-medium">Arrastre</label>
@@ -758,7 +788,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
         </div>
         <div>
           <label class="block mb-1 font-medium">Chofer</label>
-          <Select v-model="edicion.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter class="w-full" :showClear="true" />
+          <Select v-model="edicion.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter class="w-full" required />
         </div>
         <div>
           <label class="block mb-1 font-medium">Chofer 2</label>

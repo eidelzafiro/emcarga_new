@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Neumatico;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class NeumaticosController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $neumaticos = Neumatico::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%"))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -53,6 +56,8 @@ class NeumaticosController extends Controller
 
     public function update(Request $request, Neumatico $neumatico)
     {
+        $this->autorizarEntidad($neumatico->id_entidad);
+
         $validated = $request->validate([
             'folio' => 'required|unique:neumaticos,folio,'.$neumatico->id,
             'marca' => 'nullable|string|max:100',
@@ -73,6 +78,8 @@ class NeumaticosController extends Controller
 
     public function destroy(Neumatico $neumatico)
     {
+        $this->autorizarEntidad($neumatico->id_entidad);
+
         $neumatico->delete();
 
         return redirect()->route('neumaticos.index')

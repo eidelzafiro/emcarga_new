@@ -5,21 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Area;
 use App\Models\TipoPagoAdicionale;
 use App\Models\TipoPenalizacione;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TiposPenalizacionesController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidades = $this->entidadesPermitidas();
 
         $tipos = TipoPenalizacione::with(['area', 'tipoPagoAdicional'])
-            ->where(function ($q) use ($entidadId) {
-                if ($entidadId) {
-                    $q->whereHas('area', fn ($sq) => $sq->where('id_entidad', $entidadId))
-                        ->orWhereNull('area_id');
+            ->where(function ($q) use ($entidades) {
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades)->orWhereNull('id_entidad');
                 }
             })
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
@@ -54,6 +56,8 @@ class TiposPenalizacionesController extends Controller
 
     public function update(Request $request, TipoPenalizacione $tiposPenalizacione)
     {
+        $this->autorizarEntidad($tiposPenalizacione->id_entidad);
+
         $validated = $request->validate([
             'nombre' => 'required|max:255',
             'area_id' => 'nullable|exists:areas,id',
@@ -67,6 +71,8 @@ class TiposPenalizacionesController extends Controller
 
     public function destroy(TipoPenalizacione $tiposPenalizacione)
     {
+        $this->autorizarEntidad($tiposPenalizacione->id_entidad);
+
         $tiposPenalizacione->delete();
 
         return redirect()->route('tipos-penalizaciones.index')->with('success', 'Tipo de penalización eliminado correctamente.');

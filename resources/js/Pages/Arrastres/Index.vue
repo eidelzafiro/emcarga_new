@@ -12,9 +12,11 @@ import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const props = defineProps({ title: String, items: Object, filters: Object, catalogos: Object })
 const toast = useToast()
+const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
@@ -101,10 +103,19 @@ function submit() {
 }
 
 function destroy(item) {
-  if (!confirm(`¿Eliminar el arrastre ${item.descripcion ?? item.id}?`)) return
-  router.delete(route('arrastres.destroy', { tractivo: item.id }), {
-    onSuccess: () => {
-      toast.add({ severity: 'success', summary: 'Eliminado', detail: 'Arrastre eliminado.', life: 3000 })
+  confirmDialog.require({
+    message: `¿Eliminar el arrastre ${item.descripcion ?? item.id}?`,
+    header: 'Eliminar Arrastre',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      router.delete(route('arrastres.destroy', { tractivo: item.id }), {
+        onSuccess: () => {
+          toast.add({ severity: 'success', summary: 'Eliminado', detail: 'Arrastre eliminado.', life: 3000 })
+        },
+      })
     },
   })
 }

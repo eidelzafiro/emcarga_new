@@ -3,14 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\RegistroOrdenesTaller;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class RegistroOrdenesTallerController extends Controller
 {
+    use EntidadScoping;
+
     public function index()
     {
-        $items = RegistroOrdenesTaller::orderBy('id')->paginate(50);
+        $items = RegistroOrdenesTaller::query()
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
+            ->orderBy('id')->paginate(50);
 
         return Inertia::render('Catalogo/Index', [
             'items' => $items,
@@ -41,6 +46,7 @@ class RegistroOrdenesTallerController extends Controller
     public function show($id)
     {
         $item = RegistroOrdenesTaller::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
 
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
@@ -52,6 +58,7 @@ class RegistroOrdenesTallerController extends Controller
     public function edit($id)
     {
         $item = RegistroOrdenesTaller::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
 
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
@@ -67,6 +74,7 @@ class RegistroOrdenesTallerController extends Controller
         ]);
 
         $item = RegistroOrdenesTaller::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
         $item->update($validated);
 
         return redirect()->route('registro-ordenes-taller.index')->with('success', 'Registro de orden de taller actualizado.');
@@ -75,6 +83,7 @@ class RegistroOrdenesTallerController extends Controller
     public function destroy($id)
     {
         $item = RegistroOrdenesTaller::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
         $item->delete();
 
         return redirect()->route('registro-ordenes-taller.index')->with('success', 'Registro de orden de taller eliminado.');

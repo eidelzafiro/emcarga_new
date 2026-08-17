@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CombustibleCarga extends Model
@@ -13,17 +14,15 @@ class CombustibleCarga extends Model
     protected $table = 'combustible_cargas';
 
     protected $fillable = [
-        'numero',
-        'id_tarjeta',
-        'id_tractivo',
-        'id_bolsa',
-        'fecha_carga',
-        'cantidad_litros',
-        'precio_litro',
-        'total',
-        'tipo_combustible',
-        'lugar',
-        'observaciones',
+        'fcarga',
+        'saldocargado',
+        'saldoxtarjeta',
+        'id_monedas',
+        'id_tipo_combustibles',
+        'id_responsable',
+        'folio',
+        'notas',
+        'id_entidad',
         'estado',
         'id_user',
     ];
@@ -31,30 +30,39 @@ class CombustibleCarga extends Model
     protected function casts(): array
     {
         return [
-            'fecha_carga' => 'date',
-            'cantidad_litros' => 'decimal:2',
-            'precio_litro' => 'decimal:4',
-            'total' => 'decimal:2',
+            'fcarga' => 'date',
+            'saldocargado' => 'decimal:2',
+            'saldoxtarjeta' => 'decimal:2',
         ];
     }
 
-    public function tarjeta(): BelongsTo
+    public function moneda(): BelongsTo
     {
-        return $this->belongsTo(Tarjeta::class, 'id_tarjeta');
+        return $this->belongsTo(Moneda::class, 'id_monedas');
     }
 
-    public function tractivo(): BelongsTo
+    public function tipoCombustible(): BelongsTo
     {
-        return $this->belongsTo(Tractivo::class, 'id_tractivo');
+        return $this->belongsTo(TipoCombustible::class, 'id_tipo_combustibles');
     }
 
-    public function bolsa(): BelongsTo
+    public function responsable(): BelongsTo
     {
-        return $this->belongsTo(Bolsa::class, 'id_bolsa');
+        return $this->belongsTo(Bolsa::class, 'id_responsable');
+    }
+
+    public function entidad(): BelongsTo
+    {
+        return $this->belongsTo(Entidad::class, 'id_entidad');
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function detalles(): HasMany
+    {
+        return $this->hasMany(DetalleCargaCombustible::class, 'id_carga');
     }
 }

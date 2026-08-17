@@ -26,6 +26,11 @@ class GruposEscalaController extends Controller
         return 'Grupos Escala';
     }
 
+    protected function isEntityScoped(): bool
+    {
+        return true;
+    }
+
     protected function getExtraFields(): array
     {
         return [
@@ -36,11 +41,15 @@ class GruposEscalaController extends Controller
 
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidades = $this->entidadesPermitidas();
 
         $query = GrupoEscala::query();
-        $query->where(function ($q) use ($entidadId) {
-            $q->where('id_entidad', $entidadId)->orWhereNull('id_entidad');
+        $query->where(function ($q) use ($entidades) {
+            if (! empty($entidades)) {
+                $q->whereIn('id_entidad', $entidades)->orWhereNull('id_entidad');
+            } else {
+                $q->whereNull('id_entidad');
+            }
         });
         $search = $request->get('search');
 
@@ -93,6 +102,9 @@ class GruposEscalaController extends Controller
     {
         $model = $this->getModelClass();
         $item = $model::findOrFail($id);
+
+        $this->autorizarEntidad($item->id_entidad ?? null);
+
         $data = $request->validate($this->getValidationRules($id));
 
         $item->update($data);

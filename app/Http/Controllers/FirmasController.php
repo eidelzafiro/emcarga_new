@@ -3,18 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Firma;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class FirmasController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $items = Firma::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%"))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -49,6 +52,8 @@ class FirmasController extends Controller
 
     public function update(Request $request, Firma $firma)
     {
+        $this->autorizarEntidad($firma->id_entidad);
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:150',
             'confecciona_nombre' => 'nullable|string|max:150',
@@ -66,6 +71,8 @@ class FirmasController extends Controller
 
     public function destroy(Firma $firma)
     {
+        $this->autorizarEntidad($firma->id_entidad);
+
         $firma->delete();
 
         return redirect()->route('firmas.index')->with('success', 'Firma eliminada correctamente.');

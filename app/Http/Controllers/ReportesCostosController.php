@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\ReporteCosto;
 use App\Models\Tractivo;
+use App\Services\CostoCalculoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class ReportesCostosController extends Controller
@@ -109,5 +111,33 @@ class ReportesCostosController extends Controller
         $reportesCosto->delete();
 
         return redirect()->route('reportes-costos.index')->with('success', 'Reporte eliminado correctamente.');
+    }
+
+    public function recalcular(Request $request, CostoCalculoService $servicio)
+    {
+        $validated = $request->validate([
+            'id_tractivo' => 'required|exists:tractivos,id',
+            'fecha' => 'required|date',
+        ]);
+
+        $servicio->recalcular((int) $validated['id_tractivo'], Carbon::parse($validated['fecha']));
+
+        return redirect()->route('reportes-costos.index')->with('success', 'Costos recalculados correctamente.');
+    }
+
+    public function recalcularTodos(Request $request, CostoCalculoService $servicio)
+    {
+        $validated = $request->validate([
+            'fecha' => 'required|date',
+        ]);
+
+        $fecha = Carbon::parse($validated['fecha']);
+        $tractivos = Tractivo::where('estado', 'activo')->orderBy('codigo')->get();
+
+        foreach ($tractivos as $tractivo) {
+            $servicio->recalcular($tractivo, $fecha);
+        }
+
+        return redirect()->route('reportes-costos.index')->with('success', 'Costos de '.$tractivos->count().' tractivos recalculados.');
     }
 }

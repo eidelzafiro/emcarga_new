@@ -7,7 +7,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
-import DatePicker from 'primevue/datepicker'
+import DatePickerMes from '@/Components/DatePickerMes.vue'
 import Textarea from 'primevue/textarea'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -34,6 +34,11 @@ const props = defineProps({
 
 const toast = useToast()
 const esEdicion = computed(() => !!props.aforo?.id)
+
+// Rango del mes de la fecha de operaciones activa para los selectores de fecha.
+const fechaOp = () => (props.fechaOperaciones ? new Date(props.fechaOperaciones.slice(0, 10)) : new Date())
+const minFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth(), 1)
+const maxFecha = new Date(fechaOp().getFullYear(), fechaOp().getMonth() + 1, 0)
 
 // ---------- Estado inicial (CP preseleccionada o aforo a editar) ----------
 const cartaBase = computed(() => {
@@ -64,10 +69,10 @@ const form = reactive({
     // Fase 4d: cliente/tipos/productos se derivan de la solicitud; equipo de la HR.
     id_hoja_ruta: props.cartaPreseleccionada?.id_hoja_ruta ?? null,
     id_cliente: props.cartaPreseleccionada?.cliente?.id ?? props.cartaPreseleccionada?.solicitud?.id_cliente ?? null,
-    id_tractivo: props.cartaPreseleccionada?.hojaRuta?.id_tractivo ?? null,
-    id_arrastre: props.cartaPreseleccionada?.hojaRuta?.id_arrastre ?? null,
-    id_chofer: props.cartaPreseleccionada?.hojaRuta?.id_chofer ?? null,
-    id_chofer2: props.cartaPreseleccionada?.hojaRuta?.id_chofer2 ?? null,
+    id_tractivo: props.cartaPreseleccionada?.hojaRuta?.id_tractivo ?? props.cartaPreseleccionada?.tractivo?.id ?? null,
+    id_arrastre: props.cartaPreseleccionada?.hojaRuta?.id_arrastre ?? props.cartaPreseleccionada?.arrastre?.id ?? null,
+    id_chofer: props.cartaPreseleccionada?.hojaRuta?.id_chofer ?? props.cartaPreseleccionada?.chofer?.id ?? null,
+    id_chofer2: props.cartaPreseleccionada?.hojaRuta?.id_chofer2 ?? props.cartaPreseleccionada?.chofer2?.id ?? null,
     id_lugar_origen: props.cartaPreseleccionada?.solicitud?.id_lugar_origen ?? props.cartaPreseleccionada?.lugar_origen?.id ?? null,
     id_lugar_destino: props.cartaPreseleccionada?.solicitud?.id_lugar_destino ?? props.cartaPreseleccionada?.lugar_destino?.id ?? null,
     id_producto: props.cartaPreseleccionada?.solicitud?.id_producto ?? null,
@@ -204,15 +209,26 @@ const monedaCliente = computed(() => props.monedas?.find((m) => m.id === form.id
 // Derivación desde la hoja de ruta (tractivo/arrastre/choferes, solo lectura)
 const hrSeleccionada = computed(() => props.hojasRuta?.find((h) => h.id === form.id_hoja_ruta) || null)
 const tractivoCodigo = computed(() => {
+    if (cp.value.tractivo?.codigo) return cp.value.tractivo.codigo
     if (hrSeleccionada.value?.tractivo_codigo) return hrSeleccionada.value.tractivo_codigo
     return props.tractivos?.find((t) => t.id === form.id_tractivo)?.codigo || '—'
 })
 const arrastreCodigo = computed(() => {
+    if (cp.value.arrastre?.codigo) return cp.value.arrastre.codigo
     if (hrSeleccionada.value?.arrastre_codigo) return hrSeleccionada.value.arrastre_codigo
     return props.arrastres?.find((t) => t.id === form.id_arrastre)?.codigo || '—'
 })
-const choferNombre = computed(() => hrSeleccionada.value?.chofer_nombre || '—')
-const chofer2Nombre = computed(() => hrSeleccionada.value?.chofer2_nombre || '—')
+const choferNombre = computed(() => {
+    if (cp.value.chofer) return trimNombre(cp.value.chofer)
+    return hrSeleccionada.value?.chofer_nombre || '—'
+})
+const chofer2Nombre = computed(() => {
+    if (cp.value.chofer2) return trimNombre(cp.value.chofer2)
+    return hrSeleccionada.value?.chofer2_nombre || '—'
+})
+function trimNombre(p) {
+    return [p.nombre, p.apellidos].filter(Boolean).join(' ').trim() || '—'
+}
 
 function onSeleccionarCarta() {
     const sel = props.cartasPendientes?.find((c) => c.id === form.id_carta_porte)
@@ -279,7 +295,10 @@ async function api(url, data) {
 }
 
 async function cotizarLinea(linea) {
-    if (!linea.id_tipo_carga || !linea.distancia || !linea.peso_cobrar) return
+    if (!linea.id_tipo_carga) return
+    // KMS VACIOS (7/14): basta con los kms (la tarifa depende de la capacidad del tractivo).
+    const soloKms = [7, 14].includes(Number(linea.id_tipo_carga))
+    if (soloKms ? !linea.distancia : !linea.distancia || !linea.peso_cobrar) return
     linea.calculando = true
     try {
         const data = await api(route('aforos.cotizar'), {
@@ -338,11 +357,32 @@ async function calcularAlmacenajeEnter() {
     calcularAlmacenaje()
 }
 
-async function calcularDemora() {
-    const horas = round2(Number(form.dem_carga) + Number(form.dem_descarga))
+// Calcula las horas de demora desde H1/H2 restando los plazos libres
+// (paridad legacy `aforo/dif_horas`). Se dispara al salir del campo H2.
+async function calcularHorasDesde(campoHoras, campoH1, campoH2) {
+    const h1 = form[campoH1]
+    const h2 = form[campoH2]
+    if (!h1 || !h2) return
+    const data = await api(route('aforos.cotizar-dif-horas'), {
+        hora1: String(h1),
+        hora2: String(h2),
+        peso: capacidad.value,
+    })
+    form[campoHoras] = Number(data.horas || 0)
+    calcularDemora()
+}
+
+function horasCarga() {
+    calcularHorasDesde('dem_carga', 'hora_carga_1', 'hora_carga_2')
+}
+
+function horasDescarga() {
+    calcularHorasDesde('dem_descarga', 'hora_descarga_1', 'hora_descarga_2')
+}
+
+async function calcularDemora() {    const horas = round2(Number(form.dem_carga) + Number(form.dem_descarga))
     if (horas <= 0) return
-    const data = await api(route('aforos.cotizar-demora'), {
-        tipocarga1: lineas[0].id_tipo_carga || 0,
+    const data = await api(route('aforos.cotizar-demora'), {        tipocarga1: lineas[0].id_tipo_carga || 0,
         tipocarga2: lineas[1].id_tipo_carga || 0,
         capacidad: capacidad.value,
         demcarga: form.dem_carga,
@@ -371,7 +411,8 @@ async function calcularTiempos() {
     form.tiempo_total = Number(data.ttotal || 0)
 }
 
-// ---------- Salario: se propone una tasa (por rango) pero es seleccionable ----------
+// ---------- Salario: se propone y selecciona una tasa (por rango) según el
+// llenado de las tarifas; el usuario puede cambiarla luego en el selector.
 async function calcularSalario() {
     if (!lineas[0].id_tipo_carga) return
     const data = await api(route('aforos.cotizar-salario'), {
@@ -382,8 +423,8 @@ async function calcularSalario() {
         almacenaje: form.almacenaje_flete,
         idchofer2: form.id_chofer2 || 0,
     })
-    // Solo propone si aún no se ha seleccionado una tasa manualmente
-    if (!form.id_tasa) {
+    // Disparador: se selecciona la tasa que corresponde según variantes.
+    if (data.idtasa) {
         form.id_tasa = data.idtasa
         form.tasa = Number(data.tasa || 0)
         form.salario = Number(data.salario || 0)
@@ -599,11 +640,11 @@ function numeroLabel(n) {
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Fecha de Parte</label>
-                                <DatePicker v-model="form.fecha_parte" date-format="dd/mm/yy" class="w-full" />
+                                <DatePickerMes v-model="form.fecha_parte" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Fecha Emisión</label>
-                                <DatePicker v-model="form.fecha_emision" date-format="dd/mm/yy" class="w-full" />
+                                <DatePickerMes v-model="form.fecha_emision" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Cliente</label>
@@ -675,14 +716,14 @@ function numeroLabel(n) {
                                     <Select v-model="data.id_tipo_carga" :options="tiposCarga" option-value="id" option-label="nombre" filter class="w-full" @change="cotizarLinea(data)" />
                                 </template>
                             </Column>
-                            <Column field="distancia" header="Kms">
-                                <template #body="{ data }">
-                                    <InputNumber v-model="data.distancia" :min="0" :max-fraction-digits="2" locale="en-US" class="w-full text-right" @blur="cotizarLinea(data)" @keydown.enter.prevent="calcularLineaConEnter(data)" />
-                                </template>
-                            </Column>
                             <Column field="peso_cobrar" header="Peso (t)">
                                 <template #body="{ data }">
                                     <InputNumber v-model="data.peso_cobrar" :min="0" :max-fraction-digits="2" locale="en-US" class="w-full text-right" @blur="cotizarLinea(data)" @keydown.enter.prevent="calcularLineaConEnter(data)" />
+                                </template>
+                            </Column>
+                            <Column field="distancia" header="Kms">
+                                <template #body="{ data }">
+                                    <InputNumber v-model="data.distancia" :min="0" :max-fraction-digits="2" locale="en-US" class="w-full text-right" @blur="cotizarLinea(data)" @keydown.enter.prevent="calcularLineaConEnter(data)" />
                                 </template>
                             </Column>
                             <Column field="tarifa_mt" header="Tar" class="text-right">
@@ -745,17 +786,17 @@ function numeroLabel(n) {
                             <div>
                                 <label class="text-xs font-semibold text-surface-500 block mb-1">CARGA</label>
                                 <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
-                                    <DatePicker v-model="form.fecha_carga" date-format="dd/mm/yy" class="w-full" />
+                                    <DatePickerMes v-model="form.fecha_carga" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                                     <InputText v-model="form.hora_carga_1" placeholder="H1" class="w-16" />
-                                    <InputText v-model="form.hora_carga_2" placeholder="H2" class="w-16" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" />
+                                    <InputText v-model="form.hora_carga_2" placeholder="H2" class="w-16" @blur="horasCarga" @keydown.enter.prevent="horasCarga" />
                                 </div>
                             </div>
                             <div>
                                 <label class="text-xs font-semibold text-surface-500 block mb-1">DESCARGA</label>
                                 <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
-                                    <DatePicker v-model="form.fecha_descarga" date-format="dd/mm/yy" class="w-full" />
+                                    <DatePickerMes v-model="form.fecha_descarga" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                                     <InputText v-model="form.hora_descarga_1" placeholder="H1" class="w-16" />
-                                    <InputText v-model="form.hora_descarga_2" placeholder="H2" class="w-16" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" />
+                                    <InputText v-model="form.hora_descarga_2" placeholder="H2" class="w-16" @blur="horasDescarga" @keydown.enter.prevent="horasDescarga" />
                                 </div>
                             </div>
                         </div>
@@ -825,7 +866,8 @@ function numeroLabel(n) {
                             <InputNumber :model-value="form.recargo_5" readonly class="w-24 text-right readonly-field" />
                         </div>
                         <div class="flex items-center gap-2 pt-2 border-t border-surface-100 dark:border-surface-700">
-                            <span class="font-semibold text-blue-800 dark:text-blue-300">OTROS TOTAL</span>
+                            <span class="w-5"></span>
+                            <span class="w-36 text-xs font-bold text-blue-800 dark:text-blue-300">OTROS TOTAL</span>
                             <InputNumber :model-value="otrosTotal" readonly class="w-24 text-right readonly-field" />
                         </div>
                     </div>
@@ -841,12 +883,12 @@ function numeroLabel(n) {
                         <div>
                             <label class="text-xs font-semibold text-surface-500 block mb-1">TIEMPOS</label>
                             <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
-                                <div><label class="text-xs text-surface-500 block">OTROS</label><InputNumber v-model="form.tiempo_otros" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">MOV</label><InputNumber v-model="form.tiempo_movimiento" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">CAR</label><InputNumber v-model="form.tiempo_carga" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">DES</label><InputNumber v-model="form.tiempo_descarga" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">TIEMPO</label><InputNumber v-model="form.tiempo_total" readonly class="w-full text-right readonly-field" /></div>
-                                <div><label class="text-xs text-surface-500 block">FERIADO</label><InputNumber v-model="form.tiempo_feriado" class="w-full" /></div>
+                                <div><label class="text-xs text-surface-500 block">OTROS</label><InputNumber v-model="form.tiempo_otros" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-surface-500 block">MOV</label><InputNumber v-model="form.tiempo_movimiento" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-surface-500 block">CAR</label><InputNumber v-model="form.tiempo_carga" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-surface-500 block">DES</label><InputNumber v-model="form.tiempo_descarga" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-surface-500 block">TIEMPO</label><InputNumber v-model="form.tiempo_total" readonly :max-fraction-digits="2" class="w-full text-right readonly-field" /></div>
+                                <div><label class="text-xs text-surface-500 block">FERIADO</label><InputNumber v-model="form.tiempo_feriado" :max-fraction-digits="2" locale="en-US" class="w-full" /></div>
                             </div>
                         </div>
                         <div class="pt-3 border-t border-surface-100 dark:border-surface-700">

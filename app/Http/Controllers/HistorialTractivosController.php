@@ -3,14 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\HistorialTractivo;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class HistorialTractivosController extends Controller
 {
+    use EntidadScoping;
+
     public function index()
     {
-        $items = HistorialTractivo::when(session('entidad_activa_id'), fn ($q, $id) => $q->where('id_entidad', $id))
+        $items = HistorialTractivo::query()
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->orderBy('id')->paginate(50);
 
         return Inertia::render('Catalogo/Index', [
@@ -42,6 +46,7 @@ class HistorialTractivosController extends Controller
     public function show($id)
     {
         $item = HistorialTractivo::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
 
         return Inertia::render('Catalogo/Show', [
             'item' => $item,
@@ -53,6 +58,7 @@ class HistorialTractivosController extends Controller
     public function edit($id)
     {
         $item = HistorialTractivo::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
 
         return Inertia::render('Catalogo/Form', [
             'item' => $item,
@@ -68,6 +74,7 @@ class HistorialTractivosController extends Controller
         ]);
 
         $item = HistorialTractivo::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
         $item->update($validated);
 
         return redirect()->route('historial-tractivos.index')->with('success', 'Historial de tractivo actualizado.');
@@ -76,6 +83,7 @@ class HistorialTractivosController extends Controller
     public function destroy($id)
     {
         $item = HistorialTractivo::findOrFail($id);
+        $this->autorizarEntidad($item->tractivo?->id_entidad);
         $item->delete();
 
         return redirect()->route('historial-tractivos.index')->with('success', 'Historial de tractivo eliminado.');

@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Caja;
+use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class CajasController extends Controller
 {
+    use EntidadScoping;
+
     public function index(Request $request)
     {
         $cajas = Caja::with('tractivo:id,descripcion,placa')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%"))
             ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $q->where('id_entidad', $entidadId);
+                $entidades = $this->entidadesPermitidas();
+                if (! empty($entidades)) {
+                    $q->whereIn('id_entidad', $entidades);
                 }
 
                 return $q;
@@ -51,6 +54,8 @@ class CajasController extends Controller
 
     public function update(Request $request, Caja $caja)
     {
+        $this->autorizarEntidad($caja->id_entidad);
+
         $validated = $request->validate([
             'codigo' => 'required|unique:cajas,codigo,'.$caja->id,
             'descripcion' => 'required|string|max:255',
@@ -69,6 +74,8 @@ class CajasController extends Controller
 
     public function destroy(Caja $caja)
     {
+        $this->autorizarEntidad($caja->id_entidad);
+
         $caja->delete();
 
         return redirect()->route('cajas.index')

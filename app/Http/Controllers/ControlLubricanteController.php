@@ -21,6 +21,8 @@ class ControlLubricanteController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\ControlLubricante::class);
         $registros = ControlLubricante::with('tractivo:id,descripcion,placa', 'entidad:id,nombre')
             ->when($request->id_tractivo, fn ($q, $v) => $q->where('id_tractivo', $v))
             ->when($request->tipo_operacion, fn ($q, $v) => $q->where('tipo_operacion', $v))
@@ -53,6 +55,8 @@ class ControlLubricanteController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\ControlLubricante::class);
         $validated = $request->validate($this->reglas());
 
         $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
@@ -66,6 +70,8 @@ class ControlLubricanteController extends Controller
 
     public function update(Request $request, ControlLubricante $controlLubricante)
     {
+        
+        $this->authorize('update', $controlLubricante);
         $this->autorizarEntidad($controlLubricante->id_entidad);
 
         $validated = $request->validate($this->reglas());
@@ -77,6 +83,8 @@ class ControlLubricanteController extends Controller
 
     public function destroy(ControlLubricante $controlLubricante)
     {
+        
+        $this->authorize('delete', $controlLubricante);
         $this->autorizarEntidad($controlLubricante->id_entidad);
 
         $controlLubricante->delete();

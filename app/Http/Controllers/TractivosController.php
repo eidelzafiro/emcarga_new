@@ -27,6 +27,8 @@ class TractivosController extends Controller
      */
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Tractivo::class);
         $tractivos = Tractivo::query()
             ->when($request->grupo, function ($query, $grupo) {
                 $query->where('id_grupo', $grupo);
@@ -156,6 +158,8 @@ class TractivosController extends Controller
      */
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Tractivo::class);
         $validated = $request->validate($this->reglas());
 
         $validated['id_entidad'] = (int) session('entidad_activa_id');
@@ -170,6 +174,8 @@ class TractivosController extends Controller
      */
     public function update(Request $request, Tractivo $tractivo)
     {
+        
+        $this->authorize('update', $tractivo);
         $this->autorizarEntidad($tractivo->id_entidad);
 
         $validated = $request->validate($this->reglas($tractivo->id));
@@ -250,6 +256,8 @@ class TractivosController extends Controller
      */
     public function destroy(Tractivo $tractivo)
     {
+        
+        $this->authorize('delete', $tractivo);
         $this->autorizarEntidad($tractivo->id_entidad);
 
         $tractivo->delete();

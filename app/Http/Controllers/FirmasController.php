@@ -13,6 +13,8 @@ class FirmasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Firma::class);
         $items = Firma::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%"))
             ->when(true, function ($q) {
                 $entidades = $this->entidadesPermitidas();
@@ -34,6 +36,8 @@ class FirmasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Firma::class);
         $validated = $request->validate([
             'nombre' => 'required|string|max:150',
             'confecciona_nombre' => 'nullable|string|max:150',
@@ -52,6 +56,8 @@ class FirmasController extends Controller
 
     public function update(Request $request, Firma $firma)
     {
+        
+        $this->authorize('update', $firma);
         $this->autorizarEntidad($firma->id_entidad);
 
         $validated = $request->validate([
@@ -71,6 +77,8 @@ class FirmasController extends Controller
 
     public function destroy(Firma $firma)
     {
+        
+        $this->authorize('delete', $firma);
         $this->autorizarEntidad($firma->id_entidad);
 
         $firma->delete();

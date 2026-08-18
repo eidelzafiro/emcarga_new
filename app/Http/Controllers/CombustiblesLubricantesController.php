@@ -14,6 +14,8 @@ class CombustiblesLubricantesController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\CombustibleLubricante::class);
         $items = CombustibleLubricante::with(['carga', 'tractivo', 'tipoLubricante', 'causa'])
             ->when($request->id_tractivo, fn ($q, $v) => $q->where('id_tractivo', $v))
             ->orderBy('fecha', 'desc')
@@ -37,6 +39,8 @@ class CombustiblesLubricantesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\CombustibleLubricante::class);
         $validated = $request->validate([
             'id_carga' => 'nullable|exists:combustible_cargas,id',
             'id_tractivo' => 'required|exists:tractivos,id',
@@ -55,6 +59,8 @@ class CombustiblesLubricantesController extends Controller
 
     public function update(Request $request, CombustibleLubricante $combustiblesLubricante)
     {
+        
+        $this->authorize('update', $combustiblesLubricante);
         $validated = $request->validate([
             'id_carga' => 'nullable|exists:combustible_cargas,id',
             'id_tractivo' => 'required|exists:tractivos,id',
@@ -73,6 +79,8 @@ class CombustiblesLubricantesController extends Controller
 
     public function destroy(Request $request, CombustibleLubricante $combustiblesLubricante)
     {
+        
+        $this->authorize('delete', $combustiblesLubricante);
         $combustiblesLubricante->delete();
 
         return redirect()->route('combustibles-lubricantes.index')->with('success', 'Registro eliminado correctamente.');

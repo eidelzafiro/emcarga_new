@@ -10,6 +10,8 @@ class OtrosAgregadosController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\OtrosAgregado::class);
         $agregados = OtrosAgregado::with('marca:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%"))
             ->paginate(20);
@@ -23,6 +25,8 @@ class OtrosAgregadosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\OtrosAgregado::class);
         $validated = $request->validate([
             'codigo' => 'required|unique:otros_agregados,codigo',
             'descripcion' => 'required|string|max:255',
@@ -40,6 +44,8 @@ class OtrosAgregadosController extends Controller
 
     public function update(Request $request, OtrosAgregado $otrosAgregado)
     {
+        
+        $this->authorize('update', $otrosAgregado);
         $validated = $request->validate([
             'codigo' => 'required|unique:otros_agregados,codigo,'.$otrosAgregado->id,
             'descripcion' => 'required|string|max:255',
@@ -57,6 +63,8 @@ class OtrosAgregadosController extends Controller
 
     public function destroy(OtrosAgregado $otrosAgregado)
     {
+        
+        $this->authorize('delete', $otrosAgregado);
         $otrosAgregado->delete();
 
         return redirect()->route('otros-agregados.index')

@@ -15,6 +15,8 @@ class IncidenciasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Incidencia::class);
         $entidades = $this->entidadesPermitidas();
 
         $query = Incidencia::with(['bolsa', 'tipoIncidencia'])
@@ -43,6 +45,8 @@ class IncidenciasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Incidencia::class);
         $data = $request->validate([
             'id_bolsa' => 'required|exists:bolsa,id',
             'id_tipo_incidencia' => 'required|exists:tipos_incidencias,id',
@@ -61,6 +65,8 @@ class IncidenciasController extends Controller
 
     public function update(Request $request, Incidencia $incidencia)
     {
+        
+        $this->authorize('update', $incidencia);
         $this->autorizarEntidad($incidencia->bolsa?->id_entidad);
 
         $data = $request->validate([
@@ -79,6 +85,8 @@ class IncidenciasController extends Controller
 
     public function destroy(Incidencia $incidencia)
     {
+        
+        $this->authorize('delete', $incidencia);
         $this->autorizarEntidad($incidencia->bolsa?->id_entidad);
 
         $incidencia->delete();

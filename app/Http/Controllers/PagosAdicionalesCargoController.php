@@ -12,6 +12,8 @@ class PagosAdicionalesCargoController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\PagosAdicionalesCargo::class);
         $items = PagosAdicionalesCargo::query()
             ->orderBy('id')->paginate(50);
 
@@ -26,11 +28,14 @@ class PagosAdicionalesCargoController extends Controller
 
     public function create()
     {
-        return redirect()->route('pagos-adicionales-cargo.index');
+        
+        $this->authorize('create', \App\Models\PagosAdicionalesCargo::class);return redirect()->route('pagos-adicionales-cargo.index');
     }
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\PagosAdicionalesCargo::class);
         $validated = $request->validate([
             'id_cargo' => 'required|exists:cargos,id',
             'id_tipo_pago_adicional' => 'required|exists:tipos_pagos_adicionales,id',

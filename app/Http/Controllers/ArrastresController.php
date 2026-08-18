@@ -25,6 +25,8 @@ class ArrastresController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', [\App\Models\Tractivo::class, \App\Policies\ArrastrePolicy::class]);
         $query = Tractivo::query()->where('id_grupo', 8);
 
         $entidades = $this->entidadesPermitidas();
@@ -62,6 +64,8 @@ class ArrastresController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', [\App\Models\Tractivo::class, \App\Policies\ArrastrePolicy::class]);
         $validated = $request->validate($this->reglas());
 
         $validated['id_entidad'] = (int) session('entidad_activa_id');
@@ -75,7 +79,8 @@ class ArrastresController extends Controller
 
     public function update(Request $request, Tractivo $tractivo)
     {
-        if ((int) $tractivo->id_grupo !== 8) {
+        
+        $this->authorize('update', [$tractivo, \App\Policies\ArrastrePolicy::class]);if ((int) $tractivo->id_grupo !== 8) {
             abort(404);
         }
 
@@ -91,7 +96,8 @@ class ArrastresController extends Controller
 
     public function destroy(Tractivo $tractivo)
     {
-        if ((int) $tractivo->id_grupo !== 8) {
+        
+        $this->authorize('delete', [$tractivo, \App\Policies\ArrastrePolicy::class]);if ((int) $tractivo->id_grupo !== 8) {
             abort(404);
         }
 

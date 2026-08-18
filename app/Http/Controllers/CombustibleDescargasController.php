@@ -20,6 +20,8 @@ class CombustibleDescargasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\CombustibleDescarga::class);
         $entidadId = (int) session('entidad_activa_id');
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $anio = (int) Carbon::parse($fechaOperaciones)->year;
@@ -69,6 +71,8 @@ class CombustibleDescargasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\CombustibleDescarga::class);
         $validated = $request->validate([
             'id_tarjeta' => 'required|exists:tarjetas,id',
             'fdescarga' => 'required|date',
@@ -95,6 +99,8 @@ class CombustibleDescargasController extends Controller
 
     public function update(Request $request, CombustibleDescarga $combustibleDescarga)
     {
+        
+        $this->authorize('update', $combustibleDescarga);
         $this->autorizarEntidad($combustibleDescarga->id_entidad);
 
         $validated = $request->validate([
@@ -120,6 +126,8 @@ class CombustibleDescargasController extends Controller
 
     public function destroy(CombustibleDescarga $combustibleDescarga)
     {
+        
+        $this->authorize('delete', $combustibleDescarga);
         $this->autorizarEntidad($combustibleDescarga->id_entidad);
 
         $combustibleDescarga->delete();

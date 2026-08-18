@@ -14,6 +14,8 @@ class DemandasController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Demanda::class);
         $items = Demanda::with(['cliente', 'producto', 'origen', 'destino', 'embalaje'])
             ->when($request->search, fn ($q, $s) => $q->where('observaciones', 'like', "%{$s}%"))
             ->when($request->id_cliente, fn ($q, $v) => $q->where('id_cliente', $v))
@@ -38,6 +40,8 @@ class DemandasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Demanda::class);
         $validated = $request->validate([
             'fecha_demanda' => 'required|date',
             'id_cliente' => 'required|exists:clientes,id',
@@ -62,6 +66,8 @@ class DemandasController extends Controller
 
     public function update(Request $request, Demanda $demanda)
     {
+        
+        $this->authorize('update', $demanda);
         $validated = $request->validate([
             'fecha_demanda' => 'required|date',
             'id_cliente' => 'required|exists:clientes,id',
@@ -85,6 +91,8 @@ class DemandasController extends Controller
 
     public function destroy(Demanda $demanda)
     {
+        
+        $this->authorize('delete', $demanda);
         $demanda->delete();
 
         return redirect()->route('demandas.index')->with('success', 'Demanda eliminada correctamente.');

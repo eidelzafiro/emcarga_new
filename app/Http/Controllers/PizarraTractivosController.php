@@ -11,6 +11,8 @@ class PizarraTractivosController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\PizarraTractivo::class);
         $items = PizarraTractivo::with('tractivo')
             ->when($request->mes, fn ($q, $v) => $q->where('mes', $v))
             ->when($request->ano, fn ($q, $v) => $q->where('ano', $v))
@@ -30,6 +32,8 @@ class PizarraTractivosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\PizarraTractivo::class);
         $validated = $request->validate([
             'mes' => 'required|integer|min:1|max:12',
             'ano' => 'required|integer|min:2000',
@@ -43,6 +47,8 @@ class PizarraTractivosController extends Controller
 
     public function update(Request $request, PizarraTractivo $pizarraTractivo)
     {
+        
+        $this->authorize('update', $pizarraTractivo);
         $validated = $request->validate([
             'mes' => 'required|integer|min:1|max:12',
             'ano' => 'required|integer|min:2000',
@@ -56,6 +62,8 @@ class PizarraTractivosController extends Controller
 
     public function destroy(PizarraTractivo $pizarraTractivo)
     {
+        
+        $this->authorize('delete', $pizarraTractivo);
         $pizarraTractivo->delete();
 
         return redirect()->route('pizarra-tractivos.index')->with('success', 'Registro eliminado correctamente.');

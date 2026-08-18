@@ -15,6 +15,8 @@ class OtrosGastosController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\OtrosGasto::class);
         $entidades = $this->entidadesPermitidas();
 
         $gastos = OtrosGasto::with(['bolsa', 'tractivo', 'tipoConcepto'])
@@ -40,6 +42,8 @@ class OtrosGastosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\OtrosGasto::class);
         $validated = $request->validate([
             'id_bolsa' => 'required|exists:bolsa,id',
             'id_tractivo' => 'required|exists:tractivos,id',
@@ -58,6 +62,8 @@ class OtrosGastosController extends Controller
 
     public function update(Request $request, OtrosGasto $otrosGasto)
     {
+        
+        $this->authorize('update', $otrosGasto);
         $this->autorizarEntidad($this->entidadDelGasto($otrosGasto));
 
         $validated = $request->validate([
@@ -78,6 +84,8 @@ class OtrosGastosController extends Controller
 
     public function destroy(OtrosGasto $otrosGasto)
     {
+        
+        $this->authorize('delete', $otrosGasto);
         $this->autorizarEntidad($this->entidadDelGasto($otrosGasto));
 
         $otrosGasto->delete();

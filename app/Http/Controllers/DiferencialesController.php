@@ -14,6 +14,8 @@ class DiferencialesController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Diferenciale::class);
         $diferenciales = Diferenciale::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%")
                 ->orWhere('codigo', 'like', "%{$s}%"))
@@ -42,6 +44,8 @@ class DiferencialesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Diferenciale::class);
         $validated = $request->validate($this->reglas());
 
         $validated['id_entidad'] = (int) session('entidad_activa_id');
@@ -54,6 +58,8 @@ class DiferencialesController extends Controller
 
     public function update(Request $request, Diferenciale $diferencial)
     {
+        
+        $this->authorize('update', $diferencial);
         $this->autorizarEntidad($diferencial->id_entidad);
 
         $diferencial->update($request->validate($this->reglas()));
@@ -64,6 +70,8 @@ class DiferencialesController extends Controller
 
     public function destroy(Diferenciale $diferencial)
     {
+        
+        $this->authorize('delete', $diferencial);
         $this->autorizarEntidad($diferencial->id_entidad);
 
         $diferencial->delete();

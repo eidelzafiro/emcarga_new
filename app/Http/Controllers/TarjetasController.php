@@ -18,6 +18,8 @@ class TarjetasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Tarjeta::class);
         $tarjetas = Tarjeta::with(['moneda:id,codigo,nombre', 'tipoCombustible:id,nombre', 'empleado:id,nombre,apellidos', 'tractivo:id,codigo'])
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%")
                 ->orWhereHas('empleado', fn ($q2) => $q2->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%")))
@@ -39,6 +41,8 @@ class TarjetasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Tarjeta::class);
         $validated = $this->validar($request);
         $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
 
@@ -49,6 +53,8 @@ class TarjetasController extends Controller
 
     public function update(Request $request, Tarjeta $tarjeta)
     {
+        
+        $this->authorize('update', $tarjeta);
         $this->autorizarEntidad($tarjeta->id_entidad);
 
         $validated = $this->validar($request, $tarjeta);
@@ -59,6 +65,8 @@ class TarjetasController extends Controller
 
     public function destroy(Tarjeta $tarjeta)
     {
+        
+        $this->authorize('delete', $tarjeta);
         $this->autorizarEntidad($tarjeta->id_entidad);
 
         $tarjeta->delete();

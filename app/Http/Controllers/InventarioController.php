@@ -10,6 +10,8 @@ class InventarioController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Inventario::class);
         $items = Inventario::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%")->orWhere('categoria', 'like', "%{$s}%"))
             ->orderBy('nombre')
             ->paginate(20);
@@ -23,6 +25,8 @@ class InventarioController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Inventario::class);
         $validated = $request->validate([
             'codigo' => 'required|unique:inventario,codigo|max:50',
             'nombre' => 'required|max:255',
@@ -41,6 +45,8 @@ class InventarioController extends Controller
 
     public function update(Request $request, Inventario $inventario)
     {
+        
+        $this->authorize('update', $inventario);
         $validated = $request->validate([
             'codigo' => 'required|unique:inventario,codigo,'.$inventario->id.'|max:50',
             'nombre' => 'required|max:255',
@@ -59,6 +65,8 @@ class InventarioController extends Controller
 
     public function destroy(Inventario $inventario)
     {
+        
+        $this->authorize('delete', $inventario);
         $inventario->delete();
 
         return redirect()->route('inventario.index')->with('success', 'Item de inventario eliminado correctamente.');

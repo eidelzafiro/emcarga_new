@@ -11,6 +11,8 @@ class DistanciasController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Distancia::class);
         $distancias = Distancia::with('origen:id,nombre', 'destino:id,nombre')
             ->when($request->search, function ($q, $s) {
                 $q->whereHas('origen', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
@@ -28,6 +30,8 @@ class DistanciasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Distancia::class);
         $validated = $this->validar($request);
         Distancia::create($validated);
 
@@ -36,6 +40,8 @@ class DistanciasController extends Controller
 
     public function update(Request $request, Distancia $distancia)
     {
+        
+        $this->authorize('update', $distancia);
         $validated = $this->validar($request);
         $distancia->update($validated);
 
@@ -44,6 +50,8 @@ class DistanciasController extends Controller
 
     public function destroy(Distancia $distancia)
     {
+        
+        $this->authorize('delete', $distancia);
         $distancia->delete();
 
         return redirect()->route('distancias.index')->with('success', 'Distancia eliminada correctamente.');

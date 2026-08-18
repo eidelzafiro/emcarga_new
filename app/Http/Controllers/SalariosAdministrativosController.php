@@ -10,6 +10,8 @@ class SalariosAdministrativosController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\SalarioAdministrativo::class);
         $items = SalarioAdministrativo::with(['movimiento', 'user'])
             ->orderBy('fecha', 'desc')
             ->paginate(20);
@@ -23,6 +25,8 @@ class SalariosAdministrativosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\SalarioAdministrativo::class);
         $validated = $request->validate([
             'fecha' => 'required|date',
             'feriados' => 'required|numeric|min:0',
@@ -43,6 +47,8 @@ class SalariosAdministrativosController extends Controller
 
     public function update(Request $request, SalarioAdministrativo $salariosAdministrativo)
     {
+        
+        $this->authorize('update', $salariosAdministrativo);
         $validated = $request->validate([
             'fecha' => 'required|date',
             'feriados' => 'required|numeric|min:0',
@@ -62,6 +68,8 @@ class SalariosAdministrativosController extends Controller
 
     public function destroy(SalarioAdministrativo $salariosAdministrativo)
     {
+        
+        $this->authorize('delete', $salariosAdministrativo);
         $salariosAdministrativo->delete();
 
         return redirect()->route('salarios-administrativos.index')->with('success', 'Salario eliminado correctamente.');

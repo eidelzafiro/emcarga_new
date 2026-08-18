@@ -12,6 +12,8 @@ class TiposMediosCargoController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\TipoMedioCargo::class);
         $items = TipoMedioCargo::with(['medioProteccion', 'cargo'])
             ->when($request->id_medio_proteccion, fn ($q, $v) => $q->where('id_medio_proteccion', $v))
             ->paginate(20);
@@ -30,6 +32,8 @@ class TiposMediosCargoController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\TipoMedioCargo::class);
         $validated = $request->validate([
             'id_medio_proteccion' => 'required|exists:medios_proteccion,id',
             'id_cargo' => 'required|exists:cargos,id',
@@ -41,6 +45,8 @@ class TiposMediosCargoController extends Controller
 
     public function update(Request $request, TipoMedioCargo $tiposMediosCargo)
     {
+        
+        $this->authorize('update', $tiposMediosCargo);
         $validated = $request->validate([
             'id_medio_proteccion' => 'required|exists:medios_proteccion,id',
             'id_cargo' => 'required|exists:cargos,id',
@@ -52,6 +58,8 @@ class TiposMediosCargoController extends Controller
 
     public function destroy(TipoMedioCargo $tiposMediosCargo)
     {
+        
+        $this->authorize('delete', $tiposMediosCargo);
         $tiposMediosCargo->delete();
 
         return redirect()->route('tipos-medios-cargo.index')->with('success', 'Asignación eliminada correctamente.');

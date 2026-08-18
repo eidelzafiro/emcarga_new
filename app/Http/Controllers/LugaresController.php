@@ -10,6 +10,8 @@ class LugaresController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Lugare::class);
         $lugares = Lugare::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%"))
             ->orderBy('nombre')
             ->paginate(20);
@@ -23,6 +25,8 @@ class LugaresController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Lugare::class);
         $validated = $this->validar($request);
         Lugare::create($validated);
 
@@ -31,6 +35,8 @@ class LugaresController extends Controller
 
     public function update(Request $request, Lugare $lugar)
     {
+        
+        $this->authorize('update', $lugar);
         $validated = $this->validar($request);
         $lugar->update($validated);
 
@@ -39,6 +45,8 @@ class LugaresController extends Controller
 
     public function destroy(Lugare $lugar)
     {
+        
+        $this->authorize('delete', $lugar);
         $lugar->delete();
 
         return redirect()->route('lugares.index')->with('success', 'Lugar eliminado correctamente.');

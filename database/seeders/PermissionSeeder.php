@@ -188,6 +188,11 @@ class PermissionSeeder extends Seeder
             'vacaciones.ver', 'vacaciones.crear', 'vacaciones.editar', 'vacaciones.eliminar',
             'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',
             'registro-ordenes-taller.ver', 'registro-ordenes-taller.crear', 'registro-ordenes-taller.editar', 'registro-ordenes-taller.eliminar',
+
+            // Nómina (2026-08-18): incidencias, penalizaciones y dietas
+            'incidencias.ver', 'incidencias.crear', 'incidencias.editar', 'incidencias.eliminar',
+            'penalizaciones.ver', 'penalizaciones.crear', 'penalizaciones.editar', 'penalizaciones.eliminar',
+            'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
         ];
 
         foreach ($permisos as $permiso) {
@@ -316,6 +321,10 @@ class PermissionSeeder extends Seeder
                 'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
                 'descuentos-empleados.ver', 'descuentos-empleados.crear', 'descuentos-empleados.editar', 'descuentos-empleados.eliminar',
                 'vacaciones.ver', 'vacaciones.crear', 'vacaciones.editar', 'vacaciones.eliminar',
+                // Nómina (2026-08-18)
+                'incidencias.ver', 'incidencias.crear', 'incidencias.editar', 'incidencias.eliminar',
+                'penalizaciones.ver', 'penalizaciones.crear', 'penalizaciones.editar', 'penalizaciones.eliminar',
+                'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
             ],
             'CONTABILIDAD' => [
                 'dashboard.ver',

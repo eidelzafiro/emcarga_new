@@ -10,6 +10,8 @@ class MovimientosInventarioController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\MovimientosInventario::class);
         $items = MovimientosInventario::query()
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%"))
             ->orderBy('id')->paginate(50);
@@ -23,11 +25,14 @@ class MovimientosInventarioController extends Controller
 
     public function create()
     {
-        return redirect()->route('movimientos-inventario.index');
+        
+        $this->authorize('create', \App\Models\MovimientosInventario::class);return redirect()->route('movimientos-inventario.index');
     }
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\MovimientosInventario::class);
         $validated = $request->validate([
             'folio' => 'nullable|string|max:255',
             'id_almacen' => 'nullable|integer',

@@ -18,6 +18,8 @@ class BateriasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Bateria::class);
         $baterias = Bateria::with('tractivo:id,descripcion,placa', 'motivoBaja:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%")
                 ->orWhere('marca', 'like', "%{$s}%"))
@@ -47,6 +49,8 @@ class BateriasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Bateria::class);
         $validated = $request->validate([
             'folio' => 'required|string|max:50',
             'marca' => 'nullable|string|max:100',
@@ -81,6 +85,8 @@ class BateriasController extends Controller
 
     public function update(Request $request, Bateria $bateria)
     {
+        
+        $this->authorize('update', $bateria);
         $this->autorizarEntidad($bateria->id_entidad);
 
         $validated = $request->validate([
@@ -152,6 +158,8 @@ class BateriasController extends Controller
 
     public function destroy(Bateria $bateria)
     {
+        
+        $this->authorize('delete', $bateria);
         $this->autorizarEntidad($bateria->id_entidad);
 
         $bateria->delete();

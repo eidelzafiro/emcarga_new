@@ -15,6 +15,8 @@ class CajasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Caja::class);
         $cajas = Caja::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre', 'pais:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('codigo', 'like', "%{$s}%")
                 ->orWhere('numero_serie', 'like', "%{$s}%")
@@ -45,6 +47,8 @@ class CajasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Caja::class);
         $validated = $request->validate($this->reglas());
         $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
 
@@ -55,6 +59,8 @@ class CajasController extends Controller
 
     public function update(Request $request, Caja $caja)
     {
+        
+        $this->authorize('update', $caja);
         $this->autorizarEntidad($caja->id_entidad);
 
         $caja->update($request->validate($this->reglas()));
@@ -64,6 +70,8 @@ class CajasController extends Controller
 
     public function destroy(Caja $caja)
     {
+        
+        $this->authorize('delete', $caja);
         $this->autorizarEntidad($caja->id_entidad);
 
         $caja->delete();

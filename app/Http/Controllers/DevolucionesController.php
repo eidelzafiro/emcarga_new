@@ -10,6 +10,8 @@ class DevolucionesController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Devolucione::class);
         $items = Devolucione::query()
             ->when($request->search, fn ($q, $s) => $q->where('observaciones', 'like', "%{$s}%"))
             ->orderBy('id')->paginate(50);
@@ -23,11 +25,14 @@ class DevolucionesController extends Controller
 
     public function create()
     {
-        return redirect()->route('devoluciones.index');
+        
+        $this->authorize('create', \App\Models\Devolucione::class);return redirect()->route('devoluciones.index');
     }
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Devolucione::class);
         $validated = $request->validate([
             'id_carta_porte' => 'nullable|integer',
             'id_cliente' => 'nullable|integer',

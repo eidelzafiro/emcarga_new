@@ -14,6 +14,8 @@ class EntidadesController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Entidad::class);
         $user = auth()->user();
 
         // Determinación del modo de acceso:
@@ -74,7 +76,8 @@ class EntidadesController extends Controller
 
     public function store(Request $request)
     {
-        if ($this->modoSoloEntidad()) {
+        
+        $this->authorize('create', \App\Models\Entidad::class);if ($this->modoSoloEntidad()) {
             return back()->with('error', 'Su entidad no tiene subordinados. No puede crear entidades.');
         }
 

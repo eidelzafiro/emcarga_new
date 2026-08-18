@@ -13,6 +13,8 @@ class RegistroOrdenesTallerController extends Controller
 
     public function index()
     {
+        
+        $this->authorize('viewAny', \App\Models\RegistroOrdenesTaller::class);
         $items = RegistroOrdenesTaller::query()
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->orderBy('id')->paginate(50);
@@ -26,7 +28,8 @@ class RegistroOrdenesTallerController extends Controller
 
     public function create()
     {
-        return Inertia::render('Catalogo/Form', [
+        
+        $this->authorize('create', \App\Models\RegistroOrdenesTaller::class);return Inertia::render('Catalogo/Form', [
             'title' => 'Nuevo Registro de Orden de Taller',
             'route' => 'registro-ordenes-taller',
         ]);
@@ -34,6 +37,8 @@ class RegistroOrdenesTallerController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\RegistroOrdenesTaller::class);
         $validated = $request->validate([
             // add validation rules
         ]);

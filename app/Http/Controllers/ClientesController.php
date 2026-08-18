@@ -15,6 +15,8 @@ class ClientesController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Cliente::class);
         $clientes = Cliente::with('organismo:id,nombre,abreviatura', 'moneda:id,codigo,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")
                 ->orWhere('codigo', 'like', "%{$s}%")
@@ -34,6 +36,8 @@ class ClientesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Cliente::class);
         $validated = $this->validar($request);
         $validated['id_entidad'] = (int) session('entidad_activa_id');
 
@@ -44,6 +48,8 @@ class ClientesController extends Controller
 
     public function update(Request $request, Cliente $cliente)
     {
+        
+        $this->authorize('update', $cliente);
         $this->autorizarEntidad($cliente->id_entidad);
 
         $validated = $this->validar($request, $cliente);
@@ -54,6 +60,8 @@ class ClientesController extends Controller
 
     public function destroy(Cliente $cliente)
     {
+        
+        $this->authorize('delete', $cliente);
         $this->autorizarEntidad($cliente->id_entidad);
 
         $cliente->delete();

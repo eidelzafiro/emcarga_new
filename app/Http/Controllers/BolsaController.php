@@ -20,6 +20,8 @@ class BolsaController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Bolsa::class);
         $items = Bolsa::with(['cargo', 'area', 'entidad'])
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('nombre', 'like', "%{$s}%")
@@ -59,7 +61,8 @@ class BolsaController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasRole('SUPERADMIN')) {
+        
+        $this->authorize('create', \App\Models\Bolsa::class);if (! $request->user()->hasRole('SUPERADMIN')) {
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
 
@@ -80,7 +83,8 @@ class BolsaController extends Controller
 
     public function update(Request $request, Bolsa $bolsa)
     {
-        if (! $request->user()->hasRole('SUPERADMIN')) {
+        
+        $this->authorize('update', $bolsa);if (! $request->user()->hasRole('SUPERADMIN')) {
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
 
@@ -99,7 +103,8 @@ class BolsaController extends Controller
 
     public function destroy(Request $request, Bolsa $bolsa)
     {
-        if (! $request->user()->hasRole('SUPERADMIN')) {
+        
+        $this->authorize('delete', $bolsa);if (! $request->user()->hasRole('SUPERADMIN')) {
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
 

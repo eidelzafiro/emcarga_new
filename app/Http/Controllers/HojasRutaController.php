@@ -24,6 +24,8 @@ class HojasRutaController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\HojasRuta::class);
         $entidadId = session('entidad_activa_id');
 
         // Fecha de operaciones → ventana de vigencia por mes
@@ -200,6 +202,8 @@ class HojasRutaController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\HojasRuta::class);
         $datos = $this->validarApertura($request);
 
         $this->autorizarTractivo($datos['id_tractivo'] ?? null);

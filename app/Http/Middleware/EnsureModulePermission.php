@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+use App\Support\PermissionResolver;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -60,27 +60,11 @@ class EnsureModulePermission
 
         $permiso = $this->resolverPermiso($modulo, $accion, $request);
 
-        if ($permiso === null || $this->usuarioPuede($user, $permiso, $request)) {
+        if ($permiso === null || PermissionResolver::puede($user, $permiso)) {
             return $next($request);
         }
 
         abort(403);
-    }
-
-    /**
-     * Verifica si el usuario (o su perfil activo en sesión) tiene el permiso.
-     */
-    private function usuarioPuede($user, string $permiso, Request $request): bool
-    {
-        $perfil = $request->session()->get('perfil_activo');
-
-        if (! $perfil) {
-            return $user->can($permiso);
-        }
-
-        $role = Role::findByName($perfil);
-
-        return $role->hasPermissionTo($permiso);
     }
 
     /**

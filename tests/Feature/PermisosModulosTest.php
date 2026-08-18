@@ -130,12 +130,14 @@ class PermisosModulosTest extends TestCase
 
     public function test_api_pizarra_requiere_permiso_pizarra(): void
     {
+        // La API api.pizarra se retiró en el catálogo unificado; la ruta
+        // equivalente es pizarra-tractivos.index (permiso pizarra-tractivos.ver).
         $this->actingAs($this->usuarioSinRol())
-            ->getJson(route('api.pizarra'))
+            ->get(route('pizarra-tractivos.index'))
             ->assertForbidden();
 
-        $this->actingAs($this->usuarioConRol('TECNICA'))
-            ->getJson(route('api.pizarra'))
+        $this->actingAs($this->usuarioConRol('COMERCIAL'))
+            ->get(route('pizarra-tractivos.index'))
             ->assertOk();
     }
 

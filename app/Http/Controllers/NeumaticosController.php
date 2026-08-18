@@ -19,6 +19,8 @@ class NeumaticosController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Neumatico::class);
         $neumaticos = Neumatico::with('tractivo:id,descripcion,placa', 'posicion:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%")
                 ->orWhere('marca', 'like', "%{$s}%"))
@@ -46,6 +48,8 @@ class NeumaticosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Neumatico::class);
         $validated = $request->validate([
             'folio' => 'required|string|max:50',
             'marca' => 'nullable|string|max:100',
@@ -86,6 +90,8 @@ class NeumaticosController extends Controller
 
     public function update(Request $request, Neumatico $neumatico)
     {
+        
+        $this->authorize('update', $neumatico);
         $this->autorizarEntidad($neumatico->id_entidad);
 
         $validated = $request->validate([
@@ -182,6 +188,8 @@ class NeumaticosController extends Controller
 
     public function destroy(Neumatico $neumatico)
     {
+        
+        $this->authorize('delete', $neumatico);
         $this->autorizarEntidad($neumatico->id_entidad);
 
         $neumatico->delete();

@@ -20,6 +20,8 @@ class TallerController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\OrdenesTaller::class);
         $ordenes = OrdenesTaller::with(
             'tractivo:id,descripcion,placa',
             'tipoMantenimiento:id,nombre',
@@ -63,6 +65,8 @@ class TallerController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\OrdenesTaller::class);
         $validated = $request->validate([
             'numero' => 'nullable|string|max:50',
             'id_tractivo' => 'required|exists:tractivos,id',
@@ -95,6 +99,8 @@ class TallerController extends Controller
 
     public function update(Request $request, OrdenesTaller $ordene)
     {
+        
+        $this->authorize('update', $ordene);
         $this->autorizarEntidad($ordene->id_entidad);
 
         $validated = $request->validate([
@@ -224,6 +230,8 @@ class TallerController extends Controller
 
     public function destroy(OrdenesTaller $ordene)
     {
+        
+        $this->authorize('delete', $ordene);
         $this->autorizarEntidad($ordene->id_entidad);
 
         $ordene->delete();

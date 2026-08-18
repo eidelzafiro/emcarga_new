@@ -13,6 +13,8 @@ class HistorialMovimientosController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\HistorialMovimiento::class);
         $items = HistorialMovimiento::with(['bolsa', 'movimiento'])
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('bolsa', fn ($b) => $b->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->orderBy('id', 'desc')
@@ -37,6 +39,8 @@ class HistorialMovimientosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\HistorialMovimiento::class);
         $validated = $request->validate([
             'codigo' => 'required|unique:historial_movimientos,codigo|max:50',
             'nombre' => 'required|max:255',
@@ -48,6 +52,8 @@ class HistorialMovimientosController extends Controller
 
     public function update(Request $request, HistorialMovimiento $historialMovimiento)
     {
+        
+        $this->authorize('update', $historialMovimiento);
         $this->autorizarEntidad($historialMovimiento->bolsa?->id_entidad);
 
         $validated = $request->validate([
@@ -61,6 +67,8 @@ class HistorialMovimientosController extends Controller
 
     public function destroy(HistorialMovimiento $historialMovimiento)
     {
+        
+        $this->authorize('delete', $historialMovimiento);
         $this->autorizarEntidad($historialMovimiento->bolsa?->id_entidad);
 
         $historialMovimiento->delete();

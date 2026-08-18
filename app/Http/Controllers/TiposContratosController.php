@@ -10,6 +10,8 @@ class TiposContratosController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\TipoContrato::class);
         $tipos = TipoContrato::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%"))
             ->orderBy('nombre')
             ->paginate(20);
@@ -23,6 +25,8 @@ class TiposContratosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\TipoContrato::class);
         $validated = $request->validate([
             'codigo' => 'required|unique:tipos_contratos,codigo|max:50',
             'nombre' => 'required|max:255',
@@ -34,6 +38,8 @@ class TiposContratosController extends Controller
 
     public function update(Request $request, TipoContrato $tiposContrato)
     {
+        
+        $this->authorize('update', $tiposContrato);
         $validated = $request->validate([
             'codigo' => 'required|unique:tipos_contratos,codigo,'.$tiposContrato->id.'|max:50',
             'nombre' => 'required|max:255',
@@ -45,6 +51,8 @@ class TiposContratosController extends Controller
 
     public function destroy(TipoContrato $tiposContrato)
     {
+        
+        $this->authorize('delete', $tiposContrato);
         $tiposContrato->delete();
 
         return redirect()->route('tipos-contratos.index')->with('success', 'Tipo de contrato eliminado correctamente.');

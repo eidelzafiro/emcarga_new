@@ -55,6 +55,8 @@ class ConsecutivosController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Consecutivo::class);
         $entidades = $this->entidadesPermitidas();
 
         $query = Consecutivo::when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades));
@@ -98,6 +100,8 @@ class ConsecutivosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Consecutivo::class);
         $data = $request->validate($this->getValidationRules());
 
         $data['id_entidad'] = (int) session('entidad_activa_id');

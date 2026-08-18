@@ -17,6 +17,8 @@ class FacturasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Factura::class);
         $facturas = Factura::with('cliente:id,nombre', 'tipoIngreso:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%"))->orWhere('numero', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
@@ -46,6 +48,8 @@ class FacturasController extends Controller
 
     public function create()
     {
+        
+        $this->authorize('create', \App\Models\Factura::class);
         $aforosPendientes = Aforo::with('cartaPorte:id,numero,id_solicitud', 'cartaPorte.cliente', 'cartaPorte.solicitud:id,id_cliente')
             ->whereNull('id_factura')
             ->whereNull('id_prefactura')
@@ -89,6 +93,8 @@ class FacturasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Factura::class);
         $validated = $request->validate([
             'numero' => 'nullable|unique:facturas,numero|integer',
             'fecha_emision' => 'required|date',
@@ -138,6 +144,8 @@ class FacturasController extends Controller
 
     public function show(Factura $factura)
     {
+        
+        $this->authorize('view', $factura);
         $this->autorizarEntidad($factura->id_entidad);
 
         $factura->load('cliente', 'tipoIngreso', 'aforos.cartaPorte', 'user');
@@ -150,6 +158,8 @@ class FacturasController extends Controller
 
     public function update(Request $request, Factura $factura)
     {
+        
+        $this->authorize('update', $factura);
         $this->autorizarEntidad($factura->id_entidad);
 
         $validated = $request->validate([
@@ -169,6 +179,8 @@ class FacturasController extends Controller
 
     public function destroy(Factura $factura)
     {
+        
+        $this->authorize('delete', $factura);
         $this->autorizarEntidad($factura->id_entidad);
 
         Aforo::where('id_factura', $factura->id)->update(['id_factura' => null]);

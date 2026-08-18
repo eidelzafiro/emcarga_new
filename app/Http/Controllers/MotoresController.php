@@ -15,6 +15,8 @@ class MotoresController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Motore::class);
         $motores = Motore::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre', 'pais:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('codigo', 'like', "%{$s}%")
                 ->orWhere('numero_serie', 'like', "%{$s}%")
@@ -45,6 +47,8 @@ class MotoresController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Motore::class);
         $validated = $request->validate($this->reglas());
         $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
 
@@ -55,6 +59,8 @@ class MotoresController extends Controller
 
     public function update(Request $request, Motore $motore)
     {
+        
+        $this->authorize('update', $motore);
         $this->autorizarEntidad($motore->id_entidad);
 
         $motore->update($request->validate($this->reglas()));
@@ -64,6 +70,8 @@ class MotoresController extends Controller
 
     public function destroy(Motore $motore)
     {
+        
+        $this->authorize('delete', $motore);
         $this->autorizarEntidad($motore->id_entidad);
 
         $motore->delete();

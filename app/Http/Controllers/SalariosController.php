@@ -16,6 +16,8 @@ class SalariosController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Salario::class);
         $salarios = Salario::with(['bolsa', 'area', 'cargo', 'user'])
             ->when($request->search, fn ($q, $s) => $q->where('numero_nomina', 'like', "%{$s}%"))
             ->when($request->mes, fn ($q, $v) => $q->where('mes', $v))
@@ -48,6 +50,8 @@ class SalariosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Salario::class);
         $validated = $request->validate([
             'mes' => 'required|integer|min:1|max:12',
             'ano' => 'required|integer|min:2000',
@@ -66,6 +70,8 @@ class SalariosController extends Controller
 
     public function update(Request $request, Salario $salario)
     {
+        
+        $this->authorize('update', $salario);
         $this->autorizarEntidad($salario->id_entidad);
 
         $validated = $request->validate([
@@ -84,6 +90,8 @@ class SalariosController extends Controller
 
     public function destroy(Salario $salario)
     {
+        
+        $this->authorize('delete', $salario);
         $this->autorizarEntidad($salario->id_entidad);
 
         $salario->delete();

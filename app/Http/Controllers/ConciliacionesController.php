@@ -13,6 +13,8 @@ class ConciliacionesController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Conciliacione::class);
         $conciliaciones = Conciliacione::with('factura')
             ->when($request->search, fn ($q, $s) => $q->where('concepto', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $e) => $q->where('estado', $e))
@@ -36,6 +38,8 @@ class ConciliacionesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Conciliacione::class);
         $validated = $request->validate([
             'id_factura' => 'required|exists:facturas,id',
             'fecha' => 'required|date',
@@ -51,6 +55,8 @@ class ConciliacionesController extends Controller
 
     public function update(Request $request, Conciliacione $conciliacione)
     {
+        
+        $this->authorize('update', $conciliacione);
         $this->autorizarEntidad($conciliacione->id_entidad);
 
         $validated = $request->validate([
@@ -67,6 +73,8 @@ class ConciliacionesController extends Controller
 
     public function destroy(Conciliacione $conciliacione)
     {
+        
+        $this->authorize('delete', $conciliacione);
         $this->autorizarEntidad($conciliacione->id_entidad);
 
         $conciliacione->delete();

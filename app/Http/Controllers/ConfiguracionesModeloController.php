@@ -14,6 +14,8 @@ class ConfiguracionesModeloController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\ConfiguracioneModelo::class);
         $user = $request->user();
         $entidades = $this->entidadesPermitidas();
 
@@ -58,6 +60,8 @@ class ConfiguracionesModeloController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\ConfiguracioneModelo::class);
         $validated = $request->validate([
             'nombre' => 'required|max:30',
             'codigo_tipo_modelo' => 'nullable|exists:tipos_modelo,codigo',
@@ -74,6 +78,8 @@ class ConfiguracionesModeloController extends Controller
 
     public function update(Request $request, ConfiguracioneModelo $configuracionesModelo)
     {
+        
+        $this->authorize('update', $configuracionesModelo);
         $this->autorizarEntidad($configuracionesModelo->id_entidad);
 
         $validated = $request->validate([
@@ -90,6 +96,8 @@ class ConfiguracionesModeloController extends Controller
 
     public function destroy(ConfiguracioneModelo $configuracionesModelo)
     {
+        
+        $this->authorize('delete', $configuracionesModelo);
         $this->autorizarEntidad($configuracionesModelo->id_entidad);
 
         $configuracionesModelo->delete();

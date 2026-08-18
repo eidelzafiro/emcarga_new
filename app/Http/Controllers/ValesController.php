@@ -12,6 +12,8 @@ class ValesController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Vale::class);
         $vales = Vale::with(['bolsa', 'tractivo', 'detalles'])
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%")->orWhere('concepto', 'like', "%{$s}%"))
             ->orderBy('fecha_emision', 'desc')
@@ -31,6 +33,8 @@ class ValesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Vale::class);
         $validated = $request->validate([
             'numero' => 'required|unique:vales,numero|max:50',
             'id_bolsa' => 'required|exists:bolsa,id',
@@ -46,6 +50,8 @@ class ValesController extends Controller
 
     public function update(Request $request, Vale $vale)
     {
+        
+        $this->authorize('update', $vale);
         $validated = $request->validate([
             'numero' => 'required|unique:vales,numero,'.$vale->id.'|max:50',
             'id_bolsa' => 'required|exists:bolsa,id',
@@ -61,6 +67,8 @@ class ValesController extends Controller
 
     public function destroy(Vale $vale)
     {
+        
+        $this->authorize('delete', $vale);
         $vale->delete();
 
         return redirect()->route('vales.index')->with('success', 'Vale eliminado correctamente.');

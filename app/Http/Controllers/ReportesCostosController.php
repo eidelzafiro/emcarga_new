@@ -13,6 +13,8 @@ class ReportesCostosController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\ReporteCosto::class);
         $reportes = ReporteCosto::with(['tractivo', 'user'])
             ->when($request->search, fn ($q, $s) => $q->where('observaciones', 'like', "%{$s}%"))
             ->when($request->id_tractivo, fn ($q, $v) => $q->where('id_tractivo', $v))
@@ -31,6 +33,8 @@ class ReportesCostosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\ReporteCosto::class);
         $validated = $request->validate([
             'fecha_reporte' => 'required|date',
             'id_tractivo' => 'required|exists:tractivos,id',
@@ -70,6 +74,8 @@ class ReportesCostosController extends Controller
 
     public function update(Request $request, ReporteCosto $reportesCosto)
     {
+        
+        $this->authorize('update', $reportesCosto);
         $validated = $request->validate([
             'fecha_reporte' => 'required|date',
             'id_tractivo' => 'required|exists:tractivos,id',
@@ -108,6 +114,8 @@ class ReportesCostosController extends Controller
 
     public function destroy(ReporteCosto $reportesCosto)
     {
+        
+        $this->authorize('delete', $reportesCosto);
         $reportesCosto->delete();
 
         return redirect()->route('reportes-costos.index')->with('success', 'Reporte eliminado correctamente.');

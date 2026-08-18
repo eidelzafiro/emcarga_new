@@ -11,6 +11,8 @@ class TarifasController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Tarifa::class);
         $items = Tarifa::with('tipoCarga')
             ->when($request->id_tipo_carga, fn ($q, $v) => $q->where('id_tipo_carga', $v))
             ->when($request->version, fn ($q, $v) => $q->where('version', $v))
@@ -29,6 +31,8 @@ class TarifasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Tarifa::class);
         $validated = $request->validate([
             'id_tipo_carga' => 'required|exists:tipos_cargas,id',
             'kms' => 'nullable|numeric|min:0',
@@ -42,6 +46,8 @@ class TarifasController extends Controller
 
     public function update(Request $request, Tarifa $tarifa)
     {
+        
+        $this->authorize('update', $tarifa);
         $validated = $request->validate([
             'id_tipo_carga' => 'required|exists:tipos_cargas,id',
             'kms' => 'nullable|numeric|min:0',
@@ -55,6 +61,8 @@ class TarifasController extends Controller
 
     public function destroy(Tarifa $tarifa)
     {
+        
+        $this->authorize('delete', $tarifa);
         $tarifa->delete();
 
         return redirect()->route('tarifas.index')->with('success', 'Tarifa eliminada correctamente.');

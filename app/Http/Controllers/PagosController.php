@@ -12,6 +12,8 @@ class PagosController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Pago::class);
         $pagos = Pago::with(['tipoDocumento', 'moneda', 'user'])
             ->when($request->search, fn ($q, $s) => $q->where('concepto', 'like', "%{$s}%")->orWhere('numero_documento', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
@@ -32,6 +34,8 @@ class PagosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Pago::class);
         $validated = $request->validate([
             'id_tipo_documento' => 'nullable|exists:tipos_documentos,id',
             'id_moneda' => 'nullable|exists:monedas,id',
@@ -49,6 +53,8 @@ class PagosController extends Controller
 
     public function update(Request $request, Pago $pago)
     {
+        
+        $this->authorize('update', $pago);
         $validated = $request->validate([
             'id_tipo_documento' => 'nullable|exists:tipos_documentos,id',
             'id_moneda' => 'nullable|exists:monedas,id',
@@ -65,6 +71,8 @@ class PagosController extends Controller
 
     public function destroy(Pago $pago)
     {
+        
+        $this->authorize('delete', $pago);
         $pago->delete();
 
         return redirect()->route('pagos.index')->with('success', 'Pago eliminado correctamente.');

@@ -16,6 +16,8 @@ class AcuerdosController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Acuerdo::class);
         $acuerdos = Acuerdo::with(['cliente:id,nombre', 'origen:id,nombre', 'destino:id,nombre', 'producto:id,nombre'])
             ->when($request->search, function ($q, $s) {
                 $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
@@ -38,6 +40,8 @@ class AcuerdosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Acuerdo::class);
         $validated = $this->validar($request);
         $validated['id_entidad'] = (int) session('entidad_activa_id');
 
@@ -48,6 +52,8 @@ class AcuerdosController extends Controller
 
     public function update(Request $request, Acuerdo $acuerdo)
     {
+        
+        $this->authorize('update', $acuerdo);
         $this->autorizarEntidad($acuerdo->id_entidad);
 
         $validated = $this->validar($request);
@@ -58,6 +64,8 @@ class AcuerdosController extends Controller
 
     public function destroy(Acuerdo $acuerdo)
     {
+        
+        $this->authorize('delete', $acuerdo);
         $this->autorizarEntidad($acuerdo->id_entidad);
 
         $acuerdo->delete();

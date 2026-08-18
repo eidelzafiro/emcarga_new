@@ -15,6 +15,8 @@ class PenalizacionesController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Penalizacion::class);
         $entidades = $this->entidadesPermitidas();
 
         $query = Penalizacion::with(['bolsa', 'tipoPenalizacion'])
@@ -43,6 +45,8 @@ class PenalizacionesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Penalizacion::class);
         $data = $request->validate([
             'id_bolsa' => 'required|exists:bolsa,id',
             'id_tipo_penalizacion' => 'required|exists:tipos_penalizaciones,id',
@@ -59,6 +63,8 @@ class PenalizacionesController extends Controller
 
     public function update(Request $request, Penalizacion $penalizacion)
     {
+        
+        $this->authorize('update', $penalizacion);
         $this->autorizarEntidad($penalizacion->bolsa?->id_entidad);
 
         $data = $request->validate([
@@ -75,6 +81,8 @@ class PenalizacionesController extends Controller
 
     public function destroy(Penalizacion $penalizacion)
     {
+        
+        $this->authorize('delete', $penalizacion);
         $this->autorizarEntidad($penalizacion->bolsa?->id_entidad);
 
         $penalizacion->delete();

@@ -13,6 +13,8 @@ class EstadisticasExplotacionController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\EstadisticasExplotacion::class);
         $items = EstadisticasExplotacion::query()
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->orderBy('id')->paginate(50);
@@ -26,11 +28,14 @@ class EstadisticasExplotacionController extends Controller
 
     public function create()
     {
-        return redirect()->route('estadisticas-explotacion.index');
+        
+        $this->authorize('create', \App\Models\EstadisticasExplotacion::class);return redirect()->route('estadisticas-explotacion.index');
     }
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\EstadisticasExplotacion::class);
         $validated = $request->validate([
             'id_hoja_ruta' => 'nullable|integer',
             'fecha_indicadores' => 'nullable|date',

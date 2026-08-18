@@ -13,6 +13,8 @@ class TiposTasasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\TipoTasa::class);
         $tipos = TipoTasa::when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%"))
             ->when(true, function ($q) {
                 $entidades = $this->entidadesPermitidas();
@@ -34,6 +36,8 @@ class TiposTasasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\TipoTasa::class);
         $validated = $request->validate([
             'codigo' => 'required|unique:tipos_tasas,codigo|max:50',
             'nombre' => 'required|max:255',
@@ -48,6 +52,8 @@ class TiposTasasController extends Controller
 
     public function update(Request $request, TipoTasa $tiposTasa)
     {
+        
+        $this->authorize('update', $tiposTasa);
         $this->autorizarEntidad($tiposTasa->id_entidad);
 
         $validated = $request->validate([
@@ -63,6 +69,8 @@ class TiposTasasController extends Controller
 
     public function destroy(TipoTasa $tiposTasa)
     {
+        
+        $this->authorize('delete', $tiposTasa);
         $this->autorizarEntidad($tiposTasa->id_entidad);
 
         $tiposTasa->delete();

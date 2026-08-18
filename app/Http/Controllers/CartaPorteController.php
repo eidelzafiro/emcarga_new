@@ -26,6 +26,8 @@ class CartaPorteController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\CartaPorte::class);
         $entidadId = session('entidad_activa_id');
 
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
@@ -246,6 +248,8 @@ class CartaPorteController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\CartaPorte::class);
         $validated = $this->validar($request);
 
         // La hoja de ruta / solicitud usadas deben pertenecer a la entidad permitida.
@@ -280,6 +284,8 @@ class CartaPorteController extends Controller
 
     public function update(Request $request, CartaPorte $carta)
     {
+        
+        $this->authorize('update', $carta);
         $this->autorizarEntidadCarta($carta);
 
         if ($carta->cancelada) {
@@ -304,6 +310,8 @@ class CartaPorteController extends Controller
 
     public function destroy(Request $request, CartaPorte $carta)
     {
+        
+        $this->authorize('delete', $carta);
         $this->autorizarEntidadCarta($carta);
 
         if ($request->input('operacion') === 'cancelar') {

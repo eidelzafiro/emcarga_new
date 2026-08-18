@@ -13,6 +13,8 @@ class HistorialTractivosController extends Controller
 
     public function index()
     {
+        
+        $this->authorize('viewAny', \App\Models\HistorialTractivo::class);
         $items = HistorialTractivo::query()
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->orderBy('id')->paginate(50);
@@ -26,7 +28,8 @@ class HistorialTractivosController extends Controller
 
     public function create()
     {
-        return Inertia::render('Catalogo/Form', [
+        
+        $this->authorize('create', \App\Models\HistorialTractivo::class);return Inertia::render('Catalogo/Form', [
             'title' => 'Nuevo Historial de Tractivo',
             'route' => 'historial-tractivos',
         ]);
@@ -34,6 +37,8 @@ class HistorialTractivosController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\HistorialTractivo::class);
         $validated = $request->validate([
             // add validation rules
         ]);

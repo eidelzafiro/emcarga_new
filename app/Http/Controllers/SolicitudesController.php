@@ -23,6 +23,8 @@ class SolicitudesController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\SolicitudesServicio::class);
         $entidadId = (int) session('entidad_activa_id');
 
         // Por defecto se muestran SOLO pendientes y en proceso. Las ejecutadas
@@ -149,6 +151,8 @@ class SolicitudesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\SolicitudesServicio::class);
         $validated = $this->validar($request);
         $validated['id_entidad'] = (int) session('entidad_activa_id');
         $validated['id_user'] = auth()->id();
@@ -162,6 +166,8 @@ class SolicitudesController extends Controller
 
     public function update(Request $request, SolicitudesServicio $solicitude)
     {
+        
+        $this->authorize('update', $solicitude);
         $this->autorizarEntidad($solicitude->id_entidad);
         $validated = $this->validar($request, $solicitude);
         $solicitude->update($validated);
@@ -171,6 +177,8 @@ class SolicitudesController extends Controller
 
     public function destroy(SolicitudesServicio $solicitude)
     {
+        
+        $this->authorize('delete', $solicitude);
         $this->autorizarEntidad($solicitude->id_entidad);
 
         if ($solicitude->fecha_ejecutada) {

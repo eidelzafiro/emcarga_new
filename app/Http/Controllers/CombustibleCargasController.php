@@ -21,6 +21,8 @@ class CombustibleCargasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\CombustibleCarga::class);
         $entidadId = (int) session('entidad_activa_id');
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $anio = (int) Carbon::parse($fechaOperaciones)->year;
@@ -59,6 +61,8 @@ class CombustibleCargasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\CombustibleCarga::class);
         $validated = $request->validate([
             'fcarga' => 'required|date',
             'saldocargado' => 'required|numeric|min:0',
@@ -92,6 +96,8 @@ class CombustibleCargasController extends Controller
 
     public function update(Request $request, CombustibleCarga $combustibleCarga)
     {
+        
+        $this->authorize('update', $combustibleCarga);
         $this->autorizarEntidad($combustibleCarga->id_entidad);
 
         $validated = $request->validate([
@@ -122,6 +128,8 @@ class CombustibleCargasController extends Controller
 
     public function destroy(CombustibleCarga $combustibleCarga)
     {
+        
+        $this->authorize('delete', $combustibleCarga);
         $this->autorizarEntidad($combustibleCarga->id_entidad);
 
         DB::transaction(function () use ($combustibleCarga) {

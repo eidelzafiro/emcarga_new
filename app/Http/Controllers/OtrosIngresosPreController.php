@@ -15,6 +15,8 @@ class OtrosIngresosPreController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\OtrosIngresosPre::class);
         $items = OtrosIngresosPre::with(['cartaPorte', 'tipoIngreso'])
             ->when($request->id_carta_porte, fn ($q, $v) => $q->where('id_carta_porte', $v))
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('cartaPorte', fn ($c) => $c->where(function ($c2) {
@@ -38,6 +40,8 @@ class OtrosIngresosPreController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\OtrosIngresosPre::class);
         $validated = $request->validate([
             'id_carta_porte' => 'required|exists:cartas_porte,id',
             'id_tipo_ingreso' => 'required|exists:tipo_ingresos,id',
@@ -52,6 +56,8 @@ class OtrosIngresosPreController extends Controller
 
     public function update(Request $request, OtrosIngresosPre $otrosIngresosPre)
     {
+        
+        $this->authorize('update', $otrosIngresosPre);
         $this->autorizarEntidad($this->entidadCarta($otrosIngresosPre->id_carta_porte));
 
         $validated = $request->validate([
@@ -68,6 +74,8 @@ class OtrosIngresosPreController extends Controller
 
     public function destroy(OtrosIngresosPre $otrosIngresosPre)
     {
+        
+        $this->authorize('delete', $otrosIngresosPre);
         $this->autorizarEntidad($this->entidadCarta($otrosIngresosPre->id_carta_porte));
 
         $otrosIngresosPre->delete();

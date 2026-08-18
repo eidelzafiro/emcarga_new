@@ -10,6 +10,8 @@ class VacacionesController extends Controller
 {
     public function index()
     {
+        
+        $this->authorize('viewAny', \App\Models\Vacacione::class);
         $items = Vacacione::orderBy('id')->paginate(50);
 
         return Inertia::render('Catalogo/Index', [
@@ -21,7 +23,8 @@ class VacacionesController extends Controller
 
     public function create()
     {
-        return Inertia::render('Catalogo/Form', [
+        
+        $this->authorize('create', \App\Models\Vacacione::class);return Inertia::render('Catalogo/Form', [
             'title' => 'Nueva Vacación',
             'route' => 'vacaciones',
         ]);
@@ -29,6 +32,8 @@ class VacacionesController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Vacacione::class);
         $validated = $request->validate([
             // add validation rules
         ]);

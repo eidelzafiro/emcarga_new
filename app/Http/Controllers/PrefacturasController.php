@@ -18,6 +18,8 @@ class PrefacturasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Prefactura::class);
         $prefacturas = Prefactura::with('cliente:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%")))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
@@ -46,6 +48,8 @@ class PrefacturasController extends Controller
 
     public function create()
     {
+        
+        $this->authorize('create', \App\Models\Prefactura::class);
         $aforosPendientes = Aforo::with('cartaPorte:id,numero')
             ->whereNull('id_prefactura')
             ->whereNull('id_factura')
@@ -64,6 +68,8 @@ class PrefacturasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Prefactura::class);
         $validated = $request->validate([
             'numero' => 'nullable|unique:prefacturas,numero|max:50',
             'id_cliente' => 'required|exists:clientes,id',
@@ -179,6 +185,8 @@ class PrefacturasController extends Controller
 
     public function update(Request $request, Prefactura $prefactura)
     {
+        
+        $this->authorize('update', $prefactura);
         $this->autorizarEntidad($prefactura->id_entidad);
 
         $validated = $request->validate([
@@ -194,6 +202,8 @@ class PrefacturasController extends Controller
 
     public function destroy(Prefactura $prefactura)
     {
+        
+        $this->authorize('delete', $prefactura);
         $this->autorizarEntidad($prefactura->id_entidad);
 
         Aforo::where('id_prefactura', $prefactura->id)->update(['id_prefactura' => null]);

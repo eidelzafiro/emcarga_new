@@ -10,6 +10,8 @@ class DescuentosEmpleadosController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\DescuentosEmpleado::class);
         $items = DescuentosEmpleado::query()
             ->when($request->search, fn ($q, $s) => $q->where('motivo', 'like', "%{$s}%"))
             ->orderBy('id')->paginate(50);
@@ -23,11 +25,14 @@ class DescuentosEmpleadosController extends Controller
 
     public function create()
     {
-        return redirect()->route('descuentos-empleados.index');
+        
+        $this->authorize('create', \App\Models\DescuentosEmpleado::class);return redirect()->route('descuentos-empleados.index');
     }
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\DescuentosEmpleado::class);
         $validated = $request->validate([
             'id_empleado' => 'nullable|integer',
             'fecha_inicio' => 'nullable|date',

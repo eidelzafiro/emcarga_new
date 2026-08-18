@@ -11,6 +11,8 @@ class EstadosTarjetasController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\EstadoTarjeta::class);
         $estados = EstadoTarjeta::with(['tarjeta', 'entrega', 'recibe'])
             ->when($request->id_tarjeta, fn ($q, $v) => $q->where('id_tarjeta', $v))
             ->orderBy('fecha_movimiento', 'desc')
@@ -28,6 +30,8 @@ class EstadosTarjetasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\EstadoTarjeta::class);
         $validated = $request->validate([
             'id_tarjeta' => 'required|exists:tarjetas,id',
             'fecha_movimiento' => 'required|date',
@@ -45,6 +49,8 @@ class EstadosTarjetasController extends Controller
 
     public function update(Request $request, EstadoTarjeta $estadosTarjeta)
     {
+        
+        $this->authorize('update', $estadosTarjeta);
         $validated = $request->validate([
             'id_tarjeta' => 'required|exists:tarjetas,id',
             'fecha_movimiento' => 'required|date',
@@ -62,6 +68,8 @@ class EstadosTarjetasController extends Controller
 
     public function destroy(EstadoTarjeta $estadosTarjeta)
     {
+        
+        $this->authorize('delete', $estadosTarjeta);
         $estadosTarjeta->delete();
 
         return redirect()->route('estados-tarjetas.index')->with('success', 'Estado eliminado correctamente.');

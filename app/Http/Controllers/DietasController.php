@@ -18,6 +18,8 @@ class DietasController extends Controller
 
     public function index(Request $request)
     {
+        
+        $this->authorize('viewAny', \App\Models\Dieta::class);
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $anio = (int) Carbon::parse($fechaOperaciones)->year;
         $mes = (int) Carbon::parse($fechaOperaciones)->month;
@@ -62,6 +64,8 @@ class DietasController extends Controller
 
     public function store(Request $request)
     {
+        
+        $this->authorize('create', \App\Models\Dieta::class);
         $validated = $this->validar($request);
         $validated['id_entidad'] = $this->entidadActiva();
 
@@ -72,6 +76,8 @@ class DietasController extends Controller
 
     public function update(Request $request, Dieta $dieta)
     {
+        
+        $this->authorize('update', $dieta);
         $this->autorizarEntidad($dieta->id_entidad);
         $validated = $this->validar($request);
 
@@ -126,6 +132,8 @@ class DietasController extends Controller
 
     public function destroy(Dieta $dieta)
     {
+        
+        $this->authorize('delete', $dieta);
         $this->autorizarEntidad($dieta->id_entidad);
         $dieta->delete();
 

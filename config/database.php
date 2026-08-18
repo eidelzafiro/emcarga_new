@@ -59,12 +59,23 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_merge([
-                Mysql::ATTR_SSL_VERIFY_SERVER_CERT => false,
-            ], array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET FOREIGN_KEY_CHECKS=0',
-            ])) : [],
+            'options' => extension_loaded('pdo_mysql') ? array_replace(
+                [Mysql::ATTR_SSL_VERIFY_SERVER_CERT => false],
+                array_filter([
+                    Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                    // La conexión CLI a MySQL llega con autocommit desactivado, lo
+                    // que rompe el registro de migraciones con DDL (el commit
+                    // implícito de MySQL pierde el INSERT en `migrations`). Se
+                    // fuerza autocommit=1, el valor estándar de MySQL (mismo fix
+                    // que aplica EtlRun con `SET autocommit=1`).
+                    //
+                    // OJO: usar `array_replace` (NO array_merge): array_merge
+                    // reindexa las claves numéricas de las constantes PDO
+                    // (p.ej. 1009/3 → 0/1), lo que rompía ATTR_INIT_COMMAND y
+                    // desactivaba ATTR_AUTOCOMMIT (autocommit=0).
+                    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET autocommit=1; SET FOREIGN_KEY_CHECKS=0',
+                ])
+            ) : [],
         ],
 
         /*

@@ -2,19 +2,20 @@
 
 namespace App\Support;
 
+use App\Models\CatalogoTipo;
 use Illuminate\Validation\Rule;
 
 /**
  * Fuente única de verdad para la configuración de los catálogos
  * unificados (catalogo_items + catalogo_tipos).
  *
- * Centraliza lo que antes vivía hardcodeado en CatalogoController:
- * campos extra por tipo, código manual, campos de búsqueda y tipos
- * con soft-deletes migrados. Compartido por el controlador y el
- * FormRequest para que no vuelvan a desincronizarse.
+ * Schema-driven: los campos extra por tipo se leen de la columna JSON
+ * `fields` de catalogo_tipos (migración 2026_08_18_100000). Editar ese
+ * JSON cambia el formulario sin tocar código. El array hardcodeado de
+ * antaño vive solo en esa migración como valor inicial.
  *
- * Paso futuro (pendiente): mover `$extraFields` a la columna JSON
- * `fields` de catalogo_tipos y leerlo desde BD (schema-driven).
+ * Sigue en PHP (pequeñas y difíciles de administrar por el cliente):
+ * WITH_SOFT_DELETE (mostrar borrados), usaCodigoManual y searchFields.
  */
 class CatalogoSchema
 {
@@ -28,10 +29,19 @@ class CatalogoSchema
     ];
 
     /**
-     * Campos extra (se persisten en el JSON `extra` de catalogo_items).
-     * type soportados: text, textarea, number, boolean, select, email.
+     * Cache por request de los campos extra leídos de la BD.
+     *
+     * @var array<string, array|null>
      */
-    private const EXTRA_FIELDS = [
+    private static array $cache = [];
+
+    /**
+     * Valores por defecto de los campos extra por tipo (bootstrap/seed).
+     * NO es la fuente de verdad en runtime: eso es `catalogo_tipos.fields`
+     * (BD). Este array solo se usa para sembrar un tipo nuevo o cuando la
+     * columna `fields` aún no existe (degradación previa a la migración).
+     */
+    private const DEFAULT_FIELDS = [
         'tipos_operaciones' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
         'tipos_mantenimiento' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
         'tipos_gastos' => ['tipo' => ['label' => 'Tipo', 'type' => 'text']],
@@ -98,9 +108,52 @@ class CatalogoSchema
         'tipos_servicios' => [],
     ];
 
+    /**
+     * Campos extra por defecto de un tipo (valores de bootstrap). Usado por
+     * el seeder y por extraFields() como degradación.
+     */
+    public static function defaultFields(string $tipo): array
+    {
+        return self::DEFAULT_FIELDS[$tipo] ?? [];
+    }
+
+    /**
+     * Limpia la cache de campos por request. Útil en tests para que un cambio
+     * en `catalogo_tipos.fields` se refleje sin reiniciar el proceso.
+     */
+    public static function flushCache(): void
+    {
+        self::$cache = [];
+    }
+
     public static function extraFields(string $tipo): array
     {
-        return self::EXTRA_FIELDS[$tipo] ?? [];
+        if (array_key_exists($tipo, self::$cache)) {
+            return self::$cache[$tipo] ?? [];
+        }
+
+        $campos = self::defaultFields($tipo);
+
+        try {
+            $raw = CatalogoTipo::where('tipo', $tipo)->value('fields');
+            if (is_array($raw)) {
+                // `value()` aplica el cast `array` del modelo → ya es array.
+                $campos = $raw;
+            } elseif (is_string($raw)) {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded)) {
+                    $campos = $decoded;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Antes de la migración 2026_08_18_100000 la columna `fields` no
+            // existe: se degrada a los valores por defecto embebidos.
+            $campos = self::defaultFields($tipo);
+        }
+
+        self::$cache[$tipo] = $campos;
+
+        return $campos;
     }
 
     /**

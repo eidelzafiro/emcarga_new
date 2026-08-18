@@ -14,15 +14,18 @@ import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const props = defineProps({ items: Object, filters: Object, catalogConfig: Object })
 const tipo = computed(() => props.catalogConfig?.tipo)
 const toast = useToast()
+const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const filterModel = ref({})
 const showForm = ref(false)
 const editing = ref(null)
 const continuar = ref(false)
+let searchTimer = null
 
 const catalogFilters = computed(() => props.catalogConfig?.filters || {})
 
@@ -43,8 +46,13 @@ const aplicaFiltro = () => {
   }, { preserveState: true, replace: true })
 }
 
+const onSearch = () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => aplicaFiltro(), 350)
+}
+
 watch(search, () => {
-  aplicaFiltro()
+  onSearch()
 })
 
 watch(catalogFilters, (f) => {
@@ -141,8 +149,24 @@ function openEdit(item) {
   showForm.value = true
 }
 
-function submit(continuarActivo = false) {
-  const rt = props.catalogConfig.route
+function confirmarBorrado(item) {
+  confirmDialog.require({
+    message: `¿Eliminar "${item.nombre}"? Esta acción no se puede deshacer.`,
+    header: 'Eliminar registro',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      router.delete(route(`${catalogConfig.route}.destroy`, { tipo: catalogConfig.tipo, id: item.id }), {
+        onSuccess: () => toast.add({ severity: 'success', summary: 'Eliminado', life: 3000 }),
+        onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
+      })
+    },
+  })
+}
+
+function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
   const payload = { ...form.value, _continuar: continuarActivo }
   const url = editing.value ? route(`${rt}.update`, { tipo: tipo.value, id: editing.value.id }) : route(`${rt}.store`, { tipo: tipo.value })
   const method = editing.value ? 'put' : 'post'
@@ -216,7 +240,7 @@ function submit(continuarActivo = false) {
             <div class="flex gap-1">
               <Button icon="pi pi-pencil" rounded text severity="info" @click="openEdit(data)" />
               <Button icon="pi pi-trash" rounded text severity="danger"
-                @click="router.delete(route(`${catalogConfig.route}.destroy`, { tipo: catalogConfig.tipo, id: data.id }))" />
+                @click="confirmarBorrado(data)" />
             </div>
           </template>
         </Column>

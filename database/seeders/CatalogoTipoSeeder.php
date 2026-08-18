@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\CatalogoTipo;
+use App\Support\CatalogoSchema;
 use Illuminate\Database\Seeder;
 
 class CatalogoTipoSeeder extends Seeder
@@ -63,14 +64,18 @@ class CatalogoTipoSeeder extends Seeder
         $orden = 0;
         foreach ($all as $entry) {
             $orden++;
+            $tipo = $entry['tipo'];
             CatalogoTipo::updateOrCreate(
-                ['tipo' => $entry['tipo']],
+                ['tipo' => $tipo],
                 [
-                    'titulo' => $this->titles[$entry['tipo']] ?? $entry['tipo'],
+                    'titulo' => $this->titles[$tipo] ?? $tipo,
                     'agrupacion' => $entry['agrupacion'],
                     'activo' => true,
                     'orden' => $orden,
-                    'tabla_legacy' => $entry['tipo'],
+                    'tabla_legacy' => $tipo,
+                    'fields' => CatalogoSchema::defaultFields($tipo) !== []
+                        ? json_encode(CatalogoSchema::defaultFields($tipo), JSON_UNESCAPED_UNICODE)
+                        : null,
                 ]
             );
         }

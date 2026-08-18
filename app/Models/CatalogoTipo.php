@@ -14,12 +14,14 @@ class CatalogoTipo extends Model
         'activo',
         'orden',
         'tabla_legacy',
+        'fields',
     ];
 
     protected function casts(): array
     {
         return [
             'activo' => 'boolean',
+            'fields' => 'array',
         ];
     }
 

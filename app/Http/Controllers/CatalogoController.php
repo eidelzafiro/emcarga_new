@@ -94,7 +94,21 @@ class CatalogoController extends Controller
         $data = $request->validate([
             'agrupacion' => 'sometimes|string|max:100',
             'activo' => 'sometimes|boolean',
+            'fields' => 'sometimes|array',
+            'fields.*.label' => 'nullable|string|max:255',
+            'fields.*.type' => 'nullable|string|max:20',
+            'fields.*.required' => 'sometimes|boolean',
+            'fields.*.options' => 'nullable|array',
         ]);
+
+        // Si viene `fields` se persiste como JSON (fuente de verdad del
+        // formulario). Vacío/ausente -> se deja como está.
+        if (array_key_exists('fields', $data)) {
+            $fields = $data['fields'];
+            $data['fields'] = $fields !== []
+                ? json_encode($fields, JSON_UNESCAPED_UNICODE)
+                : null;
+        }
 
         CatalogoTipo::where('tipo', $tipo)->update($data);
 

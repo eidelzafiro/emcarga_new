@@ -272,6 +272,18 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'salarios_administrativos');
         }
 
+        // Incidencias y penalizaciones de nómina (idmovimientos → bolsa)
+        if (! $solo || $solo === 'incidencias') {
+            $this->info('Migrando incidencias de nómina...');
+            $etl->migrarIncidencias($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'incidencias');
+        }
+        if (! $solo || $solo === 'penalizaciones') {
+            $this->info('Migrando penalizaciones de nómina...');
+            $etl->migrarPenalizaciones($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'penalizaciones');
+        }
+
         // Hojas de ruta: solo el año de negocio (2026); entidad derivada del tractivo
         if (! $solo || $solo === 'hojas_ruta') {
             $this->info('Migrando hojas de ruta (año 2026)...');

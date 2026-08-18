@@ -1644,6 +1644,137 @@ class EtlService
     }
 
     /**
+     * ETL de incidencias de nómina: rh_incidencias → incidencias.
+     * id = idincidencias (preservado). id_bolsa se resuelve vía
+     * rh_movimientos.idbolsa; id_tipo_incidencia preserva el id de
+     * tipos_incidencias. Se omiten las filas sin movimiento→bolsa válido
+     * o sin tipo de incidencia migrado.
+     */
+    public function migrarIncidencias(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $omitidas = 0;
+
+        $movBolsa = DB::connection('legacy')->table('rh_movimientos')->pluck('idbolsa', 'idmovimientos');
+        $bolsasValidas = DB::table('bolsa')->pluck('id')->flip();
+        $tiposValidos = DB::table('tipos_incidencias')->pluck('id')->flip();
+
+        DB::connection('legacy')->table('rh_incidencias')
+            ->orderBy('idincidencias')
+            ->chunkById($chunk, function ($filas) use (&$procesados, &$omitidas, &$avisos, $movBolsa, $bolsasValidas, $tiposValidos) {
+                foreach ($filas as $fila) {
+                    $idBolsa = $movBolsa[$fila->idmovimientos] ?? null;
+                    if (! isset($bolsasValidas[$idBolsa]) || ! isset($tiposValidos[$fila->idtipoincidencias])) {
+                        $omitidas++;
+
+                        continue;
+                    }
+
+                    // Fechas '0000-00-00' del legacy: fecha_inicio es NOT NULL,
+                    // se omite la fila; fecha_fin es nullable, se convierte a NULL.
+                    $inicio = ($fila->inicio && $fila->inicio !== '0000-00-00') ? $fila->inicio : null;
+                    if ($inicio === null) {
+                        $omitidas++;
+
+                        continue;
+                    }
+                    $fin = ($fila->final && $fila->final !== '0000-00-00') ? $fila->final : null;
+
+                    try {
+                        DB::table('incidencias')->updateOrInsert(
+                            ['id' => $fila->idincidencias],
+                            [
+                                'id_bolsa' => $idBolsa,
+                                'fecha_inicio' => $inicio,
+                                'fecha_fin' => $fin,
+                                'id_tipo_incidencia' => $fila->idtipoincidencias,
+                                'periodo_actual' => $fila->pactual,
+                                'importe' => $fila->importe,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "incidencia#{$fila->idincidencias}: {$e->getMessage()}";
+                    }
+                }
+            }, 'idincidencias');
+
+        $this->reporte['incidencias'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_incidencias')->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(
+                ["{$omitidas} filas omitidas por movimiento→bolsa o tipo de incidencia inexistente"],
+                $avisos
+            ),
+        ];
+    }
+
+    /**
+     * ETL de penalizaciones de nómina: rh_penalizaciones → penalizaciones.
+     * id = idpenalizaciones (preservado). id_bolsa se resuelve vía
+     * rh_movimientos.idbolsa; id_tipo_penalizacion preserva el id de
+     * tipos_penalizaciones. Se omiten las filas sin bolsa/tipo válido o
+     * sin fecha.
+     */
+    public function migrarPenalizaciones(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $omitidas = 0;
+
+        $movBolsa = DB::connection('legacy')->table('rh_movimientos')->pluck('idbolsa', 'idmovimientos');
+        $bolsasValidas = DB::table('bolsa')->pluck('id')->flip();
+        $tiposValidos = DB::table('tipos_penalizaciones')->pluck('id')->flip();
+
+        DB::connection('legacy')->table('rh_penalizaciones')
+            ->orderBy('idpenalizaciones')
+            ->chunkById($chunk, function ($filas) use (&$procesados, &$omitidas, &$avisos, $movBolsa, $bolsasValidas, $tiposValidos) {
+                foreach ($filas as $fila) {
+                    $idBolsa = $movBolsa[$fila->idmovimientos] ?? null;
+                    if (! isset($bolsasValidas[$idBolsa]) || ! isset($tiposValidos[$fila->idtipopenalizaciones])) {
+                        $omitidas++;
+
+                        continue;
+                    }
+                    if ($fila->fpenalizacion === null || $fila->fpenalizacion === '0000-00-00') {
+                        $omitidas++;
+
+                        continue;
+                    }
+
+                    try {
+                        DB::table('penalizaciones')->updateOrInsert(
+                            ['id' => $fila->idpenalizaciones],
+                            [
+                                'id_bolsa' => $idBolsa,
+                                'fecha' => $fila->fpenalizacion,
+                                'id_tipo_penalizacion' => $fila->idtipopenalizaciones,
+                                'importe' => $fila->importe,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "penalizacion#{$fila->idpenalizaciones}: {$e->getMessage()}";
+                    }
+                }
+            }, 'idpenalizaciones');
+
+        $this->reporte['penalizaciones'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_penalizaciones')->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(
+                ["{$omitidas} filas omitidas por bolsa/tipo inexistente o fecha nula"],
+                $avisos
+            ),
+        ];
+    }
+
+    /**
      * ETL genérico de una tabla definida en config/etl.php.
      * Preserva el id legacy como id nuevo (upsert repetible).
      */
@@ -3706,6 +3837,14 @@ class EtlService
         $resultado['salarios_administrativos'] = [
             'legacy' => (int) DB::connection('legacy')->table('rh_saladmin')->count(),
             'nueva' => (int) DB::table('salarios_administrativos')->count(),
+        ];
+        $resultado['incidencias'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_incidencias')->count(),
+            'nueva' => (int) DB::table('incidencias')->count(),
+        ];
+        $resultado['penalizaciones'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_penalizaciones')->count(),
+            'nueva' => (int) DB::table('penalizaciones')->count(),
         ];
         $resultado['facturas'] = [
             'legacy' => (int) DB::connection('legacy')->table('com_rfactura')

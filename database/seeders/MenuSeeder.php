@@ -70,7 +70,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Grupos Escala', 'route' => 'grupos-escala.index', 'permission' => 'grupos-escala.ver', 'orden' => 24],
             ['parent' => 'Catálogos', 'label' => 'Cargos', 'route' => 'cargos.index', 'permission' => 'cargos.ver', 'orden' => 25],
             ['parent' => 'Catálogos', 'label' => 'Entidades', 'route' => 'entidades.index', 'permission' => 'entidades.ver', 'orden' => 26],
-            ['parent' => 'Catálogos', 'label' => 'Tipos de Modelo', 'route' => 'tipos-modelo.index', 'permission' => 'tipos-modelo.ver', 'orden' => 27],
+            ['parent' => 'Catálogos', 'label' => 'Tipos de Modelo', 'route' => 'catalogo.index?tipo=tipos_modelo', 'permission' => 'catalogo.ver', 'orden' => 27],
 
             // Comercial
             ['parent' => 'Comercial', 'label' => 'Clientes', 'route' => 'clientes.index', 'permission' => 'clientes.ver', 'orden' => 1],
@@ -142,22 +142,22 @@ class MenuSeeder extends Seeder
         // Tipos catálogo — todos los que tienen ruta pero no estaban en el menú
         $tiposCatalogo = [
             // === Catálogos Técnica ===
-            ['parent' => 'Catálogos', 'label' => 'Tipos Combustible',        'route' => 'tipos-combustibles.index',        'permission' => 'tipos-combustibles.ver',    'orden' => 31],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Neumático',          'route' => 'tipos-neumaticos.index',          'permission' => 'tipos-neumaticos.ver',      'orden' => 32],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Equipo',             'route' => 'tipos-equipos.index',             'permission' => 'tipos-equipos.ver',         'orden' => 33],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Agregado',           'route' => 'tipos-agregados.index',           'permission' => 'tipos-agregados.ver',       'orden' => 34],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Aceite',             'route' => 'tipos-aceites.index',             'permission' => 'tipos-aceites.ver',         'orden' => 35],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Rotura',             'route' => 'tipos-roturas.index',             'permission' => 'tipos-roturas.ver',         'orden' => 36],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Sistema',            'route' => 'tipos-sistemas.index',            'permission' => 'tipos-sistemas.ver',        'orden' => 37],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Suspensión',         'route' => 'tipos-suspension.index',          'permission' => 'tipos-suspension.ver',      'orden' => 38],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Combustible',        'route' => 'catalogo.index?tipo=tipos_combustibles',        'permission' => 'catalogo.ver',    'orden' => 31],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Neumático',          'route' => 'catalogo.index?tipo=tipos_neumaticos',          'permission' => 'catalogo.ver',      'orden' => 32],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Equipo',             'route' => 'catalogo.index?tipo=tipos_equipos',             'permission' => 'catalogo.ver',         'orden' => 33],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Agregado',           'route' => 'catalogo.index?tipo=tipos_agregados',           'permission' => 'catalogo.ver',       'orden' => 34],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Aceite',             'route' => 'catalogo.index?tipo=tipos_aceites',             'permission' => 'catalogo.ver',         'orden' => 35],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Rotura',             'route' => 'catalogo.index?tipo=tipos_roturas',             'permission' => 'catalogo.ver',         'orden' => 36],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Sistema',            'route' => 'catalogo.index?tipo=tipos_sistemas',            'permission' => 'catalogo.ver',        'orden' => 37],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Suspensión',         'route' => 'catalogo.index?tipo=tipos_suspension',          'permission' => 'catalogo.ver',      'orden' => 38],
             ['parent' => 'Catálogos', 'label' => 'Tipos Carga Reporte',      'route' => 'tipos-cargas-reporte.index',      'permission' => 'tipos-cargas-reporte.ver',  'orden' => 40],
 
             // === Catálogos Comercial / Contabilidad ===
-            ['parent' => 'Catálogos', 'label' => 'Tipos Servicio',           'route' => 'tipos-servicios.index',           'permission' => 'tipos-servicios.ver',       'orden' => 41],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Estado',             'route' => 'tipos-estados.index',             'permission' => 'tipos-estados.ver',         'orden' => 42],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Servicio',           'route' => 'catalogo.index?tipo=tipos_servicios',           'permission' => 'catalogo.ver',       'orden' => 41],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Estado',             'route' => 'catalogo.index?tipo=tipos_estados',             'permission' => 'catalogo.ver',         'orden' => 42],
             ['parent' => 'Catálogos', 'label' => 'Tipos Tasa',               'route' => 'tipos-tasas.index',               'permission' => 'tipos-tasas.ver',           'orden' => 44],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Gasto',              'route' => 'tipos-gastos.index',              'permission' => 'tipos-gastos.ver',          'orden' => 45],
-            ['parent' => 'Catálogos', 'label' => 'Tipo Ingresos',            'route' => 'tipo-ingresos.index',             'permission' => 'tipo-ingresos.ver',         'orden' => 46],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Gasto',              'route' => 'catalogo.index?tipo=tipos_gastos',              'permission' => 'catalogo.ver',          'orden' => 45],
+            ['parent' => 'Catálogos', 'label' => 'Tipo Ingresos',            'route' => 'catalogo.index?tipo=tipo_ingresos',             'permission' => 'catalogo.ver',         'orden' => 46],
             ['parent' => 'Catálogos', 'label' => 'Tipos Concepto',           'route' => 'tipos-conceptos.index',           'permission' => 'tipos-conceptos.ver',       'orden' => 47],
             ['parent' => 'Catálogos', 'label' => 'Tipos Cat. Lugares',       'route' => 'tipos-catalogo-lugares.index',    'permission' => 'tipos-catalogo-lugares.ver', 'orden' => 49],
 
@@ -168,21 +168,21 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Municipios',               'route' => 'municipios.index',                'permission' => 'municipios.ver',            'orden' => 54],
 
             // === Catálogos RRHH — datos personales ===
-            ['parent' => 'Catálogos', 'label' => 'Tipos Sexo',               'route' => 'tipos-sexo.index',                'permission' => 'tipos-sexo.ver',            'orden' => 55],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Estado Civil',       'route' => 'tipos-estado-civil.index',        'permission' => 'tipos-estado-civil.ver',    'orden' => 56],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Color Piel',         'route' => 'tipos-color-piel.index',          'permission' => 'tipos-color-piel.ver',      'orden' => 57],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Nivel Educación',    'route' => 'tipos-nivel-educacion.index',     'permission' => 'tipos-nivel-educacion.ver', 'orden' => 58],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Sexo',               'route' => 'catalogo.index?tipo=tipos_sexo',                'permission' => 'catalogo.ver',            'orden' => 55],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Estado Civil',       'route' => 'catalogo.index?tipo=tipos_estado_civil',        'permission' => 'catalogo.ver',    'orden' => 56],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Color Piel',         'route' => 'catalogo.index?tipo=tipos_color_piel',          'permission' => 'catalogo.ver',      'orden' => 57],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Nivel Educación',    'route' => 'catalogo.index?tipo=tipos_nivel_educacion',     'permission' => 'catalogo.ver', 'orden' => 58],
 
             // === Catálogos RRHH — laboral ===
-            ['parent' => 'Catálogos', 'label' => 'Tipos Grupo Horario',      'route' => 'tipos-grupo-horario.index',       'permission' => 'tipos-grupo-horario.ver',   'orden' => 61],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Grupo Horario',      'route' => 'catalogo.index?tipo=tipos_grupo_horario',       'permission' => 'catalogo.ver',   'orden' => 61],
             ['parent' => 'Catálogos', 'label' => 'Tipos Contrato',           'route' => 'tipos-contratos.index',           'permission' => 'tipos-contratos.ver',       'orden' => 62],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Deducción',          'route' => 'tipos-deducciones.index',         'permission' => 'tipos-deducciones.ver',     'orden' => 63],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Sistema Pago',       'route' => 'tipos-sistemas-pago.index',       'permission' => 'tipos-sistemas-pago.ver',   'orden' => 64],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Pago Adicional',     'route' => 'tipos-pagos-adicionales.index',   'permission' => 'tipos-pagos-adicionales.ver', 'orden' => 68],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Deducción',          'route' => 'catalogo.index?tipo=tipos_deducciones',         'permission' => 'catalogo.ver',     'orden' => 63],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Sistema Pago',       'route' => 'catalogo.index?tipo=tipos_sistemas_pago',       'permission' => 'catalogo.ver',   'orden' => 64],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Pago Adicional',     'route' => 'catalogo.index?tipo=tipos_pagos_adicionales',   'permission' => 'catalogo.ver', 'orden' => 68],
             ['parent' => 'Catálogos', 'label' => 'Tipos Medio Cargo',        'route' => 'tipos-medios-cargo.index',        'permission' => 'tipos-medios-cargo.ver',    'orden' => 69],
             ['parent' => 'Catálogos', 'label' => 'Tipos Medio Protección',   'route' => 'tipos-medios-proteccion.index',   'permission' => 'tipos-medios-proteccion.ver', 'orden' => 70],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Ubicación Defensa',  'route' => 'tipos-ubicacion-defensa.index',   'permission' => 'tipos-ubicacion-defensa.ver', 'orden' => 71],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Integración Polít.', 'route' => 'tipos-integracion-politica.index', 'permission' => 'tipos-integracion-politica.ver', 'orden' => 72],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Ubicación Defensa',  'route' => 'catalogo.index?tipo=tipos_ubicacion_defensa',   'permission' => 'catalogo.ver', 'orden' => 71],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Integración Polít.', 'route' => 'catalogo.index?tipo=tipos_integracion_politica', 'permission' => 'catalogo.ver', 'orden' => 72],
 
             // === Otros catálogos ===
             ['parent' => 'Catálogos', 'label' => 'Categorías Productos',     'route' => 'categorias-productos.index',      'permission' => 'categorias-productos.ver',  'orden' => 75],

@@ -60,23 +60,18 @@ class PermissionSeeder extends Seeder
 
             'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',
 
-            'tipo-ingresos.ver', 'tipo-ingresos.crear', 'tipo-ingresos.editar', 'tipo-ingresos.eliminar',
 
             'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
 
             'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
 
-            'tipos-incidencias.ver', 'tipos-incidencias.crear', 'tipos-incidencias.editar', 'tipos-incidencias.eliminar',
 
-            'tipos-penalizaciones.ver', 'tipos-penalizaciones.crear', 'tipos-penalizaciones.editar', 'tipos-penalizaciones.eliminar',
 
             'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
 
             'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
 
-            'tipos-sistemas-pago.ver', 'tipos-sistemas-pago.crear', 'tipos-sistemas-pago.editar', 'tipos-sistemas-pago.eliminar',
 
-            'tipos-pagos-adicionales.ver', 'tipos-pagos-adicionales.crear', 'tipos-pagos-adicionales.editar', 'tipos-pagos-adicionales.eliminar',
 
             'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
 
@@ -103,17 +98,10 @@ class PermissionSeeder extends Seeder
             'vallas.ver', 'vallas.crear', 'vallas.editar', 'vallas.eliminar',
             'destinos-agregados.ver', 'destinos-agregados.crear', 'destinos-agregados.editar', 'destinos-agregados.eliminar',
             'medidas-neumaticos.ver', 'medidas-neumaticos.crear', 'medidas-neumaticos.editar', 'medidas-neumaticos.eliminar',
-            'tipos-combustibles.ver', 'tipos-combustibles.crear', 'tipos-combustibles.editar', 'tipos-combustibles.eliminar',
             'consecutivos.ver', 'consecutivos.crear', 'consecutivos.editar', 'consecutivos.eliminar',
-            'tipos-servicios.ver', 'tipos-servicios.crear', 'tipos-servicios.editar', 'tipos-servicios.eliminar',
-            'tipos-gastos.ver', 'tipos-gastos.crear', 'tipos-gastos.editar', 'tipos-gastos.eliminar',
             'grupos.ver', 'grupos.crear', 'grupos.editar', 'grupos.eliminar',
             'colores.ver', 'colores.crear', 'colores.editar', 'colores.eliminar',
             'talleres.ver', 'talleres.crear', 'talleres.editar', 'talleres.eliminar',
-            'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
-            'tipos-mantenimientos.ver', 'tipos-mantenimientos.crear', 'tipos-mantenimientos.editar', 'tipos-mantenimientos.eliminar',
-            'tipos-agregados.ver', 'tipos-agregados.crear', 'tipos-agregados.editar', 'tipos-agregados.eliminar',
-            'tipos-neumaticos.ver', 'tipos-neumaticos.crear', 'tipos-neumaticos.editar', 'tipos-neumaticos.eliminar',
             'posiciones-neumaticos.ver', 'posiciones-neumaticos.crear', 'posiciones-neumaticos.editar', 'posiciones-neumaticos.eliminar',
             'embalajes.ver', 'embalajes.crear', 'embalajes.editar', 'embalajes.eliminar',
             'navieras.ver', 'navieras.crear', 'navieras.editar', 'navieras.eliminar',
@@ -152,21 +140,11 @@ class PermissionSeeder extends Seeder
             'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
             'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
             'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
-            'tipos-color-piel.ver', 'tipos-color-piel.crear', 'tipos-color-piel.editar', 'tipos-color-piel.eliminar',
-            'tipos-deducciones.ver', 'tipos-deducciones.crear', 'tipos-deducciones.editar', 'tipos-deducciones.eliminar',
-            'tipos-estado-civil.ver', 'tipos-estado-civil.crear', 'tipos-estado-civil.editar', 'tipos-estado-civil.eliminar',
-            'tipos-grupo-horario.ver', 'tipos-grupo-horario.crear', 'tipos-grupo-horario.editar', 'tipos-grupo-horario.eliminar',
-            'tipos-integracion-politica.ver', 'tipos-integracion-politica.crear', 'tipos-integracion-politica.editar', 'tipos-integracion-politica.eliminar',
             'tipos-medios-proteccion.ver', 'tipos-medios-proteccion.crear', 'tipos-medios-proteccion.editar', 'tipos-medios-proteccion.eliminar',
-            'tipos-nivel-educacion.ver', 'tipos-nivel-educacion.crear', 'tipos-nivel-educacion.editar', 'tipos-nivel-educacion.eliminar',
-            'tipos-sexo.ver', 'tipos-sexo.crear', 'tipos-sexo.editar', 'tipos-sexo.eliminar',
-            'tipos-ubicacion-defensa.ver', 'tipos-ubicacion-defensa.crear', 'tipos-ubicacion-defensa.editar', 'tipos-ubicacion-defensa.eliminar',
 
             // Comercial - Tablas faltantes
             'tipos-catalogo-lugares.ver', 'tipos-catalogo-lugares.crear', 'tipos-catalogo-lugares.editar', 'tipos-catalogo-lugares.eliminar',
-            'tipos-modelo.ver', 'tipos-modelo.crear', 'tipos-modelo.editar', 'tipos-modelo.eliminar',
             'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
-            'tipos-estados.ver', 'tipos-estados.crear', 'tipos-estados.editar', 'tipos-estados.eliminar',
             'tipos-cargas-reporte.ver', 'tipos-cargas-reporte.crear', 'tipos-cargas-reporte.editar', 'tipos-cargas-reporte.eliminar',
             'turnos-comerciales.ver', 'turnos-comerciales.crear', 'turnos-comerciales.editar', 'turnos-comerciales.eliminar',
             'hojas-ruta.ver', 'hojas-ruta.crear', 'hojas-ruta.editar', 'hojas-ruta.eliminar',
@@ -180,15 +158,11 @@ class PermissionSeeder extends Seeder
             // Técnica - Tablas faltantes
             'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
             'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
-            'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
             'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
             'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',
             'motivos-baja-bateria.ver', 'motivos-baja-bateria.crear', 'motivos-baja-bateria.editar', 'motivos-baja-bateria.eliminar',
             'motivos-entrada-taller.ver', 'motivos-entrada-taller.crear', 'motivos-entrada-taller.editar', 'motivos-entrada-taller.eliminar',
-            'tipos-roturas.ver', 'tipos-roturas.crear', 'tipos-roturas.editar', 'tipos-roturas.eliminar',
             'clasificaciones-ordenes-taller.ver', 'clasificaciones-ordenes-taller.crear', 'clasificaciones-ordenes-taller.editar', 'clasificaciones-ordenes-taller.eliminar',
-            'tipos-sistemas.ver', 'tipos-sistemas.crear', 'tipos-sistemas.editar', 'tipos-sistemas.eliminar',
-            'tipos-suspension.ver', 'tipos-suspension.crear', 'tipos-suspension.editar', 'tipos-suspension.eliminar',
             'locales-electricos.ver', 'locales-electricos.crear', 'locales-electricos.editar', 'locales-electricos.eliminar',
 
             // ATM - Inventario/Tarjetero
@@ -205,7 +179,6 @@ class PermissionSeeder extends Seeder
             'categorias-productos.ver', 'categorias-productos.crear', 'categorias-productos.editar', 'categorias-productos.eliminar',
 
             // Misc
-            'tipos-aceites.ver', 'tipos-aceites.crear', 'tipos-aceites.editar', 'tipos-aceites.eliminar',
             'elementos-gasto.ver', 'elementos-gasto.crear', 'elementos-gasto.editar', 'elementos-gasto.eliminar',
             'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
             'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
@@ -230,6 +203,7 @@ class PermissionSeeder extends Seeder
             ],
             'TECNICA' => [
                 'dashboard.ver',
+                'catalogo.ver',
                 'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
                 'motores.ver', 'motores.crear', 'motores.editar', 'motores.eliminar',
                 'cajas.ver', 'cajas.crear', 'cajas.editar', 'cajas.eliminar',
@@ -252,42 +226,32 @@ class PermissionSeeder extends Seeder
                 'vallas.ver', 'vallas.crear', 'vallas.editar', 'vallas.eliminar',
                 'destinos-agregados.ver', 'destinos-agregados.crear', 'destinos-agregados.editar', 'destinos-agregados.eliminar',
                 'medidas-neumaticos.ver', 'medidas-neumaticos.crear', 'medidas-neumaticos.editar', 'medidas-neumaticos.eliminar',
-                'tipos-combustibles.ver', 'tipos-combustibles.crear', 'tipos-combustibles.editar', 'tipos-combustibles.eliminar',
                 'consecutivos.ver', 'consecutivos.crear', 'consecutivos.editar', 'consecutivos.eliminar',
-                'tipos-gastos.ver', 'tipos-gastos.crear', 'tipos-gastos.editar', 'tipos-gastos.eliminar',
                 'grupos.ver', 'grupos.crear', 'grupos.editar', 'grupos.eliminar',
                 'talleres.ver', 'talleres.crear', 'talleres.editar', 'talleres.eliminar',
-                'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
-                'tipos-mantenimientos.ver', 'tipos-mantenimientos.crear', 'tipos-mantenimientos.editar', 'tipos-mantenimientos.eliminar',
-                'tipos-agregados.ver', 'tipos-agregados.crear', 'tipos-agregados.editar', 'tipos-agregados.eliminar',
-                'tipos-neumaticos.ver', 'tipos-neumaticos.crear', 'tipos-neumaticos.editar', 'tipos-neumaticos.eliminar',
                 'posiciones-neumaticos.ver', 'posiciones-neumaticos.crear', 'posiciones-neumaticos.editar', 'posiciones-neumaticos.eliminar',
                 // Técnica - Tablas faltantes
                                  'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
                 'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
-                'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
                 'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
 
                 'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',
                 'motivos-baja-bateria.ver', 'motivos-baja-bateria.crear', 'motivos-baja-bateria.editar', 'motivos-baja-bateria.eliminar',
                 'motivos-entrada-taller.ver', 'motivos-entrada-taller.crear', 'motivos-entrada-taller.editar', 'motivos-entrada-taller.eliminar',
-                'tipos-roturas.ver', 'tipos-roturas.crear', 'tipos-roturas.editar', 'tipos-roturas.eliminar',
                 'clasificaciones-ordenes-taller.ver', 'clasificaciones-ordenes-taller.crear', 'clasificaciones-ordenes-taller.editar', 'clasificaciones-ordenes-taller.eliminar',
-                'tipos-sistemas.ver', 'tipos-sistemas.crear', 'tipos-sistemas.editar', 'tipos-sistemas.eliminar',
-                'tipos-suspension.ver', 'tipos-suspension.crear', 'tipos-suspension.editar', 'tipos-suspension.eliminar',
                 'locales-electricos.ver', 'locales-electricos.crear', 'locales-electricos.editar', 'locales-electricos.eliminar',
 
                 'tarjetero.ver', 'tarjetero.crear', 'tarjetero.editar', 'tarjetero.eliminar',
 
                 'movimientos-inventario.ver', 'movimientos-inventario.crear', 'movimientos-inventario.editar', 'movimientos-inventario.eliminar',
 
-                'tipos-aceites.ver', 'tipos-aceites.crear', 'tipos-aceites.editar', 'tipos-aceites.eliminar',
                 'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
                 'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',
                 'registro-ordenes-taller.ver', 'registro-ordenes-taller.crear', 'registro-ordenes-taller.editar', 'registro-ordenes-taller.eliminar',
             ],
             'COMERCIAL' => [
                 'dashboard.ver',
+                'catalogo.ver',
                 'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.eliminar',
                 'lugares.ver', 'lugares.crear', 'lugares.editar', 'lugares.eliminar',
                 'distancias.ver', 'distancias.crear', 'distancias.editar', 'distancias.eliminar',
@@ -297,17 +261,13 @@ class PermissionSeeder extends Seeder
                 'facturas.ver', 'facturas.crear', 'facturas.editar', 'facturas.eliminar',
                 'facturas.cancelar', 'facturas.refacturar', 'facturas.firmar', 'facturas.cobrar',
                 'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',
-                'tipo-ingresos.ver', 'tipo-ingresos.crear', 'tipo-ingresos.editar', 'tipo-ingresos.eliminar',
                 // Catálogos comerciales
-                'tipos-servicios.ver', 'tipos-servicios.crear', 'tipos-servicios.editar', 'tipos-servicios.eliminar',
                 'embalajes.ver', 'embalajes.crear', 'embalajes.editar', 'embalajes.eliminar',
 
                 'navieras.ver', 'navieras.crear', 'navieras.editar', 'navieras.eliminar',
                 // Comercial - Tablas faltantes
                 'tipos-catalogo-lugares.ver', 'tipos-catalogo-lugares.crear', 'tipos-catalogo-lugares.editar', 'tipos-catalogo-lugares.eliminar',
-                'tipos-modelo.ver', 'tipos-modelo.crear', 'tipos-modelo.editar', 'tipos-modelo.eliminar',
                 'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
-                'tipos-estados.ver', 'tipos-estados.crear', 'tipos-estados.editar', 'tipos-estados.eliminar',
                 'tipos-cargas-reporte.ver', 'tipos-cargas-reporte.crear', 'tipos-cargas-reporte.editar', 'tipos-cargas-reporte.eliminar',
                 'turnos-comerciales.ver', 'turnos-comerciales.crear', 'turnos-comerciales.editar', 'turnos-comerciales.eliminar',
                 'hojas-ruta.ver', 'hojas-ruta.crear', 'hojas-ruta.editar', 'hojas-ruta.eliminar',
@@ -327,13 +287,10 @@ class PermissionSeeder extends Seeder
             ],
             'RECHUM' => [
                 'dashboard.ver',
+                'catalogo.ver',
                 'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
                 'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
-                'tipos-incidencias.ver', 'tipos-incidencias.crear', 'tipos-incidencias.editar', 'tipos-incidencias.eliminar',
-                'tipos-penalizaciones.ver', 'tipos-penalizaciones.crear', 'tipos-penalizaciones.editar', 'tipos-penalizaciones.eliminar',
                 'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
-                'tipos-sistemas-pago.ver', 'tipos-sistemas-pago.crear', 'tipos-sistemas-pago.editar', 'tipos-sistemas-pago.eliminar',
-                'tipos-pagos-adicionales.ver', 'tipos-pagos-adicionales.crear', 'tipos-pagos-adicionales.editar', 'tipos-pagos-adicionales.eliminar',
                 'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
                 // Catálogos RRHH
                 'organismos.ver', 'organismos.crear', 'organismos.editar', 'organismos.eliminar',
@@ -351,15 +308,7 @@ class PermissionSeeder extends Seeder
                 'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
                 'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
                 'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
-                'tipos-color-piel.ver', 'tipos-color-piel.crear', 'tipos-color-piel.editar', 'tipos-color-piel.eliminar',
-                'tipos-deducciones.ver', 'tipos-deducciones.crear', 'tipos-deducciones.editar', 'tipos-deducciones.eliminar',
-                'tipos-estado-civil.ver', 'tipos-estado-civil.crear', 'tipos-estado-civil.editar', 'tipos-estado-civil.eliminar',
-                'tipos-grupo-horario.ver', 'tipos-grupo-horario.crear', 'tipos-grupo-horario.editar', 'tipos-grupo-horario.eliminar',
-                'tipos-integracion-politica.ver', 'tipos-integracion-politica.crear', 'tipos-integracion-politica.editar', 'tipos-integracion-politica.eliminar',
                 'tipos-medios-proteccion.ver', 'tipos-medios-proteccion.crear', 'tipos-medios-proteccion.editar', 'tipos-medios-proteccion.eliminar',
-                'tipos-nivel-educacion.ver', 'tipos-nivel-educacion.crear', 'tipos-nivel-educacion.editar', 'tipos-nivel-educacion.eliminar',
-                'tipos-sexo.ver', 'tipos-sexo.crear', 'tipos-sexo.editar', 'tipos-sexo.eliminar',
-                'tipos-ubicacion-defensa.ver', 'tipos-ubicacion-defensa.crear', 'tipos-ubicacion-defensa.editar', 'tipos-ubicacion-defensa.eliminar',
 
                 // RRHH - Tablas faltantes parte 2
                 'centros-costos.ver', 'centros-costos.crear', 'centros-costos.editar', 'centros-costos.eliminar',
@@ -370,6 +319,7 @@ class PermissionSeeder extends Seeder
             ],
             'CONTABILIDAD' => [
                 'dashboard.ver',
+                'catalogo.ver',
                 'conciliaciones.ver', 'conciliaciones.crear', 'conciliaciones.editar', 'conciliaciones.eliminar',
                 'tipos-conceptos.ver', 'tipos-conceptos.crear', 'tipos-conceptos.editar', 'tipos-conceptos.eliminar',
                 'otros-gastos.ver', 'otros-gastos.crear', 'otros-gastos.editar', 'otros-gastos.eliminar',

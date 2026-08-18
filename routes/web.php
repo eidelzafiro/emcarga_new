@@ -100,42 +100,15 @@ use App\Http\Controllers\TallerController;
 use App\Http\Controllers\TalleresController;
 use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
-use App\Http\Controllers\TipoAgregadosController;
-use App\Http\Controllers\TipoEquiposController;
-use App\Http\Controllers\TipoIngresosController;
-use App\Http\Controllers\TipoNeumaticosController;
-use App\Http\Controllers\TiposAceitesController;
-use App\Http\Controllers\TiposArrrastresController;
 use App\Http\Controllers\TiposCargasReporteController;
 use App\Http\Controllers\TiposCatalogoLugaresController;
-use App\Http\Controllers\TiposColorPielController;
-use App\Http\Controllers\TiposCombustiblesController;
 use App\Http\Controllers\TiposConceptosController;
 use App\Http\Controllers\TiposContratosController;
-use App\Http\Controllers\TiposDeduccionesController;
 use App\Http\Controllers\TiposDocumentosController;
-use App\Http\Controllers\TiposEstadoCivilController;
-use App\Http\Controllers\TiposEstadosController;
-use App\Http\Controllers\TiposGastosController;
-use App\Http\Controllers\TiposGrupoHorarioController;
-use App\Http\Controllers\TiposIncidenciasController;
-use App\Http\Controllers\TiposIntegracionPoliticaController;
-use App\Http\Controllers\TiposMantenimientosController;
 use App\Http\Controllers\TiposMediosCargoController;
 use App\Http\Controllers\TiposMediosProteccionController;
-use App\Http\Controllers\TiposModeloController;
-use App\Http\Controllers\TiposNivelEducacionController;
-use App\Http\Controllers\TiposPagosAdicionalesController;
-use App\Http\Controllers\TiposPenalizacionesController;
-use App\Http\Controllers\TiposRoturasController;
-use App\Http\Controllers\TiposServiciosController;
-use App\Http\Controllers\TiposSexoController;
-use App\Http\Controllers\TiposSistemasController;
-use App\Http\Controllers\TiposSistemasPagoController;
-use App\Http\Controllers\TiposSuspensionController;
 use App\Http\Controllers\TiposTasasController;
 use App\Http\Controllers\TiposTractivosController;
-use App\Http\Controllers\TiposUbicacionDefensaController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\TurnosComercialesController;
 use App\Http\Controllers\UserController;
@@ -284,14 +257,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-catalogo-lugares', TiposCatalogoLugaresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-modelo', TiposModeloController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('configuraciones-modelo', ConfiguracionesModeloController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-estados', TiposEstadosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-cargas-reporte', TiposCargasReporteController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -342,8 +311,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'create', 'store', 'update', 'destroy']);
         Route::post('prefacturas/{prefactura}/facturar', [PrefacturasController::class, 'facturar'])->name('prefacturas.facturar');
 
-        Route::resource('tipo-ingresos', TipoIngresosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         // Módulo RRHH (Fase 5.5)
         Route::resource('bolsa', BolsaController::class)
@@ -352,20 +319,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('historial-movimientos', HistorialMovimientosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-incidencias', TiposIncidenciasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-penalizaciones', TiposPenalizacionesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-contratos', TiposContratosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-sistemas-pago', TiposSistemasPagoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-pagos-adicionales', TiposPagosAdicionalesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-tasas', TiposTasasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -402,32 +361,16 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         // RRHH - Catálogos pequeños (Fase 5.5 parte 3)
-        Route::resource('tipos-color-piel', TiposColorPielController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-deducciones', TiposDeduccionesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-estado-civil', TiposEstadoCivilController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-grupo-horario', TiposGrupoHorarioController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-integracion-politica', TiposIntegracionPoliticaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tipos-medios-proteccion', TiposMediosProteccionController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-nivel-educacion', TiposNivelEducacionController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-sexo', TiposSexoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-ubicacion-defensa', TiposUbicacionDefensaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         // Catálogos y configuración (Fase 5.7)
         Route::resource('marcas', MarcasController::class)
@@ -451,17 +394,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('medidas-neumaticos', MedidasNeumaticosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-combustibles', TiposCombustiblesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('consecutivos', ConsecutivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-servicios', TiposServiciosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-gastos', TiposGastosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('grupos', GruposController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -472,17 +409,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('talleres', TalleresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-equipos', TipoEquiposController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-mantenimientos', TiposMantenimientosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-agregados', TipoAgregadosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-neumaticos', TipoNeumaticosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('posiciones-neumaticos', PosicionesNeumaticosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -603,21 +532,13 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-tractivos', TiposTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('tipos-arrastres', TiposArrrastresController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('historial-tractivos', HistorialTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('motivos-baja-bateria', MotivosBajaBateriaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('motivos-entrada-taller', MotivosEntradaTallerController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('tipos-roturas', TiposRoturasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('clasificaciones-ordenes-taller', ClasificacionesOrdenesTallerController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('tipos-sistemas', TiposSistemasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('tipos-suspension', TiposSuspensionController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // ATM - Inventario (Fase 5.8)
@@ -634,8 +555,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('categorias-productos', CategoriasProductosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         // Misc - Tablas varias (Fase 5.8)
-        Route::resource('tipos-aceites', TiposAceitesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('elementos-gasto', ElementosGastoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('choferes', ChoferesController::class)

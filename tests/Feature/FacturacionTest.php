@@ -130,7 +130,7 @@ class FacturacionTest extends TestCase
     public function test_tipo_ingresos_index(): void
     {
         $this->actingAs($this->usuarioComercial())
-            ->get(route('tipo-ingresos.index'))
+            ->get(route('catalogo.index', ['tipo' => 'tipo_ingresos']))
             ->assertOk();
     }
 

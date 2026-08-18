@@ -55,7 +55,9 @@ class MenuBuilder
         }
 
         $disabled = false;
-        $routeName = $item->route;
+        // Soporta parámetros en la ruta del ítem: "catalogo.index?tipo=tipos_modelo".
+        [$routeName, $query] = array_pad(explode('?', (string) $item->route, 2), 2, null);
+        parse_str($query ?? '', $params);
 
         if ($routeName === 'naves.index' && ! $tallerExiste) {
             $disabled = true;
@@ -71,7 +73,7 @@ class MenuBuilder
             'label' => $item->label,
             'icon' => $item->icon,
             'route' => $item->route,
-            'url' => $item->route ? route($item->route) : null,
+            'url' => $routeName !== '' ? route($routeName, $params) : null,
             'disabled' => $disabled,
             'children' => $hijos,
         ];

@@ -48,11 +48,11 @@ class RrhhTest extends TestCase
     public function test_catalogos_rrhh_index(): void
     {
         $rutas = [
-            'tipos-incidencias.index',
-            'tipos-penalizaciones.index',
+            ['catalogo.index', ['tipo' => 'tipos_incidencias']],
+            ['catalogo.index', ['tipo' => 'tipos_penalizaciones']],
             'tipos-contratos.index',
-            'tipos-sistemas-pago.index',
-            'tipos-pagos-adicionales.index',
+            ['catalogo.index', ['tipo' => 'tipos_sistemas_pago']],
+            ['catalogo.index', ['tipo' => 'tipos_pagos_adicionales']],
             'tipos-tasas.index',
             'salarios.index',
             'salarios-administrativos.index',
@@ -63,9 +63,11 @@ class RrhhTest extends TestCase
         $user = $this->usuarioRechum();
 
         foreach ($rutas as $ruta) {
+            $nombre = is_array($ruta) ? $ruta[0] : $ruta;
+            $params = is_array($ruta) ? ($ruta[1] ?? []) : [];
             $this->actingAs($user)
-                ->get(route($ruta))
-                ->assertOk("La ruta {$ruta} debería ser accesible para RECHUM");
+                ->get(route($nombre, $params))
+                ->assertOk("La ruta {$nombre} debería ser accesible para RECHUM");
         }
     }
 

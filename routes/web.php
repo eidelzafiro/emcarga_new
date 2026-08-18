@@ -26,7 +26,6 @@ use App\Http\Controllers\TarjetasController;
 use App\Http\Controllers\CombustiblesLubricantesController;use App\Http\Controllers\ConciliacionesController;
 use App\Http\Controllers\DietasController;
 use App\Http\Controllers\PlantillaController;
-use App\Http\Controllers\TurnosController;
 use App\Http\Controllers\ConfiguracionesModeloController;
 use App\Http\Controllers\ConsecutivosController;
 use App\Http\Controllers\ContenedoresController;
@@ -518,9 +517,6 @@ Route::middleware('auth')->group(function () {
             ->name('dietas.cancelar');
 
         Route::resource('plantilla', PlantillaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('turnos', TurnosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('pagos', PagosController::class)

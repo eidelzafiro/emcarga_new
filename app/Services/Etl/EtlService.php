@@ -1775,6 +1775,55 @@ class EtlService
     }
 
     /**
+     * ETL de turnos de nómina: rh_turnos → turnos (réplica exacta del legacy).
+     * id = idturno (preservado). `idmovimientos` se conserva como referencia
+     * sin FK (la tabla `movimientos` aún no se migra). Fechas '0000-00-00'
+     * se convierten a NULL (columnas nullable).
+     */
+    public function migrarTurnos(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $omitidas = 0;
+
+        DB::connection('legacy')->table('rh_turnos')
+            ->orderBy('idturno')
+            ->chunkById($chunk, function ($filas) use (&$procesados, &$omitidas, &$avisos) {
+                foreach ($filas as $fila) {
+                    try {
+                        DB::table('turnos')->updateOrInsert(
+                            ['id' => $fila->idturno],
+                            [
+                                'inicio' => ($fila->inicio && $fila->inicio !== '0000-00-00') ? $fila->inicio : null,
+                                'final' => ($fila->final && $fila->final !== '0000-00-00') ? $fila->final : null,
+                                'idmovimientos' => $fila->idmovimientos,
+                                'tiempo' => $fila->tiempo,
+                                'noct1' => $fila->noct1,
+                                'noct2' => $fila->noct2,
+                                'doblaje' => $fila->doblaje,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $omitidas++;
+                        $avisos[] = "turno#{$fila->idturno}: {$e->getMessage()}";
+                    }
+                }
+            }, 'idturno');
+
+        $this->reporte['turnos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_turnos')->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(
+                ["{$omitidas} filas omitidas por error"],
+                $avisos
+            ),
+        ];
+    }
+
+    /**
      * ETL genérico de una tabla definida en config/etl.php.
      * Preserva el id legacy como id nuevo (upsert repetible).
      */
@@ -3845,6 +3894,10 @@ class EtlService
         $resultado['penalizaciones'] = [
             'legacy' => (int) DB::connection('legacy')->table('rh_penalizaciones')->count(),
             'nueva' => (int) DB::table('penalizaciones')->count(),
+        ];
+        $resultado['turnos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_turnos')->count(),
+            'nueva' => (int) DB::table('turnos')->count(),
         ];
         $resultado['facturas'] = [
             'legacy' => (int) DB::connection('legacy')->table('com_rfactura')

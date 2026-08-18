@@ -3,27 +3,34 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Turno de nómina (réplica del legacy rh_turnos): registro transaccional
+ * de turno vinculado a un movimiento (idmovimientos). NO es un catálogo.
+ */
 class Turno extends Model
 {
-    use SoftDeletes;
-
     protected $table = 'turnos';
 
     protected $fillable = [
-        'codigo',
-        'nombre',
-        'hora_entrada',
-        'hora_salida',
-        'dias_descanso',
-        'activo',
+        'inicio',
+        'final',
+        'idmovimientos',
+        'tiempo',
+        'noct1',
+        'noct2',
+        'doblaje',
     ];
 
     protected function casts(): array
     {
         return [
-            'activo' => 'boolean',
+            'inicio' => 'date',
+            'final' => 'date',
+            'tiempo' => 'decimal:2',
+            'noct1' => 'decimal:2',
+            'noct2' => 'decimal:2',
+            'doblaje' => 'decimal:2',
         ];
     }
 }

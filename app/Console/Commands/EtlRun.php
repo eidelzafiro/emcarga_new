@@ -283,6 +283,11 @@ class EtlRun extends Command
             $etl->migrarPenalizaciones($chunk);
             $this->mostrarResultado($etl->getReporte(), 'penalizaciones');
         }
+        if (! $solo || $solo === 'turnos') {
+            $this->info('Migrando turnos de nómina...');
+            $etl->migrarTurnos($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'turnos');
+        }
 
         // Hojas de ruta: solo el año de negocio (2026); entidad derivada del tractivo
         if (! $solo || $solo === 'hojas_ruta') {

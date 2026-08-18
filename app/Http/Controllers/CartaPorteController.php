@@ -15,7 +15,6 @@ use App\Models\Producto;
 use App\Models\SolicitudesServicio;
 use App\Models\TipoCarga;
 use App\Models\Tractivo;
-use App\Models\Turno;
 use App\Http\Controllers\Traits\EntidadScoping;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -203,7 +202,6 @@ class CartaPorteController extends Controller
             'tiposCargas' => TipoCarga::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'monedas' => Moneda::select('id', 'codigo', 'nombre', 'simbolo')->where('activo', true)->orderBy('nombre')->get(),
             'buques' => Buque::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
-            'turnos' => Turno::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'tractivos' => Tractivo::with('grupo:id,nombre')
                 ->select('id', 'codigo', 'id_entidad', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp')
                 ->whereNull('fecha_baja')

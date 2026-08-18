@@ -24,6 +24,9 @@ use App\Http\Controllers\CombustibleCargasController;
 use App\Http\Controllers\CombustibleDescargasController;
 use App\Http\Controllers\TarjetasController;
 use App\Http\Controllers\CombustiblesLubricantesController;use App\Http\Controllers\ConciliacionesController;
+use App\Http\Controllers\DietasController;
+use App\Http\Controllers\PlantillaController;
+use App\Http\Controllers\TurnosController;
 use App\Http\Controllers\ConfiguracionesModeloController;
 use App\Http\Controllers\ConsecutivosController;
 use App\Http\Controllers\ContenedoresController;
@@ -576,6 +579,19 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('combustibles-lubricantes', CombustiblesLubricantesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('dietas', DietasController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('dietas/{dieta}/liquidar', [DietasController::class, 'liquidar'])
+            ->name('dietas.liquidar');
+        Route::post('dietas/{dieta}/cancelar', [DietasController::class, 'cancelar'])
+            ->name('dietas.cancelar');
+
+        Route::resource('plantilla', PlantillaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('turnos', TurnosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('pagos', PagosController::class)

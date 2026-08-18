@@ -43,6 +43,11 @@ class EtlRun extends Command
 
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
+        // La conexión mysql llega con autocommit desactivado en sesión (CLI),
+        // lo que deja las inserciones sin commit y se pierden al terminar el
+        // proceso. Se fuerza autocommit=1 para que el ETL persista.
+        DB::statement('SET autocommit=1');
+
         if (! $solo || $solo === 'users') {
             $this->info('Migrando usuarios (cod_usuarios → users + password_histories)...');
             $etl->migrarUsuarios(min($chunk, 500));
@@ -251,6 +256,20 @@ class EtlRun extends Command
             $this->info('Migrando bolsa de empleados...');
             $etl->migrarBolsa($chunk);
             $this->mostrarResultado($etl->getReporte(), 'bolsa');
+        }
+
+        // Plantilla de puestos (requiere cargos + áreas ya migrados)
+        if (! $solo || $solo === 'plantilla') {
+            $this->info('Migrando plantilla de puestos...');
+            $etl->migrarPlantilla($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'plantilla');
+        }
+
+        // Salarios administrativos (rh_saladmin)
+        if (! $solo || $solo === 'salarios_administrativos') {
+            $this->info('Migrando salarios administrativos...');
+            $etl->migrarSalariosAdministrativos($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'salarios_administrativos');
         }
 
         // Hojas de ruta: solo el año de negocio (2026); entidad derivada del tractivo

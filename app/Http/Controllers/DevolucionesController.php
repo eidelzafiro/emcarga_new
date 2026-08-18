@@ -8,29 +8,46 @@ use Inertia\Inertia;
 
 class DevolucionesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $items = Devolucione::orderBy('id')->paginate(50);
+        $items = Devolucione::query()
+            ->when($request->search, fn ($q, $s) => $q->where('observaciones', 'like', "%{$s}%"))
+            ->orderBy('id')->paginate(50);
 
-        return Inertia::render('Catalogo/Index', [
+        return Inertia::render('Devoluciones/Index', [
             'items' => $items,
             'title' => 'Devoluciones',
-            'route' => 'devoluciones',
+            'filters' => $request->only(['search']),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Catalogo/Form', [
-            'title' => 'Nueva Devolución',
-            'route' => 'devoluciones',
-        ]);
+        return redirect()->route('devoluciones.index');
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // add validation rules
+            'id_carta_porte' => 'nullable|integer',
+            'id_cliente' => 'nullable|integer',
+            'id_cliente_mm' => 'nullable|integer',
+            'id_tractivo' => 'nullable|integer',
+            'id_empleado' => 'nullable|integer',
+            'fecha' => 'nullable|date',
+            'aumento_flete_mn' => 'nullable|numeric',
+            'aumento_flete_me' => 'nullable|numeric',
+            'aumento_demora' => 'nullable|numeric',
+            'aumento_salario' => 'nullable|numeric',
+            'aumento_alquiler' => 'nullable|numeric',
+            'aumento_izaje' => 'nullable|numeric',
+            'disminucion_flete_mn' => 'nullable|numeric',
+            'disminucion_flete_me' => 'nullable|numeric',
+            'disminucion_demora' => 'nullable|numeric',
+            'disminucion_salario' => 'nullable|numeric',
+            'disminucion_alquiler' => 'nullable|numeric',
+            'disminucion_izaje' => 'nullable|numeric',
+            'observaciones' => 'nullable|string|max:1000',
         ]);
 
         Devolucione::create($validated);
@@ -40,30 +57,36 @@ class DevolucionesController extends Controller
 
     public function show($id)
     {
-        $item = Devolucione::findOrFail($id);
-
-        return Inertia::render('Catalogo/Show', [
-            'item' => $item,
-            'title' => 'Devolución',
-            'route' => 'devoluciones',
-        ]);
+        return redirect()->route('devoluciones.index');
     }
 
     public function edit($id)
     {
-        $item = Devolucione::findOrFail($id);
-
-        return Inertia::render('Catalogo/Form', [
-            'item' => $item,
-            'title' => 'Editar Devolución',
-            'route' => 'devoluciones',
-        ]);
+        return redirect()->route('devoluciones.index');
     }
 
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            // add validation rules
+            'id_carta_porte' => 'nullable|integer',
+            'id_cliente' => 'nullable|integer',
+            'id_cliente_mm' => 'nullable|integer',
+            'id_tractivo' => 'nullable|integer',
+            'id_empleado' => 'nullable|integer',
+            'fecha' => 'nullable|date',
+            'aumento_flete_mn' => 'nullable|numeric',
+            'aumento_flete_me' => 'nullable|numeric',
+            'aumento_demora' => 'nullable|numeric',
+            'aumento_salario' => 'nullable|numeric',
+            'aumento_alquiler' => 'nullable|numeric',
+            'aumento_izaje' => 'nullable|numeric',
+            'disminucion_flete_mn' => 'nullable|numeric',
+            'disminucion_flete_me' => 'nullable|numeric',
+            'disminucion_demora' => 'nullable|numeric',
+            'disminucion_salario' => 'nullable|numeric',
+            'disminucion_alquiler' => 'nullable|numeric',
+            'disminucion_izaje' => 'nullable|numeric',
+            'observaciones' => 'nullable|string|max:1000',
         ]);
 
         $item = Devolucione::findOrFail($id);

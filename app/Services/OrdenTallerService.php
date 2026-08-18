@@ -34,36 +34,32 @@ class OrdenTallerService
             throw new \InvalidArgumentException('EXISTE UNA ORDEN ABIERTA VINCULADA A ESE VEHÍCULO. CIERRE PRIMERO LA ORDEN.');
         }
 
-        $ot = DB::transaction(function () use ($datos, $idEntidad) {
-            $ot = OrdenesTaller::create([
-                'numero' => $datos['numero'] ?? $this->siguienteNumero($idEntidad),
-                'id_tractivo' => $datos['id_tractivo'],
-                'id_tipo_mantenimiento' => $datos['id_tipo_mantenimiento'] ?? null,
-                'id_motivo_entrada' => $datos['id_motivo_entrada'] ?? null,
-                'id_clasificacion' => $datos['id_clasificacion'] ?? null,
-                'fecha_ingreso' => $datos['fecha_ingreso'] ?? now()->toDateString(),
-                'hora_ingreso' => $datos['hora_ingreso'] ?? null,
-                'fecha_salida' => $datos['fecha_salida'] ?? null,
-                'hora_salida' => $datos['hora_salida'] ?? null,
-                'id_reporte' => $datos['id_reporte'] ?? null,
-                'id_confeccionado' => $datos['id_confeccionado'] ?? null,
-                'id_operario' => $datos['id_operario'] ?? null,
-                'notas' => $datos['notas'] ?? null,
-                'cancelada' => false,
-                'ot_largo_plazo' => $datos['ot_largo_plazo'] ?? null,
-                'combtaller' => $datos['combtaller'] ?? 0,
-                'id_motor' => $datos['id_motor'] ?? null,
-                'id_taller' => $datos['id_taller'] ?? null,
-                'id_entidad' => $idEntidad,
-                'id_unidad' => $idEntidad,
-                'estado' => 'abierta',
-                'kilometraje' => $datos['kilometraje'] ?? null,
-            ]);
+        $ot = OrdenesTaller::create([
+            'numero' => $datos['numero'] ?? $this->siguienteNumero($idEntidad),
+            'id_tractivo' => $datos['id_tractivo'],
+            'id_tipo_mantenimiento' => $datos['id_tipo_mantenimiento'] ?? null,
+            'id_motivo_entrada' => $datos['id_motivo_entrada'] ?? null,
+            'id_clasificacion' => $datos['id_clasificacion'] ?? null,
+            'fecha_ingreso' => $datos['fecha_ingreso'] ?? now()->toDateString(),
+            'hora_ingreso' => $datos['hora_ingreso'] ?? null,
+            'fecha_salida' => $datos['fecha_salida'] ?? null,
+            'hora_salida' => $datos['hora_salida'] ?? null,
+            'id_reporte' => $datos['id_reporte'] ?? null,
+            'id_confeccionado' => $datos['id_confeccionado'] ?? null,
+            'id_operario' => $datos['id_operario'] ?? null,
+            'notas' => $datos['notas'] ?? null,
+            'cancelada' => false,
+            'ot_largo_plazo' => $datos['ot_largo_plazo'] ?? null,
+            'combtaller' => $datos['combtaller'] ?? 0,
+            'id_motor' => $datos['id_motor'] ?? null,
+            'id_taller' => $datos['id_taller'] ?? null,
+            'id_entidad' => $idEntidad,
+            'id_unidad' => $idEntidad,
+            'estado' => 'abierta',
+            'kilometraje' => $datos['kilometraje'] ?? null,
+        ]);
 
-            $this->aplicarEstadoTractivo($ot, true);
-
-            return $ot;
-        });
+        $this->aplicarEstadoTractivo($ot, true);
 
         return $ot;
     }

@@ -8,29 +8,31 @@ use Inertia\Inertia;
 
 class DescuentosEmpleadosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $items = DescuentosEmpleado::orderBy('id')->paginate(50);
+        $items = DescuentosEmpleado::query()
+            ->when($request->search, fn ($q, $s) => $q->where('motivo', 'like', "%{$s}%"))
+            ->orderBy('id')->paginate(50);
 
-        return Inertia::render('Catalogo/Index', [
+        return Inertia::render('DescuentosEmpleados/Index', [
             'items' => $items,
             'title' => 'Desc. Empleados',
-            'route' => 'descuentos-empleados',
+            'filters' => $request->only(['search']),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Catalogo/Form', [
-            'title' => 'Nuevo Descuento de Empleado',
-            'route' => 'descuentos-empleados',
-        ]);
+        return redirect()->route('descuentos-empleados.index');
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // add validation rules
+            'id_empleado' => 'nullable|integer',
+            'fecha_inicio' => 'nullable|date',
+            'tiempo' => 'nullable|numeric|min:0',
+            'motivo' => 'nullable|string|max:1000',
         ]);
 
         DescuentosEmpleado::create($validated);
@@ -40,30 +42,21 @@ class DescuentosEmpleadosController extends Controller
 
     public function show($id)
     {
-        $item = DescuentosEmpleado::findOrFail($id);
-
-        return Inertia::render('Catalogo/Show', [
-            'item' => $item,
-            'title' => 'Descuento de Empleado',
-            'route' => 'descuentos-empleados',
-        ]);
+        return redirect()->route('descuentos-empleados.index');
     }
 
     public function edit($id)
     {
-        $item = DescuentosEmpleado::findOrFail($id);
-
-        return Inertia::render('Catalogo/Form', [
-            'item' => $item,
-            'title' => 'Editar Descuento de Empleado',
-            'route' => 'descuentos-empleados',
-        ]);
+        return redirect()->route('descuentos-empleados.index');
     }
 
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            // add validation rules
+            'id_empleado' => 'nullable|integer',
+            'fecha_inicio' => 'nullable|date',
+            'tiempo' => 'nullable|numeric|min:0',
+            'motivo' => 'nullable|string|max:1000',
         ]);
 
         $item = DescuentosEmpleado::findOrFail($id);

@@ -1536,12 +1536,119 @@ class EtlService
     }
 
     /**
+     * ETL de plantilla de puestos: rh_plantilla → plantilla.
+     * La entidad se deriva del área (rh_areas.idunidad → areas.id_entidad).
+     */
+    public function migrarPlantilla(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $huerfanas = 0;
+
+        $entidadArea = DB::table('areas')->pluck('id_entidad', 'id');
+        $cargosValidos = DB::table('cargos')->pluck('id')->flip();
+        $areasValidas = DB::table('areas')->pluck('id')->flip();
+
+        DB::table('plantilla')->delete();
+
+        DB::connection('legacy')->table('rh_plantilla')
+            ->orderBy('idplantilla')
+            ->chunkById($chunk, function ($filas) use (&$procesados, &$huerfanas, &$avisos, $entidadArea, $cargosValidos, $areasValidas) {
+                foreach ($filas as $fila) {
+                    if (! isset($areasValidas[$fila->idareas]) || ! isset($cargosValidos[$fila->idcargos])) {
+                        $huerfanas++;
+
+                        continue;
+                    }
+
+                    try {
+                        DB::table('plantilla')->updateOrInsert(
+                            ['id' => $fila->idplantilla],
+                            [
+                                'id_cargo' => $fila->idcargos,
+                                'id_area' => $fila->idareas,
+                                'aprobada' => (int) $fila->aprobada,
+                                'cubierta' => (int) $fila->cubierta,
+                                'cubierta2' => (int) $fila->cubierta2,
+                                'propuesta' => (int) $fila->propuesta,
+                                'v_necesidad' => (int) $fila->vnecesidad,
+                                'necesidad' => (int) $fila->necesidad,
+                                'id_entidad' => $entidadArea[$fila->idareas] ?? null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "plantilla#{$fila->idplantilla}: {$e->getMessage()}";
+                    }
+                }
+            }, 'idplantilla');
+
+        $this->reporte['plantilla'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_plantilla')->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(
+                ["{$huerfanas} filas omitidas por cargo o área inexistente en la BD nueva (dato huérfano)"],
+                $avisos
+            ),
+        ];
+    }
+
+    /**
+     * ETL de salarios administrativos: rh_saladmin → salarios_administrativos.
+     * La tabla `movimientos` (salario por chofer) no está migrada, por lo que
+     * id_movimiento se deja NULL.
+     */
+    public function migrarSalariosAdministrativos(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        DB::table('salarios_administrativos')->delete();
+
+        DB::connection('legacy')->table('rh_saladmin')
+            ->orderBy('idsaladmin')
+            ->chunkById($chunk, function ($filas) use (&$procesados, &$avisos) {
+                foreach ($filas as $fila) {
+                    try {
+                        DB::table('salarios_administrativos')->updateOrInsert(
+                            ['id' => $fila->idsaladmin],
+                            [
+                                'fecha' => $fila->fsaladmin,
+                                'id_movimiento' => null,
+                                'feriados' => (float) $fila->feriados,
+                                'irregular' => (float) $fila->irregular,
+                                'cpl' => (float) $fila->cpl,
+                                'alimentos_extra' => (float) $fila->alimextra,
+                                'dias_taller' => (float) $fila->diastaller,
+                                'h_extra' => (float) $fila->hextra,
+                                'imp_h_extra' => (float) $fila->imphextra,
+                                'estado' => 'cerrado',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "salarios_administrativos#{$fila->idsaladmin}: {$e->getMessage()}";
+                    }
+                }
+            }, 'idsaladmin');
+
+        $this->reporte['salarios_administrativos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_saladmin')->count(),
+            'nueva' => $procesados,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
      * ETL genérico de una tabla definida en config/etl.php.
      * Preserva el id legacy como id nuevo (upsert repetible).
      */
     public function migrarLugares(int $chunk = 1000): void
-    {
-        $avisos = [];
+    {        $avisos = [];
         $procesados = 0;
 
         $legacy = DB::connection('legacy');
@@ -3591,6 +3698,14 @@ class EtlService
         $resultado['bolsa'] = [
             'legacy' => (int) DB::connection('legacy')->table('rh_bolsa')->count(),
             'nueva' => (int) DB::table('bolsa')->count(),
+        ];
+        $resultado['plantilla'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_plantilla')->count(),
+            'nueva' => (int) DB::table('plantilla')->count(),
+        ];
+        $resultado['salarios_administrativos'] = [
+            'legacy' => (int) DB::connection('legacy')->table('rh_saladmin')->count(),
+            'nueva' => (int) DB::table('salarios_administrativos')->count(),
         ];
         $resultado['facturas'] = [
             'legacy' => (int) DB::connection('legacy')->table('com_rfactura')

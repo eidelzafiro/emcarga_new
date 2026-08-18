@@ -2,6 +2,7 @@
 
 namespace App\Services\Etl;
 
+use App\Models\CatalogoItem;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -1818,6 +1819,179 @@ class EtlService
             'nueva' => $procesados,
             'avisos' => array_merge(
                 ["{$omitidas} filas omitidas por error"],
+                $avisos
+            ),
+        ];
+    }
+
+    /**
+     * ETL de los mini-catálogos RRHH (rh_tipo*) al catálogo unificado
+     * (catalogo_items). Cada fuente define: tabla legacy, pk, columna nombre
+     * y columnas extra (p.ej. id_tipo_causa_lab) que se persisten en el JSON
+     * `extra`. Upsert idempotente por tipo + origen_id.
+     */
+    public function migrarMiniCatalogosRrhh(int $chunk = 1000): void
+    {
+        $fuentes = [
+            'tipos_causas_baja' => ['tabla' => 'rh_tipocausabaja', 'pk' => 'idtipocausabaja', 'nombre' => 'nombcausabaja', 'extra' => ['id_tipo_causa_lab' => 'idtipocausalab']],
+            'tipos_causas_lab' => ['tabla' => 'rh_tipocausalab', 'pk' => 'idtipocausalab', 'nombre' => 'nombcausalab'],
+            'tipos_causas_mov' => ['tabla' => 'rh_tipocausamov', 'pk' => 'idtipocausamov', 'nombre' => 'nombcausamov', 'extra' => ['id_tipo_causa_lab' => 'idtipocausalab']],
+            'tipos_tallas' => ['tabla' => 'rh_tipotallas', 'pk' => 'idtipotallas', 'nombre' => 'nombtipotallas'],
+            'tipos_especialidad' => ['tabla' => 'rh_tipoespecialidad', 'pk' => 'idtiposespecialidad', 'nombre' => 'nombespecialidad'],
+            'tipos_plantillas' => ['tabla' => 'rh_tipoplantillas', 'pk' => 'idtipoplantillas', 'nombre' => 'nombtipoplantillas'],
+            'tipos_calificadores' => ['tabla' => 'rh_tipocalificadores', 'pk' => 'idtipocalificadores', 'nombre' => 'nombcalificador'],
+        ];
+
+        foreach ($fuentes as $tipo => $cfg) {
+            $filas = DB::connection('legacy')->table($cfg['tabla'])->get();
+            $procesados = 0;
+            foreach ($filas as $fila) {
+                $extra = [];
+                foreach ($cfg['extra'] ?? [] as $campo => $col) {
+                    if (isset($fila->$col) && $fila->$col !== null) {
+                        $extra[$campo] = $fila->$col;
+                    }
+                }
+
+                CatalogoItem::updateOrCreate(
+                    ['tipo' => $tipo, 'origen_id' => $fila->{$cfg['pk']}],
+                    [
+                        'codigo' => (string) $fila->{$cfg['pk']},
+                        'nombre' => trim((string) $fila->{$cfg['nombre']}),
+                        'activo' => true,
+                        'extra' => empty($extra) ? null : $extra,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+                $procesados++;
+            }
+
+            $this->reporte['mini_catalogos_'.$tipo] = [
+                'legacy' => $filas->count(),
+                'nueva' => $procesados,
+                'avisos' => [],
+            ];
+        }
+    }
+
+    /**
+     * ETL del histórico diario de tarjetas: cont_htarjetas → htarjetas.
+     * id = idhtarjeta (preservado). FKs (tarjeta, moneda, tipo combustible,
+     * entidad) validadas contra catálogos migrados; filas sin tarjeta se omiten.
+     */
+    public function migrarHtarjetas(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $omitidas = 0;
+
+        $tarjetas = DB::table('tarjetas')->pluck('id')->flip();
+        $monedas = DB::table('monedas')->pluck('id')->flip();
+        $tcomb = DB::table('tipos_combustibles')->pluck('id')->flip();
+        $entidades = DB::table('entidades')->pluck('id')->flip();
+
+        DB::connection('legacy')->table('cont_htarjetas')
+            ->orderBy('idhtarjeta')
+            ->chunkById($chunk, function ($filas) use (&$procesados, &$omitidas, &$avisos, $tarjetas, $monedas, $tcomb, $entidades) {
+                foreach ($filas as $fila) {
+                    if (! isset($tarjetas[$fila->idtarjeta])) {
+                        $omitidas++;
+
+                        continue;
+                    }
+
+                    try {
+                        DB::table('htarjetas')->updateOrInsert(
+                            ['id' => $fila->idhtarjeta],
+                            [
+                                'id_tarjeta' => $fila->idtarjeta,
+                                'ftrabajo' => ($fila->ftrabajo && $fila->ftrabajo !== '0000-00-00') ? $fila->ftrabajo : null,
+                                'codtm' => $fila->codtm,
+                                'saldoinicialmon' => $fila->saldoinicialmon,
+                                'saldoiniciallts' => $fila->saldoiniciallts,
+                                'id_monedas' => isset($monedas[$fila->idmonedas]) ? $fila->idmonedas : null,
+                                'id_tipo_combustibles' => isset($tcomb[$fila->idtipocombustibles]) ? $fila->idtipocombustibles : null,
+                                'preciomn' => $fila->preciomn,
+                                'saldocargadomon' => $fila->saldocargadomon,
+                                'saldocargadolts' => $fila->saldocargadolts,
+                                'saldodescargadomon' => $fila->saldodescargadomon,
+                                'saldodescargadolts' => $fila->saldodescargadolts,
+                                'saldotransferenciamon' => $fila->saldotransferenciamon,
+                                'saldotransferencialts' => $fila->saldotransferencialts,
+                                'saldoactualmon' => $fila->saldoactualmon,
+                                'saldoactuallts' => $fila->saldoactuallts,
+                                'id_entidad' => isset($entidades[$fila->idunidad]) ? $fila->idunidad : null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "htarjeta#{$fila->idhtarjeta}: {$e->getMessage()}";
+                    }
+                }
+            }, 'idhtarjeta');
+
+        $this->reporte['htarjetas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('cont_htarjetas')->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(
+                ["{$omitidas} filas omitidas por tarjeta inexistente"],
+                $avisos
+            ),
+        ];
+    }
+
+    /**
+     * ETL de entregas/estado de tarjetas: cont_etarjetas → etarjetas.
+     * La tabla legacy está vacía (0 filas), pero el ETL queda para completitud.
+     */
+    public function migrarEtarjetas(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $omitidas = 0;
+
+        $tarjetas = DB::table('tarjetas')->pluck('id')->flip();
+
+        DB::connection('legacy')->table('cont_etarjetas')
+            ->orderBy('idetarjeta')
+            ->chunkById($chunk, function ($filas) use (&$procesados, &$omitidas, &$avisos, $tarjetas) {
+                foreach ($filas as $fila) {
+                    if (! isset($tarjetas[$fila->idtarjeta])) {
+                        $omitidas++;
+
+                        continue;
+                    }
+
+                    try {
+                        DB::table('etarjetas')->updateOrInsert(
+                            ['id' => $fila->idetarjeta],
+                            [
+                                'id_tarjeta' => $fila->idtarjeta,
+                                'fmovimiento' => ($fila->fmovimiento && $fila->fmovimiento !== '0000-00-00') ? $fila->fmovimiento : null,
+                                'id_entrega' => $fila->identrega,
+                                'id_recibe' => $fila->idrecibe,
+                                'saldomon' => $fila->saldomon,
+                                'saldolts' => $fila->saldolts,
+                                'id_comprobante' => $fila->idcomprobante,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        $procesados++;
+                    } catch (\Throwable $e) {
+                        $avisos[] = "etarjeta#{$fila->idetarjeta}: {$e->getMessage()}";
+                    }
+                }
+            }, 'idetarjeta');
+
+        $this->reporte['etarjetas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('cont_etarjetas')->count(),
+            'nueva' => $procesados,
+            'avisos' => array_merge(
+                ["{$omitidas} filas omitidas por tarjeta inexistente"],
                 $avisos
             ),
         ];
@@ -3898,6 +4072,30 @@ class EtlService
         $resultado['turnos'] = [
             'legacy' => (int) DB::connection('legacy')->table('rh_turnos')->count(),
             'nueva' => (int) DB::table('turnos')->count(),
+        ];
+        // Mini-catálogos RRHH → catálogo unificado
+        $miniFuentes = [
+            'tipos_causas_baja' => 'rh_tipocausabaja',
+            'tipos_causas_lab' => 'rh_tipocausalab',
+            'tipos_causas_mov' => 'rh_tipocausamov',
+            'tipos_tallas' => 'rh_tipotallas',
+            'tipos_especialidad' => 'rh_tipoespecialidad',
+            'tipos_plantillas' => 'rh_tipoplantillas',
+            'tipos_calificadores' => 'rh_tipocalificadores',
+        ];
+        foreach ($miniFuentes as $tipo => $legacyTabla) {
+            $resultado['mini_catalogos_'.$tipo] = [
+                'legacy' => (int) DB::connection('legacy')->table($legacyTabla)->count(),
+                'nueva' => (int) DB::table('catalogo_items')->where('tipo', $tipo)->count(),
+            ];
+        }
+        $resultado['htarjetas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('cont_htarjetas')->count(),
+            'nueva' => (int) DB::table('htarjetas')->count(),
+        ];
+        $resultado['etarjetas'] = [
+            'legacy' => (int) DB::connection('legacy')->table('cont_etarjetas')->count(),
+            'nueva' => (int) DB::table('etarjetas')->count(),
         ];
         $resultado['facturas'] = [
             'legacy' => (int) DB::connection('legacy')->table('com_rfactura')

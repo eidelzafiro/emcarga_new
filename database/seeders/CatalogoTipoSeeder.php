@@ -43,6 +43,13 @@ class CatalogoTipoSeeder extends Seeder
         'tipos_sistemas_pago' => 'Tipos de Sistemas de Pago',
         'tipo_ingresos' => 'Tipos de Ingresos',
         'tipos_tractivos_alternativo' => 'Tipos de Tractivos Alternativo',
+        'tipos_causas_baja' => 'Causas de Baja',
+        'tipos_causas_lab' => 'Causas Laborales',
+        'tipos_causas_mov' => 'Causas de Movimiento',
+        'tipos_tallas' => 'Tallas',
+        'tipos_especialidad' => 'Especialidad',
+        'tipos_plantillas' => 'Plantillas',
+        'tipos_calificadores' => 'Calificadores',
     ];
 
     public function run(): void
@@ -51,7 +58,7 @@ class CatalogoTipoSeeder extends Seeder
             'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
             'Comercial' => ['tipos_cargas', 'tipos_servicios', 'tipos_gastos'],
             'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_sistemas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
-            'RRHH' => ['tipos_causas', 'tipos_color_piel', 'tipos_deducciones', 'tipos_modelo', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_sistemas_pago', 'tipos_sexo', 'tipos_suspension', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones'],
+            'RRHH' => ['tipos_causas', 'tipos_color_piel', 'tipos_deducciones', 'tipos_modelo', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_sistemas_pago', 'tipos_sexo', 'tipos_suspension', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones', 'tipos_causas_baja', 'tipos_causas_lab', 'tipos_causas_mov', 'tipos_tallas', 'tipos_especialidad', 'tipos_plantillas', 'tipos_calificadores'],
         ];
 
         $all = [];

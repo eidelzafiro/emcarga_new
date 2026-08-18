@@ -289,6 +289,29 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'turnos');
         }
 
+        // Mini-catálogos RRHH → catálogo unificado
+        if (! $solo || $solo === 'mini_catalogos_rrhh') {
+            $this->info('Migrando mini-catálogos RRHH al catálogo unificado...');
+            $etl->migrarMiniCatalogosRrhh($chunk);
+            foreach (array_keys($etl->getReporte()) as $key) {
+                if (str_starts_with($key, 'mini_catalogos_')) {
+                    $this->mostrarResultado($etl->getReporte(), $key);
+                }
+            }
+        }
+
+        // Históricos de tarjetas de combustible
+        if (! $solo || $solo === 'htarjetas') {
+            $this->info('Migrando histórico diario de tarjetas...');
+            $etl->migrarHtarjetas($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'htarjetas');
+        }
+        if (! $solo || $solo === 'etarjetas') {
+            $this->info('Migrando entregas de tarjetas...');
+            $etl->migrarEtarjetas($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'etarjetas');
+        }
+
         // Hojas de ruta: solo el año de negocio (2026); entidad derivada del tractivo
         if (! $solo || $solo === 'hojas_ruta') {
             $this->info('Migrando hojas de ruta (año 2026)...');

@@ -13,6 +13,23 @@
 
 ---
 
+## 0. Base común — ✅ HECHO (2026-08-21)
+
+Implementado en `app/Services/Reports/BaseReportService.php` (extendido) + componentes Blade:
+- Formateadores: `formatoMoneda` (MN/ME/MLC/MT), `formatoNumero`, `formatoPorcentaje`,
+  `formatoMesAnio`, `numeroALetras` (español, usado en facturas/certificados).
+- `tipoFiltro($variable)`: clasifica la columna `variable` de `reportes` en
+  `mes`/`fecha`/`consecutivo`/`tractivo`/`cliente`/`tarjeta`/`agrupacion`/`directo`
+  para reusar un formulario por tipo.
+- Componentes Blade reutilizables: `resources/views/components/reporte/encabezado.blade.php`,
+  `tabla.blade.php`, `pie.blade.php` (`<x-reporte.*>`).
+- Test `tests/Feature/ReportesBaseTest.php` (3 tests) en verde.
+
+Cada reporte queda como acción de controlador delgada + vista Blade que usa estos
+componentes; no se duplica lógica de formato.
+
+---
+
 ## 0. Base común (hacer PRIMERO, una sola vez)
 
 Crear infraestructura reutilizable en `app/` (Zafiro ya usa dompdf + Blade):

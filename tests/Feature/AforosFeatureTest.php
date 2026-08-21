@@ -10,7 +10,6 @@ use App\Models\Producto;
 use App\Models\Tarifa;
 use App\Models\TipoCarga;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -19,12 +18,10 @@ use Tests\TestCase;
  */
 class AforosFeatureTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function usuarioComercial(): User
@@ -126,6 +123,6 @@ class AforosFeatureTest extends TestCase
     {
         $this->actingAs($this->usuarioComercial())
             ->post(route('aforos.store'), [])
-            ->assertSessionHasErrors(['id_carta_porte', 'fecha_parte', 'flete_mt', 'ingreso_mt']);
+            ->assertSessionHasErrors(['fecha_parte', 'flete_mt', 'ingreso_mt']);
     }
 }

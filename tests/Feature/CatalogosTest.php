@@ -6,7 +6,6 @@ use App\Models\CatalogoItem;
 use App\Models\CatalogoTipo;
 use App\Models\User;
 use App\Support\CatalogoSchema;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -20,12 +19,10 @@ use Tests\TestCase;
  */
 class CatalogosTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
         CatalogoSchema::flushCache();
     }
 

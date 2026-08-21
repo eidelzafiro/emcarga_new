@@ -5,20 +5,17 @@ namespace Tests\Feature;
 use App\Models\MenuItem;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class MenuReorderTest extends TestCase
 {
-    use DatabaseTransactions;
 
     protected function setUp(): void
     {
         parent::setUp();
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        $this->seed(PermissionSeeder::class);
         $this->user = User::factory()->create();
         $this->user->assignRole('SUPERADMIN');
 

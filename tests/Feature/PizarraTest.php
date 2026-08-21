@@ -3,25 +3,22 @@
 namespace Tests\Feature;
 
 use App\Models\Pizarra;
-use App\Models\TipoVehiculo;
+use App\Models\TipoTractivo;
 use App\Models\Tractivo;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PizarraTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function tractivoValido(): Tractivo
     {
-        $tipo = TipoVehiculo::create([
+        $tipo = TipoTractivo::create([
             'codigo' => 'TEST',
             'nombre' => 'Test',
         ]);

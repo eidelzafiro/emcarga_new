@@ -18,6 +18,7 @@
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {
+        "brianium/paratest": "^7.20",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
@@ -52,8 +53,25 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
+            "@composer test:setup",
+            "@composer test:fast",
+            "@composer test:legacy"
+        ],
+        "test:setup": [
+            "@php -r \"echo 'Migrando y sembrando BD de test (emcarga_new_test)...\\n';\"",
+            "DB_DATABASE=emcarga_new_test php artisan migrate:fresh --seed --force --ansi"
+        ],
+        "test:fast": [
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php artisan test"
+            "DB_DATABASE=emcarga_new_test php artisan test --testsuite=fast"
+        ],
+        "test:legacy": [
+            "@php artisan config:clear --ansi @no_additional_args",
+            "DB_DATABASE=emcarga_new_test php artisan test --testsuite=legacy"
+        ],
+        "test:profile": [
+            "@php artisan config:clear --ansi @no_additional_args",
+            "DB_DATABASE=emcarga_new_test php artisan test --profile --testsuite=fast"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

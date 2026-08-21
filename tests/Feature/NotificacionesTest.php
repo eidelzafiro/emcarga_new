@@ -4,19 +4,16 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Notifications\NotificacionSistema;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class NotificacionesTest extends TestCase
 {
-    use RefreshDatabase;
 
     private User $admin;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
         $this->admin = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['SUPERADMIN', 'CONFIGURACIONES']))->first();
         $this->actingAs($this->admin);
     }

@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Cliente;
 use App\Models\Factura;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -14,12 +13,10 @@ use Tests\TestCase;
  */
 class FacturacionTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function usuarioComercial(): User
@@ -86,7 +83,7 @@ class FacturacionTest extends TestCase
     {
         $this->actingAs($this->usuarioComercial())
             ->post(route('facturas.store'), [])
-            ->assertSessionHasErrors(['numero', 'fecha_emision', 'id_cliente', 'flete_mt', 'flete_mlc', 'ingreso_mt']);
+            ->assertSessionHasErrors(['fecha_emision', 'id_cliente', 'flete_mt', 'flete_mlc', 'flete_demora', 'otros_mt', 'ingreso_mt']);
     }
 
     public function test_numero_de_factura_es_unico(): void

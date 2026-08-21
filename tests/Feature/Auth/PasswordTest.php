@@ -3,13 +3,11 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class PasswordTest extends TestCase
 {
-    use RefreshDatabase;
 
     private function usuario(): User
     {

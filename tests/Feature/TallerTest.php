@@ -7,7 +7,6 @@ use App\Models\OrdenesTaller;
 use App\Models\Tractivo;
 use App\Models\User;
 use App\Services\OrdenTallerService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -22,7 +21,6 @@ use Tests\TestCase;
  */
 class TallerTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {

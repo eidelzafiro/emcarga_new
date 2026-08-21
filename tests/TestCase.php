@@ -2,11 +2,21 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\DB;
 
 abstract class TestCase extends BaseTestCase
 {
+    use DatabaseTransactions;
+
+    /**
+     * La BD de test (emcarga_new_test) se migra y sembra UNA sola vez fuera de
+     * los tests (ver composer test:setup). DatabaseTransactions envuelve cada
+     * test en una transacción y revierte solo sus mutaciones, dejando intacto
+     * el baseline sembrado; así los tests arrancan siempre desde la misma BD
+     * sin re-migrar (231 tablas) ni re-sembrar por test en cada corrida.
+     */
     private const BDS_PROHIBIDAS = ['emcarga_new', 'emcarga'];
 
     protected function setUp(): void

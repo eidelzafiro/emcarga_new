@@ -6,7 +6,6 @@ use App\Models\ConfiguracionTarifa;
 use App\Models\Tarifa;
 use App\Models\TipoCarga;
 use App\Services\AforoCotizadorService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -15,7 +14,6 @@ use Tests\TestCase;
  */
 class AforoCotizadorServiceTest extends TestCase
 {
-    use RefreshDatabase;
 
     private AforoCotizadorService $servicio;
 
@@ -45,10 +43,15 @@ class AforoCotizadorServiceTest extends TestCase
         return ConfiguracionTarifa::create(array_merge([
             'demora_1' => 350,
             'demora_2' => 400,
+            'demora_cont_1' => 350,
+            'demora_cont_2' => 385,
             'kms_vacio_1' => 5,
             'kms_vacio_2' => 8,
+            'kms_vacio_cont_1' => 37.80,
+            'kms_vacio_cont_2' => 0.99,
             'tarifa_horaria_1' => 100,
             'tarifa_horaria_2' => 150,
+            'tarifa_horaria_cont_1' => 420,
             'kms_adicionales_1' => 20,
             'kms_adicionales_2' => 30,
             'almacenaje' => 10,
@@ -186,6 +189,21 @@ class AforoCotizadorServiceTest extends TestCase
         $this->assertSame(2471.60, $grande['tarmt']);
     }
 
+    public function test_calcular_th_5_contenedor_usa_tarifa_horaria_contenedor(): void
+    {
+        $this->config(['tarifa_horaria_cont_1' => 420]);
+
+        // El legacy usa `com_tarconfigcont46.tarhor1` (no existe tarhor2) y el
+        // formulario default era tipocont=1; todos los aforos migrados usaron 420.
+        $conttipo1 = $this->servicio->calcularTh(tipocarga: 5, capacidad: 30, horas: 2, tipocont: 1);
+        $conttipo2 = $this->servicio->calcularTh(tipocarga: 5, capacidad: 30, horas: 2, tipocont: 2);
+
+        $this->assertSame(420.0, $conttipo1['tarmt']);
+        $this->assertSame(840.0, $conttipo1['fth']);
+        $this->assertSame(420.0, $conttipo2['tarmt']);
+        $this->assertSame(840.0, $conttipo2['fth']);
+    }
+
     public function test_calcular_kms_costo_tarifa_fija_70(): void
     {
         $resultado = $this->servicio->calcularKmsCosto(kms: 10);
@@ -306,6 +324,25 @@ class AforoCotizadorServiceTest extends TestCase
 
         $this->assertSame(280.0, $pequeno['tardem1']);
         $this->assertSame(315.0, $grande['tardem1']);
+    }
+
+    public function test_calcular_demora_contenedor_usa_config_contenedor(): void
+    {
+        $this->config(['demora_cont_1' => 350, 'demora_cont_2' => 385]);
+
+        // conttipo 2 → demora_cont_2 (385)
+        $cont2 = $this->servicio->calcularDemora(tipocarga1: 3, capacidad: 10, demcarga: 1, demdescarga: 1, horas: 1, conttipo: 2);
+        $this->assertSame(385.0, $cont2['tardem1']);
+        $this->assertSame(385.0, $cont2['tardem2']);
+
+        // conttipo 1 → demora_cont_1 (350)
+        $cont1 = $this->servicio->calcularDemora(tipocarga1: 4, capacidad: 10, demcarga: 1, demdescarga: 1, horas: 1, conttipo: 1);
+        $this->assertSame(350.0, $cont1['tardem1']);
+        $this->assertSame(350.0, $cont1['tardem2']);
+
+        // conttipo 0 (default girado) → demora_cont_1 (350)
+        $cont0 = $this->servicio->calcularDemora(tipocarga1: 3, capacidad: 10, demcarga: 1, demdescarga: 0, horas: 1, conttipo: 0);
+        $this->assertSame(350.0, $cont0['tardem1']);
     }
 
     public function test_calcular_tiempos_suma_hh_mm(): void

@@ -5,13 +5,11 @@ namespace Tests\Feature;
 use App\Models\Entidad;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class UsuariosTest extends TestCase
 {
-    use RefreshDatabase;
 
     private User $admin;
 
@@ -22,7 +20,6 @@ class UsuariosTest extends TestCase
         parent::setUp();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        $this->seed(PermissionSeeder::class);
 
         $this->entidad = Entidad::create([
             'codigo' => '001',

@@ -3,13 +3,19 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         failOnWarning="false"
+         failOnRisky="false"
 >
     <testsuites>
-        <testsuite name="Unit">
+        <testsuite name="fast">
             <directory>tests/Unit</directory>
-        </testsuite>
-        <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <exclude>tests/Feature/EtlTest.php</exclude>
+        </testsuite>
+        <testsuite name="legacy">
+            <file>tests/Feature/EtlTest.php</file>
         </testsuite>
     </testsuites>
     <source>

@@ -3,17 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     public function test_usuario_autenticado_puede_ver_dashboard()

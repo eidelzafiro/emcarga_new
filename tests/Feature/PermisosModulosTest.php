@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Cliente;
 use App\Models\Factura;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -14,12 +13,10 @@ use Tests\TestCase;
  */
 class PermisosModulosTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function usuarioConRol(string $rol): User

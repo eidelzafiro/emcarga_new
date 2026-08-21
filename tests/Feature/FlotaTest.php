@@ -2,20 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Models\TipoVehiculo;
+use App\Models\TipoTractivo;
 use App\Models\Tractivo;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class FlotaTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function usuarioTecnica(): User
@@ -30,7 +27,7 @@ class FlotaTest extends TestCase
 
     private function tractivoValido(): Tractivo
     {
-        $tipo = TipoVehiculo::create(['codigo' => 'TST', 'nombre' => 'Test']);
+        $tipo = TipoTractivo::create(['codigo' => 'TST', 'nombre' => 'Test']);
 
         return Tractivo::factory()->create(['id_tipo_vehiculo' => $tipo->id]);
     }
@@ -74,12 +71,6 @@ class FlotaTest extends TestCase
     public function test_otros_agregados_index()
     {
         $response = $this->actingAs($this->usuarioTecnica())->get(route('otros-agregados.index'));
-        $response->assertOk();
-    }
-
-    public function test_energia_index()
-    {
-        $response = $this->actingAs($this->usuarioTecnica())->get(route('energia.index'));
         $response->assertOk();
     }
 

@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\CartaPorte;
 use App\Models\Moneda;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,12 +17,10 @@ use Tests\TestCase;
  */
 class ImpresionYFechaTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function usuarioComercial(): User
@@ -39,11 +36,11 @@ class ImpresionYFechaTest extends TestCase
     private function datosCartaBase(): array
     {
         $this->session(['fecha_operaciones' => '2026-08-18']);
-        Moneda::create(['id' => 1, 'codigo' => 'MN', 'nombre' => 'MN']);
+        $moneda = Moneda::create(['codigo' => 'MN', 'nombre' => 'MN']);
 
         return [
             'numero' => 'CP-FECHA-'.rand(1000, 9999),
-            'id_moneda' => 1,
+            'id_moneda' => $moneda->id,
             'fecha_emision' => '2026-08-10',
             'fecha_parte' => '2026-08-10',
             'toneladas' => 10,

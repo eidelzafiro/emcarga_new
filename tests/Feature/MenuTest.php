@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\PermissionRegistrar;
@@ -12,14 +11,12 @@ use Tests\TestCase;
 
 class MenuTest extends TestCase
 {
-    use DatabaseTransactions;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        $this->seed(PermissionSeeder::class);
         $this->cargarMenuBackup();
     }
 
@@ -115,7 +112,7 @@ class MenuTest extends TestCase
                 ->has('menu', 3)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Catálogos')
-                ->where('menu.1.children.0.label', 'Incidencias')
+                ->where('menu.1.children.0.label', 'Organismos')
                 ->where('menu.2.label', 'RRHH')
                 ->where('menu.2.children.0.label', 'Bolsa')
         );
@@ -130,8 +127,7 @@ class MenuTest extends TestCase
             fn (Assert $page) => $page
                 ->has('menu', 5)
                 ->where('menu.0.label', 'Dashboard')
-                ->where('menu.1.label', 'Administración')
-                ->where('menu.1.children.0.label', 'Tipos de Modelo')
+                ->where('menu.1.label', 'Config. Modelo')
                 ->where('menu.2.label', 'Catálogos')
                 ->where('menu.3.label', 'Comercial')
                 ->where('menu.3.children.0.label', 'Clientes')

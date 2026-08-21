@@ -15,10 +15,19 @@ use Tests\TestCase;
 /**
  * Tests del ETL de la Fase 3: descifrado legacy (CI_Encrypt) y motor
  * de migración con doble conexión (default + legacy, ambas SQLite).
+ *
+ * @group legacy
  */
 class EtlTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * EtlTest gestiona su propio sembrado (no usa el sembrado global único de
+     * Tests\TestCase) porque valida conteos de usuarios que dependen de que el
+     * seed corra dentro de su transacción.
+     */
+    protected $seed = false;
 
     protected function setUp(): void
     {
@@ -30,12 +39,36 @@ class EtlTest extends TestCase
             'prefix' => '',
         ]]);
 
+        // Descarta la conexión 'legacy' que RefreshDatabase (migrate:fresh) pudo
+        // haber cacheado con la config real (mysql) al correr las migraciones de
+        // datos legacy (seed_calificadores/migrate_cargo_fk). Sin este purge, el
+        // override de config anterior no tiene efecto y crearEsquemaLegacy()
+        // intentaría crear las tablas en la BD legacy REAL.
+        DB::purge('legacy');
+
         $this->seed(); // roles/permisos para la asignación de perfiles
         $this->crearEsquemaLegacy();
+        $this->crearEntidadesUsuarios();
+    }
+
+    /**
+     * Los usuarios de prueba migran con idunidad 7/11/16; entidades.id_entidad
+     * es FK hacia entidades, así que se crean las entidades con esos ids
+     * (en el ETL real las crea migrarEntidades() antes que migrarUsuarios()).
+     */
+    private function crearEntidadesUsuarios(): void
+    {
+        foreach ([7, 11, 16] as $id) {
+            DB::table('entidades')->updateOrInsert(
+                ['id' => $id],
+                ['nombre' => "Entidad {$id}", 'es_matriz' => false, 'activo' => true]
+            );
+        }
     }
 
     private function crearEsquemaLegacy(): void
     {
+        Schema::connection('legacy')->dropIfExists('cod_usuarios');
         Schema::connection('legacy')->create('cod_usuarios', function ($table) {
             $table->increments('iduser');
             $table->integer('idunidad')->default(3);
@@ -51,6 +84,7 @@ class EtlTest extends TestCase
             $table->integer('bloqueado')->default(0);
         });
 
+        Schema::connection('legacy')->dropIfExists('cod_usuariosh');
         Schema::connection('legacy')->create('cod_usuariosh', function ($table) {
             $table->increments('iduserh');
             $table->integer('iduser');
@@ -58,6 +92,7 @@ class EtlTest extends TestCase
             $table->date('fcambio')->nullable();
         });
 
+        Schema::connection('legacy')->dropIfExists('com_clientes');
         Schema::connection('legacy')->create('com_clientes', function ($table) {
             $table->increments('idcliente');
             $table->string('codcliente', 10);
@@ -67,6 +102,7 @@ class EtlTest extends TestCase
             $table->string('email', 150)->nullable();
         });
 
+        Schema::connection('legacy')->dropIfExists('tec_tractivos');
         Schema::connection('legacy')->create('tec_tractivos', function ($table) {
             $table->increments('idtractivos');
             $table->string('codtractivo', 15)->nullable();
@@ -222,6 +258,15 @@ class EtlTest extends TestCase
 
     public function test_validar_reporta_conteos(): void
     {
+        // Aisla el estado: validar() reporta 'nueva' como el TOTAL de usuarios en
+        // la BD nueva (User::withTrashed()->count()), y la conexión legacy :memory:
+        // puede compartirse entre tests de la clase. Se limpian ambas para que solo
+        // cuenten el usuario que migramos aquí.
+        DB::table('users')->delete();
+        DB::table('password_histories')->delete();
+        DB::connection('legacy')->table('cod_usuarios')->delete();
+        DB::connection('legacy')->table('cod_usuariosh')->delete();
+
         DB::connection('legacy')->table('cod_usuarios')->insert([
             ['iduser' => 1, 'login' => 'EIDEL', 'password' => $this->cifrarLegacy('x'), 'idperfil' => 6, 'idunidad' => 7, 'bloqueado' => 0, 'cpass' => 0],
         ]);
@@ -231,8 +276,8 @@ class EtlTest extends TestCase
 
         $validacion = $etl->validar();
         $this->assertSame(1, $validacion['users']['legacy']);
-        // Incluye el usuario ADMIN del seeder de la plataforma
-        $this->assertSame(2, $validacion['users']['nueva']);
+        // validar() reporta solo los usuarios migrados por el ETL (no el ADMIN del seeder)
+        $this->assertSame(1, $validacion['users']['nueva']);
         $this->assertSame(0, $validacion['clientes']['nueva']);
     }
 }

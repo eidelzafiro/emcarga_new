@@ -4,14 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class PerfilesTest extends TestCase
 {
-    use RefreshDatabase;
 
     private User $admin;
 
@@ -20,7 +18,6 @@ class PerfilesTest extends TestCase
         parent::setUp();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        $this->seed(PermissionSeeder::class);
 
         $this->admin = User::factory()->create();
         $this->admin->assignRole('SUPERADMIN');

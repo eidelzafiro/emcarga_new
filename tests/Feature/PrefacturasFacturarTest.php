@@ -8,7 +8,6 @@ use App\Models\Cliente;
 use App\Models\Factura;
 use App\Models\Prefactura;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -17,12 +16,10 @@ use Tests\TestCase;
  */
 class PrefacturasFacturarTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function usuarioComercial(): User

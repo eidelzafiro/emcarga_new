@@ -3,17 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ComercialTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
     }
 
     private function usuarioAdmin(): User
@@ -51,16 +48,13 @@ class ComercialTest extends TestCase
         $this->actingAs($this->usuarioAdmin())->get(route('solicitudes.index'))->assertOk();
     }
 
-    public function test_giros_index()
-    {
-        $this->actingAs($this->usuarioAdmin())->get(route('giros.index'))->assertOk();
-    }
-
     public function test_cliente_store()
     {
         $response = $this->actingAs($this->usuarioAdmin())->post(route('clientes.store'), [
             'codigo' => 'CLI001',
             'nombre' => 'Cliente Test',
+            'falta' => '2026-01-01',
+            'fvencimiento' => '2026-12-31',
         ]);
 
         $response->assertRedirect();

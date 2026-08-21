@@ -158,9 +158,30 @@ Andamiaje reutilizable implementado (no los 56 PDFs individuales; eso es increme
   sube `memory_limit` a 768M en `pdf()` (los parques de ~1500 vehículos
   excedían el límite por defecto de dompdf).
 
-### Fase E — EMCARGA (Reportesemcarga.php)
-- 5 indicadores agregados (distancia media, toneladas reales, tráfico, kms).
-- Confirmar si se calculan en otra herramienta (Excel/PowerBI) y el reporte es volcado.
+### Fase E — EMCARGA (Reportesemcarga.php) — ✅ HECHO (2026-08-21)
+- 5 indicadores agregados sobre `aforos` (`EmcargaReportService`): distancia media
+  de 1 tonelada (4062), carga transportada (4063), tráfico producido (4064),
+  kms recorridos totales (4065), kms recorridos con carga (4066).
+- Verificado: 5 reportes × PDF OK, 0 errores. Cableados en `ReportesDispatcher`.
+
+---
+
+## Estado final (2026-08-21)
+
+- **Fases A→E completas.** El `ReportesDispatcher::MAPA` cubre **164 entradas**
+  (agrupaciones repetidas/aprox) correspondientes a los reportes usados de todas
+  las fuentes: INDICADORES/GPS/INGRESOS/PIZARRA/ADMINISTRACION (A), COMBUSTIBLE/
+  COSTOS (B), NÓMINA/CERTIFICOS (C), TÉCNICA/BATERÍAS/ENERGÍA/CONTROL TALLER/
+  NEUMÁTICOS/EXISTENCIA (D), EMCARGA (E).
+- Verificación global: **164/164 reportes generan PDF sin errores** (mes 2026-06).
+- **Pendientes fino / decisiones**:
+  - Modelo de prenómina/divisa a aplicar (EMCARGA/Transcar/Condor/Nelson) — el
+    usuario indicó "ninguna"; los cálculos salariales de Nómina quedaron genéricos.
+  - ENERGÍA (5) sin datos legacy migrados → PDF con aviso "SIN DATOS MIGRADOS".
+  - Versiones funcionales (no paridad pixel-a-pixel): donde el legacy agrupaba
+    por dimensiones no migradas, se agrupa por la disponible (mes/tractivo/estado).
+- **No hacer**: los 8 reportes no marcados como usados y los ya cubiertos por
+  `*ReportService` (no duplicar).
 
 ---
 

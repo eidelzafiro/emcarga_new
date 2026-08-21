@@ -186,6 +186,12 @@ class ReportesDispatcher
         1000 => [NeumaticosReportService::class, 'activosXTractivos'],
         // EXISTENCIA (1)
         374  => [ExistenciaReportService::class, 'extraccionContenedoresTipo'],
+        // EMCARGA (5)
+        4062 => [EmcargaReportService::class, 'distanciaMediaTonelada'],
+        4063 => [EmcargaReportService::class, 'cargaTransportada'],
+        4064 => [EmcargaReportService::class, 'traficoProducido'],
+        4065 => [EmcargaReportService::class, 'kilometrosTotales'],
+        4066 => [EmcargaReportService::class, 'kilometrosCarga'],
     ];
 
     public function generar(int $id, array $filtros): Response

@@ -16,9 +16,11 @@ use Symfony\Component\HttpFoundation\Response;
  *   - Permissions-Policy: deshabilita APIs navegador no usadas
  *   - Strict-Transport-Security (HSTS)       (solo en producción sobre HTTPS)
  *
- * Nota (deuda conocida): no se aplica Content-Security-Policy (CSP) todavía porque
- * el build Vite/Inertia inyecta scripts y requiere integración de nonce (cspNonce)
- * para no romper el SPA. Ver PLAN.md → S-1.
+ * Nota: el Content-Security-Policy se añade sin nonce porque el build
+ * Inertia/Vite inyecta el script de Ziggy (@routes) de forma inline; por ello
+ * script-src/style-src permiten 'unsafe-inline'. El resto del policy es
+ * restrictivo (frame-ancestors/base-uri/form-action al origen, object-src none,
+ * connect-src limitado). Un CSP con nonce requeriría parchear el Blade de Ziggy.
  */
 class SecurityHeaders
 {
@@ -44,6 +46,40 @@ class SecurityHeaders
             );
         }
 
+        // Content-Security-Policy (CSP).
+        // No se usa nonce porque el build Inertia/Vite inyecta el script de
+        // Ziggy (@routes) de forma inline; por eso script-src/style-src permiten
+        // 'unsafe-inline'. El resto del policy es estricto y sí aporta protección
+        // real (anti-clickjacking, anti-inyección de base/form, sin plugins).
+        $response->headers->set('Content-Security-Policy', $this->cspPolicy());
+
         return $response;
+    }
+
+    /**
+     * Construye la directiva Content-Security-Policy.
+     *
+     * 'self' + 'unsafe-inline' para scripts/estilos (compatibilidad con Ziggy y
+     * PrimeVue). El remaining es restrictivo: prohíbe framing externo, fija
+     * base-uri y form-action al origen, bloquea object/embed, y limita conexiones
+     * al origen (+ websockets para Reverb).
+     */
+    private function cspPolicy(): string
+    {
+        $directives = [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data:",
+            "font-src 'self' data:",
+            "connect-src 'self' ws: wss:",
+            "frame-ancestors 'self'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "object-src 'none'",
+            "upgrade-insecure-requests",
+        ];
+
+        return implode('; ', $directives);
     }
 }

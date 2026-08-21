@@ -58,6 +58,67 @@ abstract class BaseReportService
         return Excel::download(new $exportClass, $filename);
     }
 
+    /**
+     * Fase A: renderiza un reporte tabular genérico (columnas + filas) a PDF
+     * usando la vista `reports.reporte_tabla`. $columnas = [['key','label','num']].
+     */
+    public function reporteTablaPdf(
+        string $titulo,
+        array $columnas,
+        array $filas,
+        array $opts = [],
+    ): Response {
+        $this->setTitle($titulo);
+        if (! empty($opts['landscape'])) {
+            $this->setOrientation('landscape');
+        }
+        if (! empty($opts['paper'])) {
+            $this->paper = $opts['paper'];
+        }
+
+        return $this->streamPdf('reports.reporte_tabla', [
+            'titulo'  => $titulo,
+            'periodo' => $opts['periodo'] ?? '',
+            'columnas'=> $columnas,
+            'filas'   => $filas,
+            'totales' => $opts['totales'] ?? null,
+        ]);
+    }
+
+    /**
+     * Fase A: exporta columnas + filas a Excel (PhpSpreadsheet) y descarga.
+     */
+    public function reporteTablaExcel(
+        string $titulo,
+        array $columnas,
+        array $filas,
+        ?string $nombre = null,
+    ): \Symfony\Component\HttpFoundation\Response {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $col = 1;
+        foreach ($columnas as $c) {
+            $sheet->setCellValueByColumnAndRow($col++, 1, $c['label']);
+        }
+
+        $row = 2;
+        foreach ($filas as $f) {
+            $col = 1;
+            foreach ($columnas as $c) {
+                $sheet->setCellValueByColumnAndRow($col++, $row, $f[$c['key']] ?? '');
+            }
+            $row++;
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $nombre ??= str_replace(' ', '_', $titulo).'.xlsx';
+        $tmp = tempnam(sys_get_temp_dir(), 'rep').'.xlsx';
+        $writer->save($tmp);
+
+        return response()->download($tmp, $nombre)->deleteFileAfterSend(true);
+    }
+
     protected function cambiarFormatoFecha(?string $fecha, string $formato = 'd/m/Y'): string
     {
         if (! $fecha) {

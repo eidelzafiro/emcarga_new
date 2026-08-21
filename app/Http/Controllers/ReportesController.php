@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ReporteLegacy;
 use App\Services\Reports\ReporteCatalogoService;
+use App\Services\Reports\ReportesDispatcher;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -22,16 +22,10 @@ class ReportesController extends Controller
     }
 
     /**
-     * Fase A (esqueleto): dispara la generación de un reporte migrado.
-     * Mientras los handlers por reporte se implementan incrementalmente,
-     * devuelve 200 con un mensaje claro de "pendiente".
+     * Fase A: dispara la generación del reporte migrado vía el dispatcher.
      */
     public function generar(Request $request, int $id)
     {
-        $reporte = ReporteLegacy::findOrFail($id);
-
-        // TODO Fase A/B/C: enrutar $reporte->controlador -> handler Zafiro
-        // que construya el PDF/Excel usando BaseReportService + ReporteFiltro.
-        return back()->with('mensaje', 'Reporte aún no migrado a Zafiro (Fase A pendiente): '.$reporte->nombreporte);
+        return app(ReportesDispatcher::class)->generar($id, $request->input('filtros', []));
     }
 }

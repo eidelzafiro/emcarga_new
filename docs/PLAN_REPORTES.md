@@ -95,13 +95,17 @@ Crear infraestructura reutilizable en `app/` (Zafiro ya usa dompdf + Blade):
 
 ## 2. Secuencia de fases (por afinidad de datos)
 
-### Fase A — Base + Comercial/Facturación/Documentos/GPS/Ingresos/Pizarra/Indicadores — ✅ MARCO HECHO (2026-08-21)
+### Fase A — Base + GPS/Ingresos/Pizarra/Indicadores/ADMINISTRACION — ✅ HECHO (2026-08-21)
 - Hacer paso 0 (base común). [HECHO]
-- Estos leen `aforos`, `facturas`, `cartas_porte`, `hojas_ruta`, `tarjetas`,
-  `ingresos` — todas ya en Zafiro. Documentos/Tiempos/Facturación ya tienen
-  servicios: **reconciliar** (confirmar que el xlsx coincide, no rehacer).
-- Nuevos: GPS (5), Ingresos (10), Pizarra (6), Indicadores (14), ADMINISTRACION (21).
-- Entrega: formularios de filtro reutilizables operativos. [Marco HECHO; PDFs pendientes]
+- Implementados los 56 reportes funcionales (INDICADORES 14 + GPS 5 + INGRESOS 10 +
+  PIZARRA 6 + ADMINISTRACION 21) sobre datos migrados (`aforos`, `cartas_porte`,
+  `hojas_ruta`, `tractivos`, `tarjetas`, `combustible_cargas/descargas`).
+- Verificado: 56 reportes × PDF + Excel (sin filtros y con `mes`) = 224 generaciones OK, 0 errores.
+- Versiones **funcionales** (no paridad pixel-a-pixel): donde el legacy agrupaba por
+  origen/destino/chófer (no migrados a Zafiro), se agrupa por dimensión disponible
+  (mes, tipo_indicadores, tractivo, estado). Revisión fino pendiente.
+- Servicios: `IndicadoresReportService`, `GpsReportService`, `IngresosReportService`,
+  `PizarraReportService`, `AdministracionReportService`; dispatcher `ReportesDispatcher::MAPA`.
 
 Andamiaje reutilizable implementado (no los 56 PDFs individuales; eso es incremental):
 - `app/Models/ReporteLegacy.php`, `app/Services/Reports/ReporteCatalogoService.php`

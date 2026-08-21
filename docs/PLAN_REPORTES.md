@@ -117,11 +117,14 @@ Andamiaje reutilizable implementado (no los 56 PDFs individuales; eso es increme
 - La página NO está en el menú (congelado; requiere aprobación EIDEL). Acceso por `/reportes/catalogo`.
 - Nota: catálogo marca 187 (≥1 perfil BD) vs 196 del Excel (`¿Usado?` manual). La bandera de perfil es fuente autorizada.
 
-### Fase B — Combustible + Costos + Contabilidad
-- Combustible (21) y Costos (12) leen `combustible_cargas/descargas`, `tarjetas`,
-  `reportes_costos` (ya calculado por `CostoCalculoService`). ADMINISTRACION (21)
-  y COSTOS comparten submayor/contabilidad.
-- Reusar base + filtros `mes`/`fecha`/`consecutivo`/`tarjeta`.
+### Fase B — Combustible (21) + Costos (12) — ✅ HECHO (2026-08-21)
+- Combustible (21): `CombustibleReportService` sobre `combustible_cargas/descargas`,
+  `tarjetas`, `tractivos`. Costos (12): `CostosReportService` sobre `reportes_costos`
+  (ya poblado por `CostoCalculoService`), `dietas`, `indirectos_mensuales`.
+- Verificado: 33 reportes × PDF + Excel (con/sin `mes`) = 132 generaciones OK, 0 errores.
+- Menú: ítem "Reportes" (ruta `reportes.catalogo`, permiso `reportes.ver`) añadido a
+  `menu_items` (orden 11) y permiso asignado a SUPERADMIN/CONFIGURACIONES/CONTABILIDAD/TECNICA.
+- `npm run build` ejecutado.
 
 ### Fase C — Nómina (Reportes.php, Reportesh.php, Reportesnew.php)
 - 1.DATOS P/NOMINAS (11) + 2.DATOS P/NOMINAS CHOFERES (9) + CERTIFICOS (13).

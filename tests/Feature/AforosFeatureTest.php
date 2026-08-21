@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Aforo;
 use App\Models\CartaPorte;
 use App\Models\Cliente;
 use App\Models\Lugare;
@@ -124,5 +125,154 @@ class AforosFeatureTest extends TestCase
         $this->actingAs($this->usuarioComercial())
             ->post(route('aforos.store'), [])
             ->assertSessionHasErrors(['fecha_parte', 'flete_mt', 'ingreso_mt']);
+    }
+
+    public function test_editar_aforo_muestra_formulario(): void
+    {
+        $this->catalogoMinimo();
+        $carta = $this->cartaPendiente();
+        $aforo = Aforo::create([
+            'id_carta_porte' => $carta->id,
+            'fecha_parte' => now()->toDateString(),
+            'flete_mt' => 500,
+            'ingreso_mt' => 500,
+            'id_user' => auth()->id(),
+        ]);
+
+        $this->actingAs($this->usuarioComercial())
+            ->get(route('aforos.edit', $aforo))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Aforos/Form')
+                ->has('cartaPreseleccionada'));
+    }
+
+    public function test_actualizar_aforo(): void
+    {
+        $this->catalogoMinimo();
+        $carta = $this->cartaPendiente();
+        $aforo = Aforo::create([
+            'id_carta_porte' => $carta->id,
+            'fecha_parte' => now()->toDateString(),
+            'flete_mt' => 500,
+            'ingreso_mt' => 500,
+            'id_user' => auth()->id(),
+        ]);
+
+        $this->actingAs($this->usuarioComercial())
+            ->put(route('aforos.update', $aforo), [
+                'id_carta_porte' => $carta->id,
+                'fecha_parte' => now()->toDateString(),
+                'flete_mt' => 750,
+                'ingreso_mt' => 750,
+            ])
+            ->assertRedirect(route('aforos.index'));
+
+        $this->assertDatabaseHas('aforos', [
+            'id' => $aforo->id,
+            'flete_mt' => 750,
+            'ingreso_mt' => 750,
+        ]);
+    }
+
+    public function test_actualizar_aforo_facturado_es_403(): void
+    {
+        $this->catalogoMinimo();
+        $carta = $this->cartaPendiente();
+        $cliente = \App\Models\Cliente::create(['nombre' => 'Cliente Factura Test']);
+        $factura = \App\Models\Factura::create([
+            'numero' => 999001,
+            'id_cliente' => $cliente->id,
+            'id_user' => auth()->id(),
+            'fecha_emision' => now()->toDateString(),
+        ]);
+        $aforo = Aforo::create([
+            'id_carta_porte' => $carta->id,
+            'fecha_parte' => now()->toDateString(),
+            'flete_mt' => 500,
+            'ingreso_mt' => 500,
+            'id_user' => auth()->id(),
+            'id_factura' => $factura->id,
+        ]);
+
+        $this->actingAs($this->usuarioComercial())
+            ->put(route('aforos.update', $aforo), [
+                'fecha_parte' => now()->toDateString(),
+                'flete_mt' => 750,
+                'ingreso_mt' => 750,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_cotizar_demora_devuelve_json(): void
+    {
+        $this->catalogoMinimo();
+
+        $this->actingAs($this->usuarioComercial())
+            ->postJson(route('aforos.cotizar-demora'), [
+                'tipocarga1' => 3, 'capacidad' => 10, 'horas' => 5,
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['tardem1', 'fletedemt']);
+    }
+
+    public function test_cotizar_almacenaje_devuelve_json(): void
+    {
+        $this->catalogoMinimo();
+
+        $this->actingAs($this->usuarioComercial())
+            ->postJson(route('aforos.cotizar-almacenaje'), [
+                'alm_peso' => 10, 'alm_horas' => 48, 'tipocarga' => 3,
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['alm_tarifa', 'alm_flete']);
+    }
+
+    public function test_cotizar_salario_devuelve_json(): void
+    {
+        $this->catalogoMinimo();
+
+        $this->actingAs($this->usuarioComercial())
+            ->postJson(route('aforos.cotizar-salario'), [
+                'tipocarga' => 3, 'capacidad' => 10, 'distancia' => 100,
+                'ingresos' => 500, 'almacenaje' => 0,
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['salario', 'tasa']);
+    }
+
+    public function test_cotizar_tiempos_devuelve_json(): void
+    {
+        $this->catalogoMinimo();
+
+        $this->actingAs($this->usuarioComercial())
+            ->postJson(route('aforos.cotizar-tiempos'), [
+                'movimiento' => 2, 'carga' => 1, 'descarga' => 1, 'otros' => 0,
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['ttotal']);
+    }
+
+    public function test_cotizar_indicadores_devuelve_json(): void
+    {
+        $this->catalogoMinimo();
+
+        $this->actingAs($this->usuarioComercial())
+            ->postJson(route('aforos.cotizar-indicadores'), [
+                'tipo' => 1, 'viajes' => 1, 'filas' => [],
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['tipo', 'kmcarga_total']);
+    }
+
+    public function test_index_sin_permiso_es_403(): void
+    {
+        $user = User::factory()->create();
+        $user->password_temporal = false;
+        $user->save();
+
+        $this->actingAs($user)
+            ->get(route('aforos.index'))
+            ->assertForbidden();
     }
 }

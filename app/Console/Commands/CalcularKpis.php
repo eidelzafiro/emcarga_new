@@ -23,8 +23,16 @@ class CalcularKpis extends Command
         ], $kpis));
 
         if ($this->option('broadcast')) {
-            KpisUpdated::dispatch($kpis);
-            $this->info('KPIs broadcast enviado.');
+            $roles = [
+                'SUPERADMIN', 'TECNICA', 'COMERCIAL', 'CONTABILIDAD',
+                'RECHUM', 'OPERATIVOS', 'CONFIGURACIONES',
+            ];
+
+            foreach ($roles as $rol) {
+                KpisUpdated::dispatch($kpiService->paraRol($rol, null), $rol);
+            }
+
+            $this->info('KPIs broadcast enviados por perfil.');
         }
     }
 }

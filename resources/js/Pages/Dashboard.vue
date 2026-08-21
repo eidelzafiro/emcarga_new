@@ -322,7 +322,7 @@ onMounted(() => {
   nextTick(renderChart);
 
   if (window.Echo) {
-    echoChannel = window.Echo.channel('kpis')
+    echoChannel = window.Echo.private('perfil.' + props.rol)
       .listen('.KpisUpdated', (e) => {
         if (e.kpis) {
           ultimaActualizacion.value = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES');
@@ -340,7 +340,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (chartInstance) chartInstance.destroy();
-  if (echoChannel) window.Echo.leaveChannel('kpis');
+  if (echoChannel) window.Echo.leaveChannel('perfil.' + props.rol);
   window.removeEventListener('resize', () => {});
 });
 </script>

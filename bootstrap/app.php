@@ -5,6 +5,8 @@ use App\Http\Middleware\EstablecerContextoTrabajo;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LicenciaMiddleware;
 use App\Http\Middleware\RedirectIfPasswordTemporal;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\AuditoriaEscritura;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             EstablecerContextoTrabajo::class,
             LicenciaMiddleware::class,
+            SecurityHeaders::class,
+            AuditoriaEscritura::class,
         ]);
 
         $middleware->alias([

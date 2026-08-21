@@ -29,12 +29,27 @@ class Bitacora extends Model
     /**
      * Registra una acción en la bitácora de auditoría.
      * Si no se indica usuario/IP, toma los del request actual.
+     *
+     * @param  string       $accion     Verbo de acción (login, aforos.store, ...)
+     * @param  string|null  $detalles   Texto libre / resumen de la operación
+     * @param  int|null     $userId     Usuario autor (default: autenticado)
+     * @param  string|null  $ip         IP (default: request actual)
+     * @param  string|null  $tabla      Tabla afectada (p.ej. aforos)
+     * @param  int|null     $idRegistro PK del registro afectado
      */
-    public static function registrar(string $accion, ?string $detalles = null, ?int $userId = null, ?string $ip = null): self
-    {
+    public static function registrar(
+        string $accion,
+        ?string $detalles = null,
+        ?int $userId = null,
+        ?string $ip = null,
+        ?string $tabla = null,
+        ?int $idRegistro = null
+    ): self {
         return self::create([
             'user_id' => $userId ?? auth()->id(),
             'accion' => $accion,
+            'tabla' => $tabla,
+            'id_registro' => $idRegistro,
             'detalles' => $detalles,
             'ip_address' => $ip ?? request()->ip(),
             'fecha_accion' => now(),

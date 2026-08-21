@@ -126,17 +126,37 @@ Andamiaje reutilizable implementado (no los 56 PDFs individuales; eso es increme
   `menu_items` (orden 11) y permiso asignado a SUPERADMIN/CONFIGURACIONES/CONTABILIDAD/TECNICA.
 - `npm run build` ejecutado.
 
-### Fase C — Nómina (Reportes.php, Reportesh.php, Reportesnew.php)
-- 1.DATOS P/NOMINAS (11) + 2.DATOS P/NOMINAS CHOFERES (9) + CERTIFICOS (13).
-- Completar `NominaReportService` (hoy esqueleto) usando tablas migradas
-  (`incidencias`, `tasas`, `bolsa`, `turnos`, `penalizaciones`).
-- Validar con usuario qué modelo de prenómina/divisa se usa HOY (EMCARGA/Transcar/Condor/Nelson) — son excluyentes.
+### Fase C — Nómina (Reportes.php, Reportesh.php, Reportesnew.php) — ✅ HECHO (2026-08-21)
+- 33 reportes funcionales (`NominaReportService`): 1.DATOS P/NOMINAS (11) +
+  2.DATOS P/NOMINAS CHOFERES (9) + CERTIFICOS (13), sobre tablas migradas
+  (`bolsa`, `cargos`, `incidencias`, `penalizaciones`, `turnos`, `aforos`,
+  `cartas_porte`, `hojas_ruta`, `tractivos`, `dietas`, `ordenes_taller`,
+  `combustible_descargas`).
+- Verificado: 33 reportes × PDF (mes 2026-06) OK, 0 errores; 2 Excel
+  (`exportarPrenomina` 800 filas, `exportarPrenominaChoferes`) válidos.
+- Cableados en `ReportesDispatcher::MAPA` (bloque NOMINA) y `ReportesController`.
+- **Pendiente decisión de negocio**: qué modelo de prenómina/divisa se usa HOY
+  (EMCARGA/Transcar/Condor/Nelson — excluyentes). Las agregaciones actuales
+  suman `incidencias.importe` y métricas de `aforos`/`turnos` genéricas; si el
+  modelo real difiere, hay que afinar los cálculos (preguntar a EIDEL).
 
-### Fase D — Técnica (Reportestec.php)
-- TECNICA (10), CONTROL TALLER (12, ya cubierto), NEUMATICOS (6, ya cubierto),
-  BATERIAS (3), ENERGIA (5), EXISTENCIA (1), CERTIFICOS (en Fase C).
-- Flota/parque/motores/cajas/diferenciales ya tienen datos + servicios; los
-  reportes son vistas sobre ellos.
+### Fase D — Técnica (Reportestec.php) — ✅ HECHO (2026-08-21)
+- TECNICA (10) → `TecnicaReportService`; CONTROL TALLER (12) → `TallerReportService`;
+  NEUMATICOS (6) → `NeumaticosReportService`; BATERIAS (3) → `BateriasReportService`;
+  ENERGIA (5) → `EnergiaReportService`; EXISTENCIA (1) → `ExistenciaReportService`.
+- Verificado: 37 reportes × PDF (mes 2026-06) OK, 0 errores.
+- Cableados en `ReportesDispatcher::MAPA` (bloques TECNICA/BATERIAS/ENERGIA/
+  CONTROL TALLER/NEUMATICOS/EXISTENCIA).
+- **Notas**: ENERGÍA (360/362/363/364/368) no tiene datos — las tablas legacy
+  `tec_electlecturas`/`tec_electdatos` están VACÍAS (0 filas); el PDF indica
+  "SIN DATOS MIGRADOS". CONTROL TALLER/NEUMATICOS son versiones funcionales
+  (resúmenes sobre `ordenes_taller`/`neumaticos`/`tractivos`/`motores`/
+  `control_lubricantes`); el detalle individual de OT ya existía en
+  `OrdenTallerReportService::pdfOrdenTaller`. EXISTENCIA (374) agrupa `aforos`
+  por `tipo_indicadores` (no hay tabla de contenedores en Zafiro).
+- `BaseReportService` ganó `mesFiltro()`/`rangoFiltros()` reutilizables y
+  sube `memory_limit` a 768M en `pdf()` (los parques de ~1500 vehículos
+  excedían el límite por defecto de dompdf).
 
 ### Fase E — EMCARGA (Reportesemcarga.php)
 - 5 indicadores agregados (distancia media, toneladas reales, tráfico, kms).

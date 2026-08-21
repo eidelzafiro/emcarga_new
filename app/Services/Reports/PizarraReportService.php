@@ -13,13 +13,13 @@ use Illuminate\Support\Facades\DB;
  */
 class PizarraReportService extends BaseReportService
 {
-    private function mesFiltro(array $filtros): ?string
+    protected function mesFiltro(array $filtros): ?string
     {
         if (empty($filtros['mes'])) return null;
         try { return Carbon::parse($filtros['mes'])->format('Y-m'); } catch (\Exception) { return null; }
     }
 
-    private function rangoFiltros(array $filtros): array
+    protected function rangoFiltros(array $filtros): array
     {
         $d = $filtros['desde'] ?? null;
         $h = $filtros['hasta'] ?? null;

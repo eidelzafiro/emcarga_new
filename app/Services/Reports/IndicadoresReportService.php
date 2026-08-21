@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  */
 class IndicadoresReportService extends BaseReportService
 {
-    private function mesFiltro(array $filtros): ?string
+    protected function mesFiltro(array $filtros): ?string
     {
         if (empty($filtros['mes'])) {
             return null;

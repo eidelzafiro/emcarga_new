@@ -31,6 +31,12 @@ abstract class BaseReportService
 
     protected function pdf(string $view, array $data = []): \Barryvdh\DomPDF\PDF
     {
+        // Los reportes tabulares grandes (parques de ~1500 vehículos) requieren
+        // más memoria que el límite por defecto de la app para renderizar en dompdf.
+        if ((int) ini_get('memory_limit') > 0) {
+            ini_set('memory_limit', '768M');
+        }
+
         return Pdf::loadView($view, array_merge($data, [
             'title' => $this->title,
             'orientation' => $this->orientation,
@@ -39,21 +45,21 @@ abstract class BaseReportService
 
     protected function streamPdf(string $view, array $data = [], ?string $filename = null): Response
     {
-        $filename ??= str_replace(' ', '_', $this->title).'.pdf';
+        $filename ??= $this->safeName($this->title).'.pdf';
 
         return $this->pdf($view, $data)->stream($filename);
     }
 
     protected function downloadPdf(string $view, array $data = [], ?string $filename = null): Response
     {
-        $filename ??= str_replace(' ', '_', $this->title).'.pdf';
+        $filename ??= $this->safeName($this->title).'.pdf';
 
         return $this->pdf($view, $data)->download($filename);
     }
 
     protected function downloadExcel(string $exportClass, ?string $filename = null): Response
     {
-        $filename ??= str_replace(' ', '_', $this->title).'.xlsx';
+        $filename ??= $this->safeName($this->title).'.xlsx';
 
         return Excel::download(new $exportClass, $filename);
     }
@@ -112,11 +118,16 @@ abstract class BaseReportService
         }
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $nombre ??= str_replace(' ', '_', $titulo).'.xlsx';
+        $nombre ??= $this->safeName($titulo).'.xlsx';
         $tmp = tempnam(sys_get_temp_dir(), 'rep').'.xlsx';
         $writer->save($tmp);
 
         return response()->download($tmp, $nombre)->deleteFileAfterSend(true);
+    }
+
+    protected function safeName(string $nombre): string
+    {
+        return str_replace(['/', '\\', ' '], ['-', '-', '_'], $nombre);
     }
 
     protected function cambiarFormatoFecha(?string $fecha, string $formato = 'd/m/Y'): string
@@ -242,6 +253,39 @@ abstract class BaseReportService
      * Clasifica la columna `variable` de la tabla legacy `reportes` en el tipo
      * de filtro que necesita el reporte. Permite reusar un único formulario por tipo.
      */
+    /**
+     * Normaliza el filtro `mes` (YYYY-MM) desde el formulario del catálogo.
+     */
+    protected function mesFiltro(array $filtros): ?string
+    {
+        if (empty($filtros['mes'])) {
+            return null;
+        }
+        try {
+            return Carbon::parse($filtros['mes'])->format('Y-m');
+        } catch (\Exception) {
+            return null;
+        }
+    }
+
+    /**
+     * Devuelve [desde, hasta] como YYYY-MM-DD; si solo hay `mes`, usa el mes completo.
+     */
+    protected function rangoFiltros(array $filtros): array
+    {
+        $d = $filtros['desde'] ?? null;
+        $h = $filtros['hasta'] ?? null;
+        if (! $d && ! $h && ! empty($filtros['mes'])) {
+            try {
+                $m = Carbon::parse($filtros['mes']);
+                $d = $m->copy()->startOfMonth()->toDateString();
+                $h = $m->copy()->endOfMonth()->toDateString();
+            } catch (\Exception) {}
+        }
+
+        return [$d, $h];
+    }
+
     protected function tipoFiltro(string $variable): string
     {
         return match (strtolower(trim($variable))) {

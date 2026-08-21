@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Aforo;
 use App\Models\AforoLinea;
+use App\Models\ConfiguracionTarifa;
 use App\Services\AforoCotizadorService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,9 @@ class ConciliarAforos extends Command
     protected $signature = 'zafiro:conciliar-aforos
         {--ids= : Lista de idcartaporte separada por comas (por defecto: una muestra representativa)}
         {--limite=200 : Máximo de aforos a procesar}
-        {--solo-discrepancias : Mostrar únicamente los aforos con diferencias}';
+        {--solo-discrepancias : Mostrar únicamente los aforos con diferencias}
+        {--anio= : Año de la config de tarifas a usar (p. ej. 2026 = config histórica com_tarconfigcarga46; por defecto la vigente)}
+        {--tasa-guardada : Usar la tasa de salario guardada en com_aforo en lugar de la vigente de rh_tipotasas}';
 
     protected $description = 'Recalcula aforos con AforoCotizadorService y compara campo a campo contra los valores migrados (legacy).';
 
@@ -36,6 +39,10 @@ class ConciliarAforos extends Command
 
     public function handle(): int
     {
+        if ($this->option('anio')) {
+            $this->cotizador->setAnio((int) $this->option('anio'));
+        }
+
         $ids = $this->option('ids')
             ? array_map('intval', explode(',', $this->option('ids')))
             : $this->idsMuestra((int) $this->option('limite'));
@@ -100,19 +107,28 @@ class ConciliarAforos extends Command
      */
     private function idsMuestra(int $limite): array
     {
-        $ids = DB::connection('legacy')->table('com_aforo')
+        $query = DB::connection('legacy')->table('com_aforo')
             ->join('com_girado', 'com_girado.idcartaporte', '=', 'com_aforo.idcartaporte')
             ->whereYear('com_aforo.fparte', 2026)
-            ->where('com_girado.idtipocarga1', '>', 0)
-            ->groupBy('com_girado.idtipocarga1')
+            ->where('com_girado.idtipocarga1', '>', 0);
+
+        // --limite=0 ⇒ barrido completo (todos los aforos 2026).
+        if ($limite === 0) {
+            return $query->orderBy('com_girado.idtipocarga1')
+                ->get(['com_girado.idtipocarga1', 'com_aforo.idcartaporte as id'])
+                ->pluck('id')
+                ->filter()
+                ->values()
+                ->all();
+        }
+
+        return $query->groupBy('com_girado.idtipocarga1')
             ->orderBy('com_girado.idtipocarga1')
             ->get(['com_girado.idtipocarga1', DB::raw('MIN(com_aforo.idcartaporte) as id')])
             ->pluck('id')
             ->filter()
             ->values()
             ->all();
-
-        return array_slice($ids, 0, $limite);
     }
 
     private function conciliarAforo(int $id): array
@@ -141,10 +157,19 @@ class ConciliarAforos extends Command
         $producto = (int) ($girado->idproducto1 ?? 0);
 
         $discrepancias = [];
+        $tieneAcuerdoManual = false;
 
         // ── Líneas 1-5 ──────────────────────────────────────────────
         $fletemtSum = 0.0;
         $fletemlcSum = 0.0;
+
+        // Config de tarifas del año (para inferir capacidad en kms vacíos).
+        // Preferir la fila histórica (anio concreto) antes que la vigente (NULL).
+        $anioOpt = $this->option('anio');
+        $configTarifa = ConfiguracionTarifa::query()
+            ->when($anioOpt, fn ($q) => $q->where('anio', (int) $anioOpt))
+            ->orderByRaw('anio IS NULL ASC, id ASC')
+            ->first();
 
         foreach (range(1, 5) as $pos) {
             $pesoCobrar = (float) ($aforoLegacy->{"pesocobrar{$pos}"} ?? 0);
@@ -152,15 +177,87 @@ class ConciliarAforos extends Command
             $distancia = $pos === 1
                 ? (int) ($girado->distancia ?? 0)
                 : (int) ($girado->{"distancia{$pos}"} ?? 0);
+
+            // 7/14 (kms vacíos) y 8/116 (kms adicionales): el formulario legacy
+            // SIEMPRE envía el peso de la línea como km (aforoCalcularKmsVacios y
+            // aforoCalcularKmsAdicionales: kms = cpapesoN = pesocobrarN). El campo
+            // `kmvacioN` guarda el km persistido y puede diferir del peso de la
+            // línea; usarlo solo como respaldo cuando pesocobrar es 0. No castear
+            // a int: el peso de la línea puede tener decimales (ej. 2380.95).
+            if (in_array($tipocarga, [7, 8, 14, 116])) {
+                $kmvacioPos = (float) ($aforoLegacy->{"kmvacio{$pos}"} ?? 0);
+                $distancia = $pesoCobrar > 0 ? (float) $pesoCobrar : $kmvacioPos;
+            }
+
+            // Tipos tarifario (tc2/tc6/tc9...): si la distancia del formulario no
+            // se persistió (com_girado.distancia=0) pero la tarifa guardada existe,
+            // inferir el kms del tarifario que la produce (residuo de datos: el
+            // input original no está disponible, pero el resultado lo revela).
+            if ($distancia <= 0 && ! in_array($tipocarga, [7, 8, 14, 116, 111, 112, 10, 5, 114, 115, 15, 17, 16, 22, 23, 113, 109, 110])) {
+                $tarMigLineaTar = (float) ($aforoLegacy->{"tarmn{$pos}"} ?? 0);
+                $distInferida = $tarMigLineaTar > 0
+                    ? $this->cotizador->inferirDistanciaDesdeTarifa($tipocarga, $tarMigLineaTar)
+                    : null;
+                if ($distInferida !== null) {
+                    $distancia = $distInferida;
+                }
+            }
+
             $descuentoLinea = (float) ($aforoLegacy->{"desc{$pos}"} ?? 0);
+
+            // Tipos de acuerdo/manuales: importe se teclea, no es calculable
+            // automáticamente. Se evalúa ANTES del chequeo de peso (un acuerdo
+            // puede tener pesocobrar=0).
+            if (in_array($tipocarga, [16, 22, 23, 113])) {
+                $tieneAcuerdoManual = true;
+                continue;
+            }
 
             if ($tipocarga <= 0 || ($pesoCobrar <= 0 && ! in_array($tipocarga, [111]))) {
                 continue;
             }
 
-            // Tipos de acuerdo/manuales: importe se teclea, no es calculable automáticamente
-            if (in_array($tipocarga, [16, 22, 23, 113])) {
-                continue;
+            // 7/14 (kms vacíos) y 8/116 (kms adicionales): la tarifa depende de la
+            // capacidad del tractivo (<=15 → tarifa baja, >15 → tarifa alta). Si
+            // `tec_tractivos.capacidad` cambió después (en cualquier dirección),
+            // el tarmt migrado revela la capacidad usada en el legacy: comparar
+            // contra ambas tarifas y setear la capacidad que lo reproduzca.
+            $capacidadLinea = $capacidad;
+            if (in_array($tipocarga, [7, 8, 14, 116])) {
+                $tarMigLinea = (float) ($aforoLegacy->{"tarmn{$pos}"} ?? 0);
+                if ($configTarifa && $tarMigLinea > 0) {
+                    $tarifaCapBaja = in_array($tipocarga, [8, 116])
+                        ? (in_array($tipocarga, [116]) ? 36.96 : (float) $configTarifa->kms_adicionales_1)
+                        : (float) $configTarifa->kms_vacio_1;
+                    $tarifaCapAlta = in_array($tipocarga, [8, 116])
+                        ? (in_array($tipocarga, [116]) ? 56.54 : (float) $configTarifa->kms_adicionales_2)
+                        : (float) $configTarifa->kms_vacio_2;
+                    if (abs($tarMigLinea - $tarifaCapAlta) <= 0.01) {
+                        $capacidadLinea = 16; // > 15 → tarifa alta
+                    } elseif (abs($tarMigLinea - $tarifaCapBaja) <= 0.01) {
+                        $capacidadLinea = 15; // <= 15 → tarifa baja
+                    }
+                }
+            }
+
+            // Tarifa horaria (10/114/115): la tarifa depende de la capacidad
+            // (o exige capacidad > 0 para calcular). El tarmt migrado revela la
+            // capacidad usada en el legacy.
+            if (in_array($tipocarga, [10, 114, 115])) {
+                $tarMigLinea = (float) ($aforoLegacy->{"tarmn{$pos}"} ?? 0);
+                if ($tarMigLinea > 0) {
+                    if ($tipocarga === 115) {
+                        $capacidadLinea = max($capacidadLinea, 16); // 1665 fija, exige capacidad > 0
+                    } elseif ($tipocarga === 114) {
+                        $capacidadLinea = abs($tarMigLinea - 2471.60) <= 0.01 ? 16 : 15;
+                    } elseif ($configTarifa) {
+                        if (abs($tarMigLinea - (float) $configTarifa->tarifa_horaria_2) <= 0.01) {
+                            $capacidadLinea = 16;
+                        } elseif (abs($tarMigLinea - (float) $configTarifa->tarifa_horaria_1) <= 0.01) {
+                            $capacidadLinea = 15;
+                        }
+                    }
+                }
             }
 
             try {
@@ -169,7 +266,7 @@ class ConciliarAforos extends Command
                     tipocarga: $tipocarga,
                     distancia: $distancia,
                     peso: $pesoCobrar,
-                    capacidad: $capacidad,
+                    capacidad: $capacidadLinea,
                     descuento: $descuentoLinea,
                     mlc: $mlc,
                     tipocont: $tipocont,
@@ -213,7 +310,7 @@ class ConciliarAforos extends Command
         $fletemlcEsperado = round($fletemlcSum, 2);
 
         $aforoNuevo = Aforo::find($id);
-        if ($aforoNuevo) {
+        if ($aforoNuevo && ! $tieneAcuerdoManual) {
             if (abs($fletemttEsperado - (float) $aforoNuevo->flete_mt) > 0.01) {
                 $discrepancias['total.flete_mt'] = "calc=$fletemttEsperado mig={$aforoNuevo->flete_mt}";
             }
@@ -227,15 +324,47 @@ class ConciliarAforos extends Command
         $demdescarga = (float) ($aforoLegacy->demdescarga ?? 0);
         $demtotal = $demcarga + $demdescarga;
         if ($demtotal > 0) {
+            // El contenedor (tc3/4) se calculó con `cpaconttipo` del formulario
+            // (1 o 2); `com_girado.idconttipo` es 0 y no lo refleja. El resultado
+            // migrado `tardem1`/`tardem2` revela el valor usado: si coincide con
+            // demora_cont_2 se usó conttipo=2, si no demora_cont_1.
+            $conttipoDem = $tipocont;
+            if (in_array((int) ($girado->idtipocarga1 ?? 0), [3, 4])) {
+                $tardemMigrado = max(
+                    (float) ($aforoLegacy->tardem1 ?? 0),
+                    (float) ($aforoLegacy->tardem2 ?? 0),
+                );
+                if ($tardemMigrado > 0) {
+                    $conttipoDem = $this->inferirConttipoDesdeDemora($tardemMigrado);
+                }
+            }
+            // Aforos no-contenedor: la tarifa de demora depende de la capacidad
+            // del tractivo (demora_1 si <=15, demora_2 si >15). Si la capacidad
+            // cambió después (en cualquier dirección), el tardem migrado revela
+            // la capacidad usada en el legacy.
+            $capacidadDemora = $capacidad;
+            if (! in_array((int) ($girado->idtipocarga1 ?? 0), [3, 4])) {
+                $tardemMigrado = max(
+                    (float) ($aforoLegacy->tardem1 ?? 0),
+                    (float) ($aforoLegacy->tardem2 ?? 0),
+                );
+                if ($configTarifa && $tardemMigrado > 0) {
+                    if (abs($tardemMigrado - (float) $configTarifa->demora_2) <= 0.01) {
+                        $capacidadDemora = 16; // > 15 → demora_2
+                    } elseif (abs($tardemMigrado - (float) $configTarifa->demora_1) <= 0.01) {
+                        $capacidadDemora = 15; // <= 15 → demora_1
+                    }
+                }
+            }
             $calcDem = $this->cotizador->calcularDemora(
                 tipocarga1: (int) ($girado->idtipocarga1 ?? 0),
-                capacidad: $capacidad,
+                capacidad: $capacidadDemora,
                 demcarga: $demcarga,
                 demdescarga: $demdescarga,
                 descuento1: (float) ($aforoLegacy->desc7 ?? 0),
                 descuento2: (float) ($aforoLegacy->desc8 ?? 0),
                 horas: $demtotal,
-                conttipo: $tipocont,
+                conttipo: $conttipoDem,
             );
             $fdem = (float) ($calcDem['fletedemt'] ?? 0);
             $fleteDemMig = (float) ($aforoLegacy->fletedemt ?? 0);
@@ -247,12 +376,19 @@ class ConciliarAforos extends Command
         // ── Almacenaje ──────────────────────────────────────────────
         $almPeso = (float) ($aforoLegacy->almpeso ?? 0);
         if ($almPeso > 0) {
+            // Igual que en demora: para tc3/4 el legacy usa 175 (conttipo=1) o
+            // 210 (conttipo=2). Se infiere desde el resultado migrado `almflete`.
+            $conttipoAlm = $tipocont;
+            if (in_array((int) ($girado->idtipocarga1 ?? 0), [3, 4])) {
+                $tarifaAlm = $almPeso > 0 ? round((float) $aforoLegacy->almflete / $almPeso, 2) : 0;
+                $conttipoAlm = $tarifaAlm == 175.0 ? 1 : 2;
+            }
             $calcAlm = $this->cotizador->calcularAlmacenaje(
                 alm_peso: $almPeso,
                 alm_horas: (float) ($aforoLegacy->almhoras ?? 0),
                 descuento: (float) ($aforoLegacy->desc6 ?? 0),
                 tipocarga: (int) ($girado->idtipocarga1 ?? 0),
-                tipocont: $tipocont,
+                tipocont: $conttipoAlm,
             );
             $almFlete = (float) ($calcAlm['alm_flete'] ?? 0);
             $almFleteMig = (float) ($aforoLegacy->almflete ?? 0);
@@ -272,6 +408,12 @@ class ConciliarAforos extends Command
                 almacenaje: $fleteAlm,
                 idchofer2: (int) ($girado->idchofer2 ?? 0),
                 idEntidad: $this->entidadDelAforo($id),
+                tasaFija: $this->option('tasa-guardada')
+                    ? (float) ($aforoLegacy->tasa ?? 0)
+                    : null,
+                tasa2Fija: $this->option('tasa-guardada')
+                    ? (float) ($aforoLegacy->tasa2 ?? 0)
+                    : 0,
             );
             $salario = (float) ($calcSal['salario'] ?? 0);
             $salarioMig = (float) ($aforoLegacy->salario ?? 0);
@@ -298,6 +440,25 @@ class ConciliarAforos extends Command
         }
 
         return 1; // MN
+    }
+
+    /**
+     * Infiere el conttipo (1/2) usado por el formulario legacy para la demora de
+     * contenedores (tc3/4). El resultado migrado `tardem1` coincide con
+     * `demora_cont_2` (→ conttipo=2) o con `demora_cont_1` (→ conttipo=1).
+     */
+    private function inferirConttipoDesdeDemora(float $tardemMigrado): int
+    {
+        $anio = $this->option('anio');
+        $config = \App\Models\ConfiguracionTarifa::query()
+            ->when($anio, fn ($q) => $q->where('anio', (int) $anio), fn ($q) => $q->whereNull('anio'))
+            ->first();
+
+        if ($config && abs($tardemMigrado - (float) $config->demora_cont_2) <= 0.01) {
+            return 2;
+        }
+
+        return 1;
     }
 
     /**

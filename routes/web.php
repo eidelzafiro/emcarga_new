@@ -83,6 +83,7 @@ use App\Http\Controllers\PagosController;
 use App\Http\Controllers\PaisesController;
 use App\Http\Controllers\PenalizacionesController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\PizarraController;
 use App\Http\Controllers\PizarraTractivosController;
 use App\Http\Controllers\PosicionesNeumaticosController;
 use App\Http\Controllers\PrefacturasController;
@@ -158,6 +159,9 @@ Route::middleware('auth')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Pizarra de vehículos en vivo (Fase 4.10)
+        Route::get('pizarra', [PizarraController::class, 'index'])->name('pizarra.index');
+        Route::get('api/pizarra', [PizarraController::class, 'datos'])->name('api.pizarra');
+
         // Módulo Técnico - Flota
         Route::resource('tractivos', TractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);

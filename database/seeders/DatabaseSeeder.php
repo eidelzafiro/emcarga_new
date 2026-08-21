@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             MenuItemSeeder::class,
             NotificacionSeeder::class,
             CatalogoTipoSeeder::class,
+            DestinoAgregadoSeeder::class,
+            PosicionNeumaticoSeeder::class,
         ]);
     }
 }

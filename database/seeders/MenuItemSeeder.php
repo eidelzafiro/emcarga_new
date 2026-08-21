@@ -31,7 +31,10 @@ class MenuItemSeeder extends Seeder
         });
 
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        DB::table('menu_items')->truncate();
+        // delete() en vez de truncate(): TRUNCATE hace commit implícito en
+        // MySQL y rompe la transacción de RefreshDatabase, provocando que
+        // cada test vuelva a ejecutar migrate:fresh (muy lento).
+        DB::table('menu_items')->delete();
 
         foreach ($items as $item) {
             DB::table('menu_items')->insert([

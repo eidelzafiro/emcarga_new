@@ -4000,11 +4000,11 @@ class EtlService
         $resultado = [];
 
         $resultado['users'] = [
-            'legacy' => (int) DB::connection('legacy')->table('cod_usuarios')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('cod_usuarios')->count()),
             'nueva' => User::withTrashed()->count(),
         ];
         $resultado['password_histories'] = [
-            'legacy' => (int) DB::connection('legacy')->table('cod_usuariosh')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('cod_usuariosh')->count()),
             'nueva' => (int) DB::table('password_histories')->count(),
         ];
 
@@ -4029,48 +4029,52 @@ class EtlService
 
         // Arrastres: legacy NO tiene tabla (tec_naves vacía). Los arrastres son
         // tractivos grupo ARRASTRES (idgrupo=8), ya unificados en `tractivos`.
-        $legacyArrastres = (int) DB::connection('legacy')->table('tec_tractivos')
-            ->where('idgrupo', 8)
-            ->count();
+        $legacyArrastres = $this->contarLegacy(
+            fn () => DB::connection('legacy')->table('tec_tractivos')
+                ->where('idgrupo', 8)
+                ->count()
+        );
         $resultado['arrastres'] = [
             'legacy' => $legacyArrastres,
             'nueva' => (int) DB::table('tractivos')->where('id_grupo', 8)->count(),
         ];
         $resultado['arrastre_tractivo'] = [
-            'legacy' => (int) DB::connection('legacy')->table('tec_asociaciones')
-                ->where('idarrastres', '>', 0)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('tec_asociaciones')
+                    ->where('idarrastres', '>', 0)->count()
+            ),
             'nueva' => (int) DB::table('arrastre_tractivo')->count(),
         ];
         $resultado['baterias'] = [
-            'legacy' => (int) DB::connection('legacy')->table('tec_baterias')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('tec_baterias')->count()),
             'nueva' => (int) DB::table('baterias')->count(),
         ];
         $resultado['baterias_movimientos'] = [
-            'legacy' => (int) DB::connection('legacy')->table('tec_bateriasmov')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('tec_bateriasmov')->count()),
             'nueva' => (int) DB::table('baterias_movimientos')->count(),
         ];
         $resultado['bolsa'] = [
-            'legacy' => (int) DB::connection('legacy')->table('rh_bolsa')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('rh_bolsa')->count()),
             'nueva' => (int) DB::table('bolsa')->count(),
         ];
         $resultado['plantilla'] = [
-            'legacy' => (int) DB::connection('legacy')->table('rh_plantilla')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('rh_plantilla')->count()),
             'nueva' => (int) DB::table('plantilla')->count(),
         ];
         $resultado['salarios_administrativos'] = [
-            'legacy' => (int) DB::connection('legacy')->table('rh_saladmin')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('rh_saladmin')->count()),
             'nueva' => (int) DB::table('salarios_administrativos')->count(),
         ];
         $resultado['incidencias'] = [
-            'legacy' => (int) DB::connection('legacy')->table('rh_incidencias')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('rh_incidencias')->count()),
             'nueva' => (int) DB::table('incidencias')->count(),
         ];
         $resultado['penalizaciones'] = [
-            'legacy' => (int) DB::connection('legacy')->table('rh_penalizaciones')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('rh_penalizaciones')->count()),
             'nueva' => (int) DB::table('penalizaciones')->count(),
         ];
         $resultado['turnos'] = [
-            'legacy' => (int) DB::connection('legacy')->table('rh_turnos')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('rh_turnos')->count()),
             'nueva' => (int) DB::table('turnos')->count(),
         ];
         // Mini-catálogos RRHH → catálogo unificado
@@ -4085,73 +4089,102 @@ class EtlService
         ];
         foreach ($miniFuentes as $tipo => $legacyTabla) {
             $resultado['mini_catalogos_'.$tipo] = [
-                'legacy' => (int) DB::connection('legacy')->table($legacyTabla)->count(),
+                'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table($legacyTabla)->count()),
                 'nueva' => (int) DB::table('catalogo_items')->where('tipo', $tipo)->count(),
             ];
         }
         $resultado['htarjetas'] = [
-            'legacy' => (int) DB::connection('legacy')->table('cont_htarjetas')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('cont_htarjetas')->count()),
             'nueva' => (int) DB::table('htarjetas')->count(),
         ];
         $resultado['etarjetas'] = [
-            'legacy' => (int) DB::connection('legacy')->table('cont_etarjetas')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('cont_etarjetas')->count()),
             'nueva' => (int) DB::table('etarjetas')->count(),
         ];
         $resultado['facturas'] = [
-            'legacy' => (int) DB::connection('legacy')->table('com_rfactura')
-                ->whereYear('ffactura', 2026)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('com_rfactura')
+                    ->whereYear('ffactura', 2026)->count()
+            ),
             'nueva' => (int) DB::table('facturas')->count(),
         ];
         $resultado['aforos'] = [
-            'legacy' => (int) DB::connection('legacy')->table('com_aforo')
-                ->whereYear('fparte', 2026)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('com_aforo')
+                    ->whereYear('fparte', 2026)->count()
+            ),
             'nueva' => (int) DB::table('aforos')->count(),
         ];
         $resultado['tarifas'] = [
-            'legacy' => (int) DB::connection('legacy')->table('com_tarifas46')->count()
-                + (int) DB::connection('legacy')->table('com_tarifas')->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('com_tarifas46')->count()
+                    + (int) DB::connection('legacy')->table('com_tarifas')->count()
+            ),
             'nueva' => (int) DB::table('tarifas')->count(),
         ];
         $resultado['configuraciones_tarifa'] = [
-            'legacy' => (int) DB::connection('legacy')->table('com_tarconfigcarga')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('com_tarconfigcarga')->count()),
             'nueva' => (int) DB::table('configuraciones_tarifa')->count(),
         ];
         $resultado['tarifas_acuerdos'] = [
-            'legacy' => (int) DB::connection('legacy')->table('com_taracuerdos')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('com_taracuerdos')->count()),
             'nueva' => (int) DB::table('tarifas_acuerdos')->count(),
         ];
 
         // Combustible (solo año de negocio 2026)
-        $legacy = DB::connection('legacy');
         $resultado['tarjetas'] = [
-            'legacy' => (int) $legacy->table('cont_tarjetas')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('cont_tarjetas')->count()),
             'nueva' => (int) DB::table('tarjetas')->count(),
         ];
         $resultado['combustible_cargas'] = [
-            'legacy' => (int) $legacy->table('cont_combcarga')->whereYear('fcarga', 2026)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('cont_combcarga')->whereYear('fcarga', 2026)->count()
+            ),
             'nueva' => (int) DB::table('combustible_cargas')->count(),
         ];
         $resultado['detalles_carga_combustible'] = [
-            'legacy' => (int) $legacy->table('cont_combdetallecarga')->whereYear('fcarga', 2026)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('cont_combdetallecarga')->whereYear('fcarga', 2026)->count()
+            ),
             'nueva' => (int) DB::table('detalles_carga_combustible')->count(),
         ];
         $resultado['combustible_descargas'] = [
-            'legacy' => (int) $legacy->table('cont_combdescarga')->whereYear('fdescarga', 2026)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('cont_combdescarga')->whereYear('fdescarga', 2026)->count()
+            ),
             'nueva' => (int) DB::table('combustible_descargas')->count(),
         ];
         $resultado['cierre_tarjetas'] = [
-            'legacy' => (int) $legacy->table('cont_htarjetas')->whereYear('ftrabajo', 2026)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('cont_htarjetas')->whereYear('ftrabajo', 2026)->count()
+            ),
             'nueva' => (int) DB::table('cierre_tarjetas')->count(),
         ];
         $resultado['dietas'] = [
-            'legacy' => (int) $legacy->table('cont_dietas')->whereYear('fcostodietas', 2026)->count(),
+            'legacy' => $this->contarLegacy(
+                fn () => DB::connection('legacy')->table('cont_dietas')->whereYear('fcostodietas', 2026)->count()
+            ),
             'nueva' => (int) DB::table('dietas')->count(),
         ];
         $resultado['indirectos_mensuales'] = [
-            'legacy' => (int) $legacy->table('cont_contabilidad')->count(),
+            'legacy' => $this->contarLegacy(fn () => DB::connection('legacy')->table('cont_contabilidad')->count()),
             'nueva' => (int) DB::table('indirectos_mensuales')->count(),
         ];
 
         return $resultado;
+    }
+
+    /**
+     * Cuenta filas legacy tolerando tablas inexistentes (devuelve -1), para que
+     * el reporte de validación no falle en entornos donde el esquema legacy está
+     * parcialmente montado (p. ej. tests con sqlite en memoria).
+     */
+    private function contarLegacy(callable $consulta): int
+    {
+        try {
+            return (int) $consulta();
+        } catch (\Throwable) {
+            return -1;
+        }
     }
 }

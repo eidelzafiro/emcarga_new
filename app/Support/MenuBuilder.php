@@ -6,6 +6,7 @@ use App\Models\MenuItem;
 use App\Models\Nave;
 use App\Models\Taller;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
 class MenuBuilder
@@ -69,12 +70,16 @@ class MenuBuilder
             return $hijos[0];
         }
 
+        // Ruta no registrada (p. ej. módulo aún no implementado): se muestra
+        // deshabilitado en lugar de crashear con RouteNotFoundException.
+        $rutaExiste = $routeName === '' || Route::has($routeName);
+
         return [
             'label' => $item->label,
             'icon' => $item->icon,
             'route' => $item->route,
-            'url' => $routeName !== '' ? route($routeName, $params) : null,
-            'disabled' => $disabled,
+            'url' => $routeName !== '' && $rutaExiste ? route($routeName, $params) : null,
+            'disabled' => $disabled || ! $rutaExiste,
             'children' => $hijos,
         ];
     }

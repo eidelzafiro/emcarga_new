@@ -22,6 +22,19 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class AforoCotizadorService
 {
+    /**
+     * Año de la configuración de tarifas a usar en los cálculos (decisión de
+     * negocio 2026-08-19, opción C: versionado por año). `null` = vigente.
+     */
+    protected ?int $anio = null;
+
+    public function setAnio(?int $anio): static
+    {
+        $this->anio = $anio;
+
+        return $this;
+    }
+
     public function redondeado(float $numero, int $decimales): float
     {
         $factor = pow(10, $decimales);
@@ -119,6 +132,34 @@ class AforoCotizadorService
     }
 
     /**
+     * Búsqueda inversa: dado el tipo de carga y la tarifa por tonelada guardada,
+     * devuelve el kms del tarifario que produce esa tarifa (si es única). Útil en
+     * la conciliación cuando la distancia del formulario legacy no se persistió
+     * en `com_girado.distancia` (residuo de datos) pero la tarifa la revela.
+     */
+    public function inferirDistanciaDesdeTarifa(int $tipocarga, float $tarifaMt, string $version = '46'): ?int
+    {
+        if ($tarifaMt <= 0) {
+            return null;
+        }
+
+        $filas = Tarifa::query()
+            ->where('id_tipo_carga', $tipocarga)
+            ->where('version', $version)
+            ->get(['kms', 'tarifa_mt']);
+
+        $coincidencias = [];
+        foreach ($filas as $fila) {
+            if (abs((float) $fila->tarifa_mt - $tarifaMt) <= 0.01) {
+                $coincidencias[] = (int) $fila->kms;
+            }
+        }
+
+        // Solo si es única (tarifas por km no duplicadas) para no inducir error.
+        return count($coincidencias) === 1 ? $coincidencias[0] : null;
+    }
+
+    /**
      * Endpoint `tarifa` / `modAforo::mostrar_tarifa`.
      *
      * @return array{tarmt: float|string, fletemt: float|string, fletemlc: float|string}
@@ -207,7 +248,7 @@ class AforoCotizadorService
     public function calcularLinea(
         int $moneda = 1,
         int $tipocarga = 0,
-        int $distancia = 0,
+        float $distancia = 0,
         float $peso = 0,
         float $capacidad = 0,
         float $descuento = 0,
@@ -238,10 +279,11 @@ class AforoCotizadorService
         if ($tipocarga === 110) {
             return ['tarmt' => 130, 'fletemt' => $this->redondeado(130 * $distancia, 2), 'fletemlc' => ''];
         }
-        // 7 / 14: KMS VACIOS. En el nuevo formulario los kms se escriben en el
-        // campo Kms (distancia); la tarifa depende de la capacidad del tractivo.
+        // 7 / 14: KMS VACIOS. El legacy envía el peso de la línea como km
+        // (aforoCalcularKmsVacios: params.kms = cpapesoN) y ese peso puede
+        // tener decimales (ej. 2380.95); NO castear a int.
         if ($tipocarga === 7 || $tipocarga === 14) {
-            return $this->calcularKmsVacios($tipocarga, $moneda, (int) $distancia, $kms_vacio_tarifa_previa, $capacidad, $mlc, $descuento);
+            return $this->calcularKmsVacios($tipocarga, $moneda, (float) $distancia, $kms_vacio_tarifa_previa, $capacidad, $mlc, $descuento);
         }
         // 10 / 5 / 114 / 115: TARIFA HORARIA (el legacy usa el peso de la línea como horas: aforoCalcularTH $horas=cpapesoN)
         if (in_array($tipocarga, [10, 5, 114, 115])) {
@@ -249,9 +291,10 @@ class AforoCotizadorService
 
             return ['tarmt' => $th['tarmt'], 'fletemt' => $th['fth'], 'fletemlc' => ''];
         }
-        // 8 / 116: KMS ADICIONALES
+        // 8 / 116: KMS ADICIONALES. El legacy envía el peso de la línea como km
+        // (aforoCalcularKmsAdicionales: params.kms = cpapesoN), igual que tc7/14.
         if ($tipocarga === 8 || $tipocarga === 116) {
-            return $this->calcularKmsAdicionales($tipocarga, $distancia, $mlc, $capacidad, $descuento);
+            return $this->calcularKmsAdicionales($tipocarga, (float) $peso, $mlc, $capacidad, $descuento);
         }
         // 15: TH EFECTOS (el legacy usa el peso de la línea como horas)
         if ($tipocarga === 15) {
@@ -344,7 +387,10 @@ class AforoCotizadorService
             $arr['tarmt'] = $capacidad <= 15 ? $config->tarifa_horaria_1 : $config->tarifa_horaria_2;
         }
         if ($tipocarga === 5) {
-            $arr['tarmt'] = $tipocont == 1 ? $config->tarifa_horaria_1 : $config->tarifa_horaria_2;
+            // Contenedor: el legacy usa `com_tarconfigcont46.tarhor1` (no existe
+            // tarhor2). Los aforos migrados usaron siempre tarhor1 (420 en 2026),
+            // incluso con idconttipo 1/2, porque el formulario default era tipocont=1.
+            $arr['tarmt'] = $config->tarifa_horaria_cont_1;
         }
         if ($tipocarga === 114) {
             $arr['tarmt'] = $capacidad <= 15 ? 1646.40 : 2471.60;
@@ -399,7 +445,7 @@ class AforoCotizadorService
      */
     public function calcularKmsAdicionales(
         int $tipocarga = 0,
-        int $kms = 0,
+        float $kms = 0,
         float $mlc = 0,
         float $capacidad = 0,
         float $descuento = 0,
@@ -536,7 +582,7 @@ class AforoCotizadorService
     public function calcularKmsVacios(
         int $tipocarga = 7,
         int $moneda = 1,
-        int $kms = 0,
+        float $kms = 0,
         float $tarkvaciosmn1 = 0,
         float $peso = 0,
         float $mlc = 0,
@@ -589,7 +635,9 @@ class AforoCotizadorService
         $config = $this->config();
 
         if ($tipocarga1 === 3 || $tipocarga1 === 4) {
-            $tardem = $conttipo == 2 ? $config->demora_2 : $config->demora_1;
+            // Contenedor: config contenedor (legacy `com_tarconfigcont46`).
+            // conttipo 2 → demora2, resto (1 o 0) → demora1.
+            $tardem = $conttipo == 2 ? $config->demora_cont_2 : $config->demora_cont_1;
             $arr['tardem1'] = $tardem;
             $arr['tardem2'] = $tardem;
         } elseif ($tipocarga1 === 18) {
@@ -747,6 +795,8 @@ class AforoCotizadorService
         float $almacenaje = 0,
         int $idchofer2 = 0,
         int $idEntidad = 0,
+        ?float $tasaFija = null,
+        float $tasa2Fija = 0,
     ): array {
         $salalm = 0;
         if ($almacenaje > 0) {
@@ -761,6 +811,23 @@ class AforoCotizadorService
             'tasa2' => 0,
             'salario' => 0,
         ];
+
+        if ($tasaFija !== null) {
+            // Conciliación: usar la tasa que el legacy realmente guardó en
+            // `com_aforo` (p. ej. 0.16 de 2026-01, que ya no es la vigente de
+            // `rh_tipotasas`). Valida la FÓRMULA sin depender de tasas históricas.
+            $resultado['tasa'] = $tasaFija;
+            $resultado['tasa2'] = $tasa2Fija;
+
+            $base = $tipocarga == 26 ? $capacidad : $ingresos;
+            if ($idchofer2 > 0 && $tasa2Fija > 0) {
+                $resultado['salario'] = round($base * $tasa2Fija + $salalm, 2);
+            } else {
+                $resultado['salario'] = round($base * $tasaFija + $salalm, 2);
+            }
+
+            return $resultado;
+        }
 
         $query = Tasa::query()
             ->where('id_tipo_carga', $tipocarga);
@@ -886,10 +953,25 @@ class AforoCotizadorService
     }
 
     /**
-     * Configuración unificada de tarifas (fila única).
+     * Configuración de tarifas versionada por año.
+     *
+     * - `anio = null` (fila NULL) ⇒ configuración VIGENTE (cálculos actuales).
+     * - `anio` concreto ⇒ fila histórica (p. ej. 2026 = `com_tarconfigcarga46`).
+     * Si no existe fila para el año pedido, se degrada a la vigente.
      */
-    protected function config(): ConfiguracionTarifa
+    protected function config(?int $anio = null): ConfiguracionTarifa
     {
-        return ConfiguracionTarifa::query()->firstOrCreate([]);
+        $anio = $anio ?? $this->anio;
+
+        if ($anio !== null) {
+            $historica = ConfiguracionTarifa::query()->where('anio', $anio)->first();
+            if ($historica) {
+                return $historica;
+            }
+        }
+
+        return ConfiguracionTarifa::query()
+            ->whereNull('anio')
+            ->firstOrCreate([]);
     }
 }

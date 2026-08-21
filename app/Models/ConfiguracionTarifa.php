@@ -9,8 +9,10 @@ class ConfiguracionTarifa extends Model
     protected $table = 'configuraciones_tarifa';
 
     protected $fillable = [
-        'demora_1', 'demora_2', 'kms_vacio_1', 'kms_vacio_2',
-        'tarifa_horaria_1', 'tarifa_horaria_2',
+        'anio',
+        'demora_1', 'demora_2', 'demora_cont_1', 'demora_cont_2',
+        'kms_vacio_1', 'kms_vacio_2', 'kms_vacio_cont_1', 'kms_vacio_cont_2',
+        'tarifa_horaria_1', 'tarifa_horaria_2', 'tarifa_horaria_cont_1',
         'kms_adicionales_1', 'kms_adicionales_2',
         'almacenaje', 'recargo_1', 'recargo_2', 'recargo_3_1',
         'recargo_3_2', 'recargo_3_3', 'recargo_4', 'recargo_5',
@@ -24,10 +26,15 @@ class ConfiguracionTarifa extends Model
         return [
             'demora_1' => 'decimal:2',
             'demora_2' => 'decimal:2',
+            'demora_cont_1' => 'decimal:2',
+            'demora_cont_2' => 'decimal:2',
             'kms_vacio_1' => 'decimal:2',
             'kms_vacio_2' => 'decimal:2',
+            'kms_vacio_cont_1' => 'decimal:2',
+            'kms_vacio_cont_2' => 'decimal:2',
             'tarifa_horaria_1' => 'decimal:2',
             'tarifa_horaria_2' => 'decimal:2',
+            'tarifa_horaria_cont_1' => 'decimal:2',
             'kms_adicionales_1' => 'decimal:2',
             'kms_adicionales_2' => 'decimal:2',
             'almacenaje' => 'decimal:2',

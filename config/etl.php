@@ -869,28 +869,11 @@ return [
 
         // Arrastres: el legacy NO tiene tabla de arrastres (tec_naves está vacía).
         // Los arrastres son tractivos idgrupo=8 (grupo ARRASTRES), unificados en
-        // `tractivos`. Migración dedicada migrarArrastres() re-asocia tipo y entidad;
-        // migrarAsociaciones() → arrastre_tractivo. No config de tabla genérica.
-        'arrastres' => [
-            'legacy' => 'tec_tipoarrastres',
-            'pk' => 'idtipoarrastres',
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
+        // `tractivos` (migración 2026_08_07_185000_mover_arrastres_a_tractivos
+        // eliminó la tabla física `arrastres`). No config de tabla genérica.
 
-        'balances_electricos' => [
-            'legacy' => 'tec_electbalance',
-            'pk' => 'idelectbalance',
-            'columnas' => [
-                'idelectlocales' => 'id_local',
-                'idelectequipos' => 'id_equipo',
-                'cantidad' => 'consumo',
-            ],
-            'defaults' => [
-                'fecha' => '1970-01-01',
-            ],
-        ],
+        // balances_electricos: el legacy tec_electbalance no tiene tabla nueva
+        // destino en el esquema (era una capa de cómputo sin migrar). No config.
 
         'cajas' => [
             'legacy' => 'tec_cajas',
@@ -904,6 +887,7 @@ return [
             ],
             'defaults' => [
                 'codigo' => null,
+                'descripcion' => '',
                 'estado' => 'disponible',
             ],
         ],
@@ -950,12 +934,25 @@ return [
             'pk' => 'idcontrollubricante',
             'columnas' => [
                 'fconfeccion' => 'fecha_cambio',
-                'litrosmotor' => 'cantidad_litros',
+                'tipooperacion' => 'tipo_operacion',
+                'litrosmotor' => 'litros_motor',
+                'litrostransmision' => 'litros_transmision',
+                'litrosdireccion' => 'litros_direccion',
+                'litroshidraulico' => 'litros_hidraulico',
+                'liquidofreno' => 'liquido_freno',
+                'aguarefrigerada' => 'agua_refrigerada',
+                'grasarollete' => 'grasa_rollete',
+                'grasacopillas' => 'grasa_copillas',
                 'idtractivos' => 'id_tractivo',
-            ],
-            'defaults' => [
-                'id_lubricante' => 0,
-                'kilometraje' => 0,
+                'idunidad' => 'id_entidad',
+                'idlubmotor' => 'id_lub_motor',
+                'idlubtransmision' => 'id_lub_transmision',
+                'idlubhidraulico' => 'id_lub_hidraulico',
+                'idlubdireccion' => 'id_lub_direccion',
+                'idgrasar' => 'id_grasa_rollete',
+                'idgrasac' => 'id_grasa_copillas',
+                'idliqfreno' => 'id_liquido_freno',
+                'idagua' => 'id_agua',
             ],
         ],
 
@@ -1375,12 +1372,11 @@ return [
                 'idlubricantes' => 'id_lubricante',
                 'idlubcubo' => 'id_lub_cubo',
                 'idtipomtto' => 'id_tipo_mantenimiento',
-                'idtipocombustibles' => 'id_tipo_combustible',
             ],
             'cero_a_null' => [
                 'id_marca', 'id_modelo', 'id_pais', 'id_tipo_equipo', 'id_tipo_suspension',
                 'id_medida_del', 'id_medida_tra', 'id_medida_res',
-                'id_lubricante', 'id_lub_cubo', 'id_tipo_mantenimiento', 'id_tipo_combustible',
+                'id_lubricante', 'id_lub_cubo', 'id_tipo_mantenimiento',
             ],
             'fk_validar' => [
                 'id_marca' => 'marcas',
@@ -1394,7 +1390,6 @@ return [
                 'id_lubricante' => 'lubricantes',
                 'id_lub_cubo' => 'lubricantes',
                 'id_tipo_mantenimiento' => 'tipos_mantenimiento',
-                'id_tipo_combustible' => 'tipos_combustibles',
             ],
             'defaults' => [
                 'activo' => true,
@@ -1539,6 +1534,10 @@ return [
         'tractivos' => [
             'legacy' => 'tec_tractivos',
             'pk' => 'idtractivos',
+            'defaults' => [
+                'descripcion' => '',
+                'placa' => '',
+            ],
         ],
 
         'tipos_tractivos' => [

@@ -91,6 +91,7 @@ use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\ProvinciasController;
 use App\Http\Controllers\RegistroOrdenesTallerController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ReportesCostosController;
 use App\Http\Controllers\SalariosAdministrativosController;
 use App\Http\Controllers\SalariosController;
@@ -444,6 +445,9 @@ Route::middleware('auth')->group(function () {
             Route::get('paises', [ReportController::class, 'pdfPaises'])->name('paises');
             Route::get('salario-prenomina', [ReportController::class, 'pdfSalarioPrenomina'])->name('salario-prenomina');
             Route::get('salario-choferes', [ReportController::class, 'pdfSalarioChoferes'])->name('salario-choferes');
+            // Fase A: catálogo de reportes usados (índice con filtros reutilizables)
+            Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
+            Route::post('generar/{reporte}', [ReportesController::class, 'generar'])->name('generar');
         });
 
         // Impresión de documentos: permiso del módulo del recurso (carta-porte.ver,

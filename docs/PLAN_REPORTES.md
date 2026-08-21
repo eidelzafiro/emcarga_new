@@ -95,13 +95,23 @@ Crear infraestructura reutilizable en `app/` (Zafiro ya usa dompdf + Blade):
 
 ## 2. Secuencia de fases (por afinidad de datos)
 
-### Fase A — Base + Comercial/Facturación/Documentos/GPS/Ingresos/Pizarra/Indicadores
-- Hacer paso 0 (base común).
+### Fase A — Base + Comercial/Facturación/Documentos/GPS/Ingresos/Pizarra/Indicadores — ✅ MARCO HECHO (2026-08-21)
+- Hacer paso 0 (base común). [HECHO]
 - Estos leen `aforos`, `facturas`, `cartas_porte`, `hojas_ruta`, `tarjetas`,
   `ingresos` — todas ya en Zafiro. Documentos/Tiempos/Facturación ya tienen
   servicios: **reconciliar** (confirmar que el xlsx coincide, no rehacer).
 - Nuevos: GPS (5), Ingresos (10), Pizarra (6), Indicadores (14), ADMINISTRACION (21).
-- Entrega: formularios de filtro reutilizables operativos.
+- Entrega: formularios de filtro reutilizables operativos. [Marco HECHO; PDFs pendientes]
+
+Andamiaje reutilizable implementado (no los 56 PDFs individuales; eso es incremental):
+- `app/Models/ReporteLegacy.php`, `app/Services/Reports/ReporteCatalogoService.php`
+  (`usadosAgrupados()` + `agrupar()` puro). Runtime: **22 agrupaciones / 187 reportes usados**.
+- `app/Http/Controllers/ReportesController.php` (`index` Inertia + `generar` esqueleto).
+- Rutas `reportes.catalogo` (GET) y `reportes.generar/{reporte}` (POST).
+- `resources/js/Components/ReporteFiltro.vue` (inputs por `tipoFiltro`) y
+  `resources/js/Pages/Reportes/Index.vue` (catálogo). Test `ReporteCatalogoServiceTest` (2) en verde.
+- La página NO está en el menú (congelado; requiere aprobación EIDEL). Acceso por `/reportes/catalogo`.
+- Nota: catálogo marca 187 (≥1 perfil BD) vs 196 del Excel (`¿Usado?` manual). La bandera de perfil es fuente autorizada.
 
 ### Fase B — Combustible + Costos + Contabilidad
 - Combustible (21) y Costos (12) leen `combustible_cargas/descargas`, `tarjetas`,

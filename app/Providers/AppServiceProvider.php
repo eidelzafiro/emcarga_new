@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Database\Grammars\MariaDbGrammarOverride;
 use App\Database\Processors\MariaDbProcessorOverride;
 use App\Policies\RolePolicy;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 
@@ -54,5 +56,18 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Gate::policy(Role::class, RolePolicy::class);
+
+        // O-1 (optimización de suite): cuando se corre con `--parallel`, Laravel
+        // crea una BD propia por worker (emcarga_new_test_<token>). Como la suite
+        // usa DatabaseTransactions sobre un baseline sembrado (no RefreshDatabase),
+        // cada worker necesita su propia BD migrada y sembrada. Este callback la
+        // prepara una sola vez por worker. No afecta el flujo secuencial normal.
+        ParallelTesting::setUpTestDatabase(function (string $database, int $token): void {
+            Artisan::call('migrate:fresh', [
+                '--database' => $database,
+                '--seed' => true,
+                '--force' => true,
+            ]);
+        });
     }
 }

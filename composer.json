@@ -73,6 +73,11 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "DB_DATABASE=emcarga_new_test php artisan test --profile --testsuite=fast"
         ],
+        "test:parallel": [
+            "@composer test:setup",
+            "DB_DATABASE=emcarga_new_test php artisan test --parallel --testsuite=fast",
+            "DB_DATABASE=emcarga_new_test php artisan test --parallel --testsuite=legacy"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

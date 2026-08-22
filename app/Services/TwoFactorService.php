@@ -28,7 +28,7 @@ class TwoFactorService
     public function generateSecret(): string
     {
         $secret = '';
-        $bytes = random_bytes(10);
+        $bytes = random_bytes(16);
         foreach (str_split($bytes, 1) as $b) {
             $secret .= self::B32[ord($b) & 31];
         }
@@ -49,15 +49,17 @@ class TwoFactorService
 
     /**
      * Verifica un código contra el secreto, con ventana de tolerancia.
+     *
+     * @param  int|null  $at  Timestamp de referencia (para tests); por defecto time().
      */
-    public function verify(string $secret, string $code): bool
+    public function verify(string $secret, string $code, ?int $at = null): bool
     {
         $code = preg_replace('/\D/', '', $code);
         if (strlen($code) !== self::DIGITS) {
             return false;
         }
 
-        $counter = intdiv(time(), self::PERIOD);
+        $counter = intdiv($at ?? time(), self::PERIOD);
         for ($i = -self::WINDOW; $i <= self::WINDOW; $i++) {
             if ($this->totp($secret, $counter + $i) === $code) {
                 return true;

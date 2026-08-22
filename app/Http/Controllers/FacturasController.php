@@ -22,19 +22,7 @@ class FacturasController extends Controller
         $facturas = Factura::with('cliente:id,nombre', 'tipoIngreso:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%"))->orWhere('numero', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
-            ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $ids = collect(Entidad::subEntidadesIds($entidadId))
-                        ->push($entidadId)
-                        ->unique()
-                        ->values()
-                        ->all();
-                    $q->whereIn('id_entidad', $ids);
-                }
-
-                return $q;
-            })
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->orderBy('fecha_emision', 'desc')
             ->orderBy('numero', 'desc')
             ->paginate(20);

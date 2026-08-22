@@ -122,11 +122,7 @@ class AforosController extends Controller
             return [];
         }
 
-        return collect(Entidad::subEntidadesIds($entidadId))
-            ->push($entidadId)
-            ->unique()
-            ->values()
-            ->all();
+        return Entidad::idsPermitidos($entidadId);
     }
 
     /**

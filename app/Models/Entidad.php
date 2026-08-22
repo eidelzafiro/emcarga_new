@@ -127,7 +127,7 @@ class Entidad extends Model
             return $q;
         }
 
-        $ids = collect(self::subEntidadesIds($entidadId))->push($entidadId)->unique()->values()->all();
+        $ids = self::idsPermitidos($entidadId);
 
         return $q->whereIn('id', $ids);
     }
@@ -143,5 +143,19 @@ class Entidad extends Model
         }
 
         return $ids;
+    }
+
+    /**
+     * Ids de entidad permitidos para una entidad dada: ella misma más sus
+     * subordinadas en la jerarquía. Punto único de verdad del patrón
+     * "ver ella + hijas" (antes duplicado en controladores y modelos).
+     */
+    public static function idsPermitidos(int $entidadId): array
+    {
+        return collect(self::subEntidadesIds($entidadId))
+            ->push($entidadId)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

@@ -23,19 +23,7 @@ class PrefacturasController extends Controller
         $prefacturas = Prefactura::with('cliente:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%")))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
-            ->when(true, function ($q) {
-                $entidadId = (int) session('entidad_activa_id');
-                if ($entidadId) {
-                    $ids = collect(Entidad::subEntidadesIds($entidadId))
-                        ->push($entidadId)
-                        ->unique()
-                        ->values()
-                        ->all();
-                    $q->whereIn('id_entidad', $ids);
-                }
-
-                return $q;
-            })
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->orderBy('fecha', 'desc')
             ->paginate(20);
 

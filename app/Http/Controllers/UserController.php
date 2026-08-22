@@ -28,11 +28,7 @@ class UserController extends Controller
                 $query->where('id_entidad', $entidadActivaId);
             }, function ($query) use ($user) {
                 if (! $user->hasRole('SUPERADMIN')) {
-                    $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
-                        ->push($user->id_entidad)
-                        ->unique()
-                        ->values()
-                        ->all();
+                    $ids = Entidad::idsPermitidos($user->id_entidad);
                     $query->whereIn('id_entidad', $ids);
                 }
             })
@@ -67,11 +63,7 @@ class UserController extends Controller
         if ($entidadActivaId > 0) {
             $entidadesQuery->where('id', $entidadActivaId);
         } elseif (! $esSuperAdmin) {
-            $ids = collect(Entidad::subEntidadesIds($user->id_entidad))
-                ->push($user->id_entidad)
-                ->unique()
-                ->values()
-                ->all();
+            $ids = Entidad::idsPermitidos($user->id_entidad);
             $adicionales = $user->entidades()->pluck('entidades.id')->all();
             $ids = array_unique([...$ids, ...$adicionales]);
             $entidadesQuery->whereIn('id', $ids);
@@ -276,11 +268,7 @@ class UserController extends Controller
             return true;
         }
 
-        $ids = collect(Entidad::subEntidadesIds($userActivo->id_entidad))
-            ->push($userActivo->id_entidad)
-            ->unique()
-            ->values()
-            ->all();
+        $ids = Entidad::idsPermitidos($userActivo->id_entidad);
         $adicionales = $userActivo->entidades()->pluck('entidades.id')->all();
         $ids = array_unique([...$ids, ...$adicionales]);
 

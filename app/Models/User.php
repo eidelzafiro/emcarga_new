@@ -128,11 +128,7 @@ class User extends Authenticatable
             return collect();
         }
 
-        $ids = collect(Entidad::subEntidadesIds($this->id_entidad))
-            ->push($this->id_entidad)
-            ->unique()
-            ->values()
-            ->all();
+        $ids = Entidad::idsPermitidos($this->id_entidad);
 
         $porJerarquia = Entidad::whereIn('id', $ids)
             ->where('activo', true)

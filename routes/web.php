@@ -7,6 +7,7 @@ use App\Http\Controllers\AreasController;
 use App\Http\Controllers\ArrastresController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\BateriasController;
 use App\Http\Controllers\BolsaController;
 use App\Http\Controllers\CajasController;
@@ -130,11 +131,20 @@ Route::get('/', fn () => redirect(auth()->check() ? route('dashboard') : route('
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->name('login.store');
+
+    // Challenge 2FA (login diferido, aún sin autenticar)
+    Route::get('two-factor', [TwoFactorController::class, 'create'])->name('two-factor.create');
+    Route::post('two-factor', [TwoFactorController::class, 'store'])->name('two-factor.store');
 });
 
 // Autenticados
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
+
+    // 2FA (auto-servicio, solo perfiles privilegiados)
+    Route::get('two-factor/enable', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
+    Route::post('two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+    Route::post('two-factor/disable', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
 
     Route::get('perfil/cambiar-password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('perfil/cambiar-password', [PasswordController::class, 'update'])->name('password.update');

@@ -59,7 +59,7 @@
         ],
         "test:setup": [
             "@php -r \"echo 'Migrando y sembrando BD de test (emcarga_new_test)...\\n';\"",
-            "DB_DATABASE=emcarga_new_test php artisan migrate:fresh --seed --force --ansi"
+            "DB_DATABASE=emcarga_new_test php artisan zafiro:test-setup --ansi"
         ],
         "test:fast": [
             "@php artisan config:clear --ansi @no_additional_args",

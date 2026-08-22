@@ -1645,6 +1645,111 @@ class EtlService
     }
 
     /**
+     * E-1 (2026-08-22): migra rh_movimientos + rh_hmovimientos → movimientos_rrhh
+     * con paridad 1:1. Resuelve el solapamiento de 403 ids (rango 1-413 en
+     * ambas tablas) vía la PK nueva + columna `origen` ('mov' | 'hmov') y el
+     * índice único [origen, id_legacy]. Luego enlaza las FKs colgantes de
+     * turnos.idmovimientos y salarios_administrativos.id_movimiento con
+     * movimientos_rrhh (siempre origen 'mov').
+     */
+    public function migrarMovimientosRrhh(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+
+        // Ids válidos en la BD nueva para resolver FKs (nullOnDelete en ETL).
+        $bolsaIds = DB::table('bolsa')->pluck('id')->all();
+        $tractivoIds = DB::table('tractivos')->pluck('id')->all();
+        $plantillaIds = DB::table('plantilla')->pluck('id')->all();
+        $userIds = DB::table('users')->pluck('id')->all();
+
+        $fuentes = [
+            'mov' => 'rh_movimientos',
+            'hmov' => 'rh_hmovimientos',
+        ];
+
+        foreach ($fuentes as $origen => $tablaLegacy) {
+            DB::connection('legacy')->table($tablaLegacy)
+                ->orderBy('idmovimientos')
+                ->chunkById($chunk, function ($filas) use (
+                    $origen, &$procesados, &$avisos,
+                    $bolsaIds, $tractivoIds, $plantillaIds, $userIds
+                ) {
+                    foreach ($filas as $fila) {
+                        try {
+                            $idBolsa = in_array((int) $fila->idbolsa, $bolsaIds, true)
+                                ? (int) $fila->idbolsa : null;
+                            $idTractivo = in_array((int) $fila->idtractivos, $tractivoIds, true)
+                                ? (int) $fila->idtractivos : null;
+                            $idPlantilla = in_array((int) $fila->idplantilla, $plantillaIds, true)
+                                ? (int) $fila->idplantilla : null;
+                            $idUser = in_array((int) $fila->iduser, $userIds, true)
+                                ? (int) $fila->iduser : null;
+
+                            if ($fila->idbolsa && $idBolsa === null) {
+                                $avisos[] = "{$origen}#{$fila->idmovimientos}: idbolsa {$fila->idbolsa} no migrado → NULL";
+                            }
+
+                            DB::table('movimientos_rrhh')->updateOrInsert(
+                                ['origen' => $origen, 'id_legacy' => $fila->idmovimientos],
+                                [
+                                    'id_bolsa' => $idBolsa,
+                                    'nronomina' => $fila->nronomina ? (int) $fila->nronomina : null,
+                                    'id_tractivo' => $idTractivo,
+                                    'id_plantilla' => $idPlantilla,
+                                    'fbaja' => ($fila->fbaja && $fila->fbaja !== '0000-00-00') ? $fila->fbaja : null,
+                                    'cubreplaza' => (int) $fila->cubreplaza,
+                                    'tipomov' => $fila->tipomov,
+                                    'id_user' => $idUser,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]
+                            );
+                            $procesados++;
+                        } catch (\Throwable $e) {
+                            $avisos[] = "{$origen}#{$fila->idmovimientos}: {$e->getMessage()}";
+                        }
+                    }
+                }, 'idmovimientos');
+        }
+
+        // Poblar salarios_administrativos.id_movimiento (legacy rh_saladmin.idmovimientos)
+        // para luego enlazarlo con movimientos_rrhh.
+        $mapSal = DB::connection('legacy')->table('rh_saladmin')
+            ->pluck('idmovimientos', 'idsaladmin');
+        foreach ($mapSal as $idsaladmin => $idmov) {
+            DB::table('salarios_administrativos')
+                ->where('id', $idsaladmin)
+                ->update(['id_movimiento' => $idmov ? (int) $idmov : null]);
+        }
+
+        // Enlazar turnos (origen 'mov') y salarios (origen 'mov').
+        DB::statement(
+            "UPDATE turnos t JOIN movimientos_rrhh m "
+            . "ON t.idmovimientos = m.id_legacy AND m.origen = 'mov' "
+            . "SET t.id_movimiento_rrhh = m.id WHERE t.idmovimientos IS NOT NULL"
+        );
+        DB::statement(
+            "UPDATE salarios_administrativos s JOIN movimientos_rrhh m "
+            . "ON s.id_movimiento = m.id_legacy AND m.origen = 'mov' "
+            . "SET s.id_movimiento_rrhh = m.id WHERE s.id_movimiento IS NOT NULL"
+        );
+
+        $legacyMov = (int) DB::connection('legacy')->table('rh_movimientos')->count();
+        $legacyHmov = (int) DB::connection('legacy')->table('rh_hmovimientos')->count();
+
+        $this->reporte['movimientos_rrhh'] = [
+            'legacy_mov' => $legacyMov,
+            'legacy_hmov' => $legacyHmov,
+            'legacy' => $legacyMov + $legacyHmov,
+            'nueva' => (int) DB::table('movimientos_rrhh')->count(),
+            'turnos_enlazados' => (int) DB::table('turnos')->whereNotNull('id_movimiento_rrhh')->count(),
+            'salarios_enlazados' => (int) DB::table('salarios_administrativos')->whereNotNull('id_movimiento_rrhh')->count(),
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
      * ETL de incidencias de nómina: rh_incidencias → incidencias.
      * id = idincidencias (preservado). id_bolsa se resuelve vía
      * rh_movimientos.idbolsa; id_tipo_incidencia preserva el id de

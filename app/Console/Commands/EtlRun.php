@@ -272,6 +272,13 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'salarios_administrativos');
         }
 
+        // Movimientos RRHH (rh_movimientos + rh_hmovimientos → movimientos_rrhh)
+        if (! $solo || $solo === 'movimientos_rrhh') {
+            $this->info('Migrando movimientos RRHH...');
+            $etl->migrarMovimientosRrhh($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'movimientos_rrhh');
+        }
+
         // Incidencias y penalizaciones de nómina (idmovimientos → bolsa)
         if (! $solo || $solo === 'incidencias') {
             $this->info('Migrando incidencias de nómina...');

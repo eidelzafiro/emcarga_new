@@ -198,6 +198,13 @@
                   <i class="pi pi-key text-gray-400" />
                   Cambiar contraseña
                 </Link>
+                <Link
+                  :href="route('two-factor.enable')"
+                  class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <i class="pi pi-shield text-gray-400" />
+                  Verificación en dos pasos
+                </Link>
                 <hr class="border-gray-100 dark:border-gray-700 my-1">
                 <Link
                   :href="route('logout')"

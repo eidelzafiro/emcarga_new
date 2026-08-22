@@ -92,6 +92,19 @@ class LoginController extends Controller
         // completa la entidad activa en el siguiente request)
         $request->session()->put('fecha_operaciones', $fechaOperaciones);
 
+        // 2FA para perfiles privilegiados: si tiene 2FA habilitado, diferir el
+        // login real hasta verificar el código en el challenge.
+        if ($user->esPrivilegiado() && $user->two_factor_enabled) {
+            $request->session()->put('two_factor_pending', [
+                'user_id' => $user->id,
+                'remember' => $request->boolean('remember'),
+                'fecha_operaciones' => $fechaOperaciones,
+            ]);
+            Bitacora::registrar('login_2fa_pendiente', 'Acceso concedido (pendiente 2FA).', $user->id);
+
+            return redirect()->route('two-factor.create');
+        }
+
         Bitacora::registrar('login', 'Inicio de sesión exitoso.', $user->id);
 
         if ($user->password_temporal) {

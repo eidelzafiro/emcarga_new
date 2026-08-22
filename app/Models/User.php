@@ -40,6 +40,8 @@ class User extends Authenticatable
         'fecha_cambio_password',
         'password_temporal',
         'activo',
+        'two_factor_secret',
+        'two_factor_recovery',
     ];
 
     /**
@@ -68,7 +70,24 @@ class User extends Authenticatable
             'ultimo_login' => 'datetime',
             'fecha_cambio_password' => 'datetime',
             'fecha_operaciones' => 'date',
+            'two_factor_recovery' => 'array',
         ];
+    }
+
+    /**
+     * Indica si el usuario tiene un rol privilegiado que exige 2FA.
+     */
+    public function esPrivilegiado(): bool
+    {
+        return $this->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES']);
+    }
+
+    /**
+     * Accesor: true si el usuario tiene 2FA habilitado.
+     */
+    public function getTwoFactorEnabledAttribute(): bool
+    {
+        return ! empty($this->two_factor_secret);
     }
 
     /**

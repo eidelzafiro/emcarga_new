@@ -78,6 +78,10 @@
             "DB_DATABASE=emcarga_new_test php artisan test --parallel --testsuite=fast",
             "DB_DATABASE=emcarga_new_test php artisan test --parallel --testsuite=legacy"
         ],
+        "test:coverage": [
+            "@php artisan config:clear --ansi @no_additional_args",
+            "DB_DATABASE=emcarga_new_test vendor/bin/phpunit -c phpunit.coverage.xml --testsuite=fast --coverage-text --coverage-html=coverage"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

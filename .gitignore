@@ -48,3 +48,6 @@ phpunit.xml.bak
 y
 .composer/
 .config/
+
+# Cobertura de tests (PCOV)
+/coverage

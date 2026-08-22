@@ -16,7 +16,7 @@ class PreviewController extends Controller
 {
     public function hojasRuta(Request $request)
     {
-        $entidadId = session('entidad_activa_id');
+        $entidadId = entidadActivaId();
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $inicioMes = Carbon::parse($fechaOperaciones)->startOfMonth()->toDateString();
         $finMes = Carbon::parse($fechaOperaciones)->endOfMonth()->toDateString();
@@ -37,7 +37,7 @@ class PreviewController extends Controller
 
     public function solicitudes(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
 
         $solicitudes = SolicitudesServicio::with([
             'cliente:id,nombre',

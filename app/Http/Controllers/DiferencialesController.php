@@ -48,7 +48,7 @@ class DiferencialesController extends Controller
         $this->authorize('create', \App\Models\Diferenciale::class);
         $validated = $request->validate($this->reglas());
 
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
 
         Diferenciale::create($validated);
 

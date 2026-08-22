@@ -48,7 +48,7 @@ class FirmasController extends Controller
             'aprueba_cargo' => 'nullable|string|max:150',
             'activo' => 'boolean',
         ]);
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
         Firma::create($validated);
 
         return redirect()->route('firmas.index')->with('success', 'Firma creada correctamente.');

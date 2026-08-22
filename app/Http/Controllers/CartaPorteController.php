@@ -28,7 +28,7 @@ class CartaPorteController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\CartaPorte::class);
-        $entidadId = session('entidad_activa_id');
+        $entidadId = entidadActivaId();
 
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $inicioMes = Carbon::parse($fechaOperaciones)->startOfMonth()->toDateString();
@@ -481,7 +481,7 @@ class CartaPorteController extends Controller
         $fechaEmision = $v['fecha_emision'] ?? now()->toDateString();
         $nueva = SolicitudesServicio::create(array_merge($datos, [
             'numero' => $this->siguienteNumeroSolicitud($fechaEmision),
-            'id_entidad' => auth()->user()?->entidad_activa_id ?? session('entidad_activa_id') ?: null,
+            'id_entidad' => auth()->user()?->entidad_activa_id ?? entidadActivaId() ?: null,
             'id_user' => auth()->id(),
             'fecha_solicitud' => $fechaEmision,
             'estado' => 'pendiente',

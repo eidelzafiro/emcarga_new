@@ -44,7 +44,7 @@ class TiposTasasController extends Controller
             'unidad' => 'nullable|max:100',
             'valor' => 'nullable|numeric|min:0',
         ]);
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
         TipoTasa::create($validated);
 
         return redirect()->route('tipos-tasas.index')->with('success', 'Tipo de tasa creado correctamente.');

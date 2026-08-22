@@ -21,7 +21,7 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $user = $request->user();
-        $entidadActivaId = (int) session('entidad_activa_id');
+        $entidadActivaId = (int) entidadActivaId();
 
         $usuarios = User::with('roles:id,name', 'entidades:id,nombre', 'entidad:id,nombre,abreviatura')
             ->when($entidadActivaId > 0, function ($query) use ($entidadActivaId) {

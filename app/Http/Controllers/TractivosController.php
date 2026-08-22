@@ -162,7 +162,7 @@ class TractivosController extends Controller
         $this->authorize('create', \App\Models\Tractivo::class);
         $validated = $request->validate($this->reglas());
 
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
         Tractivo::create($validated);
 
         return redirect()->route('tractivos.index')

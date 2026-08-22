@@ -34,7 +34,7 @@ class BolsaController extends Controller
             ->orderBy('nombre')
             ->paginate(20);
 
-        $entidadActiva = (int) session('entidad_activa_id');
+        $entidadActiva = (int) entidadActivaId();
 
         $cargos = Cargo::query()
             ->when($entidadActiva, fn ($q) => $q->where('id_entidad', $entidadActiva))
@@ -68,7 +68,7 @@ class BolsaController extends Controller
 
         $validated = $request->validate($this->rules());
 
-        $validated['id_entidad'] ??= session('entidad_activa_id');
+        $validated['id_entidad'] ??= entidadActivaId();
 
         $bolsa = Bolsa::create($validated);
 
@@ -92,7 +92,7 @@ class BolsaController extends Controller
 
         $validated = $request->validate($this->rules($bolsa->id));
 
-        $validated['id_entidad'] ??= session('entidad_activa_id');
+        $validated['id_entidad'] ??= entidadActivaId();
 
         $bolsa->update($validated);
 
@@ -163,7 +163,7 @@ class BolsaController extends Controller
             'email' => $bolsa->email ?? $username.'@zafiro.local',
             'password' => Hash::make('ZAFIRO'),
             'password_temporal' => true,
-            'id_entidad' => $bolsa->id_entidad ?? session('entidad_activa_id'),
+            'id_entidad' => $bolsa->id_entidad ?? entidadActivaId(),
             'activo' => true,
         ]);
 

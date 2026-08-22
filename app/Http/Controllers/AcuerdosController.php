@@ -43,7 +43,7 @@ class AcuerdosController extends Controller
         
         $this->authorize('create', \App\Models\Acuerdo::class);
         $validated = $this->validar($request);
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
 
         Acuerdo::create($validated);
 

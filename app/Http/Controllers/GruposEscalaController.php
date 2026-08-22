@@ -87,7 +87,7 @@ class GruposEscalaController extends Controller
             $data['codigo'] = $this->generarCodigo();
         }
 
-        $data['id_entidad'] = (int) session('entidad_activa_id');
+        $data['id_entidad'] = (int) entidadActivaId();
 
         $model::create($data);
 

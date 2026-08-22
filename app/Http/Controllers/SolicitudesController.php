@@ -25,7 +25,7 @@ class SolicitudesController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\SolicitudesServicio::class);
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
 
         // Por defecto se muestran SOLO pendientes y en proceso. Las ejecutadas
         // y canceladas solo cuando el usuario las solicita explícitamente.
@@ -154,7 +154,7 @@ class SolicitudesController extends Controller
         
         $this->authorize('create', \App\Models\SolicitudesServicio::class);
         $validated = $this->validar($request);
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
         $validated['id_user'] = auth()->id();
         $validated['estado'] = 'pendiente';
         $validated['numero'] = $this->generarNumero($validated['fecha_solicitud']);

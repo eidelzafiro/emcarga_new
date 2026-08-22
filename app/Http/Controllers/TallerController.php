@@ -85,7 +85,7 @@ class TallerController extends Controller
             'id_taller' => 'nullable|exists:talleres,id',
         ]);
 
-        $idEntidad = (int) session('entidad_activa_id') ?: null;
+        $idEntidad = (int) entidadActivaId() ?: null;
 
         try {
             $this->ordenTallerService->crear($validated, $idEntidad);

@@ -104,7 +104,7 @@ class ConsecutivosController extends Controller
         $this->authorize('create', \App\Models\Consecutivo::class);
         $data = $request->validate($this->getValidationRules());
 
-        $data['id_entidad'] = (int) session('entidad_activa_id');
+        $data['id_entidad'] = (int) entidadActivaId();
         $data['descripcion'] = $data['nombre'];
         $data['ultimo'] = $data['valor'] ?? 0;
         if (empty($data['codigo'])) {
@@ -147,7 +147,7 @@ class ConsecutivosController extends Controller
 
     protected function getValidationRules($id = null): array
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         $table = 'consecutivos';
 
         $codigoUnique = $id

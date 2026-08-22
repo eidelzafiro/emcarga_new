@@ -162,7 +162,7 @@ class DietasController extends Controller
 
     private function entidadActiva(): ?int
     {
-        $id = (int) session('entidad_activa_id');
+        $id = (int) entidadActivaId();
 
         return $id ?: null;
     }

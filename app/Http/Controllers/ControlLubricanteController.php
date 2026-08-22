@@ -59,7 +59,7 @@ class ControlLubricanteController extends Controller
         $this->authorize('create', \App\Models\ControlLubricante::class);
         $validated = $request->validate($this->reglas());
 
-        $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
         $validated['id_unidad'] = $validated['id_entidad'];
 
         ControlLubricante::create($validated);

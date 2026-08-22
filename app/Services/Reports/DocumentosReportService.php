@@ -223,7 +223,7 @@ class DocumentosReportService extends BaseReportService
 
     private function entidadIds(): array
     {
-        $activa = (int) session('entidad_activa_id');
+        $activa = (int) entidadActivaId();
         if (! $activa) {
             return [23];
         }

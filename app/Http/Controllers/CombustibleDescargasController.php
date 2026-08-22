@@ -20,7 +20,7 @@ class CombustibleDescargasController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\CombustibleDescarga::class);
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $anio = (int) Carbon::parse($fechaOperaciones)->year;
         $mes = (int) Carbon::parse($fechaOperaciones)->month;
@@ -84,7 +84,7 @@ class CombustibleDescargasController extends Controller
         ]);
 
         $validated['saldo_lts'] = $this->calcularLitros($validated['id_tarjeta'], $validated['saldo_mon']);
-        $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
         $validated['id_user'] = auth()->id();
         $validated['estado'] = 'registrada';
 
@@ -135,7 +135,7 @@ class CombustibleDescargasController extends Controller
 
     public function hojasRuta()
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $anio = (int) Carbon::parse($fechaOperaciones)->year;
         $mes = (int) Carbon::parse($fechaOperaciones)->month;

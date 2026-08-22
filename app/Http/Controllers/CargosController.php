@@ -158,7 +158,7 @@ class CargosController extends Controller
 
         $query = $model::with(['grupo_escala', 'categoria_cargo', 'grupo_horario']);
 
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         if ($entidadId && $this->isEntityScoped()) {
             $this->applyEntityScope($query, $entidadId);
         }

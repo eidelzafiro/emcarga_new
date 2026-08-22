@@ -47,7 +47,7 @@ class ConciliacionesController extends Controller
             'estado' => 'required|in:pendiente,conciliado,pendiente',
             'descripcion' => 'nullable|max:500',
         ]);
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
         Conciliacione::create($validated);
 
         return redirect()->route('conciliaciones.index')->with('success', 'Conciliación creada correctamente.');

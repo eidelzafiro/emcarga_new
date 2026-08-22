@@ -45,7 +45,7 @@ trait ManagesCatalog
 
     protected function getScopingData(): array
     {
-        return ['id_entidad' => (int) session('entidad_activa_id')];
+        return ['id_entidad' => (int) entidadActivaId()];
     }
 
     protected function getSortField(): string
@@ -129,7 +129,7 @@ trait ManagesCatalog
         $query = $model::query();
 
         if ($this->isEntityScoped()) {
-            $entidadId = (int) session('entidad_activa_id');
+            $entidadId = (int) entidadActivaId();
             if ($entidadId) {
                 $this->applyEntityScope($query, $entidadId);
             }

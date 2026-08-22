@@ -42,7 +42,7 @@ class VallasController extends Controller
 
     protected function getExtraFields(): array
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
 
         $naves = Nave::select('naves.id', 'naves.nombre', 'talleres.nombre as taller_nombre')
             ->leftJoin('talleres', 'talleres.id', '=', 'naves.id_taller')

@@ -50,7 +50,7 @@ class MotoresController extends Controller
         
         $this->authorize('create', \App\Models\Motore::class);
         $validated = $request->validate($this->reglas());
-        $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
 
         Motore::create($validated);
 

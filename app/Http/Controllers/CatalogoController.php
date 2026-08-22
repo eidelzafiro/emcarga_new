@@ -180,7 +180,7 @@ class CatalogoController extends Controller
         $itemData['tipo'] = $tipo;
 
         if (in_array($tipo, ['tipos_modelo'])) {
-            $entidadId = (int) session('entidad_activa_id');
+            $entidadId = (int) entidadActivaId();
             if ($entidadId) {
                 $extra = $itemData['extra'] ?? [];
                 $extra['id_entidad'] = $entidadId;
@@ -208,7 +208,7 @@ class CatalogoController extends Controller
         if ($this->esCatalogoPorEntidad($tipo)) {
             $extra = $item->extra ?? [];
             if (! isset($extra['id_entidad'])) {
-                $extra['id_entidad'] = (int) session('entidad_activa_id');
+                $extra['id_entidad'] = (int) entidadActivaId();
             }
             $itemData['extra'] = $itemData['extra'] ?? [];
             $itemData['extra']['id_entidad'] = $extra['id_entidad'];

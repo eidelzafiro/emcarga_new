@@ -76,13 +76,13 @@ class ReportController extends Controller
     public function pdfPlanBajasNeumaticos(Request $request)
     {
         return app(PlanBajasNeumaticoReportService::class)
-            ->pdfPlanBajas($request->integer('tipo', 1), (int) session('entidad_activa_id') ?: null);
+            ->pdfPlanBajas($request->integer('tipo', 1), (int) entidadActivaId() ?: null);
     }
 
     public function pdfControlLubricante(Request $request)
     {
         return app(ControlLubricanteReportService::class)
-            ->pdfControlLubricante($request->input('desde'), $request->input('hasta'), (int) session('entidad_activa_id') ?: null);
+            ->pdfControlLubricante($request->input('desde'), $request->input('hasta'), (int) entidadActivaId() ?: null);
     }
 
     public function pdfOrdenTaller(int $id)

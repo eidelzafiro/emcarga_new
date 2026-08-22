@@ -50,7 +50,7 @@ class CajasController extends Controller
         
         $this->authorize('create', \App\Models\Caja::class);
         $validated = $request->validate($this->reglas());
-        $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
 
         Caja::create($validated);
 

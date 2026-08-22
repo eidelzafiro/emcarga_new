@@ -26,7 +26,7 @@ class HojasRutaController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\HojasRuta::class);
-        $entidadId = session('entidad_activa_id');
+        $entidadId = entidadActivaId();
 
         // Fecha de operaciones → ventana de vigencia por mes
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
@@ -366,7 +366,7 @@ class HojasRutaController extends Controller
             }
 
             $fecha = Carbon::parse($request->input('fecha_emision'));
-            $entidadId = session('entidad_activa_id');
+            $entidadId = entidadActivaId();
 
             $existe = HojasRuta::where('numero', $folio)
                 ->whereYear('fecha_emision', $fecha->year)

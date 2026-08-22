@@ -64,7 +64,7 @@ class BateriasController extends Controller
             'estado' => 'nullable|string|max:50',
         ]);
 
-        $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
         $validated['folio'] = $request->input('folio', 'AUTOMATICO') === 'AUTOMATICO'
             ? $this->siguienteFolio()
             : $validated['folio'];

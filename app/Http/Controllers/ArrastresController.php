@@ -68,7 +68,7 @@ class ArrastresController extends Controller
         $this->authorize('create', [\App\Models\Tractivo::class, \App\Policies\ArrastrePolicy::class]);
         $validated = $request->validate($this->reglas());
 
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
         $validated['id_grupo'] = 8;
         $this->aplicarFichaTipo($validated);
         Tractivo::create($validated);

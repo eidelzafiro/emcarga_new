@@ -36,7 +36,7 @@ class AforosController extends Controller
      */
     public function index(Request $request)
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
 
         // Mes/año de la fecha de parte a revisar: SIEMPRE el mes de operaciones
         // (el grid NO permite cambiar de mes/año).
@@ -117,7 +117,7 @@ class AforosController extends Controller
      */
     private function entidadesPermitidas(): array
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         if (! $entidadId) {
             return [];
         }
@@ -347,7 +347,7 @@ class AforosController extends Controller
      */
     private function datosFormulario(Request $request): array
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
 
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $inicioMes = Carbon::parse($fechaOperaciones)->startOfMonth()->toDateString();
@@ -542,7 +542,7 @@ class AforosController extends Controller
             'idchofer2' => 'nullable|integer',
         ]);
 
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
 
         return response()->json($this->cotizador->calcularSalario(
             tipocarga: (int) ($v['tipocarga'] ?? 0),
@@ -641,7 +641,7 @@ class AforosController extends Controller
         // El aforo siempre apunta a una carta existente (creada o seleccionada).
         $validated['id_carta_porte'] = $carta->id;
 
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         if (! $entidadId) {
             $entidadId = (int) ($carta->tractivo?->id_entidad ?? 0);
         }
@@ -690,7 +690,7 @@ class AforosController extends Controller
 
         $validated = $this->validar($request);
         $this->validarLineasCalculadas($request);
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         if (! $entidadId) {
             $entidadId = (int) ($aforo->cartaPorte?->tractivo?->id_entidad ?? 0);
         }
@@ -734,7 +734,7 @@ class AforosController extends Controller
 
         $solicitud = SolicitudesServicio::create([
             'numero' => $this->siguienteNumeroSolicitud($fecha),
-            'id_entidad' => session('entidad_activa_id') ?: null,
+            'id_entidad' => entidadActivaId() ?: null,
             'id_user' => auth()->id(),
             'fecha_solicitud' => $fecha,
             'estado' => 'pendiente',

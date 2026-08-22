@@ -61,7 +61,7 @@ class SalariosController extends Controller
             'observaciones' => 'nullable|string',
             'estado' => 'required|in:borrador,aprobado,cerrado',
         ]);
-        $validated['id_entidad'] = (int) session('entidad_activa_id');
+        $validated['id_entidad'] = (int) entidadActivaId();
         $validated['id_user'] = auth()->id();
         Salario::create($validated);
 

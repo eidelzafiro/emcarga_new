@@ -44,7 +44,7 @@ class TarjetasController extends Controller
         
         $this->authorize('create', \App\Models\Tarjeta::class);
         $validated = $this->validar($request);
-        $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
 
         Tarjeta::create($validated);
 

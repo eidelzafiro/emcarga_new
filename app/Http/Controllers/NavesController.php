@@ -32,7 +32,7 @@ class NavesController extends Controller
 
     protected function getExtraFields(): array
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
 
         $talleres = Taller::select('id', 'nombre')
             ->where('activo', true)

@@ -18,7 +18,7 @@ trait EntidadScoping
      */
     protected function entidadesPermitidas(): array
     {
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         if (! $entidadId) {
             return [];
         }

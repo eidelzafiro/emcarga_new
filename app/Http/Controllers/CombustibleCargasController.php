@@ -23,7 +23,7 @@ class CombustibleCargasController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\CombustibleCarga::class);
-        $entidadId = (int) session('entidad_activa_id');
+        $entidadId = (int) entidadActivaId();
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $anio = (int) Carbon::parse($fechaOperaciones)->year;
         $mes = (int) Carbon::parse($fechaOperaciones)->month;
@@ -80,7 +80,7 @@ class CombustibleCargasController extends Controller
         $detalles = $validated['detalles'];
         unset($validated['detalles']);
 
-        $validated['id_entidad'] = (int) session('entidad_activa_id') ?: null;
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
         $validated['id_user'] = auth()->id();
         $validated['estado'] = 'registrada';
 

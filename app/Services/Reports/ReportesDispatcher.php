@@ -225,6 +225,26 @@ class ReportesDispatcher
         1005 => [FacturacionReportService::class, 'facturasPendientesFirma'],
         1007 => [FacturacionReportService::class, 'listadoConciliaciones'],
         4069 => [FacturacionReportService::class, 'resumenMensualClientesOtrasVentas'],
+        // OTROS / RRHH (6) — plazas vacantes, aseo tecnológico, cumpleaños, licencias, documentos
+        93   => [OtrosReportService::class, 'plazasVacantes'],
+        130  => [OtrosReportService::class, 'aseoTecnologico'],
+        131  => [OtrosReportService::class, 'cumpleanosMes'],
+        1038 => [OtrosReportService::class, 'personalConLicencia'],
+        1039 => [OtrosReportService::class, 'documentosChoferes'],
+        1041 => [OtrosReportService::class, 'modeloAseoTecnologico'],
+        // TIEMPOS (3) — resúmenes de tiempos y conciliación HR–Tiempos
+        128  => [TiemposReportService::class, 'resumenTiemposTractivos'],
+        129  => [TiemposReportService::class, 'resumenTiemposEmpresa'],
+        136  => [TiemposReportService::class, 'conciliacionHojaRutaTiempos'],
+        // EXPORTAR TABLAS (8) — volcados CSV de tablas maestras
+        1075 => [ExportarTablasReportService::class, 'clientes'],
+        1076 => [ExportarTablasReportService::class, 'organismos'],
+        1077 => [ExportarTablasReportService::class, 'lugares'],
+        1078 => [ExportarTablasReportService::class, 'productos'],
+        1079 => [ExportarTablasReportService::class, 'girado'],
+        1080 => [ExportarTablasReportService::class, 'aforo'],
+        1081 => [ExportarTablasReportService::class, 'hojaRutas'],
+        1082 => [ExportarTablasReportService::class, 'tractivos'],
         // EMCARGA (5)
         4062 => [EmcargaReportService::class, 'distanciaMediaTonelada'],
         4063 => [EmcargaReportService::class, 'cargaTransportada'],

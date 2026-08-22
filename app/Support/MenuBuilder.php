@@ -27,7 +27,7 @@ class MenuBuilder
 
         $perfilRole = $perfil ? Role::findByName($perfil) : null;
 
-        return MenuItem::with('children')
+        return MenuItem::with('children.children')
             ->whereNull('parent_id')
             ->where('activo', true)
             ->orderBy('orden')

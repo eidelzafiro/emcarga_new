@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\EntidadScoping;
 use App\Models\Neumatico;
-use App\Models\NeumaticosMovimiento;
 use App\Services\NeumaticoService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

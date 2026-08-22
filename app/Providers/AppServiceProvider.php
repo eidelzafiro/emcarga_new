@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Database\Grammars\MariaDbGrammarOverride;
 use App\Database\Processors\MariaDbProcessorOverride;
 use App\Policies\RolePolicy;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -28,6 +29,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Detecta consultas N+1 en desarrollo local (lanza excepción) para
+        // evitar regresiones de rendimiento. Se acota a 'local' para no romper
+        // el suite de tests (APP_ENV=testing) mientras se corrigen los N+1
+        // existentes de forma incremental.
+        Model::preventLazyLoading(config('app.env') === 'local');
+
         Schema::defaultStringLength(191);
 
         // dompdf requiere un directorio de fuentes/caché escribible por el

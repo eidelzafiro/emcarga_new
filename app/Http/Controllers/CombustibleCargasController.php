@@ -142,8 +142,10 @@ class CombustibleCargasController extends Controller
 
     private function crearDetalles(CombustibleCarga $carga, array $detalles, string $fcarga): void
     {
+        [$tarjetas, $precioTipo] = $this->precargarParaLitros($carga, $detalles);
+
         foreach ($detalles as $detalle) {
-            $litros = $this->calcularLitros($detalle['id_tarjeta'], $detalle['saldo_mon'], $carga->id_tipo_combustibles);
+            $litros = $this->calcularLitros($detalle['saldo_mon'], $tarjetas->get($detalle['id_tarjeta']), $precioTipo);
             DetalleCargaCombustible::create([
                 'id_carga' => $carga->id,
                 'id_tarjeta' => $detalle['id_tarjeta'],
@@ -161,8 +163,10 @@ class CombustibleCargasController extends Controller
         $enviados = collect($detalles)->pluck('id')->filter();
         $carga->detalles()->whereNotIn('id', $enviados)->delete();
 
+        [$tarjetas, $precioTipo] = $this->precargarParaLitros($carga, $detalles);
+
         foreach ($detalles as $detalle) {
-            $litros = $this->calcularLitros($detalle['id_tarjeta'], $detalle['saldo_mon'], $carga->id_tipo_combustibles);
+            $litros = $this->calcularLitros($detalle['saldo_mon'], $tarjetas->get($detalle['id_tarjeta']), $precioTipo);
             if (empty($detalle['id'])) {
                 DetalleCargaCombustible::create([
                     'id_carga' => $carga->id,
@@ -184,15 +188,30 @@ class CombustibleCargasController extends Controller
         }
     }
 
-    private function calcularLitros(int $idTarjeta, float $saldoMon, ?int $idTipoCombustible): float
+    /**
+     * Carga en una sola consulta las tarjetas (con su tipo de combustible)
+     * y el precio del tipo de combustible de la carga, para evitar N+1 en
+     * calcularLitros (antes hacía Tarjeta::find + lazy load por detalle).
+     *
+     * @return array{0: \Illuminate\Support\Collection<int, Tarjeta>, 1: float|null}
+     */
+    private function precargarParaLitros(CombustibleCarga $carga, array $detalles): array
+    {
+        $ids = collect($detalles)->pluck('id_tarjeta')->unique()->all();
+        $tarjetas = Tarjeta::with('tipoCombustible:id,preciomn')->whereIn('id', $ids)->get()->keyBy('id');
+        $precioTipo = TipoCombustible::find($carga->id_tipo_combustibles)?->preciomn;
+
+        return [$tarjetas, $precioTipo];
+    }
+
+    private function calcularLitros(float $saldoMon, ?Tarjeta $tarjeta, ?float $precioTipo): float
     {
         $precio = null;
-        $tarjeta = Tarjeta::find($idTarjeta);
         if ($tarjeta?->idmonedas == 1) {
             $precio = $tarjeta->tipoCombustible?->preciomn;
         }
-        if ($precio === null && $idTipoCombustible) {
-            $precio = TipoCombustible::find($idTipoCombustible)?->preciomn;
+        if ($precio === null && $precioTipo !== null) {
+            $precio = $precioTipo;
         }
 
         return ($precio > 0) ? round($saldoMon / $precio, 2) : 0;

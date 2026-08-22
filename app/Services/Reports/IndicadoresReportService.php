@@ -3,8 +3,6 @@
 namespace App\Services\Reports;
 
 use App\Models\Aforo;
-use App\Models\AforoIndicadore;
-use App\Models\CartaPorte;
 use App\Models\Tractivo;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

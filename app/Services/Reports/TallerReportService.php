@@ -3,7 +3,6 @@
 namespace App\Services\Reports;
 
 use App\Models\Motore;
-use App\Models\Neumatico;
 use App\Models\OrdenesTaller;
 use App\Models\Tractivo;
 use Illuminate\Support\Facades\DB;

@@ -8,10 +8,8 @@ use App\Models\Entidad;
 use App\Models\HojasRuta;
 use App\Models\Servicentro;
 use App\Models\Tarjeta;
-use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CombustibleDescargasController extends Controller

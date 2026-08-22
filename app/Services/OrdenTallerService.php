@@ -7,7 +7,6 @@ use App\Models\MovimientosTaller;
 use App\Models\OrdenesOperacione;
 use App\Models\OrdenesTaller;
 use App\Models\Tractivo;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Lógica de negocio de Órdenes de Taller (réplica del legacy CI3 ModTaller).

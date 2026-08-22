@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bitacora;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -40,12 +41,26 @@ class LoginController extends Controller
             'fecha_operaciones.date_format' => 'La fecha de operaciones no es válida.',
         ]);
 
+        // Throttle basado en tiempo/IP: evita fuerza bruta y abuso del bloqueo
+        // por cuenta (que de lo contrario permitiría bloquear a cualquier
+        // usuario con solo 5 intentos fallidos). La clave combina el usuario
+        // intentado y la IP para limitar intentos por ambas dimensiones.
+        $throttleKey = 'login:'.strtolower($credenciales['username']).'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            throw ValidationException::withMessages([
+                'username' => "Demasiados intentos de inicio de sesión. Intente nuevamente en {$seconds} segundos.",
+            ]);
+        }
+
         // Los usernames se guardan en mayúsculas (paridad con el legacy)
         $user = User::where('username', strtoupper($credenciales['username']))->first();
 
         // Mensaje genérico para no revelar si el usuario existe
         if (! $user) {
             Bitacora::registrar('login_fallido', 'Usuario inexistente: '.$credenciales['username']);
+            RateLimiter::hit($throttleKey);
 
             throw ValidationException::withMessages([
                 'username' => 'Credenciales no válidas.',
@@ -54,6 +69,7 @@ class LoginController extends Controller
 
         if ($user->estaBloqueado()) {
             Bitacora::registrar('login_bloqueado', 'Intento de acceso con usuario bloqueado.', $user->id);
+            RateLimiter::hit($throttleKey);
 
             throw ValidationException::withMessages([
                 'username' => 'El usuario se encuentra bloqueado. Contacte con el administrador del sistema.',
@@ -69,6 +85,8 @@ class LoginController extends Controller
             if ($user->intentos_fallidos >= User::MAX_INTENTOS_LOGIN) {
                 Bitacora::registrar('bloqueo_automatico', 'Bloqueado tras '.User::MAX_INTENTOS_LOGIN.' intentos fallidos.', $user->id);
             }
+
+            RateLimiter::hit($throttleKey);
 
             throw ValidationException::withMessages([
                 'username' => 'Credenciales no válidas.',
@@ -86,6 +104,7 @@ class LoginController extends Controller
         }
 
         Auth::login($user, $request->boolean('remember'));
+        RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
         // Contexto de trabajo en sesión (el middleware EstablecerContextoTrabajo

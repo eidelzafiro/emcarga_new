@@ -25,7 +25,7 @@ function generar(id) {
       onSuccess: (page) => {
         estado.value[id] = {
           filtros,
-          mensaje: page.props.flash?.mensaje || 'Generado.',
+          mensaje: page.props.flash?.success || page.props.flash?.mensaje || 'Generado.',
           ok: true,
         }
       },

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AcuerdosController;
+use App\Http\Controllers\ExportacionController;
 use App\Http\Controllers\AforosController;
 use App\Http\Controllers\AlertasController;
 use App\Http\Controllers\AreasController;
@@ -459,6 +460,10 @@ Route::middleware('auth')->group(function () {
             Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
             Route::post('generar/{reporte}', [ReportesController::class, 'generar'])->name('generar');
         });
+
+        // R-3: descarga de exportaciones de tablas generadas en cola
+        Route::get('exportaciones/descargar/{token}', [ExportacionController::class, 'descargar'])
+            ->name('exportaciones.descargar');
 
         // Impresión de documentos: permiso del módulo del recurso (carta-porte.ver,
         // hojas-ruta.ver, facturas.ver, prefacturas.ver) en vez de reportes.ver.

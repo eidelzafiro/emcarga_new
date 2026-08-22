@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ReportesDispatcher
 {
+    /** ids de reportes del grupo EXPORTAR TABLAS (se procesan en cola, R-3). */
+    public const EXPORT_IDS = [1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082];
+
     /** idreporte => [clase servicio, método] */
     private const MAPA = [
         // INDICADORES (14)
@@ -263,5 +266,14 @@ class ReportesDispatcher
         [$clase, $metodo] = self::MAPA[$id];
 
         return app($clase)->{$metodo}($filtros);
+    }
+
+    /**
+     * Indica si el reporte pertenece al grupo EXPORTAR TABLAS y debe
+     * procesarse en cola (R-3) en vez de devolverse de forma síncrona.
+     */
+    public static function esExportacion(int $id): bool
+    {
+        return in_array($id, self::EXPORT_IDS, true);
     }
 }

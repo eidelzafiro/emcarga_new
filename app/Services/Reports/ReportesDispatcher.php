@@ -214,6 +214,17 @@ class ReportesDispatcher
         12   => [DocumentosReportService::class, 'hojaRutaParteDiarioEmision'],
         158  => [DocumentosReportService::class, 'hojaRutaRegistroRes184'],
         1014 => [DocumentosReportService::class, 'hojaRutaAnalisisDocumentacion'],
+        // FACTURACION (10) — facturas, cartas a facturar, resúmenes, firmas, conciliaciones
+        13   => [FacturacionReportService::class, 'facturasImpresion'],
+        14   => [FacturacionReportService::class, 'cartasPorteAFacturar'],
+        16   => [FacturacionReportService::class, 'registroFacturacionMes'],
+        17   => [FacturacionReportService::class, 'resumenMensualClientes'],
+        18   => [FacturacionReportService::class, 'resumenMensualOrganismos'],
+        59   => [FacturacionReportService::class, 'impresionComprobantes'],
+        1003 => [FacturacionReportService::class, 'facturasFirmadasClientes'],
+        1005 => [FacturacionReportService::class, 'facturasPendientesFirma'],
+        1007 => [FacturacionReportService::class, 'listadoConciliaciones'],
+        4069 => [FacturacionReportService::class, 'resumenMensualClientesOtrasVentas'],
         // EMCARGA (5)
         4062 => [EmcargaReportService::class, 'distanciaMediaTonelada'],
         4063 => [EmcargaReportService::class, 'cargaTransportada'],

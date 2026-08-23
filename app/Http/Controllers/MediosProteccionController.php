@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\MedioProteccion;
-use App\Models\TipoMedioProteccion;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,12 +17,10 @@ class MediosProteccionController extends Controller
             ->orderBy('nombre')
             ->paginate(20);
 
-        $tipos = TipoMedioProteccion::select('id', 'nombre')->orderBy('nombre')->get();
 
         return Inertia::render('MediosProteccion/Index', [
             'title' => 'Medios de Protección',
             'items' => $items,
-            'tipos' => $tipos,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -34,7 +31,6 @@ class MediosProteccionController extends Controller
         $this->authorize('create', \App\Models\MedioProteccion::class);
         $validated = $request->validate([
             'nombre' => 'required|string|max:150',
-            'id_tipo_medio_proteccion' => 'nullable|exists:tipos_medios_proteccion,id',
             'duracion' => 'nullable|integer|min:0',
             'tipo_duracion' => 'nullable|string|max:150',
             'activo' => 'boolean',
@@ -50,7 +46,6 @@ class MediosProteccionController extends Controller
         $this->authorize('update', $mediosProteccion);
         $validated = $request->validate([
             'nombre' => 'required|string|max:150',
-            'id_tipo_medio_proteccion' => 'nullable|exists:tipos_medios_proteccion,id',
             'duracion' => 'nullable|integer|min:0',
             'tipo_duracion' => 'nullable|string|max:150',
             'activo' => 'boolean',

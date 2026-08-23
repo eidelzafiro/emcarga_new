@@ -18,7 +18,6 @@ use App\Http\Controllers\CartaPorteController;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\CategoriasCargoController;
 use App\Http\Controllers\CategoriasProductosController;
-use App\Http\Controllers\CentrosCostosController;
 use App\Http\Controllers\ChoferesController;
 use App\Http\Controllers\ClasificacionesOrdenesTallerController;
 use App\Http\Controllers\ClientesController;
@@ -41,7 +40,6 @@ use App\Http\Controllers\DetallesCargaCombustibleController;
 use App\Http\Controllers\DevolucionesController;
 use App\Http\Controllers\DiferencialesController;
 use App\Http\Controllers\DistanciasController;
-use App\Http\Controllers\ElementosGastoController;
 use App\Http\Controllers\EmbalajesController;
 use App\Http\Controllers\EmpleadosController;
 use App\Http\Controllers\EntidadesController;
@@ -73,7 +71,6 @@ use App\Http\Controllers\MotoresController;
 use App\Http\Controllers\MovimientosInventarioController;
 use App\Http\Controllers\MunicipiosController;
 use App\Http\Controllers\NavesController;
-use App\Http\Controllers\NavierasController;
 use App\Http\Controllers\NeumaticosController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OrganismosController;
@@ -105,12 +102,9 @@ use App\Http\Controllers\TalleresController;
 use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
 use App\Http\Controllers\TiposCargasReporteController;
-use App\Http\Controllers\TiposCatalogoLugaresController;
 use App\Http\Controllers\TiposConceptosController;
 use App\Http\Controllers\TiposContratosController;
-use App\Http\Controllers\TiposDocumentosController;
 use App\Http\Controllers\TiposMediosCargoController;
-use App\Http\Controllers\TiposMediosProteccionController;
 use App\Http\Controllers\TiposTasasController;
 use App\Http\Controllers\TiposTractivosController;
 use App\Http\Controllers\TractivosController;
@@ -283,10 +277,6 @@ Route::middleware('auth')->group(function () {
         Route::get('preview/solicitudes', [PreviewController::class, 'solicitudes'])
             ->name('preview.solicitudes');
 
-        // Comercial - Tablas faltantes (Fase 5.3 parte 2)
-        Route::resource('tipos-catalogo-lugares', TiposCatalogoLugaresController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
 
         Route::resource('configuraciones-modelo', ConfiguracionesModeloController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -395,13 +385,6 @@ Route::middleware('auth')->group(function () {
 
 
 
-
-        Route::resource('tipos-medios-proteccion', TiposMediosProteccionController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-
-
-
         // Catálogos y configuración (Fase 5.7)
         Route::resource('marcas', MarcasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -447,9 +430,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('embalajes', EmbalajesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('navieras', NavierasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('organismos', OrganismosController::class)
@@ -525,9 +505,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('servicentros', ServicentrosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-documentos', TiposDocumentosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         Route::resource('firmas-autorizadas', FirmasAutorizadasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
@@ -581,8 +558,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('movimientos-inventario', MovimientosInventarioController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         // RRHH - Tablas faltantes (Fase 5.8)
-        Route::resource('centros-costos', CentrosCostosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('pagos-adicionales-cargo', PagosAdicionalesCargoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         // Comercial - Tablas faltantes (Fase 5.8)
@@ -591,8 +566,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('categorias-productos', CategoriasProductosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         // Misc - Tablas varias (Fase 5.8)
-        Route::resource('elementos-gasto', ElementosGastoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('choferes', ChoferesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('empleados', EmpleadosController::class)

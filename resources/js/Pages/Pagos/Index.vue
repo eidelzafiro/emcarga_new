@@ -13,13 +13,13 @@ import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ pagos: Object, tiposDocumento: Array, monedas: Array, filters: Object })
+const props = defineProps({ pagos: Object, monedas: Array, filters: Object })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const estado = ref(props.filters?.estado || null)
 const showForm = ref(false)
 const editing = ref(null)
-const form = ref({ id_tipo_documento: null, id_moneda: null, fecha_pago: null, numero_documento: '', monto: null, concepto: '', estado: 'pendiente' })
+const form = ref({ id_moneda: null, fecha_pago: null, numero_documento: '', monto: null, concepto: '', estado: 'pendiente' })
 const title = 'Pagos'
 const estados = [
   { label: 'Pendiente', value: 'pendiente' },
@@ -40,14 +40,13 @@ function onPage(event) {
 
 function openCreate() {
   editing.value = null
-  form.value = { id_tipo_documento: null, id_moneda: null, fecha_pago: null, numero_documento: '', monto: null, concepto: '', estado: 'pendiente' }
+  form.value = { id_moneda: null, fecha_pago: null, numero_documento: '', monto: null, concepto: '', estado: 'pendiente' }
   showForm.value = true
 }
 
 function openEdit(item) {
   editing.value = item
   form.value = {
-    id_tipo_documento: item.id_tipo_documento,
     id_moneda: item.id_moneda,
     fecha_pago: item.fecha_pago ? item.fecha_pago.slice(0, 10) : null,
     numero_documento: item.numero_documento || '',
@@ -132,10 +131,6 @@ function estadoBadge(e) {
           <div>
             <label class="block mb-1 font-medium">Monto</label>
             <InputNumber v-model="form.monto" :min="0" :max-fraction-digits="2" class="w-full" required />
-          </div>
-          <div>
-            <label class="block mb-1 font-medium">Tipo de Documento</label>
-            <Select v-model="form.id_tipo_documento" :options="tiposDocumento" optionLabel="nombre" optionValue="id" filter placeholder="Seleccione..." class="w-full" :showClear="true" />
           </div>
           <div>
             <label class="block mb-1 font-medium">Moneda</label>

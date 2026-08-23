@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Moneda;
 use App\Models\Pago;
-use App\Models\TipoDocumento;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,7 +19,6 @@ class PagosController extends Controller
             ->orderBy('fecha_pago', 'desc')
             ->paginate(20);
 
-        $tiposDocumento = TipoDocumento::select('id', 'nombre')->orderBy('nombre')->get();
         $monedas = Moneda::select('id', 'codigo', 'nombre')->orderBy('codigo')->get();
 
         return Inertia::render('Pagos/Index', [
@@ -37,7 +35,6 @@ class PagosController extends Controller
         
         $this->authorize('create', \App\Models\Pago::class);
         $validated = $request->validate([
-            'id_tipo_documento' => 'nullable|exists:tipos_documentos,id',
             'id_moneda' => 'nullable|exists:monedas,id',
             'fecha_pago' => 'required|date',
             'numero_documento' => 'nullable|max:100',
@@ -56,7 +53,6 @@ class PagosController extends Controller
         
         $this->authorize('update', $pago);
         $validated = $request->validate([
-            'id_tipo_documento' => 'nullable|exists:tipos_documentos,id',
             'id_moneda' => 'nullable|exists:monedas,id',
             'fecha_pago' => 'required|date',
             'numero_documento' => 'nullable|max:100',

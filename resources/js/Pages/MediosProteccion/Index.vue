@@ -14,12 +14,12 @@ import Dialog from 'primevue/dialog'
 import Checkbox from 'primevue/checkbox'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, tipos: Array, filters: Object })
+const props = defineProps({ items: Object, filters: Object })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
-const form = ref({ nombre: '', id_tipo_medio_proteccion: null, duracion: null, tipo_duracion: '', activo: true })
+const form = ref({ nombre: '', duracion: null, tipo_duracion: '', activo: true })
 const title = 'Medios de Protección'
 
 watch(search, () => {
@@ -32,14 +32,14 @@ function onPage(event) {
 
 function openCreate() {
   editing.value = null
-  form.value = { nombre: '', id_tipo_medio_proteccion: null, duracion: null, tipo_duracion: '', activo: true }
+  form.value = { nombre: '', duracion: null, tipo_duracion: '', activo: true }
   showForm.value = true
 }
 
 function openEdit(item) {
   editing.value = item
   form.value = {
-    nombre: item.nombre, id_tipo_medio_proteccion: item.id_tipo_medio_proteccion, duracion: item.duracion,
+    nombre: item.nombre, duracion: item.duracion,
     tipo_duracion: item.tipo_duracion || '', activo: Boolean(item.activo),
   }
   showForm.value = true
@@ -96,10 +96,6 @@ function submit() {
         <div>
           <label class="block mb-1 font-medium">Nombre</label>
           <InputText v-model="form.nombre" class="w-full" required />
-        </div>
-        <div>
-          <label class="block mb-1 font-medium">Tipo de medio</label>
-          <Select v-model="form.id_tipo_medio_proteccion" :options="tipos" optionLabel="nombre" optionValue="id" filter placeholder="Seleccione el tipo..." class="w-full" :showClear="true" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>

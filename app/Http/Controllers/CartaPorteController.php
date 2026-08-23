@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bolsa;
-use App\Models\Buque;
 use App\Models\CartaPorte;
 use App\Models\Cliente;
 use App\Models\Distancia;
@@ -203,7 +202,6 @@ class CartaPorteController extends Controller
             'productos' => Producto::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'tiposCargas' => TipoCarga::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'monedas' => Moneda::select('id', 'codigo', 'nombre', 'simbolo')->where('activo', true)->orderBy('nombre')->get(),
-            'buques' => Buque::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'tractivos' => Tractivo::with('grupo:id,nombre')
                 ->select('id', 'codigo', 'id_entidad', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp')
                 ->whereNull('fecha_baja')

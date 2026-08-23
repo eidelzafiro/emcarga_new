@@ -64,7 +64,6 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Medidas Neumáticos', 'route' => 'medidas-neumaticos.index', 'permission' => 'medidas-neumaticos.ver', 'orden' => 10],
             ['parent' => 'Catálogos', 'label' => 'Posiciones Neumáticos', 'route' => 'posiciones-neumaticos.index', 'permission' => 'posiciones-neumaticos.ver', 'orden' => 15],
             ['parent' => 'Catálogos', 'label' => 'Embalajes', 'route' => 'embalajes.index', 'permission' => 'embalajes.ver', 'orden' => 19],
-            ['parent' => 'Catálogos', 'label' => 'Navieras', 'route' => 'navieras.index', 'permission' => 'navieras.ver', 'orden' => 21],
             ['parent' => 'Catálogos', 'label' => 'Organismos', 'route' => 'organismos.index', 'permission' => 'organismos.ver', 'orden' => 22],
             ['parent' => 'Catálogos', 'label' => 'Categorías Cargo', 'route' => 'categorias-cargo.index', 'permission' => 'categorias-cargo.ver', 'orden' => 23],
             ['parent' => 'Catálogos', 'label' => 'Grupos Escala', 'route' => 'grupos-escala.index', 'permission' => 'grupos-escala.ver', 'orden' => 24],
@@ -159,7 +158,6 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Tipos Gasto',              'route' => 'catalogo.index?tipo=tipos_gastos',              'permission' => 'catalogo.ver',          'orden' => 45],
             ['parent' => 'Catálogos', 'label' => 'Tipo Ingresos',            'route' => 'catalogo.index?tipo=tipo_ingresos',             'permission' => 'catalogo.ver',         'orden' => 46],
             ['parent' => 'Catálogos', 'label' => 'Tipos Concepto',           'route' => 'tipos-conceptos.index',           'permission' => 'tipos-conceptos.ver',       'orden' => 47],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Cat. Lugares',       'route' => 'tipos-catalogo-lugares.index',    'permission' => 'tipos-catalogo-lugares.ver', 'orden' => 49],
 
             // === Geográficos ===
             ['parent' => 'Catálogos', 'label' => 'Colores',                  'route' => 'colores.index',                   'permission' => 'colores.ver',               'orden' => 51],
@@ -180,7 +178,6 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Tipos Sistema Pago',       'route' => 'catalogo.index?tipo=tipos_sistemas_pago',       'permission' => 'catalogo.ver',   'orden' => 64],
             ['parent' => 'Catálogos', 'label' => 'Tipos Pago Adicional',     'route' => 'catalogo.index?tipo=tipos_pagos_adicionales',   'permission' => 'catalogo.ver', 'orden' => 68],
             ['parent' => 'Catálogos', 'label' => 'Tipos Medio Cargo',        'route' => 'tipos-medios-cargo.index',        'permission' => 'tipos-medios-cargo.ver',    'orden' => 69],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Medio Protección',   'route' => 'tipos-medios-proteccion.index',   'permission' => 'tipos-medios-proteccion.ver', 'orden' => 70],
             ['parent' => 'Catálogos', 'label' => 'Tipos Ubicación Defensa',  'route' => 'catalogo.index?tipo=tipos_ubicacion_defensa',   'permission' => 'catalogo.ver', 'orden' => 71],
             ['parent' => 'Catálogos', 'label' => 'Tipos Integración Polít.', 'route' => 'catalogo.index?tipo=tipos_integracion_politica', 'permission' => 'catalogo.ver', 'orden' => 72],
 

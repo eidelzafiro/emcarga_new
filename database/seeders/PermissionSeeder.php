@@ -104,7 +104,6 @@ class PermissionSeeder extends Seeder
             'talleres.ver', 'talleres.crear', 'talleres.editar', 'talleres.eliminar',
             'posiciones-neumaticos.ver', 'posiciones-neumaticos.crear', 'posiciones-neumaticos.editar', 'posiciones-neumaticos.eliminar',
             'embalajes.ver', 'embalajes.crear', 'embalajes.editar', 'embalajes.eliminar',
-            'navieras.ver', 'navieras.crear', 'navieras.editar', 'navieras.eliminar',
             'organismos.ver', 'organismos.crear', 'organismos.editar', 'organismos.eliminar',
             'categorias-cargo.ver', 'categorias-cargo.crear', 'categorias-cargo.editar', 'categorias-cargo.eliminar',
             'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
@@ -124,7 +123,6 @@ class PermissionSeeder extends Seeder
             'catalogo.ver', 'catalogo.crear', 'catalogo.editar', 'catalogo.eliminar',
 
             'servicentros.ver', 'servicentros.crear', 'servicentros.editar', 'servicentros.eliminar',
-            'tipos-documentos.ver', 'tipos-documentos.crear', 'tipos-documentos.editar', 'tipos-documentos.eliminar',
             'firmas-autorizadas.ver', 'firmas-autorizadas.crear', 'firmas-autorizadas.editar', 'firmas-autorizadas.eliminar',
             'reportes-costos.ver', 'reportes-costos.crear', 'reportes-costos.editar', 'reportes-costos.eliminar',
             'estados-tarjetas.ver', 'estados-tarjetas.crear', 'estados-tarjetas.editar', 'estados-tarjetas.eliminar',
@@ -140,10 +138,8 @@ class PermissionSeeder extends Seeder
             'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
             'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
             'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
-            'tipos-medios-proteccion.ver', 'tipos-medios-proteccion.crear', 'tipos-medios-proteccion.editar', 'tipos-medios-proteccion.eliminar',
 
             // Comercial - Tablas faltantes
-            'tipos-catalogo-lugares.ver', 'tipos-catalogo-lugares.crear', 'tipos-catalogo-lugares.editar', 'tipos-catalogo-lugares.eliminar',
             'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
             'tipos-cargas-reporte.ver', 'tipos-cargas-reporte.crear', 'tipos-cargas-reporte.editar', 'tipos-cargas-reporte.eliminar',
             'turnos-comerciales.ver', 'turnos-comerciales.crear', 'turnos-comerciales.editar', 'turnos-comerciales.eliminar',
@@ -171,7 +167,6 @@ class PermissionSeeder extends Seeder
             'movimientos-inventario.ver', 'movimientos-inventario.crear', 'movimientos-inventario.editar', 'movimientos-inventario.eliminar',
 
             // RRHH - Tablas faltantes
-            'centros-costos.ver', 'centros-costos.crear', 'centros-costos.editar', 'centros-costos.eliminar',
             'pagos-adicionales-cargo.ver', 'pagos-adicionales-cargo.crear', 'pagos-adicionales-cargo.editar', 'pagos-adicionales-cargo.eliminar',
 
             // Comercial - Tablas faltantes
@@ -179,7 +174,6 @@ class PermissionSeeder extends Seeder
             'categorias-productos.ver', 'categorias-productos.crear', 'categorias-productos.editar', 'categorias-productos.eliminar',
 
             // Misc
-            'elementos-gasto.ver', 'elementos-gasto.crear', 'elementos-gasto.editar', 'elementos-gasto.eliminar',
             'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
             'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
             'devoluciones.ver', 'devoluciones.crear', 'devoluciones.editar', 'devoluciones.eliminar',
@@ -268,10 +262,7 @@ class PermissionSeeder extends Seeder
                 'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',
                 // Catálogos comerciales
                 'embalajes.ver', 'embalajes.crear', 'embalajes.editar', 'embalajes.eliminar',
-
-                'navieras.ver', 'navieras.crear', 'navieras.editar', 'navieras.eliminar',
                 // Comercial - Tablas faltantes
-                'tipos-catalogo-lugares.ver', 'tipos-catalogo-lugares.crear', 'tipos-catalogo-lugares.editar', 'tipos-catalogo-lugares.eliminar',
                 'configuraciones-modelo.ver', 'configuraciones-modelo.crear', 'configuraciones-modelo.editar', 'configuraciones-modelo.eliminar',
                 'tipos-cargas-reporte.ver', 'tipos-cargas-reporte.crear', 'tipos-cargas-reporte.editar', 'tipos-cargas-reporte.eliminar',
                 'turnos-comerciales.ver', 'turnos-comerciales.crear', 'turnos-comerciales.editar', 'turnos-comerciales.eliminar',
@@ -313,10 +304,8 @@ class PermissionSeeder extends Seeder
                 'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
                 'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
                 'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
-                'tipos-medios-proteccion.ver', 'tipos-medios-proteccion.crear', 'tipos-medios-proteccion.editar', 'tipos-medios-proteccion.eliminar',
 
                 // RRHH - Tablas faltantes parte 2
-                'centros-costos.ver', 'centros-costos.crear', 'centros-costos.editar', 'centros-costos.eliminar',
                 'pagos-adicionales-cargo.ver', 'pagos-adicionales-cargo.crear', 'pagos-adicionales-cargo.editar', 'pagos-adicionales-cargo.eliminar',
                 'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
                 'descuentos-empleados.ver', 'descuentos-empleados.crear', 'descuentos-empleados.editar', 'descuentos-empleados.eliminar',
@@ -338,14 +327,12 @@ class PermissionSeeder extends Seeder
                 'inventario.ver', 'inventario.crear', 'inventario.editar', 'inventario.eliminar',
                 'vales.ver', 'vales.crear', 'vales.editar', 'vales.eliminar',
                 'servicentros.ver', 'servicentros.crear', 'servicentros.editar', 'servicentros.eliminar',
-                'tipos-documentos.ver', 'tipos-documentos.crear', 'tipos-documentos.editar', 'tipos-documentos.eliminar',
                 'firmas-autorizadas.ver', 'firmas-autorizadas.crear', 'firmas-autorizadas.editar', 'firmas-autorizadas.eliminar',
                 'reportes-costos.ver', 'reportes-costos.crear', 'reportes-costos.editar', 'reportes-costos.eliminar',
                 'estados-tarjetas.ver', 'estados-tarjetas.crear', 'estados-tarjetas.editar', 'estados-tarjetas.eliminar',
 
                 'combustibles-lubricantes.ver', 'combustibles-lubricantes.crear', 'combustibles-lubricantes.editar', 'combustibles-lubricantes.eliminar',
                 'pagos.ver', 'pagos.crear', 'pagos.editar', 'pagos.eliminar',
-                'elementos-gasto.ver', 'elementos-gasto.crear', 'elementos-gasto.editar', 'elementos-gasto.eliminar',
             ],
             'OPERATIVOS' => [
                 'dashboard.ver',

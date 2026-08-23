@@ -56,9 +56,7 @@ class ContabilidadTest extends TestCase
             'inventario.index',
             'servicentros.index',
             'tipos-conceptos.index',
-            'tipos-documentos.index',
             'estados-tarjetas.index',
-            'elementos-gasto.index',
         ];
 
         $user = $this->usuarioContabilidad();

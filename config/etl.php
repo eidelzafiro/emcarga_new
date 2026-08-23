@@ -251,18 +251,6 @@ return [
             'pk' => 'idtipocargasreporte',
         ],
 
-        'tipos_catalogo_lugares' => [
-            'legacy' => 'com_tipocatlugares',
-            'pk' => 'idtipocatlugares',
-            'columnas' => [
-                'tipocatlugares' => 'nombre',
-                'abreviatura' => 'abreviatura',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'tipos_estados' => [
             'legacy' => 'com_tipoestados',
@@ -422,17 +410,6 @@ return [
             ],
         ],
 
-        'tipos_documentos' => [
-            'legacy' => 'cont_tipodocumentos',
-            'pk' => 'idtipodoc',
-            'columnas' => [
-                'tipodocumentos' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'tipos_gastos' => [
             'legacy' => 'cont_tipogastos',
@@ -775,16 +752,6 @@ return [
             ],
         ],
 
-        'tipos_medios_proteccion' => [
-            'legacy' => 'rh_tipomediosproteccion',
-            'pk' => 'idtipomediosproteccion',
-            'columnas' => [
-                'nombtipomediosproteccion' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'tipos_nivel_educacion' => [
             'legacy' => 'rh_tiponiveducacion',

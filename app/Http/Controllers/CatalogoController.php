@@ -8,6 +8,8 @@ use App\Models\CatalogoItem;
 use App\Models\CatalogoTipo;
 use App\Support\CatalogoSchema;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -185,6 +187,18 @@ class CatalogoController extends Controller
         $itemData = $request->itemData();
         $itemData['tipo'] = $tipo;
 
+        // Imagen ilustrativa subida por el usuario (tipos de equipos).
+        // Valida y guarda en el disco público; la ruta va al JSON extra.
+        if ($tipo === 'tipos_equipos') {
+            $ruta = $this->guardarImagenEquipo($request);
+            if ($ruta) {
+                $extra = $itemData['extra'] ?? [];
+                $extra['imagen'] = $ruta;
+                unset($extra['imagen_fuente']);
+                $itemData['extra'] = $extra ?: null;
+            }
+        }
+
         if (in_array($tipo, ['tipos_modelo'])) {
             $entidadId = (int) entidadActivaId();
             if ($entidadId) {
@@ -211,6 +225,19 @@ class CatalogoController extends Controller
 
         $itemData = $request->itemData();
 
+        // Imagen nueva: elimina la anterior del disco y actualiza extra + legacy.
+        if ($tipo === 'tipos_equipos' && ($ruta = $this->guardarImagenEquipo($request))) {
+            $anterior = $item->extra['imagen'] ?? null;
+            if ($anterior) {
+                Storage::disk('public')->delete($anterior);
+            }
+
+            $extra = $item->extra ?? [];
+            unset($itemData['extra']['imagen_fuente']);
+            $extra = array_merge($extra, $itemData['extra'] ?? [], ['imagen' => $ruta]);
+            $itemData['extra'] = $extra;
+        }
+
         if ($this->esCatalogoPorEntidad($tipo)) {
             $extra = $item->extra ?? [];
             if (! isset($extra['id_entidad'])) {
@@ -222,7 +249,43 @@ class CatalogoController extends Controller
 
         $item->update($itemData);
 
+        // Paridad con la tabla legacy (fuente de los re-syncs del ETL):
+        // si el ítem proviene de tipos_equipos, se replica la imagen ahí.
+        if ($tipo === 'tipos_equipos'
+            && isset($itemData['extra']['imagen'])
+            && $item->origen_id
+            && Schema::hasTable('tipos_equipos')
+            && DB::table('tipos_equipos')->where('id', $item->origen_id)->exists()) {
+            DB::table('tipos_equipos')->where('id', $item->origen_id)->update([
+                'imagen' => $itemData['extra']['imagen'],
+                'imagen_fuente' => null,
+                'updated_at' => now(),
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Actualizado correctamente');
+    }
+
+    /**
+     * Valida y guarda la imagen subida para un tipo de equipo.
+     * Devuelve la ruta relativa en el disco público o null si no vino archivo.
+     */
+    private function guardarImagenEquipo(Request $request): ?string
+    {
+        if (! $request->hasFile('imagen_archivo')) {
+            return null;
+        }
+
+        $request->validate([
+            'imagen_archivo' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=1024,max_height=1024'],
+        ], [
+            'imagen_archivo.image' => 'El archivo debe ser una imagen.',
+            'imagen_archivo.mimes' => 'Formatos permitidos: JPG, PNG o WEBP.',
+            'imagen_archivo.max' => 'La imagen no puede superar 2 MB.',
+            'imagen_archivo.dimensions' => 'La imagen no puede superar 1024x1024 píxeles.',
+        ]);
+
+        return $request->file('imagen_archivo')->store('tipos_equipos', 'public');
     }
 
     public function destroy(string $tipo, $id)

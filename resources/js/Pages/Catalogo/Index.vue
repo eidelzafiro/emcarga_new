@@ -4,6 +4,7 @@ import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import DataTable from 'primevue/datatable'
+import Paginator from 'primevue/paginator'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -18,6 +19,8 @@ import { useConfirm } from 'primevue/useconfirm'
 
 const props = defineProps({ items: Object, filters: Object, catalogConfig: Object })
 const tipo = computed(() => props.catalogConfig?.tipo)
+// Tipos de equipos: vista de tarjetas con imagen grande + subida de archivo
+const esEquipos = computed(() => tipo.value === 'tipos_equipos')
 const toast = useToast()
 const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
@@ -133,6 +136,7 @@ function openCreate() {
     else f[k] = ''
   })
   form.value = f
+  limpiarArchivo()
   showForm.value = true
 }
 
@@ -149,7 +153,39 @@ function openEdit(item) {
     else f[k] = item[k] ?? ''
   })
   form.value = f
+  previewImagen.value = esEquipos.value ? (item.imagen || null) : null
+  archivoImagen.value = null
+  errorArchivo.value = ''
   showForm.value = true
+}
+
+// ── Imagen para tipos de equipos ──────────────────────────────────────
+const archivoImagen = ref(null)
+const previewImagen = ref(null)
+const errorArchivo = ref('')
+const EXTENSIONES_OK = ['image/jpeg', 'image/png', 'image/webp']
+
+function limpiarArchivo() {
+  archivoImagen.value = null
+  previewImagen.value = null
+  errorArchivo.value = ''
+}
+
+function seleccionarArchivo(evento) {
+  const file = evento.target.files?.[0]
+  evento.target.value = ''
+  if (!file) return
+  if (!EXTENSIONES_OK.includes(file.type)) {
+    errorArchivo.value = 'Formatos permitidos: JPG, PNG o WEBP.'
+    return
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    errorArchivo.value = 'La imagen no puede superar 2 MB.'
+    return
+  }
+  errorArchivo.value = ''
+  archivoImagen.value = file
+  previewImagen.value = URL.createObjectURL(file)
 }
 
 function confirmarBorrado(item) {
@@ -170,8 +206,38 @@ function confirmarBorrado(item) {
 }
 
 function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
-  const payload = { ...form.value, _continuar: continuarActivo }
   const url = editing.value ? route(`${rt}.update`, { tipo: tipo.value, id: editing.value.id }) : route(`${rt}.store`, { tipo: tipo.value })
+
+  // Tipos de equipos: FormData (permite adjuntar la imagen del equipo).
+  if (esEquipos.value) {
+    if (errorArchivo.value) return
+    const fd = new FormData()
+    fd.append('nombre', form.value.nombre || '')
+    fd.append('activo', form.value.activo ? '1' : '0')
+    if (form.value.codigo) fd.append('codigo', form.value.codigo)
+    // El path manual solo aplica al crear sin archivo nuevo
+    if (!archivoImagen.value && !editing.value && form.value.imagen) {
+      fd.append('imagen', form.value.imagen)
+    }
+    if (archivoImagen.value) fd.append('imagen_archivo', archivoImagen.value)
+    if (continuarActivo) fd.append('_continuar', '1')
+    if (editing.value) fd.append('_method', 'PUT')
+    router.post(url, fd, {
+      onSuccess: () => {
+        toast.add({ severity: 'success', summary: editing.value ? 'Actualizado' : 'Creado', life: 3000 })
+        showForm.value = false
+        continuar.value = false
+        limpiarArchivo()
+      },
+      onError: (e) => {
+        errorArchivo.value = e.imagen_archivo || ''
+        toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 })
+      },
+    })
+    return
+  }
+
+  const payload = { ...form.value, _continuar: continuarActivo }
   const method = editing.value ? 'put' : 'post'
   router[method](url, payload, {
     onSuccess: () => {
@@ -218,7 +284,42 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
         </template>
       </Toolbar>
 
-      <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total"
+      <!-- Tipos de equipos: tarjetas con imagen grande -->
+      <div v-if="esEquipos" class="grid gap-4" :class="'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'">
+        <div v-for="item in items.data" :key="item.id"
+             class="relative rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 shadow-sm hover:shadow-md transition-shadow group">
+          <a :href="item.imagen || '#'" target="_blank" rel="noopener" class="block bg-surface-100 dark:bg-surface-800">
+            <img v-if="item.imagen" :src="item.imagen" :alt="item.nombre"
+                 class="w-full h-52 object-cover group-hover:scale-[1.03] transition-transform duration-200 cursor-zoom-in" />
+            <div v-else class="w-full h-52 flex items-center justify-center">
+              <i class="pi pi-image text-5xl text-surface-300 dark:text-surface-600" />
+            </div>
+          </a>
+          <span v-if="!item.activo"
+                class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-xs font-semibold bg-red-500/90 text-white">Inactivo</span>
+
+          <div class="p-3 text-center border-t border-surface-100 dark:border-surface-800">
+            <p class="font-semibold text-gray-800 dark:text-gray-100 truncate" :title="item.nombre">{{ item.nombre }}</p>
+          </div>
+
+          <div class="absolute bottom-[52px] right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button icon="pi pi-pencil" rounded severity="info" size="small" @click="openEdit(item)" v-tooltip.top="'Editar'" />
+            <Button icon="pi pi-trash" rounded severity="danger" size="small" @click="confirmarBorrado(item)" v-tooltip.top="'Eliminar'" />
+          </div>
+        </div>
+        <div v-if="items.data?.length === 0" class="col-span-full p-8 text-center text-gray-400 dark:text-gray-500">
+          <i class="pi pi-inbox text-3xl mb-2 block" /> Sin registros
+        </div>
+      </div>
+
+      <Paginator v-if="esEquipos && items.total > items.per_page"
+                 :rows="items.per_page" :totalRecords="items.total"
+                 :first="(items.current_page - 1) * items.per_page"
+                 @page="onPage"
+                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                 currentPageReportTemplate="Total: {totalRecords} registros" />
+
+      <DataTable v-if="!esEquipos" :value="items.data" striped-rows paginator :rows="20" :total-records="items.total"
                  :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
         <Column v-if="tieneImagenes" header="Imagen" :style="{ width: '90px' }">
           <template #body="{ data }">
@@ -271,8 +372,29 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
             <InputText v-if="(catalogConfig?.fields || {}).nombre?.type !== 'textarea'" v-model="form.nombre" class="w-full" required />
             <Textarea v-else v-model="form.nombre" class="w-full" :rows="(catalogConfig?.fields || {}).nombre?.rows || 3" required />
           </div>
+          <!-- Imagen del equipo: subida con validación y previsualización -->
+          <div v-if="esEquipos" class="col-span-2">
+            <label class="block mb-1 font-medium">Imagen del equipo</label>
+            <div class="flex items-start gap-4">
+              <div class="w-32 h-24 rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0">
+                <img v-if="previewImagen" :src="previewImagen" alt="Vista previa" class="w-full h-full object-cover" />
+                <i v-else class="pi pi-image text-3xl text-surface-300 dark:text-surface-600" />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-surface-100 dark:bg-surface-800 text-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors w-fit">
+                  <i class="pi pi-upload" />
+                  {{ previewImagen ? 'Cambiar imagen' : 'Seleccionar imagen' }}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="seleccionarArchivo" />
+                </label>
+                <small v-if="errorArchivo" class="text-red-500">{{ errorArchivo }}</small>
+                <small v-else class="text-xs text-surface-400">JPG, PNG o WEBP · máx. 2 MB · 1024×1024</small>
+                <Button v-if="previewImagen && archivoImagen" label="Quitar" icon="pi pi-times" text severity="danger" size="small" class="w-fit" @click="limpiarArchivo" />
+              </div>
+            </div>
+          </div>
+
           <template v-for="(cfg, key) in (catalogConfig?.fields || {})" :key="key">
-            <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
+            <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo' && !(esEquipos && key === 'imagen')" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Textarea v-else-if="cfg.type === 'textarea'" v-model="form[key]" class="w-full" :rows="3" />
@@ -285,7 +407,7 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
             </div>
           </template>
           <template v-for="(cfg, key) in (catalogConfig?.extra || {})" :key="'x-' + key">
-            <div v-if="!(catalogConfig?.fields || {})[key] && key !== 'activo'" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
+            <div v-if="!(catalogConfig?.fields || {})[key] && key !== 'activo' && !(esEquipos && (key === 'imagen' || key === 'imagen_fuente'))" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Select v-else-if="cfg.type === 'select' && cfg.options" v-model="form[key]" :options="cfg.options" optionLabel="label" optionValue="value" placeholder="Seleccionar..." class="w-full" :showClear="true" />

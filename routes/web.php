@@ -458,7 +458,9 @@ Route::middleware('auth')->group(function () {
             Route::get('salario-choferes', [ReportController::class, 'pdfSalarioChoferes'])->name('salario-choferes');
             // Fase A: catálogo de reportes usados (índice con filtros reutilizables)
             Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
-            Route::post('generar/{reporte}', [ReportesController::class, 'generar'])->name('generar');
+            // GET: descarga/binario vía navegación real (sin XHR Inertia). POST: flujo
+            // Inertia para exportaciones en cola (feedback en la misma página).
+            Route::match(['get', 'post'], 'generar/{reporte}', [ReportesController::class, 'generar'])->name('generar');
         });
 
         // R-3: descarga de exportaciones de tablas generadas en cola

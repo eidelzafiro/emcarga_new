@@ -18,7 +18,7 @@ class InventarioController extends Controller
 
         return Inertia::render('Inventario/Index', [
             'title' => 'Inventario',
-            'items' => $items,
+            'inventario' => $items,
             'filters' => $request->only(['search']),
         ]);
     }

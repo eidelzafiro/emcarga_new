@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Models\ReporteLegacy;
+use App\Services\Reports\ReportesDispatcher;
 
 /**
  * Fase A: catálogo de los reportes marcados como usados, agrupados por
@@ -59,12 +60,13 @@ class ReporteCatalogoService extends BaseReportService
             }
 
             $grupos[$r->tipo][] = [
-                'id'          => $r->idreporte,
-                'nombre'      => $r->nombreporte,
-                'controlador' => $r->controlador,
-                'variable'    => $r->variable,
-                'perfiles'    => $perfiles,
-                'filtro'      => $this->tipoFiltro((string) ($r->variable ?? '')),
+                'id'             => $r->idreporte,
+                'nombre'         => $r->nombreporte,
+                'controlador'    => $r->controlador,
+                'variable'       => $r->variable,
+                'perfiles'       => $perfiles,
+                'filtro'         => $this->tipoFiltro((string) ($r->variable ?? '')),
+                'es_exportacion' => ReportesDispatcher::esExportacion($r->idreporte),
             ];
         }
 

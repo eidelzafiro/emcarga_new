@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { reactive } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -13,31 +13,54 @@ const props = defineProps({
   resumen: { type: Object, default: () => ({}) },
 })
 
-const estado = ref({})
+const estado = reactive({})
+
+// Mapa id -> reporte y estado de filtros. El v-model (estado[rep.id].filtros)
+// requiere que cada reporte esté inicializado antes de renderizar la lista.
+const porId = {}
+for (const reportes of Object.values(props.grupos)) {
+  for (const rep of reportes) {
+    porId[rep.id] = rep
+    estado[rep.id] = { filtros: {} }
+  }
+}
 
 function generar(id) {
-  const filtros = estado.value[id]?.filtros || {}
-  router.post(
-    route('reportes.generar', id),
-    { filtros },
-    {
-      preserveScroll: true,
-      onSuccess: (page) => {
-        estado.value[id] = {
-          filtros,
-          mensaje: page.props.flash?.success || page.props.flash?.mensaje || 'Generado.',
-          ok: true,
-        }
+  const rep = porId[id]
+  const filtros = estado[id]?.filtros || {}
+
+  // Las exportaciones en cola usan el flujo Inertia (feedback en la página).
+  if (rep?.es_exportacion) {
+    router.post(
+      route('reportes.generar', id),
+      { filtros },
+      {
+        preserveScroll: true,
+        onSuccess: (page) => {
+          estado[id] = {
+            filtros,
+            mensaje: page.props.flash?.success || page.props.flash?.mensaje || 'Exportación en cola.',
+            ok: true,
+          }
+        },
+        onError: (errors) => {
+          estado[id] = {
+            filtros,
+            mensaje: errors.mensaje || 'Error al exportar el reporte.',
+            ok: false,
+          }
+        },
       },
-      onError: (errors) => {
-        estado.value[id] = {
-          filtros,
-          mensaje: errors.mensaje || 'Reporte aún no migrado a Zafiro (Fase A pendiente).',
-          ok: false,
-        }
-      },
-    },
-  )
+    )
+
+    return
+  }
+
+  // Los reportes PDF se descargan con una navegación REAL (GET), no con XHR
+  // Inertia: si se usa router.post el binario se devuelve al XHR y el
+  // navegador pinta los bytes del PDF como texto plano en la página.
+  const params = new URLSearchParams({ filtros: JSON.stringify(filtros) })
+  window.open(route('reportes.generar', id) + '?' + params.toString(), '_blank')
 }
 </script>
 

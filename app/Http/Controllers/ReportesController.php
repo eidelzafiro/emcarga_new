@@ -30,12 +30,17 @@ class ReportesController extends Controller
      */
     public function generar(Request $request, int $id)
     {
+        $filtros = $request->input('filtros', []);
+        if (is_string($filtros)) {
+            $filtros = json_decode($filtros, true) ?: [];
+        }
+
         if (ReportesDispatcher::esExportacion($id)) {
-            ProcesarExportacionTabla::dispatch($id, $request->input('filtros', []), $request->user()->id);
+            ProcesarExportacionTabla::dispatch($id, $filtros, $request->user()->id);
 
             return back()->with('success', 'Exportación en cola. Te avisaremos cuando esté lista.');
         }
 
-        return app(ReportesDispatcher::class)->generar($id, $request->input('filtros', []));
+        return app(ReportesDispatcher::class)->generar($id, $filtros);
     }
 }

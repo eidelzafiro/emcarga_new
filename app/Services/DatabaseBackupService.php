@@ -60,12 +60,22 @@ class DatabaseBackupService
         $fecha = date('Y-m-d_H-i-s');
         $archivo = $dir.'/emcarga_new_'.$fecha.($sufijo ? '_'.$sufijo : '').'.sql';
 
-        // Prioridad: binario mysqldump si existe (producción), si no dump PDO.
+        // Prioridad: binario mysqldump si existe (producción). Si mysqldump
+        // falla (p.ej. TLS/SSL con certificado autofirmado), se degrada al
+        // dump PDO propio en vez de romper la salva.
         if ($this->todosMysqldump()) {
-            $this->dumpConBin($archivo);
-        } else {
-            $this->salvarConPdo($archivo);
+            try {
+                $this->dumpConBin($archivo);
+
+                return $archivo;
+            } catch (\RuntimeException $e) {
+                if (is_file($archivo)) {
+                    @unlink($archivo);
+                }
+            }
         }
+
+        $this->salvarConPdo($archivo);
 
         return $archivo;
     }
@@ -108,7 +118,7 @@ class DatabaseBackupService
     {
         $config = config('database.connections.mysql');
         $cmd = sprintf(
-            "mysqldump -h '%s' -P %d -u '%s' -p'%s' --single-transaction --routines --triggers --no-tablespaces '%s' > '%s'",
+            "mysqldump -h '%s' -P %d -u '%s' -p'%s' --skip-ssl --single-transaction --routines --triggers --events --no-tablespaces '%s' > '%s'",
             $config['host'],
             $config['port'] ?? 3306,
             $config['username'],

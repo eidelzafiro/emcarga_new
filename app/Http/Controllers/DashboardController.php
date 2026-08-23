@@ -8,6 +8,7 @@ use App\Models\SolicitudesServicio;
 use App\Services\KpiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -25,12 +26,13 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $entidadId = (int) $request->session()->get('entidad_activa_id') ?: null;
+        $fechaRef = $this->fechaOperaciones($request);
         $rol = $this->detectarRol($request, $user);
-        $kpis = $this->kpiService->paraRol($rol, $entidadId);
+        $kpis = $this->kpiService->paraRol($rol, $entidadId, $fechaRef);
         $actividadReciente = $this->actividadPorRol($rol);
         $movimientos = $this->movimientosPorRol($rol, $entidadId);
         $secciones = $this->seccionesPorRol($rol);
-        $serieActividad = $this->actividadDiaria($entidadId);
+        $serieActividad = $this->actividadDiaria($entidadId, 90, $fechaRef);
 
         return Inertia::render('Dashboard', [
             'title' => 'Dashboard',
@@ -48,10 +50,23 @@ class DashboardController extends Controller
     {
         $entidadId = (int) $request->session()->get('entidad_activa_id') ?: null;
         $rol = $this->detectarRol($request, $request->user());
+        $fechaRef = $this->fechaOperaciones($request);
 
         return response()->json([
-            'kpis' => $this->kpiService->paraRol($rol, $entidadId),
+            'kpis' => $this->kpiService->paraRol($rol, $entidadId, $fechaRef),
         ]);
+    }
+
+    /**
+     * Fecha de operaciones seleccionada en sesión. Los KPIs y la serie de
+     * actividad se calculan sobre este mes y no sobre la fecha real del
+     * sistema (principio de filtrado por fecha de operaciones).
+     */
+    private function fechaOperaciones(Request $request): ?Carbon
+    {
+        $valor = $request->session()->get('fecha_operaciones');
+
+        return $valor ? Carbon::parse($valor) : null;
     }
 
     private function detectarRol(Request $request, $user): string
@@ -219,10 +234,11 @@ class DashboardController extends Controller
      * Serie diaria de emisión de hojas de ruta, cartas de porte y solicitudes
      * para alimentar el gráfico de actividad con datos reales.
      */
-    private function actividadDiaria(?int $entidadId = null, int $dias = 90): array
+    private function actividadDiaria(?int $entidadId = null, int $dias = 90, ?Carbon $fechaReferencia = null): array
     {
-        $desde = now()->subDays($dias - 1)->toDateString();
-        $hasta = now()->toDateString();
+        $ref = $fechaReferencia ?? now();
+        $desde = $ref->copy()->subDays($dias - 1)->toDateString();
+        $hasta = $ref->copy()->toDateString();
 
         $hojas = HojasRuta::whereBetween('fecha_emision', [$desde, $hasta])
             ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
@@ -245,7 +261,7 @@ class DashboardController extends Controller
 
         $serie = [];
         for ($i = $dias - 1; $i >= 0; $i--) {
-            $d = now()->subDays($i)->toDateString();
+            $d = $ref->copy()->subDays($i)->toDateString();
             $serie[] = [
                 'fecha' => $d,
                 'hojas' => (int) ($hojas[$d] ?? 0),

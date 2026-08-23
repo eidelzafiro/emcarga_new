@@ -12,12 +12,27 @@ use App\Models\HojasRuta;
 use App\Models\SolicitudesServicio;
 use App\Models\Tractivo;
 use App\Models\User;
+use Carbon\Carbon;
 
 class KpiService
 {
+    /**
+     * Fecha de referencia para los KPIs. Por defecto es el mes actual, pero
+     * cuando el usuario tiene seleccionada una "fecha de operaciones" en
+     * sesión, los KPIs deben calcularse sobre ese mes (no sobre la fecha real).
+     */
+    private ?Carbon $fechaReferencia = null;
+
+    private function ref(): Carbon
+    {
+        return $this->fechaReferencia ?? now();
+    }
+
     private function periodoMes(): array
     {
-        return [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()];
+        $r = $this->ref();
+
+        return [$r->copy()->startOfMonth()->toDateString(), $r->copy()->endOfMonth()->toDateString()];
     }
 
     private function cartasDelMes(?int $entidadId = null)
@@ -33,8 +48,10 @@ class KpiService
      */
     private function ingresosDelMes(?int $entidadId = null): float
     {
-        return Aforo::whereYear('fecha_parte', now()->year)
-            ->whereMonth('fecha_parte', now()->month)
+        $r = $this->ref();
+
+        return Aforo::whereYear('fecha_parte', $r->year)
+            ->whereMonth('fecha_parte', $r->month)
             ->when($entidadId, fn ($q) => $q->whereHas('cartaPorte.hojaRuta.tractivo', fn ($t) => $t->where('id_entidad', $entidadId)))
             ->sum('ingreso_mt');
     }
@@ -44,13 +61,15 @@ class KpiService
         return '$'.number_format((float) $valor, 2, '.', ',');
     }
 
-    public function calcular(?int $entidadId = null): array
+    public function calcular(?int $entidadId = null, ?Carbon $fechaReferencia = null): array
     {
-        return $this->paraRol('default', $entidadId);
+        return $this->paraRol('default', $entidadId, $fechaReferencia);
     }
 
-    public function paraRol(string $rol, ?int $entidadId = null): array
+    public function paraRol(string $rol, ?int $entidadId = null, ?Carbon $fechaReferencia = null): array
     {
+        $this->fechaReferencia = $fechaReferencia;
+
         return match ($rol) {
             'SUPERADMIN' => $this->kpisSuperadmin($entidadId),
             'TECNICA' => $this->kpisTecnica($entidadId),

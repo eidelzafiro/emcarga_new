@@ -259,12 +259,26 @@ const cambiandoEntidad = ref(false);
 const perfilSeleccionado = ref(page.props.contexto?.perfilActivo ?? 'SUPERADMIN');
 const cambiandoPerfil = ref(false);
 
+// Mantiene los selectores sincronizados con el contexto real de la sesión
+// (tras cambiar entidad/perfil/fecha la página se recarga con nuevos props).
+watch(
+  () => page.props.contexto,
+  (c) => {
+    if (!c) return;
+    entidadSeleccionada.value = c.entidadActiva?.id ?? null;
+    perfilSeleccionado.value = c.perfilActivo ?? 'SUPERADMIN';
+    fechaOperaciones.value = parseFechaLocal(c.fechaOperaciones);
+  },
+  { deep: true },
+);
+
 const cambiarPerfil = () => {
   if (perfilSeleccionado.value === page.props.contexto?.perfilActivo) return;
   cambiandoPerfil.value = true;
   router.post(route('contexto.perfil'), { perfil: perfilSeleccionado.value }, {
     preserveScroll: true,
     onFinish: () => { cambiandoPerfil.value = false; },
+    onSuccess: () => router.reload({ preserveScroll: true }),
   });
 };
 
@@ -289,13 +303,17 @@ const cambiarEntidad = () => {
   router.post(route('contexto.entidad'), { entidad_id: entidadSeleccionada.value }, {
     preserveScroll: true,
     onFinish: () => { cambiandoEntidad.value = false; },
+    onSuccess: () => router.reload({ preserveScroll: true }),
   });
 };
 
 const cambiarFechaOperaciones = (valor) => {
   const iso = aIsoLocal(valor);
   if (!iso || iso === page.props.contexto?.fechaOperaciones) return;
-  router.post(route('contexto.fecha-operaciones'), { fecha: iso }, { preserveScroll: true });
+  router.post(route('contexto.fecha-operaciones'), { fecha: iso }, {
+    preserveScroll: true,
+    onSuccess: () => router.reload({ preserveScroll: true }),
+  });
 };
 
 const sidebarOpen = ref((() => { try { return localStorage.getItem('sidebarOpen') !== 'false' } catch { return true } })());

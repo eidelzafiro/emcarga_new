@@ -47,16 +47,6 @@ class PagosAdicionalesCargoController extends Controller
         return redirect()->route('pagos-adicionales-cargo.index')->with('success', 'Pago adicional de cargo creado.');
     }
 
-    public function show($id)
-    {
-        return redirect()->route('pagos-adicionales-cargo.index');
-    }
-
-    public function edit($id)
-    {
-        return redirect()->route('pagos-adicionales-cargo.index');
-    }
-
     public function update(Request $request, $id)
     {
         $validated = $request->validate([

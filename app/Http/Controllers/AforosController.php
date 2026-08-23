@@ -277,66 +277,7 @@ class AforosController extends Controller
             ];
         })->values();
 
-        $data['aforo'] = [
-            'id' => $aforo->id,
-            'id_carta_porte' => $aforo->id_carta_porte,
-            'fecha_parte' => $aforo->fecha_parte?->format('Y-m-d'),
-            'fecha_emision' => $aforo->cartaPorte?->fecha_emision?->format('Y-m-d'),
-            'fecha_recepcion' => $aforo->cartaPorte?->fecha_recepcion?->format('Y-m-d'),
-            'descuento' => (float) $aforo->descuento,
-            'flete_mt' => (float) $aforo->flete_mt,
-            'flete_mlc' => (float) $aforo->flete_mlc,
-            'flete_demora' => (float) $aforo->flete_demora,
-            'otros_mt' => (float) $aforo->otros_mt,
-            'ingreso_mt' => (float) $aforo->ingreso_mt,
-            'id_tasa' => $aforo->id_tasa,
-            'tasa' => (float) $aforo->tasa,
-            'salario' => (float) $aforo->salario,
-            'viajes' => $aforo->viajes,
-            'tipo_indicadores' => $aforo->tipo_indicadores,
-            'almacenaje_peso' => (float) $aforo->almacenaje_peso,
-            'almacenaje_horas' => (float) $aforo->almacenaje_horas,
-            'almacenaje_tarifa' => (float) $aforo->almacenaje_tarifa,
-            'almacenaje_flete' => (float) $aforo->almacenaje_flete,
-            'desc_6' => (float) $aforo->desc_6,
-            'dem_carga' => (float) $aforo->dem_carga,
-            'dem_descarga' => (float) $aforo->dem_descarga,
-            'dem_total' => (float) $aforo->dem_total,
-            'fecha_carga' => $aforo->fecha_carga?->format('Y-m-d'),
-            'hora_carga_1' => $aforo->hora_carga_1,
-            'hora_carga_2' => $aforo->hora_carga_2,
-            'fecha_descarga' => $aforo->fecha_descarga?->format('Y-m-d'),
-            'hora_descarga_1' => $aforo->hora_descarga_1,
-            'hora_descarga_2' => $aforo->hora_descarga_2,
-            'tar_dem_1' => (float) $aforo->tar_dem_1,
-            'tar_dem_2' => (float) $aforo->tar_dem_2,
-            'flete_dem_1' => (float) $aforo->flete_dem_1,
-            'flete_dem_2' => (float) $aforo->flete_dem_2,
-            'desc_7' => (float) $aforo->desc_7,
-            'desc_8' => (float) $aforo->desc_8,
-            'tiempo_feriado' => (float) $aforo->tiempo_feriado,
-            'tiempo_otros' => (float) $aforo->tiempo_otros,
-            'tiempo_movimiento' => (float) $aforo->tiempo_movimiento,
-            'tiempo_carga' => (float) $aforo->tiempo_carga,
-            'tiempo_descarga' => (float) $aforo->tiempo_descarga,
-            'tiempo_total' => (float) $aforo->tiempo_total,
-            'recargo_1' => (float) $aforo->recargo_1,
-            'recargo_2' => (float) $aforo->recargo_2,
-            'recargo_3' => (float) $aforo->recargo_3,
-            'recargo_4' => (float) $aforo->recargo_4,
-            'recargo_5' => (float) $aforo->recargo_5,
-            'lineas' => $lineas,
-            'indFilas' => $indFilas,
-            'indicadores_totales' => [
-                'km_carga_total' => (float) $aforo->km_carga_total,
-                'km_vacio_total' => (float) $aforo->km_vacio_total,
-                'km_total_total' => (float) $aforo->km_total_total,
-                'tn_pos_total' => (float) $aforo->tn_pos_total,
-                'tn_real_total' => (float) $aforo->tn_real_total,
-                'traf_pos_total' => (float) $aforo->traf_pos_total,
-                'traf_real_total' => (float) $aforo->traf_real_total,
-            ],
-        ];
+        $data['aforo'] = $this->mapearAforoEdicion($aforo, $lineas, $indFilas);
         $data['title'] = 'Editar Aforo '.$aforo->cartaPorte?->numero;
 
         return Inertia::render('Aforos/Form', $data);
@@ -355,19 +296,7 @@ class AforosController extends Controller
 
         // CP disponibles a aforar: ya girada, no aforada, del mes de operaciones,
         // no cancelada, por unidad.
-        $cartasPendientes = CartaPorte::with([
-            'hojaRuta:id,numero,fecha_cierre,id_entidad,id_tractivo,id_arrastre,id_chofer,id_chofer2',
-            'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
-            'cliente',
-            'tractivo',
-            'arrastre',
-            'chofer',
-            'chofer2',
-            'lugarOrigen',
-            'lugarDestino',
-            'producto',
-            'tipoCarga',
-        ])
+        $cartasPendientes = CartaPorte::with($this->withCartaCompleta())
             ->whereDoesntHave('aforos')
             ->where('cancelada', false)
             ->whereBetween('fecha_emision', [$inicioMes, $finMes])
@@ -378,19 +307,7 @@ class AforosController extends Controller
         // Select preseleccionada (si viene ?carta=<id> desde el grid de CP)
         $cartaPreseleccionada = null;
         if ($request->filled('carta')) {
-            $cartaPreseleccionada = CartaPorte::with([
-                'hojaRuta:id,numero,fecha_cierre,id_entidad,id_tractivo,id_arrastre,id_chofer,id_chofer2',
-                'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
-                'cliente',
-                'tractivo',
-                'arrastre',
-                'chofer',
-                'chofer2',
-                'lugarOrigen',
-                'lugarDestino',
-                'producto',
-                'tipoCarga',
-            ])
+            $cartaPreseleccionada = CartaPorte::with($this->withCartaCompleta())
                 ->whereKey($request->integer('carta'))
                 ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('hojaRuta.tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
                 ->first();
@@ -1047,5 +964,96 @@ class AforosController extends Controller
                 ...$datos,
             ]);
         }
+    }
+
+    /**
+     * Relaciones completas de CartaPorte necesarias en los formularios
+     * (create/edit) y en el detalle de edición. Centralizado para no duplicar
+     * el mismo bloque `with([...])` en varios puntos del controlador.
+     */
+    private function withCartaCompleta(): array
+    {
+        return [
+            'hojaRuta:id,numero,fecha_cierre,id_entidad,id_tractivo,id_arrastre,id_chofer,id_chofer2',
+            'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
+            'cliente',
+            'tractivo',
+            'arrastre',
+            'chofer',
+            'chofer2',
+            'lugarOrigen',
+            'lugarDestino',
+            'producto',
+            'tipoCarga',
+        ];
+    }
+
+    /**
+     * Mapea un aforo (con sus líneas e indicadores ya calculados) al arreglo
+     * que consume el formulario de edición. Aísla el mapeo de ~60 campos
+     * para reducir el tamaño del método `edit`.
+     */
+    private function mapearAforoEdicion(Aforo $aforo, \Illuminate\Support\Collection $lineas, \Illuminate\Support\Collection $indFilas): array
+    {
+        return [
+            'id' => $aforo->id,
+            'id_carta_porte' => $aforo->id_carta_porte,
+            'fecha_parte' => $aforo->fecha_parte?->format('Y-m-d'),
+            'fecha_emision' => $aforo->cartaPorte?->fecha_emision?->format('Y-m-d'),
+            'fecha_recepcion' => $aforo->cartaPorte?->fecha_recepcion?->format('Y-m-d'),
+            'descuento' => (float) $aforo->descuento,
+            'flete_mt' => (float) $aforo->flete_mt,
+            'flete_mlc' => (float) $aforo->flete_mlc,
+            'flete_demora' => (float) $aforo->flete_demora,
+            'otros_mt' => (float) $aforo->otros_mt,
+            'ingreso_mt' => (float) $aforo->ingreso_mt,
+            'id_tasa' => $aforo->id_tasa,
+            'tasa' => (float) $aforo->tasa,
+            'salario' => (float) $aforo->salario,
+            'viajes' => $aforo->viajes,
+            'tipo_indicadores' => $aforo->tipo_indicadores,
+            'almacenaje_peso' => (float) $aforo->almacenaje_peso,
+            'almacenaje_horas' => (float) $aforo->almacenaje_horas,
+            'almacenaje_tarifa' => (float) $aforo->almacenaje_tarifa,
+            'almacenaje_flete' => (float) $aforo->almacenaje_flete,
+            'desc_6' => (float) $aforo->desc_6,
+            'dem_carga' => (float) $aforo->dem_carga,
+            'dem_descarga' => (float) $aforo->dem_descarga,
+            'dem_total' => (float) $aforo->dem_total,
+            'fecha_carga' => $aforo->fecha_carga?->format('Y-m-d'),
+            'hora_carga_1' => $aforo->hora_carga_1,
+            'hora_carga_2' => $aforo->hora_carga_2,
+            'fecha_descarga' => $aforo->fecha_descarga?->format('Y-m-d'),
+            'hora_descarga_1' => $aforo->hora_descarga_1,
+            'hora_descarga_2' => $aforo->hora_descarga_2,
+            'tar_dem_1' => (float) $aforo->tar_dem_1,
+            'tar_dem_2' => (float) $aforo->tar_dem_2,
+            'flete_dem_1' => (float) $aforo->flete_dem_1,
+            'flete_dem_2' => (float) $aforo->flete_dem_2,
+            'desc_7' => (float) $aforo->desc_7,
+            'desc_8' => (float) $aforo->desc_8,
+            'tiempo_feriado' => (float) $aforo->tiempo_feriado,
+            'tiempo_otros' => (float) $aforo->tiempo_otros,
+            'tiempo_movimiento' => (float) $aforo->tiempo_movimiento,
+            'tiempo_carga' => (float) $aforo->tiempo_carga,
+            'tiempo_descarga' => (float) $aforo->tiempo_descarga,
+            'tiempo_total' => (float) $aforo->tiempo_total,
+            'recargo_1' => (float) $aforo->recargo_1,
+            'recargo_2' => (float) $aforo->recargo_2,
+            'recargo_3' => (float) $aforo->recargo_3,
+            'recargo_4' => (float) $aforo->recargo_4,
+            'recargo_5' => (float) $aforo->recargo_5,
+            'lineas' => $lineas,
+            'indFilas' => $indFilas,
+            'indicadores_totales' => [
+                'km_carga_total' => (float) $aforo->km_carga_total,
+                'km_vacio_total' => (float) $aforo->km_vacio_total,
+                'km_total_total' => (float) $aforo->km_total_total,
+                'tn_pos_total' => (float) $aforo->tn_pos_total,
+                'tn_real_total' => (float) $aforo->tn_real_total,
+                'traf_pos_total' => (float) $aforo->traf_pos_total,
+                'traf_real_total' => (float) $aforo->traf_real_total,
+            ],
+        ];
     }
 }

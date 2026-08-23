@@ -60,16 +60,6 @@ class DevolucionesController extends Controller
         return redirect()->route('devoluciones.index')->with('success', 'Devolución creada.');
     }
 
-    public function show($id)
-    {
-        return redirect()->route('devoluciones.index');
-    }
-
-    public function edit($id)
-    {
-        return redirect()->route('devoluciones.index');
-    }
-
     public function update(Request $request, $id)
     {
         $validated = $request->validate([

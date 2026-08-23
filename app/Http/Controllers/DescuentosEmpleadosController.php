@@ -45,16 +45,6 @@ class DescuentosEmpleadosController extends Controller
         return redirect()->route('descuentos-empleados.index')->with('success', 'Descuento de empleado creado.');
     }
 
-    public function show($id)
-    {
-        return redirect()->route('descuentos-empleados.index');
-    }
-
-    public function edit($id)
-    {
-        return redirect()->route('descuentos-empleados.index');
-    }
-
     public function update(Request $request, $id)
     {
         $validated = $request->validate([

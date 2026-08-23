@@ -50,16 +50,6 @@ class MovimientosInventarioController extends Controller
         return redirect()->route('movimientos-inventario.index')->with('success', 'Movimiento de inventario creado.');
     }
 
-    public function show($id)
-    {
-        return redirect()->route('movimientos-inventario.index');
-    }
-
-    public function edit($id)
-    {
-        return redirect()->route('movimientos-inventario.index');
-    }
-
     public function update(Request $request, $id)
     {
         $validated = $request->validate([

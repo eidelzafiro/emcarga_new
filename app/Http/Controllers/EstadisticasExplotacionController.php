@@ -54,16 +54,6 @@ class EstadisticasExplotacionController extends Controller
         return redirect()->route('estadisticas-explotacion.index')->with('success', 'Estadística de explotación creada.');
     }
 
-    public function show($id)
-    {
-        return redirect()->route('estadisticas-explotacion.index');
-    }
-
-    public function edit($id)
-    {
-        return redirect()->route('estadisticas-explotacion.index');
-    }
-
     public function update(Request $request, $id)
     {
         $validated = $request->validate([

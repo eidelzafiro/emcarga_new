@@ -287,18 +287,18 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
       <!-- Tipos de equipos: tarjetas con imagen grande -->
       <div v-if="esEquipos" class="grid gap-4" :class="'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'">
         <div v-for="item in items.data" :key="item.id"
-             class="relative rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 shadow-sm hover:shadow-md transition-shadow group">
-          <a :href="item.imagen || '#'" target="_blank" rel="noopener" class="block bg-surface-100 dark:bg-surface-800">
+             class="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow group">
+          <a :href="item.imagen || '#'" target="_blank" rel="noopener" class="block bg-gray-100 dark:bg-gray-800">
             <img v-if="item.imagen" :src="item.imagen" :alt="item.nombre"
                  class="w-full h-52 object-cover group-hover:scale-[1.03] transition-transform duration-200 cursor-zoom-in" />
             <div v-else class="w-full h-52 flex items-center justify-center">
-              <i class="pi pi-image text-5xl text-surface-300 dark:text-surface-600" />
+              <i class="pi pi-image text-5xl text-gray-300 dark:text-gray-600" />
             </div>
           </a>
           <span v-if="!item.activo"
                 class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-xs font-semibold bg-red-500/90 text-white">Inactivo</span>
 
-          <div class="p-3 text-center border-t border-surface-100 dark:border-surface-800">
+          <div class="p-3 text-center border-t border-gray-100 dark:border-gray-800">
             <p class="font-semibold text-gray-800 dark:text-gray-100 truncate" :title="item.nombre">{{ item.nombre }}</p>
           </div>
 
@@ -325,9 +325,9 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
           <template #body="{ data }">
             <a v-if="data.imagen" :href="data.imagen" target="_blank" rel="noopener">
               <img :src="data.imagen" :alt="data.nombre"
-                   class="w-14 h-10 object-cover rounded border border-surface-200 dark:border-surface-700 cursor-zoom-in hover:opacity-80 transition-opacity" />
+                   class="w-14 h-10 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-zoom-in hover:opacity-80 transition-opacity" />
             </a>
-            <i v-else class="pi pi-image text-surface-300" />
+            <i v-else class="pi pi-image text-gray-300" />
           </template>
         </Column>
         <Column v-if="catalogConfig?.codigoManual !== false" field="codigo" header="Código" sortable />
@@ -376,18 +376,18 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
           <div v-if="esEquipos" class="col-span-2">
             <label class="block mb-1 font-medium">Imagen del equipo</label>
             <div class="flex items-start gap-4">
-              <div class="w-32 h-24 rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0">
+              <div class="w-32 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
                 <img v-if="previewImagen" :src="previewImagen" alt="Vista previa" class="w-full h-full object-cover" />
-                <i v-else class="pi pi-image text-3xl text-surface-300 dark:text-surface-600" />
+                <i v-else class="pi pi-image text-3xl text-gray-300 dark:text-gray-600" />
               </div>
               <div class="flex flex-col gap-1.5">
-                <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-surface-100 dark:bg-surface-800 text-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors w-fit">
+                <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors w-fit">
                   <i class="pi pi-upload" />
                   {{ previewImagen ? 'Cambiar imagen' : 'Seleccionar imagen' }}
                   <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="seleccionarArchivo" />
                 </label>
                 <small v-if="errorArchivo" class="text-red-500">{{ errorArchivo }}</small>
-                <small v-else class="text-xs text-surface-400">JPG, PNG o WEBP · máx. 2 MB · 1024×1024</small>
+                <small v-else class="text-xs text-gray-400">JPG, PNG o WEBP · máx. 2 MB · 1024×1024</small>
                 <Button v-if="previewImagen && archivoImagen" label="Quitar" icon="pi pi-times" text severity="danger" size="small" class="w-fit" @click="limpiarArchivo" />
               </div>
             </div>

@@ -87,6 +87,9 @@ const activosCount = computed(() => {
   return props.items.data.filter(i => i.activo).length
 })
 
+// Mostrar columna de miniaturas solo si algún ítem tiene imagen (ej. tipos_equipos)
+const tieneImagenes = computed(() => (props.items?.data || []).some(i => i.imagen))
+
 const gridFields = computed(() => {
   const result = {}
   if (props.catalogConfig?.codigoManual !== false) {
@@ -217,6 +220,15 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
 
       <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total"
                  :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
+        <Column v-if="tieneImagenes" header="Imagen" :style="{ width: '90px' }">
+          <template #body="{ data }">
+            <a v-if="data.imagen" :href="data.imagen" target="_blank" rel="noopener">
+              <img :src="data.imagen" :alt="data.nombre"
+                   class="w-14 h-10 object-cover rounded border border-surface-200 dark:border-surface-700 cursor-zoom-in hover:opacity-80 transition-opacity" />
+            </a>
+            <i v-else class="pi pi-image text-surface-300" />
+          </template>
+        </Column>
         <Column v-if="catalogConfig?.codigoManual !== false" field="codigo" header="Código" sortable />
         <Column v-if="!catalogConfig?.hideNombre" field="nombre" header="Nombre" sortable />
         <template v-for="(cfg, key) in gridFields" :key="key">

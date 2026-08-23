@@ -84,7 +84,9 @@ class CatalogoSchema
         'tipos_agregados' => [],
         'tipos_cargas' => [],
         'tipos_combustibles' => [],
-        'tipos_equipos' => [],
+        'tipos_equipos' => [
+            'imagen' => ['label' => 'Imagen', 'type' => 'text'],
+        ],
         'tipos_incidencias' => [
             'id_tipo_deducciones' => ['label' => 'Tipo de Deducción', 'type' => 'number'],
             'tsuma' => ['label' => 'Suma Tiempo', 'type' => 'boolean'],

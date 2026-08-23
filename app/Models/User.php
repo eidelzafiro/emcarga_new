@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -31,8 +32,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'apellidos',
         'username',
         'email',
+        'avatar',
         'password',
         'id_entidad',
         'fecha_operaciones',
@@ -83,6 +86,22 @@ class User extends Authenticatable
     public function esPrivilegiado(): bool
     {
         return $this->hasAnyRole(['SUPERADMIN', 'CONFIGURACIONES']);
+    }
+
+    /**
+     * Nombre completo para mostrar: nombre + apellidos (si existen).
+     */
+    public function getNombreCompletoAttribute(): string
+    {
+        return trim($this->name.' '.($this->apellidos ?? ''));
+    }
+
+    /**
+     * URL pública del avatar (null si no tiene: la UI muestra iniciales).
+     */
+    public function getUrlAvatarAttribute(): ?string
+    {
+        return $this->avatar ? Storage::url($this->avatar) : null;
     }
 
     /**

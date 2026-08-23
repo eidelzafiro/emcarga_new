@@ -36,7 +36,7 @@ class HandleInertiaRequests extends Middleware
             'title' => config('app.name', 'EMCARGA'),
             'appName' => config('app.name', 'EMCARGA'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => fn () => $request->user()?->makeHidden(['two_factor_secret'])->append(['nombre_completo', 'url_avatar']),
                 'roles' => fn () => $request->user()?->getRoleNames(),
                 'permissions' => fn () => $request->user()?->getAllPermissions()->pluck('name'),
             ],

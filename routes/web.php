@@ -159,6 +159,12 @@ Route::middleware('auth')->group(function () {
     Route::get('perfil/cambiar-password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('perfil/cambiar-password', [PasswordController::class, 'update'])->name('password.update');
 
+    // Perfil propio: datos personales + avatar
+    Route::get('perfil', [\App\Http\Controllers\Auth\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('perfil', [\App\Http\Controllers\Auth\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('perfil/avatar', [\App\Http\Controllers\Auth\ProfileController::class, 'actualizarAvatar'])->name('profile.avatar');
+    Route::delete('perfil/avatar', [\App\Http\Controllers\Auth\ProfileController::class, 'eliminarAvatar'])->name('profile.avatar.delete');
+
     // Contexto de trabajo: entidad activa y fecha de operaciones
     Route::post('contexto/entidad', [ContextoTrabajoController::class, 'cambiarEntidad'])->name('contexto.entidad');
     Route::post('contexto/perfil', [ContextoTrabajoController::class, 'cambiarPerfil'])->name('contexto.perfil');

@@ -604,11 +604,11 @@ function numeroLabel(n) {
 <template>
     <AppLayout :title="title">
         <div class="max-w-7xl mx-auto p-4">
-            <h2 class="text-xl font-bold mb-4 text-surface-800 dark:text-surface-100">{{ esEdicion ? 'Editar Aforo' : 'Nuevo Aforo' }}</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">{{ esEdicion ? 'Editar Aforo' : 'Nuevo Aforo' }}</h2>
             <form @submit.prevent="submit" class="space-y-4">
                 <!-- Selección de CP (solo en creación) -->
-                <div v-if="!esEdicion" class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div v-if="!esEdicion" class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <i class="pi pi-file-check text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Carta de Porte (no aforada del mes)</h3>
                     </div>
@@ -620,74 +620,74 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- DATOS GENERALES: una sola sección, editables (momento de corregir) -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <i class="pi pi-file-edit text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Datos Generales</h3>
                     </div>
                     <div class="p-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex items-center gap-2">
-                                <label class="w-28 shrink-0 text-sm font-medium text-surface-600 dark:text-surface-300">CP No.</label>
+                                <label class="w-28 shrink-0 text-sm font-medium text-gray-600 dark:text-gray-300">CP No.</label>
                                 <InputText v-if="esNuevaCp" v-model="form.numero_carta" placeholder="Folio de la nueva CP (opcional)" class="w-full" />
                                 <InputText v-else :model-value="cp?.numero || (esEdicion ? form.id_carta_porte : '')" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0 xl:col-span-2">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Hoja de Ruta</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Hoja de Ruta</label>
                                 <Select v-model="form.id_hoja_ruta" :options="hojasRuta" option-value="id" option-label="numero"
                                     :filter="true" filter-placeholder="Buscar HR..." placeholder="SELECCIONE HOJA DE RUTA..."
                                     class="w-full" @change="onSeleccionarHojaRuta" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Fecha de Parte</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Fecha de Parte</label>
                                 <DatePickerMes v-model="form.fecha_parte" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Fecha Emisión</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Emisión</label>
                                 <DatePickerMes v-model="form.fecha_emision" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Cliente</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Cliente</label>
                                 <Select v-model="form.id_cliente" :options="clientes" option-value="id" option-label="nombre" filter placeholder="Cliente..." class="w-full" @change="calcularTodas" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Tractivo</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Tractivo</label>
                                 <InputText :model-value="tractivoCodigo" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Arrastre</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Arrastre</label>
                                 <InputText :model-value="arrastreCodigo" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Chofer</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Chofer</label>
                                 <InputText :model-value="choferNombre" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Chofer 2</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Chofer 2</label>
                                 <InputText :model-value="chofer2Nombre" readonly class="w-full readonly-field" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Origen</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Origen</label>
                                 <Select v-model="form.id_lugar_origen" :options="lugares" option-value="id" option-label="nombre" filter placeholder="Origen..." class="w-full" @change="calcularTodas" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Destino</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Destino</label>
                                 <Select v-model="form.id_lugar_destino" :options="lugares" option-value="id" option-label="nombre" filter placeholder="Destino..." class="w-full" @change="calcularTodas" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Producto</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Producto</label>
                                 <Select v-model="form.id_producto" :options="productos" option-value="id" option-label="nombre" filter placeholder="Producto..." class="w-full" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Moneda</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Moneda</label>
                                 <Select v-model="form.id_moneda" :options="monedas" option-value="id" option-label="nombre" placeholder="Moneda..." class="w-full" />
                             </div>
                             <div class="min-w-0">
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Capacidad (t)</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Capacidad (t)</label>
                                 <InputNumber :model-value="capacidad" readonly class="w-full readonly-field" />
                             </div>
                             <div>
-                                <label class="block mb-1 text-sm font-medium text-surface-600 dark:text-surface-300">Conduce</label>
+                                <label class="block mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">Conduce</label>
                                 <InputText v-model="form.conduce" class="w-full" />
                             </div>
                         </div>
@@ -695,14 +695,14 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Calculo de la Tarifas -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <div class="flex items-center gap-2">
                             <i class="pi pi-table text-blue-700 dark:text-blue-400"></i>
                             <h3 class="font-semibold text-blue-800 dark:text-blue-300">Calculo de la Tarifas</h3>
                         </div>
                         <div class="flex items-center gap-3">
-                            <label class="flex items-center gap-1.5 text-xs text-surface-600 dark:text-surface-300 cursor-pointer">
+                            <label class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                                 <Checkbox v-model="mostrarLineasExtra" binary :binary="true" />
                                 Mostrar líneas 3-5
                             </label>
@@ -747,27 +747,27 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Almacenaje -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <i class="pi pi-box text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Almacenaje</h3>
                     </div>
                     <div class="p-4">
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Peso</label>
+                                <label class="text-xs text-gray-500 block mb-1">Peso</label>
                                 <InputNumber v-model="form.almacenaje_peso" :min="0" :max-fraction-digits="2" locale="en-US" placeholder="PESO..." class="w-full text-right" @blur="calcularAlmacenaje" @keydown.enter.prevent="calcularAlmacenajeEnter" />
                             </div>
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Horas</label>
+                                <label class="text-xs text-gray-500 block mb-1">Horas</label>
                                 <InputNumber v-model="form.almacenaje_horas" :min="0" :max-fraction-digits="2" locale="en-US" placeholder="HORAS..." class="w-full text-right" @blur="calcularAlmacenaje" @keydown.enter.prevent="calcularAlmacenajeEnter" />
                             </div>
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Tarifa</label>
+                                <label class="text-xs text-gray-500 block mb-1">Tarifa</label>
                                 <InputNumber v-model="form.almacenaje_tarifa" readonly class="w-full text-right readonly-field" />
                             </div>
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Flete</label>
+                                <label class="text-xs text-gray-500 block mb-1">Flete</label>
                                 <InputNumber v-model="form.almacenaje_flete" readonly class="w-full text-right readonly-field" />
                             </div>
                         </div>
@@ -775,8 +775,8 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Demora -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <i class="pi pi-clock text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Demora</h3>
                     </div>
@@ -784,7 +784,7 @@ function numeroLabel(n) {
                         <!-- Fila 1: CARGA (izquierda) / DESCARGA (derecha) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="text-xs font-semibold text-surface-500 block mb-1">CARGA</label>
+                                <label class="text-xs font-semibold text-gray-500 block mb-1">CARGA</label>
                                 <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
                                     <DatePickerMes v-model="form.fecha_carga" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                                     <InputText v-model="form.hora_carga_1" placeholder="H1" class="w-16" />
@@ -792,7 +792,7 @@ function numeroLabel(n) {
                                 </div>
                             </div>
                             <div>
-                                <label class="text-xs font-semibold text-surface-500 block mb-1">DESCARGA</label>
+                                <label class="text-xs font-semibold text-gray-500 block mb-1">DESCARGA</label>
                                 <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
                                     <DatePickerMes v-model="form.fecha_descarga" date-format="dd/mm/yy" class="w-full" :min-date="minFecha" :max-date="maxFecha" />
                                     <InputText v-model="form.hora_descarga_1" placeholder="H1" class="w-16" />
@@ -803,30 +803,30 @@ function numeroLabel(n) {
                         <!-- Fila 2: horas carga, flete carga | horas descarga, flete descarga -->
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Horas carga</label>
+                                <label class="text-xs text-gray-500 block mb-1">Horas carga</label>
                                 <InputNumber v-model="form.dem_carga" :min="0" :max-fraction-digits="2" locale="en-US" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" class="w-full" />
                             </div>
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Flete carga</label>
-                                <InputNumber v-model="form.flete_dem_1" readonly class="w-full bg-surface-100 dark:bg-surface-800" />
+                                <label class="text-xs text-gray-500 block mb-1">Flete carga</label>
+                                <InputNumber v-model="form.flete_dem_1" readonly class="w-full bg-gray-100 dark:bg-gray-800" />
                             </div>
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Horas descarga</label>
+                                <label class="text-xs text-gray-500 block mb-1">Horas descarga</label>
                                 <InputNumber v-model="form.dem_descarga" :min="0" :max-fraction-digits="2" locale="en-US" @blur="calcularDemora" @keydown.enter.prevent="calcularDemora" class="w-full" />
                             </div>
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Flete descarga</label>
-                                <InputNumber v-model="form.flete_dem_2" readonly class="w-full bg-surface-100 dark:bg-surface-800" />
+                                <label class="text-xs text-gray-500 block mb-1">Flete descarga</label>
+                                <InputNumber v-model="form.flete_dem_2" readonly class="w-full bg-gray-100 dark:bg-gray-800" />
                             </div>
                         </div>
                         <!-- Fila 3: feriado + totales de demora -->
                         <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 items-end">
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Horas total</label>
+                                <label class="text-xs text-gray-500 block mb-1">Horas total</label>
                                 <InputNumber :model-value="demoraHorasTotal" readonly class="w-full text-right readonly-field" />
                             </div>
                             <div>
-                                <label class="text-xs text-surface-500 block mb-1">Flete total</label>
+                                <label class="text-xs text-gray-500 block mb-1">Flete total</label>
                                 <InputNumber :model-value="demoraTotal" readonly class="w-full text-right readonly-field" />
                             </div>
                         </div>
@@ -834,38 +834,38 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Recargos (van antes de Salario porque sus importes alimentan el salario) -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <i class="pi pi-plus-circle text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Recargos</h3>
                     </div>
                     <div class="p-4 space-y-2">
                         <div class="flex items-center gap-2">
                             <Checkbox v-model="recargosCheck.incumplimiento" binary @change="onRecargo(1)" />
-                            <span class="text-sm w-36 text-surface-700 dark:text-surface-200">INCUMP. CARGA?</span>
+                            <span class="text-sm w-36 text-gray-700 dark:text-gray-200">INCUMP. CARGA?</span>
                             <InputNumber v-model="form.recargo_1" readonly class="w-24 text-right readonly-field" />
                         </div>
                         <div class="flex items-center gap-2">
                             <Checkbox v-model="recargosCheck.entrega_doc" binary @change="onRecargo(2, 210)" />
-                            <span class="text-sm w-36 text-surface-700 dark:text-surface-200">ENTREGA DOC.?</span>
+                            <span class="text-sm w-36 text-gray-700 dark:text-gray-200">ENTREGA DOC.?</span>
                             <InputNumber :model-value="form.recargo_2" readonly class="w-24 text-right readonly-field" />
                         </div>
                         <div class="flex items-center gap-2">
                             <Checkbox v-model="recargosCheck.error_doc" binary @change="onRecargo(3, 280)" />
-                            <span class="text-sm w-36 text-surface-700 dark:text-surface-200">ERROR DOC.?</span>
+                            <span class="text-sm w-36 text-gray-700 dark:text-gray-200">ERROR DOC.?</span>
                             <InputNumber :model-value="form.recargo_3" readonly class="w-24 text-right readonly-field" />
                         </div>
                         <div class="flex items-center gap-2">
                             <Checkbox v-model="recargosCheck.limpio_libre" binary @change="onRecargo(4, 210)" />
-                            <span class="text-sm w-36 text-surface-700 dark:text-surface-200">LIMPIO/LIBRE?</span>
+                            <span class="text-sm w-36 text-gray-700 dark:text-gray-200">LIMPIO/LIBRE?</span>
                             <InputNumber :model-value="form.recargo_4" readonly class="w-24 text-right readonly-field" />
                         </div>
                         <div class="flex items-center gap-2">
                             <Checkbox v-model="recargosCheck.proteccion" binary @change="onRecargo(5, 1750)" />
-                            <span class="text-sm w-36 text-surface-700 dark:text-surface-200">PROT. CARGA?</span>
+                            <span class="text-sm w-36 text-gray-700 dark:text-gray-200">PROT. CARGA?</span>
                             <InputNumber :model-value="form.recargo_5" readonly class="w-24 text-right readonly-field" />
                         </div>
-                        <div class="flex items-center gap-2 pt-2 border-t border-surface-100 dark:border-surface-700">
+                        <div class="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                             <span class="w-5"></span>
                             <span class="w-36 text-xs font-bold text-blue-800 dark:text-blue-300">OTROS TOTAL</span>
                             <InputNumber :model-value="otrosTotal" readonly class="w-24 text-right readonly-field" />
@@ -874,37 +874,37 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Salario (tiempos + feriado + coeficiente) -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <i class="pi pi-money-bill text-blue-700 dark:text-blue-400"></i>
                         <h3 class="font-semibold text-blue-800 dark:text-blue-300">Salario</h3>
                     </div>
                     <div class="p-4 space-y-3">
                         <div>
-                            <label class="text-xs font-semibold text-surface-500 block mb-1">TIEMPOS</label>
+                            <label class="text-xs font-semibold text-gray-500 block mb-1">TIEMPOS</label>
                             <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
-                                <div><label class="text-xs text-surface-500 block">OTROS</label><InputNumber v-model="form.tiempo_otros" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">MOV</label><InputNumber v-model="form.tiempo_movimiento" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">CAR</label><InputNumber v-model="form.tiempo_carga" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">DES</label><InputNumber v-model="form.tiempo_descarga" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
-                                <div><label class="text-xs text-surface-500 block">TIEMPO</label><InputNumber v-model="form.tiempo_total" readonly :max-fraction-digits="2" class="w-full text-right readonly-field" /></div>
-                                <div><label class="text-xs text-surface-500 block">FERIADO</label><InputNumber v-model="form.tiempo_feriado" :max-fraction-digits="2" locale="en-US" class="w-full" /></div>
+                                <div><label class="text-xs text-gray-500 block">OTROS</label><InputNumber v-model="form.tiempo_otros" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-gray-500 block">MOV</label><InputNumber v-model="form.tiempo_movimiento" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-gray-500 block">CAR</label><InputNumber v-model="form.tiempo_carga" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-gray-500 block">DES</label><InputNumber v-model="form.tiempo_descarga" :max-fraction-digits="2" locale="en-US" @blur="calcularTiempos" class="w-full" /></div>
+                                <div><label class="text-xs text-gray-500 block">TIEMPO</label><InputNumber v-model="form.tiempo_total" readonly :max-fraction-digits="2" class="w-full text-right readonly-field" /></div>
+                                <div><label class="text-xs text-gray-500 block">FERIADO</label><InputNumber v-model="form.tiempo_feriado" :max-fraction-digits="2" locale="en-US" class="w-full" /></div>
                             </div>
                         </div>
-                        <div class="pt-3 border-t border-surface-100 dark:border-surface-700">
-                            <label class="text-xs font-semibold text-surface-500 block mb-1">COEFICIENTE</label>
+                        <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <label class="text-xs font-semibold text-gray-500 block mb-1">COEFICIENTE</label>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                                 <div>
-                                    <label class="text-xs text-surface-500 block mb-1">Tasa</label>
+                                    <label class="text-xs text-gray-500 block mb-1">Tasa</label>
                                     <Select v-model="form.id_tasa" :options="tasas" option-value="id" option-label="nombre"
                                         placeholder="SELECCIONE TASA..." filter class="w-full" @change="onSelectTasa" />
                                 </div>
                                 <div>
-                                    <label class="text-xs text-surface-500 block mb-1">Coeficiente</label>
+                                    <label class="text-xs text-gray-500 block mb-1">Coeficiente</label>
                                     <InputNumber v-model="form.tasa" :min="0" readonly :max-fraction-digits="6" class="w-full text-right readonly-field" />
                                 </div>
                                 <div>
-                                    <label class="text-xs text-surface-500 block mb-1">Salario</label>
+                                    <label class="text-xs text-gray-500 block mb-1">Salario</label>
                                     <InputNumber v-model="form.salario" readonly class="w-full text-right readonly-field" />
                                 </div>
                             </div>
@@ -913,13 +913,13 @@ function numeroLabel(n) {
                 </div>
 
                 <!-- Indicadores -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-                    <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-surface-200 dark:border-surface-700">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 border-b border-gray-200 dark:border-gray-700">
                         <div class="flex items-center gap-2">
                             <i class="pi pi-chart-bar text-blue-700 dark:text-blue-400"></i>
                             <h3 class="font-semibold text-blue-800 dark:text-blue-300">Indicadores</h3>
                         </div>
-                        <label class="flex items-center gap-1.5 text-xs text-surface-600 dark:text-surface-300 cursor-pointer">
+                        <label class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                             <Checkbox v-model="mostrarIndExtra" binary :binary="true" />
                             Mostrar filas 3-5
                         </label>
@@ -934,7 +934,7 @@ function numeroLabel(n) {
                             </div>
                         </div>
                         <div class="flex items-center gap-2 mb-3">
-                            <label class="text-sm font-medium text-surface-600 dark:text-surface-300">Viajes</label>
+                            <label class="text-sm font-medium text-gray-600 dark:text-gray-300">Viajes</label>
                             <InputNumber v-model="form.viajes" :min="1" class="w-20" @blur="calcularIndicadores" @keydown.enter.prevent="calcularIndicadores" />
                         </div>
                         <DataTable :value="indFilasVisibles" size="small" striped-rows>

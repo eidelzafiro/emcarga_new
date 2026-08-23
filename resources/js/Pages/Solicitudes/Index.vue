@@ -399,7 +399,7 @@ const estadoBadge = (s) => ({
           </div>
         </div>
 
-        <div class="text-sm font-semibold text-surface-500 mb-1">Datos generales</div>
+        <div class="text-sm font-semibold text-gray-500 mb-1">Datos generales</div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block mb-1 font-medium text-sm">Fecha de solicitud</label>
@@ -427,7 +427,7 @@ const estadoBadge = (s) => ({
           </div>
         </div>
 
-        <div class="text-sm font-semibold text-surface-500 -mb-1">Carga 1</div>
+        <div class="text-sm font-semibold text-gray-500 -mb-1">Carga 1</div>
         <div class="grid grid-cols-3 gap-4">
           <div class="col-span-2">
             <label class="block mb-1 font-medium text-sm">Producto</label>
@@ -443,7 +443,7 @@ const estadoBadge = (s) => ({
           </div>
         </div>
 
-        <div class="text-sm font-semibold text-surface-500 -mb-1">Carga 2</div>
+        <div class="text-sm font-semibold text-gray-500 -mb-1">Carga 2</div>
         <div class="grid grid-cols-3 gap-4">
           <div class="col-span-2">
             <label class="block mb-1 font-medium text-sm">Producto</label>
@@ -474,7 +474,7 @@ const estadoBadge = (s) => ({
     <Dialog v-model:visible="showCarta" :header="`Ejecutar Carta de Porte — ${cartaSolicitud?.numero || ''}`" modal style="width: 880px">
       <div v-if="cartaSolicitud">
         <form @submit.prevent="registrarCarta" class="space-y-4 overflow-y-auto max-h-[75vh]">
-          <div class="text-sm bg-surface-50 p-2 rounded flex gap-6">
+          <div class="text-sm bg-gray-50 p-2 rounded flex gap-6">
             <div><strong>N°:</strong> {{ cartaSolicitud.numero }}</div>
             <div><strong>Cliente:</strong> {{ cartaSolicitud.cliente?.nombre }}</div>
             <div><strong>Pendientes:</strong> {{ fmtNum(cartaSolicitud.toneladas_pendientes ?? cartaSolicitud.peso1) }} de {{ fmtNum(cartaSolicitud.toneladas_total ?? cartaSolicitud.peso1) }} tns</div>

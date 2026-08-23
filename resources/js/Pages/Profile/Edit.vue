@@ -11,7 +11,7 @@
                 v-if="user.url_avatar"
                 :src="user.url_avatar"
                 :alt="user.nombre_completo"
-                class="w-24 h-24 rounded-full object-cover border border-surface-200 dark:border-surface-700"
+                class="w-24 h-24 rounded-full object-cover border border-gray-200 dark:border-gray-700"
               />
               <Avatar
                 v-else
@@ -23,7 +23,7 @@
             </div>
 
             <div class="flex flex-col gap-2 items-start">
-              <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-surface-100 dark:bg-surface-800 text-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
+              <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <i class="pi pi-camera" />
                 {{ user.url_avatar ? 'Cambiar avatar' : 'Subir avatar' }}
                 <input
@@ -44,7 +44,7 @@
                 @click="eliminarAvatar"
               />
               <small v-if="form.errors.avatar" class="text-red-500">{{ form.errors.avatar }}</small>
-              <small class="text-xs text-surface-400">JPG, PNG o WEBP · máx. 2 MB · 1024×1024</small>
+              <small class="text-xs text-gray-400">JPG, PNG o WEBP · máx. 2 MB · 1024×1024</small>
             </div>
           </div>
 
@@ -52,7 +52,7 @@
           <form @submit.prevent="submit" class="space-y-5">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label for="name" class="block text-sm font-medium text-surface-700 mb-1">Nombre</label>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
                 <InputText
                   id="name"
                   v-model="form.name"
@@ -64,7 +64,7 @@
               </div>
 
               <div>
-                <label for="apellidos" class="block text-sm font-medium text-surface-700 mb-1">Apellidos</label>
+                <label for="apellidos" class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
                 <InputText
                   id="apellidos"
                   v-model="form.apellidos"
@@ -77,7 +77,7 @@
             </div>
 
             <div>
-              <label for="email" class="block text-sm font-medium text-surface-700 mb-1">Correo electrónico</label>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
               <InputText
                 id="email"
                 v-model="form.email"
@@ -87,13 +87,13 @@
                 :class="{ 'p-invalid': form.errors.email }"
               />
               <small v-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</small>
-              <small v-else class="block text-xs text-surface-400 mt-1">
+              <small v-else class="block text-xs text-gray-400 mt-1">
                 Se usa para la recuperación de contraseña (.cu → correo nacional, resto → Gmail).
               </small>
             </div>
 
             <div>
-              <label for="username" class="block text-sm font-medium text-surface-400 mb-1">Usuario (no editable)</label>
+              <label for="username" class="block text-sm font-medium text-gray-400 mb-1">Usuario (no editable)</label>
               <InputText id="username" :model-value="user.username" disabled fluid />
             </div>
 

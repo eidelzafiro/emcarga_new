@@ -24,7 +24,7 @@
             >
               <template #value="{ value }">
                 <span v-if="value" class="text-sm">{{ value }}</span>
-                <span v-else class="text-surface-400 text-sm">Filtrar por perfil</span>
+                <span v-else class="text-gray-400 text-sm">Filtrar por perfil</span>
               </template>
             </Select>
             <Select
@@ -38,7 +38,7 @@
             >
               <template #value="{ value }">
                 <span v-if="value" class="text-sm">{{ entidadNombre(value) }}</span>
-                <span v-else class="text-surface-400 text-sm">Filtrar por entidad</span>
+                <span v-else class="text-gray-400 text-sm">Filtrar por entidad</span>
               </template>
             </Select>
             <Select
@@ -55,7 +55,7 @@
             >
               <template #value="{ value }">
                 <span v-if="value" class="text-sm">{{ value === 'activo' ? 'Activo' : value === 'bloqueado' ? 'Bloqueado' : value === 'temporal' ? 'Contraseña temporal' : 'Todos los estados' }}</span>
-                <span v-else class="text-surface-400 text-sm">Todos los estados</span>
+                <span v-else class="text-gray-400 text-sm">Todos los estados</span>
               </template>
             </Select>
           </div>
@@ -92,7 +92,7 @@
               <span v-for="rol in data.roles" :key="rol.id">
                 <Tag :value="rol.name" severity="info" class="mr-1" />
               </span>
-              <span v-if="!data.roles.length" class="text-surface-400 text-sm">—</span>
+              <span v-if="!data.roles.length" class="text-gray-400 text-sm">—</span>
             </template>
           </Column>
           <Column header="Estado">
@@ -121,7 +121,7 @@
           </Column>
           <Column header="Último acceso">
             <template #body="{ data }">
-              <span class="text-sm text-surface-500">{{ formatoFecha(data.ultimo_login) }}</span>
+              <span class="text-sm text-gray-500">{{ formatoFecha(data.ultimo_login) }}</span>
             </template>
           </Column>
           <Column header="Acciones" :exportable="false">
@@ -181,7 +181,7 @@
             </template>
           </Column>
           <template #empty>
-            <div class="text-center py-8 text-surface-400">
+            <div class="text-center py-8 text-gray-400">
               <i class="pi pi-users text-3xl mb-2 block" />
               No se encontraron usuarios.
             </div>
@@ -199,28 +199,28 @@
     >
       <form class="space-y-4" @submit.prevent="guardarForm">
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Nombre completo</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
           <InputText v-model="form.name" class="w-full" :class="{ 'p-invalid': form.errors.name }" />
           <small v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</small>
         </div>
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Usuario</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
           <InputText v-model="form.username" class="w-full uppercase" :class="{ 'p-invalid': form.errors.username }" />
           <small v-if="form.errors.username" class="text-red-500">{{ form.errors.username }}</small>
         </div>
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Correo (opcional)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Correo (opcional)</label>
           <InputText v-model="form.email" type="email" class="w-full" :class="{ 'p-invalid': form.errors.email }" />
           <small v-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</small>
         </div>
         <div v-if="!editando">
-          <label class="block text-sm font-medium text-surface-700 mb-1">Contraseña temporal</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña temporal</label>
           <Password v-model="form.password" :feedback="false" toggleMask class="w-full" inputClass="w-full" fluid />
-          <small class="text-surface-400 block mt-1">El usuario deberá cambiarla en su primer acceso.</small>
+          <small class="text-gray-400 block mt-1">El usuario deberá cambiarla en su primer acceso.</small>
           <small v-if="form.errors.password" class="text-red-500 block">{{ form.errors.password }}</small>
         </div>
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Perfil</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
           <Select
             v-model="form.role"
             :options="roles"
@@ -231,7 +231,7 @@
           <small v-if="form.errors.role" class="text-red-500">{{ form.errors.role }}</small>
         </div>
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Entidad</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Entidad</label>
           <Select
             v-model="form.id_entidad"
             :options="entidades"
@@ -243,16 +243,16 @@
             :class="{ 'p-invalid': form.errors.id_entidad }"
           />
           <small v-if="form.errors.id_entidad" class="text-red-500">{{ form.errors.id_entidad }}</small>
-          <small v-if="!esAdmin && miEntidadId" class="text-surface-400 block mt-1">
+          <small v-if="!esAdmin && miEntidadId" class="text-gray-400 block mt-1">
             Solo el administrador puede cambiar la entidad.
           </small>
         </div>
         <div v-if="entidadesAccesoOptions.length">
-          <label class="block text-sm font-medium text-surface-700 mb-1">Entidades a las que tiene acceso</label>
-          <small v-if="entidadesAccesoOptions.length === 1" class="text-surface-400 block mb-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Entidades a las que tiene acceso</label>
+          <small v-if="entidadesAccesoOptions.length === 1" class="text-gray-400 block mb-1">
             La entidad principal no tiene subordinadas, solo se muestra ella misma.
           </small>
-          <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-surface-300 rounded p-2">
+          <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded p-2">
             <div v-for="ent in entidadesAccesoOptions" :key="ent.id" class="flex items-center gap-2">
               <Checkbox
                 :inputId="'ent_' + ent.id"
@@ -282,7 +282,7 @@
       :modal="true"
       class="w-full max-w-md"
     >
-      <p class="text-sm text-surface-600 mb-4">
+      <p class="text-sm text-gray-600 mb-4">
         Indique la contraseña temporal para <strong>{{ seleccionado?.username }}</strong>.
         Deberá cambiarla en su próximo acceso. También se desbloqueará la cuenta.
       </p>
@@ -305,7 +305,7 @@
       :modal="true"
       class="w-full max-w-sm"
     >
-      <p class="text-sm text-surface-600">
+      <p class="text-sm text-gray-600">
         ¿Está seguro de eliminar al usuario <strong>{{ seleccionado?.username }}</strong> ({{ seleccionado?.name }})?
       </p>
       <template #footer>

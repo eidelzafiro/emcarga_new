@@ -10,7 +10,7 @@
           <Column field="lectura_actual" header="Lectura Actual" />
           <Column field="prepago" header="Prepago">
             <template #body="{ data }">
-              <i :class="data.prepago ? 'pi pi-check text-green-500' : 'pi pi-times text-surface-400'" />
+              <i :class="data.prepago ? 'pi pi-check text-green-500' : 'pi pi-times text-gray-400'" />
             </template>
           </Column>
           <Column field="activo" header="Activo">

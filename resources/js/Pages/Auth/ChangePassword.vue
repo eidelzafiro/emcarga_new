@@ -4,9 +4,9 @@
       <Card>
         <template #title>Cambiar contraseña</template>
         <template #content>
-          <div class="mb-6 p-3 bg-surface-50 rounded-lg border border-surface-200">
-            <p class="text-sm font-medium text-surface-700 mb-2">Requisitos:</p>
-            <ul class="text-sm text-surface-500 space-y-1 list-disc pl-5">
+          <div class="mb-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="text-sm font-medium text-gray-700 mb-2">Requisitos:</p>
+            <ul class="text-sm text-gray-500 space-y-1 list-disc pl-5">
               <li>Mínimo 6 caracteres</li>
               <li>Al menos una mayúscula, una minúscula, un número y un carácter especial (!@#.$%?&amp;*()_-+=)</li>
               <li>No puede coincidir con contraseñas utilizadas anteriormente</li>
@@ -15,7 +15,7 @@
 
           <form @submit.prevent="submit" class="space-y-5">
             <div>
-              <label for="password_actual" class="block text-sm font-medium text-surface-700 mb-1">Contraseña actual</label>
+              <label for="password_actual" class="block text-sm font-medium text-gray-700 mb-1">Contraseña actual</label>
               <Password
                 id="password_actual"
                 v-model="form.password_actual"
@@ -30,7 +30,7 @@
             </div>
 
             <div>
-              <label for="password" class="block text-sm font-medium text-surface-700 mb-1">Nueva contraseña</label>
+              <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
               <Password
                 id="password"
                 v-model="form.password"
@@ -44,7 +44,7 @@
             </div>
 
             <div>
-              <label for="password_confirmation" class="block text-sm font-medium text-surface-700 mb-1">Confirmar nueva contraseña</label>
+              <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirmar nueva contraseña</label>
               <Password
                 id="password_confirmation"
                 v-model="form.password_confirmation"

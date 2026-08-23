@@ -72,8 +72,8 @@ watch([search, cliente, chofer, equipo], navegar)
         <div class="p-4">
             <Toolbar class="mb-4">
                 <template #start>
-                    <h2 class="text-xl font-bold text-surface-800 dark:text-surface-100">Aforos</h2>
-                    <span class="text-sm text-surface-500 dark:text-surface-400 ml-3">{{ totalRegistros }} registros</span>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">Aforos</h2>
+                    <span class="text-sm text-gray-500 dark:text-gray-400 ml-3">{{ totalRegistros }} registros</span>
                 </template>
                 <template #end>
                     <div class="flex gap-2 flex-wrap">
@@ -99,7 +99,7 @@ watch([search, cliente, chofer, equipo], navegar)
                         <i class="pi pi-calendar text-sm"></i>
                         <span class="font-semibold">{{ grupo.fecha }}</span>
                     </div>
-                    <span class="text-sm text-surface-500 dark:text-surface-400">{{ grupo.aforos.length }} documento(s)</span>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">{{ grupo.aforos.length }} documento(s)</span>
                 </div>
 
                 <!-- Grid de tarjetas (4 por línea) -->
@@ -176,7 +176,7 @@ watch([search, cliente, chofer, equipo], navegar)
             <div v-if="aforos.last_page > 1" class="flex justify-center gap-2 mt-6">
                 <Button icon="pi pi-chevron-left" text severity="secondary" :disabled="aforos.current_page <= 1"
                     @click="router.get(route('aforos.index'), { ...filters, page: aforos.current_page - 1 })" />
-                <span class="self-center text-sm text-surface-600 dark:text-surface-400">Página {{ aforos.current_page }} de {{ aforos.last_page }}</span>
+                <span class="self-center text-sm text-gray-600 dark:text-gray-400">Página {{ aforos.current_page }} de {{ aforos.last_page }}</span>
                 <Button icon="pi pi-chevron-right" text severity="secondary" :disabled="aforos.current_page >= aforos.last_page"
                     @click="router.get(route('aforos.index'), { ...filters, page: aforos.current_page + 1 })" />
             </div>

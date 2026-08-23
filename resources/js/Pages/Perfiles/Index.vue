@@ -3,7 +3,7 @@
     <Card>
       <template #title>Gestión de perfiles</template>
       <template #content>
-        <p class="text-sm text-surface-500 mb-4">
+        <p class="text-sm text-gray-500 mb-4">
           Perfiles (roles) del sistema y los permisos asignados a cada uno.
         </p>
 
@@ -32,7 +32,7 @@
                   size="small"
                 />
                 <Tag v-if="data.permissions.length > 6" :value="'+' + (data.permissions.length - 6) + ' más'" severity="secondary" size="small" />
-                <span v-if="data.permissions.length === 0" class="text-xs text-surface-400">Sin permisos</span>
+                <span v-if="data.permissions.length === 0" class="text-xs text-gray-400">Sin permisos</span>
               </div>
             </template>
           </Column>
@@ -63,13 +63,13 @@
             </template>
           </Column>
           <template #empty>
-            <div class="text-center py-8 text-surface-400">
+            <div class="text-center py-8 text-gray-400">
               <i class="pi pi-shield text-3xl mb-2 block" />
               No hay perfiles registrados.
             </div>
           </template>
           <template #footer>
-            <span class="text-xs text-surface-400">Total: {{ perfiles.length }} registros</span>
+            <span class="text-xs text-gray-400">Total: {{ perfiles.length }} registros</span>
           </template>
         </DataTable>
 
@@ -93,7 +93,7 @@
     >
       <form class="space-y-4" @submit.prevent="guardarForm">
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Nombre del perfil</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del perfil</label>
           <InputText
             v-model="form.nombre"
             class="w-full uppercase"
@@ -104,11 +104,11 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-2">Permisos asignados</label>
-          <div class="max-h-80 overflow-y-auto border border-surface-200 rounded-lg divide-y divide-surface-100">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Permisos asignados</label>
+          <div class="max-h-80 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
             <div v-for="(permisosGrupo, modulo) in permisosAgrupados" :key="modulo" class="p-3">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-surface-700 capitalize">{{ modulo }}</span>
+                <span class="text-sm font-semibold text-gray-700 capitalize">{{ modulo }}</span>
                 <Button
                   :label="grupoCompleto(permisosGrupo) ? 'Quitar todos' : 'Seleccionar todos'"
                   size="small"
@@ -121,13 +121,13 @@
                 <label
                   v-for="permiso in permisosGrupo"
                   :key="permiso"
-                  class="flex items-center gap-2 text-sm text-surface-600 cursor-pointer p-1 rounded hover:bg-surface-50"
+                  class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer p-1 rounded hover:bg-gray-50"
                 >
                   <input
                     v-model="form.permisos"
                     type="checkbox"
                     :value="permiso"
-                    class="rounded border-surface-300 text-blue-600 focus:ring-blue-500"
+                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span>{{ permiso.split('.')[1] }}</span>
                 </label>
@@ -154,7 +154,7 @@
       :modal="true"
       class="w-full max-w-sm"
     >
-      <p class="text-sm text-surface-600">
+      <p class="text-sm text-gray-600">
         ¿Está seguro de eliminar el perfil <strong>{{ seleccionado?.name }}</strong>?
         <span v-if="seleccionado?.users_count > 0" class="block mt-2 text-red-500">
           Tiene {{ seleccionado.users_count }} usuario(s) asignado(s); el sistema no lo permitirá.

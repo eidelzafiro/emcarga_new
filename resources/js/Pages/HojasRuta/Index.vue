@@ -588,7 +588,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
         </div>
 
         <!-- Equipo (tractivo) -->
-        <div class="border rounded-lg p-3 bg-surface-50">
+        <div class="border rounded-lg p-3 bg-gray-50">
           <div class="flex items-center justify-between mb-2">
             <span class="font-semibold">Equipo (tractivo)</span>
           </div>
@@ -599,11 +599,11 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
             </div>
             <div>
               <label class="block mb-1 font-medium">Marca-Modelo</label>
-              <InputText :model-value="marcaModelo(infoTractivo)" readonly class="w-full bg-surface-100" />
+              <InputText :model-value="marcaModelo(infoTractivo)" readonly class="w-full bg-gray-100" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Chapa</label>
-              <InputText :model-value="infoTractivo?.placa || '—'" readonly class="w-full bg-surface-100" />
+              <InputText :model-value="infoTractivo?.placa || '—'" readonly class="w-full bg-gray-100" />
             </div>
             <div>
               <label class="block mb-1 font-medium">KMS disponibles</label>
@@ -613,7 +613,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
         </div>
 
         <!-- Arrastre -->
-        <div class="border rounded-lg p-3 bg-surface-50">
+        <div class="border rounded-lg p-3 bg-gray-50">
           <div class="flex items-center justify-between mb-2">
             <span class="font-semibold">Arrastre</span>
           </div>
@@ -624,11 +624,11 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
             </div>
             <div>
               <label class="block mb-1 font-medium">Marca-Modelo</label>
-              <InputText :value="marcaModelo(infoArrastre)" readonly class="w-full bg-surface-100" />
+              <InputText :value="marcaModelo(infoArrastre)" readonly class="w-full bg-gray-100" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Chapa</label>
-              <InputText :value="infoArrastre?.placa || '—'" readonly class="w-full bg-surface-100" />
+              <InputText :value="infoArrastre?.placa || '—'" readonly class="w-full bg-gray-100" />
             </div>
             <div>
               <label class="block mb-1 font-medium">KMS disponibles</label>
@@ -639,34 +639,34 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
 
         <!-- Chóferes -->
         <div class="grid grid-cols-2 gap-4">
-          <div class="border rounded-lg p-4 bg-surface-50">
+          <div class="border rounded-lg p-4 bg-gray-50">
             <span class="font-semibold block mb-2">Chofer</span>
             <div class="space-y-2">
               <Select v-model="apertura.id_chofer" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" required />
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block mb-1 font-medium">CI</label>
-                  <InputText :model-value="infoChofer?.ci || '—'" readonly class="w-full bg-surface-100" />
+                  <InputText :model-value="infoChofer?.ci || '—'" readonly class="w-full bg-gray-100" />
                 </div>
                 <div>
                   <label class="block mb-1 font-medium">Licencia</label>
-                  <InputText :model-value="infoChofer?.cat || '—'" readonly class="w-full bg-surface-100" />
+                  <InputText :model-value="infoChofer?.cat || '—'" readonly class="w-full bg-gray-100" />
                 </div>
               </div>
             </div>
           </div>
-          <div class="border rounded-lg p-4 bg-surface-50">
+          <div class="border rounded-lg p-4 bg-gray-50">
             <span class="font-semibold block mb-2">2do Chofer</span>
             <div class="space-y-2">
               <Select v-model="apertura.id_chofer2" :options="choferOptionsCompleto" optionLabel="label" optionValue="id" filter placeholder="Seleccione el chofer" class="w-full" :showClear="true" />
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block mb-1 font-medium">CI</label>
-                  <InputText :model-value="infoChofer2?.ci || '—'" readonly class="w-full bg-surface-100" />
+                  <InputText :model-value="infoChofer2?.ci || '—'" readonly class="w-full bg-gray-100" />
                 </div>
                 <div>
                   <label class="block mb-1 font-medium">Licencia</label>
-                  <InputText :model-value="infoChofer2?.cat || '—'" readonly class="w-full bg-surface-100" />
+                  <InputText :model-value="infoChofer2?.cat || '—'" readonly class="w-full bg-gray-100" />
                 </div>
               </div>
             </div>
@@ -711,7 +711,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           <div>
             <label class="block mb-1 font-medium">Consumido</label>
             <InputNumber v-model="cierre.combustible_consumido" :min="0" :max-fraction-digits="2" class="w-full" />
-            <small class="text-surface-400">Índice del tractivo: {{ indiceTractivo }}</small>
+            <small class="text-gray-400">Índice del tractivo: {{ indiceTractivo }}</small>
           </div>
           <div>
             <label class="block mb-1 font-medium">Técnico</label>
@@ -760,7 +760,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           <label class="block mb-1 font-medium">Número</label>
           <InputText v-model="edicion.numero" class="w-full" required readonly />
         </div>
-        <div class="col-span-2 grid grid-cols-4 gap-3 border rounded-lg p-3 bg-surface-50">
+        <div class="col-span-2 grid grid-cols-4 gap-3 border rounded-lg p-3 bg-gray-50">
           <div>
             <label class="block mb-1 font-medium">Fecha emisión</label>
             <input v-model="edicion.fecha_emision" type="date" class="w-full border rounded p-2" required :min="minFecha" :max="maxFecha" />
@@ -831,7 +831,7 @@ watch(() => [edicion.value.fecha_emision, edicion.value.hora_emision, edicion.va
           <InputText v-model="edicion.dias_trabajados" class="w-full" />
         </div>
 
-        <div class="col-span-2 border rounded-lg p-3 bg-surface-50">
+        <div class="col-span-2 border rounded-lg p-3 bg-gray-50">
           <div class="flex items-center justify-between mb-2">
             <span class="font-semibold">Tiempos (horas decimales)</span>
             <div class="flex gap-4 text-sm">

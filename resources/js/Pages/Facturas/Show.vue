@@ -20,7 +20,7 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold">Factura No. {{ factura.numero }}</h2>
-                    <p class="text-surface-500">{{ formatDate(factura.fecha_emision) }}</p>
+                    <p class="text-gray-500">{{ formatDate(factura.fecha_emision) }}</p>
                 </div>
                 <Tag :severity="severityMap[factura.estado] || 'info'" class="text-lg p-2">{{ factura.estado }}</Tag>
             </div>
@@ -70,7 +70,7 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
                             <template #body="{ data }">${{ Number(data.ingreso_mt).toLocaleString() }}</template>
                         </Column>
                     </DataTable>
-                    <div class="text-xs text-surface-400 pt-1">Total: {{ (factura.aforos || []).length }} registros</div>
+                    <div class="text-xs text-gray-400 pt-1">Total: {{ (factura.aforos || []).length }} registros</div>
                 </template>
             </Card>
 

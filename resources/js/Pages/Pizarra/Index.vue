@@ -24,14 +24,14 @@
               Averiado
             </span>
           </div>
-          <div class="flex items-center gap-2 text-sm text-surface-500">
+          <div class="flex items-center gap-2 text-sm text-gray-500">
             <span class="w-2 h-2 rounded-full" :class="conectado ? 'bg-emerald-500' : 'bg-red-500'" />
             {{ conectado ? 'Tiempo real activo' : 'Desconectado' }}
           </div>
         </div>
 
         <!-- Grid de tarjetas -->
-        <div v-if="registros.length === 0" class="text-center py-12 text-surface-400">
+        <div v-if="registros.length === 0" class="text-center py-12 text-gray-400">
           <i class="pi pi-truck text-4xl mb-3 block" />
           <p>No hay vehículos en la pizarra.</p>
         </div>
@@ -46,31 +46,31 @@
             <div class="p-4">
               <div class="flex items-start justify-between mb-3">
                 <div class="min-w-0">
-                  <h3 class="font-semibold text-surface-900 truncate">{{ r.vehiculo }}</h3>
-                  <p class="text-xs text-surface-500">{{ r.placa }}</p>
+                  <h3 class="font-semibold text-gray-900 truncate">{{ r.vehiculo }}</h3>
+                  <p class="text-xs text-gray-500">{{ r.placa }}</p>
                 </div>
                 <Tag :value="r.estado" :severity="severidadEstado(r.estado)" />
               </div>
 
               <div class="space-y-2 text-sm">
-                <div v-if="r.conductor !== '—'" class="flex items-center gap-2 text-surface-600">
-                  <i class="pi pi-user text-surface-400 text-xs" />
+                <div v-if="r.conductor !== '—'" class="flex items-center gap-2 text-gray-600">
+                  <i class="pi pi-user text-gray-400 text-xs" />
                   <span class="truncate">{{ r.conductor }}</span>
                 </div>
-                <div v-if="r.origen" class="flex items-center gap-2 text-surface-600">
-                  <i class="pi pi-map-marker text-surface-400 text-xs" />
+                <div v-if="r.origen" class="flex items-center gap-2 text-gray-600">
+                  <i class="pi pi-map-marker text-gray-400 text-xs" />
                   <span class="truncate">{{ r.origen }} → {{ r.destino || '—' }}</span>
                 </div>
-                <div v-if="r.ubicacion" class="flex items-center gap-2 text-surface-600">
-                  <i class="pi pi-globe text-surface-400 text-xs" />
+                <div v-if="r.ubicacion" class="flex items-center gap-2 text-gray-600">
+                  <i class="pi pi-globe text-gray-400 text-xs" />
                   <span class="truncate">{{ r.ubicacion }}</span>
                 </div>
-                <div v-if="r.salida" class="flex items-center gap-2 text-surface-500">
-                  <i class="pi pi-clock text-surface-400 text-xs" />
+                <div v-if="r.salida" class="flex items-center gap-2 text-gray-500">
+                  <i class="pi pi-clock text-gray-400 text-xs" />
                   <span>Salida: {{ r.salida }}</span>
                 </div>
-                <div v-if="r.tonelaje" class="flex items-center gap-2 text-surface-600">
-                  <i class="pi pi-box text-surface-400 text-xs" />
+                <div v-if="r.tonelaje" class="flex items-center gap-2 text-gray-600">
+                  <i class="pi pi-box text-gray-400 text-xs" />
                   <span>{{ r.tonelaje }} t — {{ r.carga || '—' }}</span>
                 </div>
               </div>
@@ -125,7 +125,7 @@ const bordeEstado = (estado) => {
     'en ruta': 'border-l-4 border-l-blue-500',
     'en taller': 'border-l-4 border-l-amber-500',
     averiado: 'border-l-4 border-l-red-500',
-  }[estado] || 'border-l-4 border-l-surface-300';
+  }[estado] || 'border-l-4 border-l-gray-300';
 };
 
 const severidadEstado = (estado) => {

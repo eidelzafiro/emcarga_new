@@ -25,7 +25,7 @@ const cp = computed(() => props.aforo.carta_porte || {})
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold">Aforo CP No. {{ cp.numero }}</h2>
-                    <p class="text-surface-500">Fecha de parte: {{ formatDate(aforo.fecha_parte) }}</p>
+                    <p class="text-gray-500">Fecha de parte: {{ formatDate(aforo.fecha_parte) }}</p>
                 </div>
                 <Tag :severity="estado.severity" class="text-lg p-2">{{ estado.label }}</Tag>
             </div>
@@ -35,14 +35,14 @@ const cp = computed(() => props.aforo.carta_porte || {})
                     <template #title>Cliente</template>
                     <template #content>
                         <p class="font-medium">{{ cp.cliente?.nombre }}</p>
-                        <p class="text-sm text-surface-500">{{ cp.cliente?.codigo }}</p>
+                        <p class="text-sm text-gray-500">{{ cp.cliente?.codigo }}</p>
                     </template>
                 </Card>
                 <Card>
                     <template #title>Tractivo</template>
                     <template #content>
                         <p class="font-medium">{{ cp.tractivo?.codigo }}</p>
-                        <p class="text-sm text-surface-500">Placa: {{ cp.tractivo?.placa }}</p>
+                        <p class="text-sm text-gray-500">Placa: {{ cp.tractivo?.placa }}</p>
                     </template>
                 </Card>
                 <Card>
@@ -61,13 +61,13 @@ const cp = computed(() => props.aforo.carta_porte || {})
                     <template #title>Datos de la Carta Porte</template>
                     <template #content>
                         <div class="grid grid-cols-2 gap-2 text-sm">
-                            <p class="text-surface-500">Orig</p><p>{{ cp.lugar_origen?.nombre || '—' }}</p>
-                            <p class="text-surface-500">Destino</p><p>{{ cp.lugar_destino?.nombre || '—' }}</p>
-                            <p class="text-surface-500">Producto</p><p>{{ cp.producto?.nombre || '—' }}</p>
-                            <p class="text-surface-500">Tipo de carga</p><p>{{ cp.tipo_carga?.nombre || '—' }}</p>
-                            <p class="text-surface-500">Chofer</p><p>{{ cp.chofer?.nombrecompleto || '—' }}</p>
-                            <p class="text-surface-500">Chofer 2</p><p>{{ cp.chofer2?.nombrecompleto || '—' }}</p>
-                            <p class="text-surface-500">Hoja de Ruta</p><p>{{ cp.hoja_ruta?.numero || '—' }}</p>
+                            <p class="text-gray-500">Orig</p><p>{{ cp.lugar_origen?.nombre || '—' }}</p>
+                            <p class="text-gray-500">Destino</p><p>{{ cp.lugar_destino?.nombre || '—' }}</p>
+                            <p class="text-gray-500">Producto</p><p>{{ cp.producto?.nombre || '—' }}</p>
+                            <p class="text-gray-500">Tipo de carga</p><p>{{ cp.tipo_carga?.nombre || '—' }}</p>
+                            <p class="text-gray-500">Chofer</p><p>{{ cp.chofer?.nombrecompleto || '—' }}</p>
+                            <p class="text-gray-500">Chofer 2</p><p>{{ cp.chofer2?.nombrecompleto || '—' }}</p>
+                            <p class="text-gray-500">Hoja de Ruta</p><p>{{ cp.hoja_ruta?.numero || '—' }}</p>
                         </div>
                     </template>
                 </Card>
@@ -75,13 +75,13 @@ const cp = computed(() => props.aforo.carta_porte || {})
                     <template #title>Totales del Aforo</template>
                     <template #content>
                         <div class="grid grid-cols-2 gap-2 text-sm">
-                            <p class="text-surface-500">Flete MN</p><p>${{ Number(aforo.flete_mt).toLocaleString() }}</p>
-                            <p class="text-surface-500">Flete MLC</p><p>${{ Number(aforo.flete_mlc).toLocaleString() }}</p>
-                            <p class="text-surface-500">Demora</p><p>${{ Number(aforo.flete_demora).toLocaleString() }}</p>
-                            <p class="text-surface-500">Otros MN</p><p>${{ Number(aforo.otros_mt).toLocaleString() }}</p>
-                            <p class="text-surface-500 font-bold">Ingreso MN</p><p class="font-bold">${{ Number(aforo.ingreso_mt).toLocaleString() }}</p>
-                            <p class="text-surface-500">Coeficiente</p><p>{{ aforo.tasa }}</p>
-                            <p class="text-surface-500 font-bold">Salario</p><p class="font-bold">${{ Number(aforo.salario).toLocaleString() }}</p>
+                            <p class="text-gray-500">Flete MN</p><p>${{ Number(aforo.flete_mt).toLocaleString() }}</p>
+                            <p class="text-gray-500">Flete MLC</p><p>${{ Number(aforo.flete_mlc).toLocaleString() }}</p>
+                            <p class="text-gray-500">Demora</p><p>${{ Number(aforo.flete_demora).toLocaleString() }}</p>
+                            <p class="text-gray-500">Otros MN</p><p>${{ Number(aforo.otros_mt).toLocaleString() }}</p>
+                            <p class="text-gray-500 font-bold">Ingreso MN</p><p class="font-bold">${{ Number(aforo.ingreso_mt).toLocaleString() }}</p>
+                            <p class="text-gray-500">Coeficiente</p><p>{{ aforo.tasa }}</p>
+                            <p class="text-gray-500 font-bold">Salario</p><p class="font-bold">${{ Number(aforo.salario).toLocaleString() }}</p>
                         </div>
                     </template>
                 </Card>
@@ -95,7 +95,7 @@ const cp = computed(() => props.aforo.carta_porte || {})
                             <h4 class="font-semibold mb-2">Tarifas por línea</h4>
                             <table class="w-full text-sm">
                                 <thead>
-                                    <tr class="text-left text-surface-500">
+                                    <tr class="text-left text-gray-500">
                                         <th class="py-1">#</th><th>Tarifa</th><th>Flete MN</th><th>Flete MLC</th>
                                     </tr>
                                 </thead>
@@ -108,18 +108,18 @@ const cp = computed(() => props.aforo.carta_porte || {})
                                     </tr>
                                 </tbody>
                             </table>
-                            <p class="mt-2"><span class="text-surface-500">Almacenaje:</span> ${{ Number(aforo.almacenaje_flete || 0).toLocaleString() }}</p>
-                            <p><span class="text-surface-500">Recargos:</span> ${{ Number(aforo.otros_mt).toLocaleString() }}</p>
+                            <p class="mt-2"><span class="text-gray-500">Almacenaje:</span> ${{ Number(aforo.almacenaje_flete || 0).toLocaleString() }}</p>
+                            <p><span class="text-gray-500">Recargos:</span> ${{ Number(aforo.otros_mt).toLocaleString() }}</p>
                         </div>
                         <div>
                             <h4 class="font-semibold mb-2">Demora</h4>
-                            <p><span class="text-surface-500">Carga:</span> {{ aforo.dem_carga }}h / ${{ Number(aforo.flete_dem_1 || 0).toLocaleString() }}</p>
-                            <p><span class="text-surface-500">Descarga:</span> {{ aforo.dem_descarga }}h / ${{ Number(aforo.flete_dem_2 || 0).toLocaleString() }}</p>
-                            <p><span class="text-surface-500">Total:</span> ${{ Number(aforo.flete_demora).toLocaleString() }}</p>
+                            <p><span class="text-gray-500">Carga:</span> {{ aforo.dem_carga }}h / ${{ Number(aforo.flete_dem_1 || 0).toLocaleString() }}</p>
+                            <p><span class="text-gray-500">Descarga:</span> {{ aforo.dem_descarga }}h / ${{ Number(aforo.flete_dem_2 || 0).toLocaleString() }}</p>
+                            <p><span class="text-gray-500">Total:</span> ${{ Number(aforo.flete_demora).toLocaleString() }}</p>
                             <h4 class="font-semibold mt-3 mb-1">Indicadores</h4>
-                            <p><span class="text-surface-500">Tráf. pos:</span> {{ aforo.traf_pos_total }}</p>
-                            <p><span class="text-surface-500">Tráf. real:</span> {{ aforo.traf_real_total }}</p>
-                            <p><span class="text-surface-500">Km carga:</span> {{ aforo.km_carga_total }}</p>
+                            <p><span class="text-gray-500">Tráf. pos:</span> {{ aforo.traf_pos_total }}</p>
+                            <p><span class="text-gray-500">Tráf. real:</span> {{ aforo.traf_real_total }}</p>
+                            <p><span class="text-gray-500">Km carga:</span> {{ aforo.km_carga_total }}</p>
                         </div>
                     </div>
                 </template>

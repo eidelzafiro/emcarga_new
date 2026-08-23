@@ -3,7 +3,7 @@
     <Card>
       <template #title>Gestión de tipos de catálogo</template>
       <template #content>
-        <p class="text-sm text-surface-500 mb-4">
+        <p class="text-sm text-gray-500 mb-4">
           Organiza los tipos, asígnalos a una agrupación y decide cuáles mantener activos.
         </p>
 
@@ -23,7 +23,7 @@
                 <InputIcon><i class="pi pi-search" /></InputIcon>
                 <InputText v-model="filtro" placeholder="Buscar…" class="w-48" />
               </IconField>
-              <span class="text-sm text-surface-400 ml-auto">{{ tipos.length }} tipos</span>
+              <span class="text-sm text-gray-400 ml-auto">{{ tipos.length }} tipos</span>
             </div>
           </template>
 

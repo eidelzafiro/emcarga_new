@@ -177,15 +177,15 @@ function destroy(item) {
             optionLabel="label" optionValue="value" placeholder="Seleccione" showClear class="w-full" @change="aplicarFicha" />
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Marca <i class="pi pi-lock text-xs text-surface-400 ml-1" /></label>
+          <label class="text-sm font-medium">Marca <i class="pi pi-lock text-xs text-gray-400 ml-1" /></label>
           <InputText v-model="form.marca" readonly />
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Modelo <i class="pi pi-lock text-xs text-surface-400 ml-1" /></label>
+          <label class="text-sm font-medium">Modelo <i class="pi pi-lock text-xs text-gray-400 ml-1" /></label>
           <InputText v-model="form.modelo" readonly />
         </div>
         <div class="flex flex-col gap-1 col-span-2">
-          <label class="text-sm font-medium">Año <i class="pi pi-lock text-xs text-surface-400 ml-1" /></label>
+          <label class="text-sm font-medium">Año <i class="pi pi-lock text-xs text-gray-400 ml-1" /></label>
           <InputText :value="form.anno" readonly />
         </div>
         <div class="flex flex-col gap-1">

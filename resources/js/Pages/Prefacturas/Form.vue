@@ -63,7 +63,7 @@ function submit() {
                     <div>
                         <label class="block mb-1 font-medium">Número</label>
                         <InputText v-model="form.numero" class="w-full" />
-                        <small class="text-surface-400">Auto-generado; puede editarlo si lo necesita.</small>
+                        <small class="text-gray-400">Auto-generado; puede editarlo si lo necesita.</small>
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Fecha</label>
@@ -91,7 +91,7 @@ function submit() {
                             <template #body="{ data }">${{ Number(data.ingreso_mt).toLocaleString() }}</template>
                         </Column>
                     </DataTable>
-                    <div class="text-xs text-surface-400 pt-1">Total: {{ aforos_pendientes.length }} registros</div>
+                    <div class="text-xs text-gray-400 pt-1">Total: {{ aforos_pendientes.length }} registros</div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -39,7 +39,7 @@
           </div>
         </div>
 
-        <div v-if="puedeMover" class="mb-3 text-xs text-surface-400 dark:text-surface-400">
+        <div v-if="puedeMover" class="mb-3 text-xs text-gray-400 dark:text-gray-400">
           <i class="pi pi-info-circle mr-1" />
           Arrastra el icono <i class="pi pi-bars mx-1" /> para reordenar o cambiar el agrupador.
           Para meter un ítem dentro de un agrupador suéltalo <strong>sobre el nombre</strong> del
@@ -47,8 +47,8 @@
           dejado: los ítems se renumeran (1..n) dentro de cada agrupador sin reordenar alfabéticamente.
         </div>
 
-        <div class="border border-surface-200 dark:border-surface-800 rounded-lg overflow-hidden">
-          <div class="flex items-center gap-2 px-3 py-2 sticky top-0 z-10 bg-surface-50 dark:bg-surface-800/60 border-b border-surface-100 dark:border-surface-800 text-xs font-semibold text-surface-500">
+        <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+          <div class="flex items-center gap-2 px-3 py-2 sticky top-0 z-10 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500">
             <span style="width: 28px" />
             <span class="flex-1">Ítem</span>
             <span style="min-width: 44px; text-align: center">Orden</span>
@@ -104,13 +104,13 @@
                 @editar="abrirEditar"
                 @eliminar="abrirEliminar"
               />
-              <div v-if="!itemsVisibles.length" class="text-center py-8 text-surface-400">
+              <div v-if="!itemsVisibles.length" class="text-center py-8 text-gray-400">
                 <i class="pi pi-search text-2xl mb-2 block" />
                 Sin resultados para el filtro actual.
               </div>
             </template>
 
-            <div v-else class="text-center py-8 text-surface-400">
+            <div v-else class="text-center py-8 text-gray-400">
               <i class="pi pi-bars text-3xl mb-2 block" />
               No hay ítems de menú registrados.
             </div>
@@ -128,25 +128,25 @@
     >
       <form class="space-y-4" @submit.prevent="guardarForm">
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Etiqueta</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Etiqueta</label>
           <InputText v-model="form.label" class="w-full" :class="{ 'p-invalid': form.errors.label }" />
           <small v-if="form.errors.label" class="text-red-500">{{ form.errors.label }}</small>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Icono (clase Prime)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Icono (clase Prime)</label>
             <InputText v-model="form.icon" class="w-full" placeholder="pi pi-circle" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Ruta (nombre de ruta)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ruta (nombre de ruta)</label>
             <InputText v-model="form.route" class="w-full" placeholder="ej: tractivos.index" />
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Padre (agrupador)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Padre (agrupador)</label>
             <Select
               v-model="form.parent_id"
               :options="opcionesPadre"
@@ -159,13 +159,13 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Orden</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Orden</label>
             <InputNumber v-model="form.orden" class="w-full" :min="0" />
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-surface-700 mb-1">Permiso requerido</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Permiso requerido</label>
           <Select
             v-model="form.permission"
             :options="permisos"
@@ -174,17 +174,17 @@
             :showClear="true"
             filter
           />
-          <small class="text-surface-400">Solo los usuarios con este permiso verán el ítem.</small>
+          <small class="text-gray-400">Solo los usuarios con este permiso verán el ítem.</small>
         </div>
 
         <div v-if="editando" class="flex items-center gap-2">
           <ToggleSwitch v-model="form.activo" inputId="activo" />
-          <label for="activo" class="text-sm text-surface-700">Ítem activo</label>
+          <label for="activo" class="text-sm text-gray-700">Ítem activo</label>
         </div>
 
         <div v-if="editando && form.permission" class="border-t pt-4 mt-4">
-          <label class="block text-sm font-medium text-surface-700 mb-2">Visibilidad por perfil</label>
-          <p class="text-xs text-surface-400 mb-3">Seleccione qué perfiles pueden ver este ítem.</p>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Visibilidad por perfil</label>
+          <p class="text-xs text-gray-400 mb-3">Seleccione qué perfiles pueden ver este ítem.</p>
           <div class="flex flex-wrap gap-3">
             <div v-for="rol in rolesExpon" :key="rol.id" class="flex items-center gap-2">
               <ToggleSwitch
@@ -215,7 +215,7 @@
       :modal="true"
       class="w-full max-w-sm"
     >
-      <p class="text-sm text-surface-600">
+      <p class="text-sm text-gray-600">
         ¿Está seguro de eliminar el ítem <strong>{{ seleccionado?.label }}</strong>?
       </p>
       <template #footer>

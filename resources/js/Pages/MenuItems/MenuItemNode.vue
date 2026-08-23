@@ -2,18 +2,18 @@
   <div>
     <div class="relative drag-node" :data-menu-id="node.id">
       <div
-        class="flex items-center gap-2 px-3 py-2 border-b border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/50 cursor-grab"
+        class="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-grab"
         :style="{ paddingLeft: (profundidad || 0) * 28 + 12 + 'px' }"
       >
         <span
-          :class="['drag-handle drag-h-' + (profundidad || 0), 'cursor-grab text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 select-none']"
+          :class="['drag-handle drag-h-' + (profundidad || 0), 'cursor-grab text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 select-none']"
           title="Mover ítem"
         >
           <i class="pi pi-bars" />
         </span>
 
         <span class="flex-1 min-w-0 flex items-center gap-2">
-          <i v-if="node.icon" :class="node.icon" class="text-surface-400 text-sm" />
+          <i v-if="node.icon" :class="node.icon" class="text-gray-400 text-sm" />
           <span class="font-medium truncate">{{ node.label }}</span>
           <i
             v-if="tieneHijos"
@@ -25,7 +25,7 @@
         <Tag :value="node.orden" severity="secondary" style="min-width: 40px; justify-content: center" />
 
         <div class="flex items-center gap-2">
-          <span class="text-xs text-surface-400">{{ node.activo !== false ? 'Activo' : 'Inactivo' }}</span>
+          <span class="text-xs text-gray-400">{{ node.activo !== false ? 'Activo' : 'Inactivo' }}</span>
         </div>
 
         <div class="flex-1 flex min-w-0 items-stretch">
@@ -34,14 +34,14 @@
               v-for="rol in roles"
               :key="rol.id"
               class="flex-1 flex items-center justify-center cursor-pointer select-none"
-              :class="tienePermiso(rol.name) ? 'text-blue-600 dark:text-blue-400' : 'text-surface-300 hover:text-surface-500'"
+              :class="tienePermiso(rol.name) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-300 hover:text-gray-500'"
               :title="`${tienePermiso(rol.name) ? 'Ocultar' : 'Mostrar'} para ${rol.name}`"
               @click="toggleRol(rol)"
             >
               <i :class="tienePermiso(rol.name) ? 'pi pi-check-circle' : 'pi pi-circle'" class="text-sm" />
             </span>
           </template>
-          <span v-else class="flex-1 flex items-center justify-center text-xs text-surface-400 italic" title="Sin permiso asociado; aplica a todo perfil.">—</span>
+          <span v-else class="flex-1 flex items-center justify-center text-xs text-gray-400 italic" title="Sin permiso asociado; aplica a todo perfil.">—</span>
         </div>
 
         <div class="flex gap-1 ml-2">

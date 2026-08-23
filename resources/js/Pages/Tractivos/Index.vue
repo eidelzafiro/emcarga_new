@@ -6,7 +6,7 @@
       <template #content>
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <div class="relative w-full sm:w-72">
-            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm" />
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
             <InputText
               v-model="search"
               placeholder="Buscar por descripción o placa…"
@@ -50,7 +50,7 @@
             </template>
           </Column>
           <template #empty>
-            <div class="text-center py-8 text-surface-400">
+            <div class="text-center py-8 text-gray-400">
               <i class="pi pi-truck text-3xl mb-2 block" />
               No se encontraron vehículos.
             </div>
@@ -62,207 +62,207 @@
     <Dialog v-model:visible="showModal" :header="editing ? 'Editar Vehículo' : 'Nuevo Vehículo'" :modal="true" :style="{ width: '820px' }">
       <form @submit.prevent="submit">
         <div class="grid grid-cols-3 gap-4">
-          <div class="col-span-3 border-b border-surface-200 pb-2 mb-1 text-sm font-semibold text-surface-600">Identificación</div>
+          <div class="col-span-3 border-b border-gray-200 pb-2 mb-1 text-sm font-semibold text-gray-600">Identificación</div>
           <div class="col-span-2">
-            <label class="block text-sm font-medium text-surface-700 mb-1">Descripción *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
             <InputText v-model="form.descripcion" required class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Chapa *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Chapa *</label>
             <InputText v-model="form.placa" required class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo de Vehículo *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Vehículo *</label>
             <Select v-if="esArrastre" v-model="form.id_tipo_vehiculo" :options="catalogos.tiposArrastre" optionLabel="label" optionValue="value" class="w-full" showClear required @change="aplicarFichaTipo" />
             <Select v-else v-model="form.id_tipo_vehiculo" :options="catalogos.tiposTractivo" optionLabel="label" optionValue="value" class="w-full" showClear required @change="aplicarFichaTipo" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Motor</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Motor</label>
             <Select v-model="form.id_motor" :options="catalogos.motores" optionLabel="label" optionValue="value" class="w-full" showClear :disabled="esArrastre" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Caja</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Caja</label>
             <Select v-model="form.id_caja" :options="catalogos.cajas" optionLabel="label" optionValue="value" class="w-full" showClear :disabled="esArrastre" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Diferencial</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Diferencial</label>
             <Select v-model="form.id_diferencial" :options="catalogos.diferenciales" optionLabel="label" optionValue="value" class="w-full" showClear />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Color primario</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Color primario</label>
             <Select v-model="form.id_color_primario" :options="catalogos.colores" optionLabel="label" optionValue="value" class="w-full" showClear />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Color secundario</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Color secundario</label>
             <Select v-model="form.id_color_secundario" :options="catalogos.colores" optionLabel="label" optionValue="value" class="w-full" showClear />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Grupo *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Grupo *</label>
             <Select v-model="form.id_grupo" :options="catalogos.grupos" optionLabel="label" optionValue="value" class="w-full" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo servicio</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo servicio</label>
             <Select v-model="form.id_tipo_servicio" :options="catalogos.tiposServicio" optionLabel="label" optionValue="value" class="w-full" showClear />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo estado</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo estado</label>
             <Select v-model="form.id_tipo_estado" :options="catalogos.estados" optionLabel="label" optionValue="value" class="w-full" showClear />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Lubricante hidráulico</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Lubricante hidráulico</label>
             <Select v-model="form.id_lubricante_hidraulico" :options="catalogos.lubricantes" optionLabel="label" optionValue="value" class="w-full" showClear />
           </div>
 
-          <div class="col-span-3 border-b border-surface-200 pb-1 mb-1 text-sm font-semibold text-surface-600">Números / Físico</div>
+          <div class="col-span-3 border-b border-gray-200 pb-1 mb-1 text-sm font-semibold text-gray-600">Números / Físico</div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">No. Motor</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Motor</label>
             <InputText v-model="form.numero_motor" class="w-full" :disabled="esArrastre" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">No. Chasis</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Chasis</label>
             <InputText v-model="form.numero_chasis" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">No. Caja</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Caja</label>
             <InputText v-model="form.numero_caja" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">VIN</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">VIN</label>
             <InputText v-model="form.vin" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">No. Carrocería</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Carrocería</label>
             <InputText v-model="form.nro_carroceria" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Registro</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Registro</label>
             <InputText v-model="form.nro_registro" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Resolución</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Resolución</label>
             <InputText v-model="form.nro_resolucion" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Capacidad (ton) *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Capacidad (ton) *</label>
             <InputNumber v-model="form.capacidad_toneladas" mode="decimal" class="w-full" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Tara</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tara</label>
             <InputNumber v-model="form.tara" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Cap. depósito</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cap. depósito</label>
             <InputNumber v-model="form.cap_deposito" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Cap. hidráulico</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cap. hidráulico</label>
             <InputNumber v-model="form.cap_hidraulico" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Cuenta combustible</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cuenta combustible</label>
             <InputText v-model="form.cta_combustible" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Índice consumo *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Índice consumo *</label>
             <InputNumber v-model="form.indice_consumo" mode="decimal" class="w-full" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Índice aceite</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Índice aceite</label>
             <InputNumber v-model="form.indice_aceite" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">GPS</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">GPS</label>
             <div class="flex items-center gap-2 pt-2">
               <ToggleSwitch v-model="form.gps" />
-              <span class="text-sm text-surface-500">{{ form.gps ? 'Con GPS' : 'Sin GPS' }}</span>
+              <span class="text-sm text-gray-500">{{ form.gps ? 'Con GPS' : 'Sin GPS' }}</span>
             </div>
           </div>
 
-          <div class="col-span-3 border-b border-surface-200 pb-1 mb-1 text-sm font-semibold text-surface-600">Kilometrajes / Planes</div>
+          <div class="col-span-3 border-b border-gray-200 pb-1 mb-1 text-sm font-semibold text-gray-600">Kilometrajes / Planes</div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Kilometraje actual</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kilometraje actual</label>
             <InputNumber v-model="form.kilometraje_actual" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Kms disponibilidad</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kms disponibilidad</label>
             <InputNumber v-model="form.kms_disp" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">KMS plan MTTO</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">KMS plan MTTO</label>
             <InputNumber v-model="form.kms_plan_mtto" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Plan combustible</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Plan combustible</label>
             <InputNumber v-model="form.plan_comb" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Plan TN</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Plan TN</label>
             <InputNumber v-model="form.plan_tn" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Plan viajes</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Plan viajes</label>
             <InputNumber v-model="form.plan_viajes" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Plan gastos</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Plan gastos</label>
             <InputNumber v-model="form.plan_gastos" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Plan CDT</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Plan CDT</label>
             <InputNumber v-model="form.plan_cdt" mode="decimal" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Plan diario</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Plan diario</label>
             <InputNumber v-model="form.plan_diario" mode="decimal" class="w-full" />
           </div>
 
-          <div class="col-span-3 border-b border-surface-200 pb-1 mb-1 text-sm font-semibold text-surface-600">Vencimientos / Fechas</div>
+          <div class="col-span-3 border-b border-gray-200 pb-1 mb-1 text-sm font-semibold text-gray-600">Vencimientos / Fechas</div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Fecha alta</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha alta</label>
             <DatePicker v-model="form.fecha_alta" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Fecha baja</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha baja</label>
             <DatePicker v-model="form.fecha_baja" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Fecha reconstrucción</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha reconstrucción</label>
             <DatePicker v-model="form.f_reconstruccion" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">FICAV</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">FICAV</label>
             <InputText v-model="form.ficav" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Emisión FICAV</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Emisión FICAV</label>
             <DatePicker v-model="form.femision_ficav" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Vence FICAV</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Vence FICAV</label>
             <DatePicker v-model="form.fvence_ficav" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">LOT</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">LOT</label>
             <InputText v-model="form.lot" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Emisión LOT</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Emisión LOT</label>
             <DatePicker v-model="form.femision_lot" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Vence LOT</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Vence LOT</label>
             <DatePicker v-model="form.fvence_lot" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Circulación</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Circulación</label>
             <InputText v-model="form.circulacion" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Emisión circulación</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Emisión circulación</label>
             <DatePicker v-model="form.femision_circ" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Vence circulación</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Vence circulación</label>
             <DatePicker v-model="form.fvence_circ" dateFormat="yy-mm-dd" showIcon class="w-full" />
           </div>
         </div>

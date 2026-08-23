@@ -194,7 +194,7 @@ function printGrid() {
     <div class="card">
       <template v-if="solo">
         <div class="mb-4 p-4 border border-primary-200 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-          <p class="text-sm text-surface-600 dark:text-surface-300">
+          <p class="text-sm text-gray-600 dark:text-gray-300">
             <i class="pi pi-info-circle mr-2 text-primary" />
             Su entidad no tiene subordinados. Solo puede editar los datos de su propia entidad.
           </p>
@@ -219,7 +219,7 @@ function printGrid() {
         <DataTable ref="dt" :value="items.data" striped-rows paginator :rows="20" :total-records="items.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="codigo" header="Código" sortable>
             <template #body="{ data }">
-              <span :class="data.codigo ? '' : 'text-surface-400 italic'">{{ data.codigo ?? 'Sin código' }}</span>
+              <span :class="data.codigo ? '' : 'text-gray-400 italic'">{{ data.codigo ?? 'Sin código' }}</span>
             </template>
           </Column>
           <Column field="nombre" header="Nombre" sortable />

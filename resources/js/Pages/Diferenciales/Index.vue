@@ -177,8 +177,8 @@ function destroy(item) {
           <InputText id="numero_serie" v-model="form.numero_serie" />
         </div>
       </div>
-      <div class="mt-4 pt-3 border-t border-surface-200 dark:border-surface-700">
-        <h3 class="text-sm font-semibold mb-2 text-surface-700 dark:text-surface-200">Ficha técnica</h3>
+      <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <h3 class="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">Ficha técnica</h3>
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
             <label for="durabilidad" class="text-sm font-medium">Durabilidad</label>

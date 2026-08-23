@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Mail\RestablecerPassword;
+use App\Support\MailRouter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -170,5 +173,24 @@ class User extends Authenticatable
     public function bitacoras(): HasMany
     {
         return $this->hasMany(Bitacora::class);
+    }
+
+    /**
+     * Envía el correo de restablecimiento de contraseña eligiendo el
+     * transporte según el dominio: ".cu" → SMTP nacional, resto → Gmail
+     * (con caída al mailer por defecto si faltan credenciales).
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        if (empty($this->email)) {
+            return;
+        }
+
+        $transporte = MailRouter::paraEmail($this->email);
+        $url = url(route('password.reset', ['token' => $token, 'email' => $this->email]));
+
+        Mail::mailer($transporte)
+            ->to($this->email)
+            ->send(new RestablecerPassword($this, $url, $transporte));
     }
 }

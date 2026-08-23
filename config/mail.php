@@ -49,6 +49,46 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        /*
+        |----------------------------------------------------------------------
+        | Correo nacional (dominios .cu)
+        |----------------------------------------------------------------------
+        |
+        | Transporte SMTP del proveedor nacional para destinatarios con
+        | dominio terminado en ".cu" (elegido dinámicamente por MailRouter).
+        | Sin credenciales configuradas no se usa (MailRouter cae al default).
+        */
+        'nacional' => [
+            'transport' => 'smtp',
+            'host' => env('MAIL_NACIONAL_HOST'),
+            'port' => env('MAIL_NACIONAL_PORT', 25),
+            'encryption' => env('MAIL_NACIONAL_ENCRYPTION'),
+            'username' => env('MAIL_NACIONAL_USERNAME'),
+            'password' => env('MAIL_NACIONAL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        /*
+        |----------------------------------------------------------------------
+        | Gmail (resto de los dominios: gmail.com, etc.)
+        |----------------------------------------------------------------------
+        |
+        | Requiere una CONTRASEÑA DE APLICACIÓN de Google (no la password
+        | normal de la cuenta): myaccount.google.com/apppasswords con la
+        | verificación en 2 pasos activada.
+        */
+        'gmail' => [
+            'transport' => 'smtp',
+            'host' => env('MAIL_GMAIL_HOST', 'smtp.gmail.com'),
+            'port' => env('MAIL_GMAIL_PORT', 587),
+            'encryption' => env('MAIL_GMAIL_ENCRYPTION', 'tls'),
+            'username' => env('MAIL_GMAIL_USERNAME'),
+            'password' => env('MAIL_GMAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
@@ -113,6 +153,16 @@ return [
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+
+        // Remitente por transporte (elegido por App\Support\MailRouter)
+        'nacional' => [
+            'address' => env('MAIL_NACIONAL_FROM_ADDRESS', env('MAIL_NACIONAL_USERNAME', env('MAIL_FROM_ADDRESS', 'hello@example.com'))),
+            'name' => env('MAIL_NACIONAL_FROM_NAME', env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel'))),
+        ],
+        'gmail' => [
+            'address' => env('MAIL_GMAIL_FROM_ADDRESS', env('MAIL_GMAIL_USERNAME', env('MAIL_FROM_ADDRESS', 'hello@example.com'))),
+            'name' => env('MAIL_GMAIL_FROM_NAME', env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel'))),
+        ],
     ],
 
 ];

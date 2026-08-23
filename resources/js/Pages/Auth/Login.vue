@@ -121,6 +121,12 @@
           </div>
         </form>
 
+        <div class="text-center mt-5">
+          <Link :href="route('password.request')" class="text-sm text-gray-500 hover:text-blue-600 transition-colors inline-flex items-center gap-1.5">
+            <i class="pi pi-question-circle text-xs" /> ¿Olvidó su contraseña?
+          </Link>
+        </div>
+
         <p class="text-center text-gray-400 text-xs mt-8 lg:hidden">
           {{ appName }} &copy; 2026
         </p>
@@ -131,7 +137,7 @@
 
 <script setup>
 import { usePage } from '@inertiajs/vue3';
-import { useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { route } from 'ziggy-js';
 

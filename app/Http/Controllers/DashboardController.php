@@ -30,9 +30,9 @@ class DashboardController extends Controller
         $rol = $this->detectarRol($request, $user);
         $kpis = $this->kpiService->paraRol($rol, $entidadId, $fechaRef);
         $actividadReciente = $this->actividadPorRol($rol);
-        $movimientos = $this->movimientosPorRol($rol, $entidadId);
+        $movimientos = $this->movimientosPorRol($rol, $entidadId, $fechaRef);
         $secciones = $this->seccionesPorRol($rol);
-        $serieActividad = $this->actividadDiaria($entidadId, 90, $fechaRef);
+        $serieActividad = $this->actividadDiaria($entidadId, $fechaRef);
 
         return Inertia::render('Dashboard', [
             'title' => 'Dashboard',
@@ -138,16 +138,20 @@ class DashboardController extends Controller
 
     /**
      * Últimos movimientos con datos reales de la operación: hojas de ruta,
-     * cartas de porte y solicitudes de servicio recientes.
+     * cartas de porte y solicitudes de servicio del MES de operaciones de la
+     * entidad activa (principio de filtrado por entidad + fecha de operaciones).
      */
-    private function movimientosPorRol(string $rol, ?int $entidadId = null): array
+    private function movimientosPorRol(string $rol, ?int $entidadId = null, ?Carbon $fechaRef = null): array
     {
         $movimientos = [];
+        // Ventana: mes de operaciones (o el mes actual si no hay fecha en sesión).
+        $inicioMes = ($fechaRef ?? now())->copy()->startOfMonth()->toDateString();
+        $finMes = ($fechaRef ?? now())->copy()->endOfMonth()->toDateString();
 
         $hojas = HojasRuta::with('tractivo:id,codigo')
             ->select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'cancelada', 'id_tractivo')
             ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
-            ->whereNotNull('fecha_emision')
+            ->whereBetween('fecha_emision', [$inicioMes, $finMes])
             ->orderByDesc('fecha_emision')
             ->limit(6)
             ->get();
@@ -170,7 +174,7 @@ class DashboardController extends Controller
         $cartas = CartaPorte::with('cliente')
             ->select('id', 'numero', 'fecha_emision', 'estado', 'cancelada')
             ->where('cancelada', false)
-            ->whereNotNull('fecha_emision')
+            ->whereBetween('fecha_emision', [$inicioMes, $finMes])
             ->when($entidadId, fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_entidad', $entidadId)))
             ->orderByDesc('fecha_emision')
             ->limit(6)
@@ -193,7 +197,7 @@ class DashboardController extends Controller
 
         $solicitudes = SolicitudesServicio::with('cliente:id,nombre')
             ->select('id', 'numero', 'fecha_solicitud', 'estado', 'id_cliente')
-            ->whereNotNull('fecha_solicitud')
+            ->whereBetween('fecha_solicitud', [$inicioMes, $finMes])
             ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
             ->orderByDesc('fecha_solicitud')
             ->limit(4)
@@ -232,13 +236,15 @@ class DashboardController extends Controller
 
     /**
      * Serie diaria de emisión de hojas de ruta, cartas de porte y solicitudes
-     * para alimentar el gráfico de actividad con datos reales.
+     * para alimentar el gráfico "Resumen de actividad". Ventana: MES completo
+     * de la fecha de operaciones (no ventana móvil), filtrado por entidad.
      */
-    private function actividadDiaria(?int $entidadId = null, int $dias = 90, ?Carbon $fechaReferencia = null): array
+    private function actividadDiaria(?int $entidadId = null, ?Carbon $fechaReferencia = null): array
     {
-        $ref = $fechaReferencia ?? now();
-        $desde = $ref->copy()->subDays($dias - 1)->toDateString();
-        $hasta = $ref->copy()->toDateString();
+        // Mes de operaciones completo: día 1 → fin de mes.
+        $base = $fechaReferencia ?? now();
+        $desde = $base->copy()->startOfMonth()->toDateString();
+        $hasta = $base->copy()->endOfMonth()->toDateString();
 
         $hojas = HojasRuta::whereBetween('fecha_emision', [$desde, $hasta])
             ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
@@ -260,13 +266,13 @@ class DashboardController extends Controller
             ->pluck('total', 'fecha_solicitud');
 
         $serie = [];
-        for ($i = $dias - 1; $i >= 0; $i--) {
-            $d = $ref->copy()->subDays($i)->toDateString();
+        for ($d = $base->copy()->startOfMonth(); $d->lte($base->copy()->endOfMonth()); $d->addDay()) {
+            $fecha = $d->toDateString();
             $serie[] = [
-                'fecha' => $d,
-                'hojas' => (int) ($hojas[$d] ?? 0),
-                'cartas' => (int) ($cartas[$d] ?? 0),
-                'solicitudes' => (int) ($solicitudes[$d] ?? 0),
+                'fecha' => $fecha,
+                'hojas' => (int) ($hojas[$fecha] ?? 0),
+                'cartas' => (int) ($cartas[$fecha] ?? 0),
+                'solicitudes' => (int) ($solicitudes[$fecha] ?? 0),
             ];
         }
 

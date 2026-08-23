@@ -7,6 +7,7 @@ use App\Http\Controllers\AlertasController;
 use App\Http\Controllers\AreasController;
 use App\Http\Controllers\ArrastresController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\BateriasController;
@@ -132,6 +133,14 @@ Route::get('/', fn () => redirect(auth()->check() ? route('dashboard') : route('
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->name('login.store');
+
+    // Recuperación de contraseña (solo usuarios con correo guardado)
+    Route::get('olvide-password', [ForgotPasswordController::class, 'solicitarForm'])->name('password.request');
+    Route::post('olvide-password', [ForgotPasswordController::class, 'enviarEnlace'])
+        ->middleware('throttle:5,1')->name('password.email');
+    Route::get('restablecer-password/{token}', [ForgotPasswordController::class, 'formularioReset'])->name('password.reset');
+    Route::post('restablecer-password', [ForgotPasswordController::class, 'guardarReset'])
+        ->middleware('throttle:5,1')->name('password.update');
 
     // Challenge 2FA (login diferido, aún sin autenticar)
     Route::get('two-factor', [TwoFactorController::class, 'create'])->name('two-factor.create');

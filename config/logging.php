@@ -65,6 +65,21 @@ return [
             'replace_placeholders' => true,
         ],
 
+        /*
+        |----------------------------------------------------------------------
+        | Canal dedicado al transporte de correo "log" (MAIL_LOG_CHANNEL).
+        |----------------------------------------------------------------------
+        | Registra a nivel debug cada correo enviado sin credenciales SMTP
+        | (p. ej. recuperación de contraseña mientras se configuran los
+        | transportes nacional/Gmail). Independiente de LOG_LEVEL global.
+        */
+        'maillog' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/mail.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

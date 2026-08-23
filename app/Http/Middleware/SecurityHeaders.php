@@ -36,10 +36,14 @@ class SecurityHeaders
         );
         $response->headers->set(
             'Permissions-Policy',
-            "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+            'camera=(), microphone=(), geolocation=(), browsing-topics=()'
         );
 
-        if (app()->environment('production')) {
+        // ⚠️ HSTS y 'upgrade-insecure-requests' SOLO si la petición llega
+        // realmente por HTTPS (no por APP_ENV: el staging local corre con
+        // APP_ENV=production pero HTTP plano, y forzar https rompería el SPA:
+        // ERR_SSL_PROTOCOL_ERROR porque nginx no escucha TLS).
+        if ($request->isSecure()) {
             $response->headers->set(
                 'Strict-Transport-Security',
                 'max-age=31536000; includeSubDomains'
@@ -51,7 +55,7 @@ class SecurityHeaders
         // Ziggy (@routes) de forma inline; por eso script-src/style-src permiten
         // 'unsafe-inline'. El resto del policy es estricto y sí aporta protección
         // real (anti-clickjacking, anti-inyección de base/form, sin plugins).
-        $response->headers->set('Content-Security-Policy', $this->cspPolicy());
+        $response->headers->set('Content-Security-Policy', $this->cspPolicy($request));
 
         return $response;
     }
@@ -63,8 +67,12 @@ class SecurityHeaders
      * PrimeVue). El remaining es restrictivo: prohíbe framing externo, fija
      * base-uri y form-action al origen, bloquea object/embed, y limita conexiones
      * al origen (+ websockets para Reverb).
+     *
+     * 'upgrade-insecure-requests' se emite únicamente cuando la petición llega
+     * por HTTPS; en HTTP plano rompería el SPA (el navegador "actualizaría"
+     * login/logout a https inexistente).
      */
-    private function cspPolicy(): string
+    private function cspPolicy(Request $request): string
     {
         $directives = [
             "default-src 'self'",
@@ -77,8 +85,11 @@ class SecurityHeaders
             "base-uri 'self'",
             "form-action 'self'",
             "object-src 'none'",
-            "upgrade-insecure-requests",
         ];
+
+        if ($request->isSecure()) {
+            $directives[] = 'upgrade-insecure-requests';
+        }
 
         return implode('; ', $directives);
     }

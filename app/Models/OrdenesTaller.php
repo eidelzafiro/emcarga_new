@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -55,12 +56,12 @@ class OrdenesTaller extends Model
 
     public function motivoEntrada(): BelongsTo
     {
-        return $this->belongsTo(MotivosEntradaTaller::class, 'id_motivo_entrada');
+        return $this->belongsTo(CatalogoItem::class, 'id_motivo_entrada');
     }
 
     public function clasificacion(): BelongsTo
     {
-        return $this->belongsTo(ClasificacionOrdenTaller::class, 'id_clasificacion');
+        return $this->belongsTo(CatalogoItem::class, 'id_clasificacion');
     }
 
     public function motor(): BelongsTo

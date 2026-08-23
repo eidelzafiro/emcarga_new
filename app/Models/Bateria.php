@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -40,12 +41,12 @@ class Bateria extends Model
 
     public function motivoBaja(): BelongsTo
     {
-        return $this->belongsTo(MotivosBajaBaterium::class, 'id_motivo_baja');
+        return $this->belongsTo(CatalogoItem::class, 'id_motivo_baja');
     }
 
     public function destino(): BelongsTo
     {
-        return $this->belongsTo(DestinoAgregado::class, 'id_destino');
+        return $this->belongsTo(CatalogoItem::class, 'id_destino');
     }
 
     public function movimientos(): HasMany

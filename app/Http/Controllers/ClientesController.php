@@ -28,7 +28,7 @@ class ClientesController extends Controller
         return Inertia::render('Clientes/Index', [
             'title' => 'Clientes',
             'clientes' => $clientes,
-            'organismos' => Organismo::where('activo', true)->orderBy('abreviatura')->get(['id', 'nombre', 'abreviatura']),
+            'organismos' => \App\Support\Catalogos::opciones('organismos', true),
             'monedas' => Moneda::where('activo', true)->orderBy('codigo')->get(['id', 'codigo', 'nombre', 'simbolo']),
             'filters' => $request->only(['search']),
         ]);
@@ -80,7 +80,7 @@ class ClientesController extends Controller
             'falta' => 'required|date',
             'fvencimiento' => 'required|date',
             'codreup' => 'nullable|max:120',
-            'idorganismos' => 'nullable|exists:organismos,id',
+            'idorganismos' => 'nullable|exists:catalogo_items,id',
             'idmonedas' => 'nullable|exists:monedas,id',
             'nit' => 'nullable|max:50',
             'direccion' => 'nullable|max:500',

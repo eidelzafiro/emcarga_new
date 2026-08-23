@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -45,7 +46,7 @@ class Demanda extends Model
 
     public function embalaje(): BelongsTo
     {
-        return $this->belongsTo(Embalaje::class, 'id_embalaje');
+        return $this->belongsTo(CatalogoItem::class, 'id_embalaje');
     }
 
     public function user(): BelongsTo

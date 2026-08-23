@@ -140,7 +140,7 @@ class CargosController extends Controller
             'id_fondo_tiempo' => 'required|exists:fondos_tiempo,id',
             'id_nivel_educacion' => 'required|exists:tipos_nivel_educacion,id',
             'id_grupo_escala' => 'required|exists:grupos_escala,id',
-            'id_categoria_cargo' => 'required|exists:categorias_cargo,id',
+            'id_categoria_cargo' => 'required|exists:catalogo_items,id',
             'id_grupo_horario' => 'required|exists:tipos_grupo_horario,id',
             'tipo_salario' => 'required|in:0,1',
             'en_salario' => 'required|in:0,1',
@@ -279,10 +279,8 @@ class CargosController extends Controller
 
     private function comboCategorias(): array
     {
-        return CategoriaCargo::where('activo', true)
-            ->orderBy('abreviatura')
-            ->get()
-            ->map(fn ($c) => ['value' => $c->id, 'label' => $c->abreviatura ?? $c->nombre])
+        return collect(\App\Support\Catalogos::opciones('categorias_cargo', true))
+            ->map(fn ($c) => ['value' => $c['id'], 'label' => $c['abreviatura'] ?? $c['nombre']])
             ->toArray();
     }
 

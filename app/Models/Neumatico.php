@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,7 +47,7 @@ class Neumatico extends Model
 
     public function posicion(): BelongsTo
     {
-        return $this->belongsTo(PosicionNeumatico::class, 'id_posicion');
+        return $this->belongsTo(CatalogoItem::class, 'id_posicion');
     }
 
     public function movimientos(): HasMany

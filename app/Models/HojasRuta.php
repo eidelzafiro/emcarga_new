@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -98,7 +99,7 @@ class HojasRuta extends Model
 
     public function grupo(): BelongsTo
     {
-        return $this->belongsTo(Grupo::class, 'id_grupo');
+        return $this->belongsTo(CatalogoItem::class, 'id_grupo');
     }
 
     public function user(): BelongsTo

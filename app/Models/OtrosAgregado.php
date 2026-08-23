@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,6 +27,6 @@ class OtrosAgregado extends Model
 
     public function marca(): BelongsTo
     {
-        return $this->belongsTo(Marca::class, 'id_marca');
+        return $this->belongsTo(CatalogoItem::class, 'id_marca');
     }
 }

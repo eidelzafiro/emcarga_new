@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -35,6 +36,6 @@ class BateriasMovimiento extends Model
 
     public function destino(): BelongsTo
     {
-        return $this->belongsTo(DestinoAgregado::class, 'id_destino');
+        return $this->belongsTo(CatalogoItem::class, 'id_destino');
     }
 }

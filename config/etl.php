@@ -144,16 +144,6 @@ return [
             ],
         ],
 
-        'embalajes' => [
-            'legacy' => 'com_embalajes',
-            'pk' => 'idembalaje',
-            'columnas' => [
-                'nombembalaje' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'lugares' => [
             'legacy' => 'com_lugares',
@@ -306,16 +296,6 @@ return [
             ],
         ],
 
-        'turnos_comerciales' => [
-            'legacy' => 'com_turnos',
-            'pk' => 'idturno',
-            'columnas' => [
-                'nombturno' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         // Tarjetas de combustible (legacy cont_tarjetas): campos originales
         // completos. id_cliente queda NULL (legacy relaciona con empleado/
@@ -509,18 +489,6 @@ return [
             ],
         ],
 
-        'categorias_cargo' => [
-            'legacy' => 'rh_tipocatcargos',
-            'pk' => 'idtipocatcargos',
-            'columnas' => [
-                'nombcatcargo' => 'nombre',
-                'abreviatura' => 'abreviatura',
-                'perfeccionamiento' => 'perfeccionamiento',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'firmas' => [
             'legacy' => 'rh_firmas',
@@ -561,16 +529,6 @@ return [
             ],
         ],
 
-        'medios_proteccion' => [
-            'legacy' => 'rh_mediosproteccion',
-            'pk' => 'idmediosproteccion',
-            'columnas' => [
-                'nombmediosproteccion' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'meses' => [
             'legacy' => 'rh_meses',
@@ -593,17 +551,6 @@ return [
             ],
         ],
 
-        'organismos' => [
-            'legacy' => 'rh_organismos',
-            'pk' => 'idorganismos',
-            'columnas' => [
-                'nomborganismo' => 'nombre',
-                'abreviatura' => 'abreviatura',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'osdes' => [
             'legacy' => 'rh_osdes',
@@ -619,16 +566,6 @@ return [
             ],
         ],
 
-        'perfiles_rh' => [
-            'legacy' => 'rh_perfiles',
-            'pk' => 'idperfil',
-            'columnas' => [
-                'nombperfil' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'provincias' => [
             'legacy' => 'rh_provincias',
@@ -743,14 +680,6 @@ return [
             ],
         ],
 
-        'tipos_medios_cargo' => [
-            'legacy' => 'rh_tipomedioscargo',
-            'pk' => 'idtipomedioscargo',
-            'columnas' => [
-                'idmediosproteccion' => 'id_medio_proteccion',
-                'idcargos' => 'id_cargo',
-            ],
-        ],
 
 
         'tipos_nivel_educacion' => [
@@ -859,29 +788,7 @@ return [
             ],
         ],
 
-        'clasificaciones_ordenes_taller' => [
-            'legacy' => 'tec_tipoclasificacion',
-            'pk' => 'idtipoclasificacion',
-            'columnas' => [
-                'tipoclasificacion' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'colores' => [
-            'legacy' => 'tec_colores',
-            'pk' => 'idcolores',
-            'columnas' => [
-                'colores' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'consecutivos' => [
             'legacy' => 'tec_consecutivos',
@@ -923,17 +830,6 @@ return [
             ],
         ],
 
-        'destinos_agregados' => [
-            'legacy' => 'tec_destagregados',
-            'pk' => 'iddestagregados',
-            'columnas' => [
-                'destagregados' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'diferenciales' => [
             'legacy' => 'tec_diferenciales',
@@ -996,17 +892,6 @@ return [
             ],
         ],
 
-        'grupos' => [
-            'legacy' => 'tec_grupo',
-            'pk' => 'idgrupo',
-            'columnas' => [
-                'grupo' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'historial_tractivos' => [
             'legacy' => 'tec_htractivos',
@@ -1067,29 +952,7 @@ return [
             ],
         ],
 
-        'marcas' => [
-            'legacy' => 'tec_marca',
-            'pk' => 'idmarca',
-            'columnas' => [
-                'marca' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'medidas_neumaticos' => [
-            'legacy' => 'tec_neumaticosmedidas',
-            'pk' => 'idneumaticosmedidas',
-            'columnas' => [
-                'neumaticosmedidas' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'medidores' => [
             'legacy' => 'tec_electdatos',
@@ -1105,41 +968,8 @@ return [
             ],
         ],
 
-        'modelos' => [
-            'legacy' => 'tec_modelo',
-            'pk' => 'idmodelo',
-            'columnas' => [
-                'modelo' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'motivos_baja_bateria' => [
-            'legacy' => 'tec_motbajabat',
-            'pk' => 'idmotbajabat',
-            'columnas' => [
-                'motbajabat' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'motivos_entrada_taller' => [
-            'legacy' => 'tec_motentrada',
-            'pk' => 'idmotentrada',
-            'columnas' => [
-                'motentrada' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'motores' => [
             'legacy' => 'tec_motores',
@@ -1251,28 +1081,7 @@ return [
             ],
         ],
 
-        'paises' => [
-            'legacy' => 'tec_paises',
-            'pk' => 'idpaises',
-            'columnas' => [
-                'paises' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'posiciones_neumaticos' => [
-            'legacy' => 'tec_neumaticosposicion',
-            'pk' => 'idposicion',
-            'columnas' => [
-                'nombposicion' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'subsistemas' => [
             'legacy' => 'tec_tiposubsistemas',

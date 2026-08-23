@@ -133,7 +133,7 @@ class KpiService
             ->where('estado', 'activo')->count();
         $vehiculosTotales = Tractivo::when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))->count();
 
-        $arrastresQuery = Tractivo::where('id_grupo', 8);
+        $arrastresQuery = Tractivo::where('id_grupo', \App\Support\Catalogos::grupoArrastresId());
         $this->scopeEntidad($arrastresQuery, $entidadId);
 
         $bateriasQuery = Bateria::query();

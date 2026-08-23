@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -82,7 +83,7 @@ class Cargo extends Model
 
     public function categoria_cargo(): BelongsTo
     {
-        return $this->belongsTo(CategoriaCargo::class, 'id_categoria_cargo');
+        return $this->belongsTo(CatalogoItem::class, 'id_categoria_cargo');
     }
 
     public function grupo_horario(): BelongsTo

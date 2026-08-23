@@ -41,10 +41,8 @@ class OsdesController extends Controller
 
     private function getOrganismoOptions(): array
     {
-        return Organismo::where('activo', true)
-            ->orderBy('nombre')
-            ->get(['id', 'nombre', 'abreviatura'])
-            ->map(fn ($o) => ['label' => $o->nombre.($o->abreviatura ? " ({$o->abreviatura})" : ''), 'value' => $o->id])
+        return collect(\App\Support\Catalogos::opciones('organismos', true))
+            ->map(fn ($o) => ['label' => $o['nombre'].(! empty($o['abreviatura']) ? " ({$o['abreviatura']})" : ''), 'value' => $o['id']])
             ->toArray();
     }
 
@@ -92,7 +90,7 @@ class OsdesController extends Controller
         return [
             'nombre' => 'required|string|max:255',
             'siglas' => 'nullable|string|max:50',
-            'id_organismo' => 'nullable|exists:organismos,id',
+            'id_organismo' => 'nullable|exists:catalogo_items,id',
             'activo' => 'boolean',
         ];
     }

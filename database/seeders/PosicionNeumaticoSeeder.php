@@ -2,15 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\PosicionNeumatico;
+use App\Models\CatalogoItem;
 use Illuminate\Database\Seeder;
 
 /**
- * Catálogo base de posiciones de neumáticos.
- *
- * El legacy `tec_neumaticosposicion` usa ids fijos (5=REPUESTO) que el servicio
- * NeumaticoService referencia en código (POSICION_REPUESTO). Este seeder
- * garantiza que esos ids existan con idempotencia (upsert por id).
+ * Posiciones de neumáticos (viven en catalogo_items desde la unificación).
+ * El legacy usaba ids fijos (5=REPUESTO) que NeumaticoService referencia
+ * por origen_id; este seeder garantiza su existencia en installs frescos.
  */
 class PosicionNeumaticoSeeder extends Seeder
 {
@@ -22,13 +20,16 @@ class PosicionNeumaticoSeeder extends Seeder
 
     public function run(): void
     {
-        foreach (self::BASE as $id => [$nombre, $descripcion]) {
-            PosicionNeumatico::updateOrCreate(['id' => $id], [
-                'codigo' => (string) $id,
-                'nombre' => $nombre,
-                'descripcion' => $descripcion,
-                'activo' => true,
-            ]);
+        foreach (self::BASE as $origenId => [$siglas, $descripcion]) {
+            CatalogoItem::updateOrCreate(
+                ['tipo' => 'posiciones_neumaticos', 'origen_id' => $origenId],
+                [
+                    'codigo' => $siglas,
+                    'nombre' => $descripcion,
+                    'activo' => true,
+                    'extra' => json_encode(['descripcion' => $descripcion], JSON_UNESCAPED_UNICODE),
+                ]
+            );
         }
     }
 }

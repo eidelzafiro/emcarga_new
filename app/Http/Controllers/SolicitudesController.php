@@ -133,7 +133,7 @@ class SolicitudesController extends Controller
                 ->get()
                 ->map(fn ($t) => ['id' => $t->id, 'codigo' => $t->codigo, 'tipo' => $t->grupo?->nombre, 'marca' => $t->marca, 'placa' => $t->placa]),
             'arrastres' => Tractivo::select('id', 'codigo', 'marca', 'placa')
-                ->where('id_grupo', 8)
+                ->where('id_grupo', \App\Support\Catalogos::grupoArrastresId())
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')

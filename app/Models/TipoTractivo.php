@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -31,17 +32,17 @@ class TipoTractivo extends Model
 
     public function marca(): BelongsTo
     {
-        return $this->belongsTo(Marca::class, 'id_marca');
+        return $this->belongsTo(CatalogoItem::class, 'id_marca');
     }
 
     public function modelo(): BelongsTo
     {
-        return $this->belongsTo(Modelo::class, 'id_modelo');
+        return $this->belongsTo(CatalogoItem::class, 'id_modelo');
     }
 
     public function pais(): BelongsTo
     {
-        return $this->belongsTo(Pais::class, 'id_pais');
+        return $this->belongsTo(CatalogoItem::class, 'id_pais');
     }
 
     public function tipoCombustible(): BelongsTo
@@ -66,16 +67,16 @@ class TipoTractivo extends Model
 
     public function medidaDel(): BelongsTo
     {
-        return $this->belongsTo(MedidaNeumatico::class, 'id_medida_del');
+        return $this->belongsTo(CatalogoItem::class, 'id_medida_del');
     }
 
     public function medidaTra(): BelongsTo
     {
-        return $this->belongsTo(MedidaNeumatico::class, 'id_medida_tra');
+        return $this->belongsTo(CatalogoItem::class, 'id_medida_tra');
     }
 
     public function medidaRes(): BelongsTo
     {
-        return $this->belongsTo(MedidaNeumatico::class, 'id_medida_res');
+        return $this->belongsTo(CatalogoItem::class, 'id_medida_res');
     }
 }

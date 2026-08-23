@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\Neumatico;
 use App\Models\NeumaticosMovimiento;
+use App\Support\Catalogos;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Lógica de negocio de neumáticos (réplica del legacy CI3 ModNeumaticos).
@@ -16,9 +19,20 @@ use App\Models\NeumaticosMovimiento;
  */
 class NeumaticoService
 {
-    // Destinos (tec_destagregados)
-    public const DESTINO_VEHICULO = 1;
-    public const POSICION_REPUESTO = 5;
+    // Destinos/posiciones: origen_id legacy en el catálogo unificado
+    public const DESTINO_VEHICULO_ORIGEN = 1;
+
+    public const POSICION_REPUESTO_ORIGEN = 5;
+
+    public static function idDestinoVehiculo(): ?int
+    {
+        return Catalogos::idDe('destinos_agregados', self::DESTINO_VEHICULO_ORIGEN);
+    }
+
+    private static function idPosicionRepuesto(): ?int
+    {
+        return Catalogos::idDe('posiciones_neumaticos', self::POSICION_REPUESTO_ORIGEN);
+    }
 
     /**
      * Registra un movimiento de montaje/desmontaje de un neumático.
@@ -30,19 +44,19 @@ class NeumaticoService
         ?string $fechaMontaje,
         ?float $kmInstalado,
         ?int $idPosicion,
-        ?int $idDestino = self::DESTINO_VEHICULO,
+        ?int $idDestino = null,
         ?string $observaciones = null
     ): NeumaticosMovimiento {
         $fechaMontaje = $fechaMontaje ?? now()->toDateString();
-        $idPosicion = $idPosicion ?? self::POSICION_REPUESTO;
-        $kmInstalado = (int) $idPosicion === self::POSICION_REPUESTO ? 0 : ($kmInstalado ?? 0);
+        $idPosicion = $idPosicion ?? self::idPosicionRepuesto();
+        $kmInstalado = (int) $idPosicion === (int) self::idPosicionRepuesto() ? 0 : ($kmInstalado ?? 0);
 
         // Cerrar el movimiento vigente (fretirada IS NULL equivalente)
         $vigente = $neumatico->movimientos()->whereNull('fecha_retiro')->orderByDesc('id')->first();
         if ($vigente) {
             $vigente->update([
                 'fecha_retiro' => $fechaMontaje,
-                'km_retirado' => (int) $idPosicion === self::POSICION_REPUESTO ? 0 : ($vigente->km_retirado ?? $kmInstalado),
+                'km_retirado' => (int) $idPosicion === (int) self::idPosicionRepuesto() ? 0 : ($vigente->km_retirado ?? $kmInstalado),
             ]);
         }
 
@@ -58,7 +72,7 @@ class NeumaticoService
 
         // Actualizar cabecera
         $neumatico->update([
-            'id_tractivo' => (int) $idDestino === self::DESTINO_VEHICULO ? $idTractivo : null,
+            'id_tractivo' => (int) $idDestino === (int) self::idDestinoVehiculo() ? $idTractivo : null,
             'id_posicion' => $idPosicion,
             'fecha_instalacion' => $movimiento->fecha_montaje,
             'kilometraje' => $kmInstalado,
@@ -115,7 +129,7 @@ class NeumaticoService
         $entidadId = $neumatico->id_entidad;
         $vida = ['nuevo' => 0, 'rec' => 0, 'admin' => 0];
         try {
-            $rh = \Illuminate\Support\Facades\DB::connection('legacy')
+            $rh = DB::connection('legacy')
                 ->table('rh_entidades')->where('identidades', $entidadId)->first();
             if ($rh) {
                 $vida = [
@@ -144,7 +158,7 @@ class NeumaticoService
             return;
         }
 
-        $fInstalacion = $neumatico->fecha_instalacion ? \Carbon\Carbon::parse($neumatico->fecha_instalacion) : now();
+        $fInstalacion = $neumatico->fecha_instalacion ? Carbon::parse($neumatico->fecha_instalacion) : now();
         $dias = max(1, now()->diffInDays($fInstalacion));
         $kmsPromedio = $kmRecorridos > 0 ? $kmRecorridos / max(1, $dias / 30) : 0;
 
@@ -170,7 +184,7 @@ class NeumaticoService
             }
         }
         $vigente = $neumatico->movimientos()->whereNull('fecha_retiro')->first();
-        if ($vigente && (int) $vigente->id_destino === self::DESTINO_VEHICULO && $neumatico->tractivo) {
+        if ($vigente && (int) $vigente->id_destino === (int) self::idDestinoVehiculo() && $neumatico->tractivo) {
             $total += (float) ($neumatico->tractivo->kilometraje_actual ?? 0) - (float) ($vigente->km_instalado ?? 0);
         }
 

@@ -86,7 +86,7 @@ class HojasRutaController extends Controller
                 ]),
             'arrastres' => Tractivo::with('grupo:id,nombre')
                 ->select('id', 'codigo', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp')
-                ->where('id_grupo', 8)
+                ->where('id_grupo', \App\Support\Catalogos::grupoArrastresId())
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')
@@ -115,7 +115,7 @@ class HojasRutaController extends Controller
                     'categorias_licencia' => $b->categorias_licencia,
                 ]),
             'lugares' => Lugare::select('id', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
-            'grupos' => Grupo::select('id', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
+            'grupos' => \App\Support\Catalogos::opciones('grupos'),
             // HR anteriores: cerradas no canceladas de la entidad activa (para autocompletar apertura)
             'hojasAnteriores' => HojasRuta::with([
                 'tractivo:id,codigo,id_entidad',
@@ -185,7 +185,7 @@ class HojasRutaController extends Controller
 
         return [
             'tractivos' => Tractivo::select('id', 'codigo')->whereIn('id', $tractivoIds)->orderBy('codigo')->get(),
-            'grupos' => Grupo::select('id', 'nombre')->whereIn('id', $grupoIds)->orderBy('nombre')->get(),
+            'grupos' => collect(\App\Support\Catalogos::opciones('grupos'))->whereIn('id', $grupoIds)->values(),
             'choferes' => Bolsa::select('id', 'nombre', 'apellidos')->whereIn('id', $choferIds)->orderBy('nombre')->get(),
             // Combinaciones reales del mes para filtros encadenados
             'combinaciones' => (clone $base)
@@ -287,7 +287,7 @@ class HojasRutaController extends Controller
             'id_chofer' => ['required', 'exists:bolsa,id'],
             'id_chofer2' => ['nullable', 'exists:bolsa,id'],
             'id_parqueo' => ['required', 'exists:lugares,id'],
-            'id_grupo' => ['nullable', 'exists:grupos,id'],
+            'id_grupo' => ['nullable', 'exists:catalogo_items,id'],
             'kms_disponible' => ['nullable', 'numeric', 'min:0'],
             'kms_disponibles_adicionales' => ['nullable', 'numeric', 'min:0'],
         ]);
@@ -332,7 +332,7 @@ class HojasRutaController extends Controller
             'id_chofer' => ['required', 'exists:bolsa,id'],
             'id_chofer2' => ['nullable', 'exists:bolsa,id'],
             'id_parqueo' => ['nullable', 'exists:lugares,id'],
-            'id_grupo' => ['nullable', 'exists:grupos,id'],
+            'id_grupo' => ['nullable', 'exists:catalogo_items,id'],
             'kms_disponible' => ['nullable', 'numeric', 'min:0'],
             'kms_disponibles_adicionales' => ['nullable', 'numeric', 'min:0'],
             'kms_totales' => ['nullable', 'numeric', 'min:0'],

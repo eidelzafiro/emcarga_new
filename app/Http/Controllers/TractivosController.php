@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\EntidadScoping;
 use App\Models\Caja;
-use App\Models\Color;
 use App\Models\Diferenciale;
 use App\Models\EstadoComponente;
 use App\Models\Grupo;
@@ -13,7 +13,7 @@ use App\Models\TipoArrastre;
 use App\Models\TipoServicio;
 use App\Models\TipoTractivo;
 use App\Models\Tractivo;
-use App\Http\Controllers\Traits\EntidadScoping;
+use App\Support\Catalogos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -27,8 +27,8 @@ class TractivosController extends Controller
      */
     public function index(Request $request)
     {
-        
-        $this->authorize('viewAny', \App\Models\Tractivo::class);
+
+        $this->authorize('viewAny', Tractivo::class);
         $tractivos = Tractivo::query()
             ->when($request->grupo, function ($query, $grupo) {
                 $query->where('id_grupo', $grupo);
@@ -57,7 +57,8 @@ class TractivosController extends Controller
         // legacy el idtipotractivos colisiona entre ambas fichas: el mismo
         // id 100 es GAZ 69 en tipos_tractivos y COSIC ST-TVO en tipos_arrastres.
         $tractivos->getCollection()->transform(function ($tractivo) use ($tiposArrastre, $tiposTractivo) {
-            $catalogo = (int) $tractivo->id_grupo === 8 ? $tiposArrastre : $tiposTractivo;
+            $gidArrastre = Catalogos::grupoArrastresId();
+            $catalogo = $gidArrastre !== null && (int) $tractivo->id_grupo === $gidArrastre ? $tiposArrastre : $tiposTractivo;
             $tipo = collect($catalogo)->firstWhere('value', $tractivo->id_tipo_vehiculo);
             $tractivo->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$tractivo->id_tipo_vehiculo);
             $tractivo->tipo_equipo_label = $tipo['tipo_equipo'] ?? null;
@@ -79,20 +80,19 @@ class TractivosController extends Controller
                 'motores' => $this->combos(Motore::class, 'descripcion'),
                 'cajas' => $this->combos(Caja::class, 'descripcion'),
                 'diferenciales' => $this->combos(Diferenciale::class, 'descripcion'),
-                'grupos' => $this->combos(Grupo::class, 'nombre'),
+                'grupos' => $this->combosCatalogo('grupos'),
                 'tiposServicio' => $this->combos(TipoServicio::class, 'nombre'),
-                'colores' => $this->combos(Color::class, 'nombre'),
+                'colores' => $this->combosCatalogo('colores'),
                 'estados' => $this->combos(EstadoComponente::class, 'nombre'),
                 'lubricantes' => $this->combos(Lubricante::class, 'nombre'),
             ],
         ]);
     }
 
-    private function combos(string $model, string $labelField): array
+    private function combosCatalogo(string $tipo): array
     {
-        return $model::orderBy($labelField)
-            ->get()
-            ->map(fn ($item) => ['value' => $item->id, 'label' => (string) $item->{$labelField}])
+        return collect(Catalogos::opciones($tipo))
+            ->map(fn ($o) => ['value' => $o['id'], 'label' => (string) $o['nombre']])
             ->values()
             ->toArray();
     }
@@ -158,8 +158,8 @@ class TractivosController extends Controller
      */
     public function store(Request $request)
     {
-        
-        $this->authorize('create', \App\Models\Tractivo::class);
+
+        $this->authorize('create', Tractivo::class);
         $validated = $request->validate($this->reglas());
 
         $validated['id_entidad'] = (int) entidadActivaId();
@@ -174,7 +174,7 @@ class TractivosController extends Controller
      */
     public function update(Request $request, Tractivo $tractivo)
     {
-        
+
         $this->authorize('update', $tractivo);
         $this->autorizarEntidad($tractivo->id_entidad);
 
@@ -194,6 +194,7 @@ class TractivosController extends Controller
             'id_tipo_vehiculo' => ['required', function ($attr, $value, $fail) {
                 if (! $value) {
                     $fail('El tipo de vehículo es obligatorio.');
+
                     return;
                 }
                 $enTractivos = DB::table('tipos_tractivos')->where('id', $value)->exists();
@@ -205,10 +206,10 @@ class TractivosController extends Controller
             'id_motor' => 'nullable|exists:motores,id',
             'id_caja' => 'nullable|exists:cajas,id',
             'id_diferencial' => 'nullable|exists:diferenciales,id',
-            'id_grupo' => 'required|exists:grupos,id',
+            'id_grupo' => 'required|exists:catalogo_items,id',
             'id_tipo_servicio' => 'nullable|exists:tipos_servicios,id',
-            'id_color_primario' => 'nullable|exists:colores,id',
-            'id_color_secundario' => 'nullable|exists:colores,id',
+            'id_color_primario' => 'nullable|exists:catalogo_items,id',
+            'id_color_secundario' => 'nullable|exists:catalogo_items,id',
             'id_tipo_estado' => 'nullable|exists:estados_componentes,id',
             'id_lubricante_hidraulico' => 'nullable|exists:lubricantes,id',
             'numero_motor' => 'nullable|string|max:100',
@@ -256,7 +257,7 @@ class TractivosController extends Controller
      */
     public function destroy(Tractivo $tractivo)
     {
-        
+
         $this->authorize('delete', $tractivo);
         $this->autorizarEntidad($tractivo->id_entidad);
 

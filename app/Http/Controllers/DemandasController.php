@@ -25,7 +25,7 @@ class DemandasController extends Controller
         $clientes = Cliente::select('id', 'nombre')->orderBy('nombre')->get();
         $productos = Producto::select('id', 'nombre')->orderBy('nombre')->get();
         $lugares = Lugare::select('id', 'nombre')->orderBy('nombre')->get();
-        $embalajes = Embalaje::select('id', 'nombre')->orderBy('nombre')->get();
+        $embalajes = \App\Support\Catalogos::opciones('embalajes');
 
         return Inertia::render('Demandas/Index', [
             'title' => 'Demandas',
@@ -48,7 +48,7 @@ class DemandasController extends Controller
             'id_producto' => 'required|exists:productos,id',
             'id_origen' => 'required|exists:lugares,id',
             'id_destino' => 'required|exists:lugares,id',
-            'id_embalaje' => 'required|exists:embalajes,id',
+            'id_embalaje' => 'required|exists:catalogo_items,id',
             'viajes' => 'required|integer|min:0',
             'kms_totales' => 'required|numeric|min:0',
             'kms_carga' => 'required|numeric|min:0',
@@ -74,7 +74,7 @@ class DemandasController extends Controller
             'id_producto' => 'required|exists:productos,id',
             'id_origen' => 'required|exists:lugares,id',
             'id_destino' => 'required|exists:lugares,id',
-            'id_embalaje' => 'required|exists:embalajes,id',
+            'id_embalaje' => 'required|exists:catalogo_items,id',
             'viajes' => 'required|integer|min:0',
             'kms_totales' => 'required|numeric|min:0',
             'kms_carga' => 'required|numeric|min:0',

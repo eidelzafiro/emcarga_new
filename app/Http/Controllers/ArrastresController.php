@@ -27,7 +27,7 @@ class ArrastresController extends Controller
     {
         
         $this->authorize('viewAny', [\App\Models\Tractivo::class, \App\Policies\ArrastrePolicy::class]);
-        $query = Tractivo::query()->where('id_grupo', 8);
+        $query = Tractivo::query()->where('id_grupo', \App\Support\Catalogos::grupoArrastresId());
 
         $entidades = $this->entidadesPermitidas();
         if (! empty($entidades)) {
@@ -69,7 +69,7 @@ class ArrastresController extends Controller
         $validated = $request->validate($this->reglas());
 
         $validated['id_entidad'] = (int) entidadActivaId();
-        $validated['id_grupo'] = 8;
+        $validated['id_grupo'] = \App\Support\Catalogos::grupoArrastresId();
         $this->aplicarFichaTipo($validated);
         Tractivo::create($validated);
 
@@ -172,7 +172,7 @@ class ArrastresController extends Controller
 
     private function grupoArrastre(): array
     {
-        $grupo = \App\Models\Grupo::where('nombre', 'LIKE', '%ARRASTRE%')->first();
+        $grupo = \App\Models\CatalogoItem::where('tipo', 'grupos')->where('nombre', 'LIKE', '%ARRASTRE%')->first();
 
         return ['value' => $grupo?->id ?? 8, 'label' => $grupo?->nombre ?? 'Arrastres'];
     }

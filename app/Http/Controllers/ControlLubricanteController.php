@@ -44,7 +44,7 @@ class ControlLubricanteController extends Controller
             'title' => 'Control de Lubricantes (CT-7)',
             'registros' => $registros,
             'filtros' => [
-                'tractivos' => \App\Models\Tractivo::where('id_grupo', '!=', 8)
+                'tractivos' => \App\Models\Tractivo::where('id_grupo', '!=', \App\Support\Catalogos::grupoArrastresId())
                     ->orderBy('descripcion')->get(['id', 'descripcion', 'placa']),
                 'tipos_operacion' => ['RELLENO', 'MTTO', 'O.CAUSAS'],
                 'lubricantes' => Lubricante::orderBy('nombre')->get(['id', 'nombre', 'tipo']),

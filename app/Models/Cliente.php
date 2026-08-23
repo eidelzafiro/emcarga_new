@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -57,7 +58,7 @@ class Cliente extends Model
 
     public function organismo(): BelongsTo
     {
-        return $this->belongsTo(Organismo::class, 'idorganismos');
+        return $this->belongsTo(CatalogoItem::class, 'idorganismos');
     }
 
     public function moneda(): BelongsTo

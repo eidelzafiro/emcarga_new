@@ -63,7 +63,7 @@ class MenuTest extends TestCase
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Folios')
                 ->where('menu.2.label', 'Catálogos')
-                ->where('menu.2.children.0.label', 'Marcas')
+                ->where('menu.2.children.0.label', 'Talleres')
                 ->where('menu.3.label', 'Flota')
                 ->where('menu.3.children.0.label', 'Vehículos')
                 ->where('menu.4.label', 'Taller')
@@ -83,9 +83,8 @@ class MenuTest extends TestCase
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Administración')
                 ->where('menu.1.children.0.label', 'Entidades')
-                ->where('menu.1.children.1.label', 'Usuarios')
                 ->where('menu.2.label', 'Catálogos')
-                ->where('menu.2.children.0.label', 'Marcas')
+                ->where('menu.2.children.0.label', 'Catálogos')
                 ->where('menu.3.label', 'Flota')
                 ->where('menu.3.children.0.label', 'Vehículos')
                 ->where('menu.4.label', 'Taller')
@@ -112,7 +111,7 @@ class MenuTest extends TestCase
                 ->has('menu', 3)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Catálogos')
-                ->where('menu.1.children.0.label', 'Organismos')
+                ->where('menu.1.children.0.label', 'Grupos Escala')
                 ->where('menu.2.label', 'RRHH')
                 ->where('menu.2.children.0.label', 'Bolsa')
         );
@@ -125,14 +124,13 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 5)
+                ->has('menu', 4)
                 ->where('menu.0.label', 'Dashboard')
                 ->where('menu.1.label', 'Config. Modelo')
-                ->where('menu.2.label', 'Catálogos')
-                ->where('menu.3.label', 'Comercial')
-                ->where('menu.3.children.0.label', 'Clientes')
-                ->where('menu.4.label', 'Facturación')
-                ->where('menu.4.children.0.label', 'Facturas')
+                ->where('menu.2.label', 'Comercial')
+                ->where('menu.2.children.0.label', 'Clientes')
+                ->where('menu.3.label', 'Facturación')
+                ->where('menu.3.children.0.label', 'Facturas')
         );
     }
 

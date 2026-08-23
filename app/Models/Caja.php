@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -44,7 +45,7 @@ class Caja extends Model
 
     public function pais(): BelongsTo
     {
-        return $this->belongsTo(Pais::class, 'id_pais');
+        return $this->belongsTo(CatalogoItem::class, 'id_pais');
     }
 
     public function entidad(): BelongsTo

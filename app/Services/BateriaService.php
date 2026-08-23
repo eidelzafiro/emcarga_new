@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Bateria;
 use App\Models\BateriasMovimiento;
+use App\Support\Catalogos;
+use Carbon\Carbon;
 
 /**
  * Lógica de negocio de baterías (réplica del legacy CI3 ModBaterias).
@@ -15,7 +17,13 @@ use App\Models\BateriasMovimiento;
  */
 class BateriaService
 {
-    public const DESTINO_VEHICULO = 1;
+    /** origen_id legacy del destino "VEHICULO" en destinos_agregados (catálogo). */
+    public const DESTINO_VEHICULO_ORIGEN = 1;
+
+    public static function idDestinoVehiculo(): ?int
+    {
+        return Catalogos::idDe('destinos_agregados', self::DESTINO_VEHICULO_ORIGEN);
+    }
 
     /**
      * Registra un movimiento (montar/desmontar/cambiar de vehículo).
@@ -28,12 +36,12 @@ class BateriaService
         ?string $observaciones = null
     ): BateriasMovimiento {
         $fecha = $fechaMovimiento ?? now()->toDateString();
-        $idDestino = $idDestino ?? self::DESTINO_VEHICULO;
+        $idDestino = $idDestino ?? self::idDestinoVehiculo();
 
         // Cerrar movimiento vigente (fecha_retiro NULL)
         $vigente = $bateria->movimientos()->whereNull('fecha_retiro')->orderByDesc('id')->first();
         if ($vigente) {
-            $dias = \Carbon\Carbon::parse($vigente->fecha_movimiento ?? $fecha)->diffInDays(\Carbon\Carbon::parse($fecha));
+            $dias = Carbon::parse($vigente->fecha_movimiento ?? $fecha)->diffInDays(Carbon::parse($fecha));
             $vigente->update([
                 'fecha_retiro' => $fecha,
                 'tiempo_trabajo' => (int) round($dias / 30),
@@ -41,7 +49,7 @@ class BateriaService
         }
 
         $movimiento = $bateria->movimientos()->create([
-            'id_tractivo' => (int) $idDestino === self::DESTINO_VEHICULO ? $idTractivo : null,
+            'id_tractivo' => (int) $idDestino === (int) self::idDestinoVehiculo() ? $idTractivo : null,
             'fecha_movimiento' => $fecha,
             'tipo' => 'movimiento',
             'id_destino' => $idDestino,
@@ -51,7 +59,7 @@ class BateriaService
 
         // Actualizar cabecera
         $bateria->update([
-            'id_tractivo' => (int) $idDestino === self::DESTINO_VEHICULO ? $idTractivo : null,
+            'id_tractivo' => (int) $idDestino === (int) self::idDestinoVehiculo() ? $idTractivo : null,
             'fecha_movimiento' => $fecha,
             'id_destino' => $idDestino,
         ]);

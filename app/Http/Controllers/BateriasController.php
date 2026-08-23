@@ -40,8 +40,8 @@ class BateriasController extends Controller
             'baterias' => $baterias,
             'filtros' => [
                 'estados' => ['activa', 'baja'],
-                'motivos_baja' => \App\Models\MotivosBajaBaterium::orderBy('nombre')->get(['id', 'nombre']),
-                'destinos' => \App\Models\DestinoAgregado::orderBy('nombre')->get(['id', 'nombre']),
+                'motivos_baja' => \App\Support\Catalogos::opciones('motivos_baja_bateria'),
+                'destinos' => \App\Support\Catalogos::opciones('destinos_agregados'),
             ],
             'filters' => $request->only(['search', 'estado']),
         ]);
@@ -76,7 +76,7 @@ class BateriasController extends Controller
             $bateria,
             (int) ($validated['id_tractivo'] ?? 0),
             $validated['fecha_instalacion'] ?? now()->toDateString(),
-            $validated['id_tractivo'] ? BateriaService::DESTINO_VEHICULO : null,
+            $validated['id_tractivo'] ? BateriaService::idDestinoVehiculo() : null,
         );
 
         return redirect()->route('baterias.index')
@@ -142,7 +142,7 @@ class BateriasController extends Controller
 
         $validated = $request->validate([
             'fecha_baja' => 'nullable|date',
-            'id_motivo_baja' => 'required|exists:motivos_baja_bateria,id',
+            'id_motivo_baja' => 'required|exists:catalogo_items,id',
             'id_destino' => 'nullable|integer',
         ]);
 

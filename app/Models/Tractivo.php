@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -96,7 +97,7 @@ class Tractivo extends Model
 
     public function grupo(): BelongsTo
     {
-        return $this->belongsTo(Grupo::class, 'id_grupo');
+        return $this->belongsTo(CatalogoItem::class, 'id_grupo');
     }
 
     public function tipoServicio(): BelongsTo
@@ -106,12 +107,12 @@ class Tractivo extends Model
 
     public function colorPrimario(): BelongsTo
     {
-        return $this->belongsTo(Color::class, 'id_color_primario');
+        return $this->belongsTo(CatalogoItem::class, 'id_color_primario');
     }
 
     public function colorSecundario(): BelongsTo
     {
-        return $this->belongsTo(Color::class, 'id_color_secundario');
+        return $this->belongsTo(CatalogoItem::class, 'id_color_secundario');
     }
 
     public function tipoEstado(): BelongsTo

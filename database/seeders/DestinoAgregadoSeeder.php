@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\DestinoAgregado;
+use App\Models\CatalogoItem;
 use Illuminate\Database\Seeder;
 
 /**
  * Catálogo base de destinos de agregados (baterías, neumáticos, etc.).
  *
- * El legacy `tec_destagregados` usa ids fijos (1=VEHICULO, 14=TALLER) que los
- * servicios referencian en código (p. ej. BateriaService::DESTINO_VEHICULO).
- * Este seeder garantiza que esos ids existan con idempotencia (upsert por id),
- * sin pisar los datos migrados por el ETL.
+ * Desde la unificación (2026-08-23) viven en catalogo_items; el legacy
+ * tec_destagregados usaba ids fijos (1=VEHICULO, 14=TALLER) que los
+ * servicios referencian por origen_id (p. ej. BateriaService). Este seeder
+ * garantiza que esos orígenes existan en installs frescos.
  */
 class DestinoAgregadoSeeder extends Seeder
 {
@@ -25,12 +25,15 @@ class DestinoAgregadoSeeder extends Seeder
 
     public function run(): void
     {
-        foreach (self::BASE as $id => $nombre) {
-            DestinoAgregado::updateOrCreate(['id' => $id], [
-                'codigo' => (string) $id,
-                'nombre' => $nombre,
-                'activo' => true,
-            ]);
+        foreach (self::BASE as $origenId => $nombre) {
+            CatalogoItem::updateOrCreate(
+                ['tipo' => 'destinos_agregados', 'origen_id' => $origenId],
+                [
+                    'codigo' => (string) $origenId,
+                    'nombre' => $nombre,
+                    'activo' => true,
+                ]
+            );
         }
     }
 }

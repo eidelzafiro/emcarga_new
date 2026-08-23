@@ -16,12 +16,9 @@ use App\Http\Controllers\CajasController;
 use App\Http\Controllers\CargosController;
 use App\Http\Controllers\CartaPorteController;
 use App\Http\Controllers\CatalogoController;
-use App\Http\Controllers\CategoriasCargoController;
 use App\Http\Controllers\CategoriasProductosController;
 use App\Http\Controllers\ChoferesController;
-use App\Http\Controllers\ClasificacionesOrdenesTallerController;
 use App\Http\Controllers\ClientesController;
-use App\Http\Controllers\ColoresController;
 use App\Http\Controllers\CombustibleCargasController;
 use App\Http\Controllers\CombustibleDescargasController;
 use App\Http\Controllers\TarjetasController;
@@ -35,12 +32,10 @@ use App\Http\Controllers\ContextoTrabajoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemandasController;
 use App\Http\Controllers\DescuentosEmpleadosController;
-use App\Http\Controllers\DestinosAgregadosController;
 use App\Http\Controllers\DetallesCargaCombustibleController;
 use App\Http\Controllers\DevolucionesController;
 use App\Http\Controllers\DiferencialesController;
 use App\Http\Controllers\DistanciasController;
-use App\Http\Controllers\EmbalajesController;
 use App\Http\Controllers\EmpleadosController;
 use App\Http\Controllers\EntidadesController;
 use App\Http\Controllers\EstadisticasExplotacionController;
@@ -49,7 +44,6 @@ use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\FirmasAutorizadasController;
 use App\Http\Controllers\FirmasController;
 use App\Http\Controllers\FondosTiempoController;
-use App\Http\Controllers\GruposController;
 use App\Http\Controllers\GruposEscalaController;
 use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
@@ -59,33 +53,24 @@ use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\LubricantesController;
 use App\Http\Controllers\ControlLubricanteController;
 use App\Http\Controllers\LugaresController;
-use App\Http\Controllers\MarcasController;
-use App\Http\Controllers\MedidasNeumaticosController;
-use App\Http\Controllers\MediosProteccionController;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\MesesController;
-use App\Http\Controllers\ModelosController;
-use App\Http\Controllers\MotivosBajaBateriaController;
-use App\Http\Controllers\MotivosEntradaTallerController;
 use App\Http\Controllers\MotoresController;
 use App\Http\Controllers\MovimientosInventarioController;
 use App\Http\Controllers\MunicipiosController;
 use App\Http\Controllers\NavesController;
 use App\Http\Controllers\NeumaticosController;
 use App\Http\Controllers\NotificationsController;
-use App\Http\Controllers\OrganismosController;
 use App\Http\Controllers\OsdesController;
 use App\Http\Controllers\OtrosAgregadosController;
 use App\Http\Controllers\OtrosGastosController;
 use App\Http\Controllers\OtrosIngresosPreController;
 use App\Http\Controllers\PagosAdicionalesCargoController;
 use App\Http\Controllers\PagosController;
-use App\Http\Controllers\PaisesController;
 use App\Http\Controllers\PenalizacionesController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraController;
 use App\Http\Controllers\PizarraTractivosController;
-use App\Http\Controllers\PosicionesNeumaticosController;
 use App\Http\Controllers\PrefacturasController;
 use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\ProvinciasController;
@@ -104,11 +89,9 @@ use App\Http\Controllers\TarifasController;
 use App\Http\Controllers\TiposCargasReporteController;
 use App\Http\Controllers\TiposConceptosController;
 use App\Http\Controllers\TiposContratosController;
-use App\Http\Controllers\TiposMediosCargoController;
 use App\Http\Controllers\TiposTasasController;
 use App\Http\Controllers\TiposTractivosController;
 use App\Http\Controllers\TractivosController;
-use App\Http\Controllers\TurnosComercialesController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VacacionesController;
 use App\Http\Controllers\ValesController;
@@ -285,8 +268,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-cargas-reporte', TiposCargasReporteController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('turnos-comerciales', TurnosComercialesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('alertas', AlertasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -368,11 +349,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('fondos-tiempo', FondosTiempoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('medios-proteccion', MediosProteccionController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-medios-cargo', TiposMediosCargoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('salarios', SalariosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -386,14 +363,8 @@ Route::middleware('auth')->group(function () {
 
 
         // Catálogos y configuración (Fase 5.7)
-        Route::resource('marcas', MarcasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('modelos', ModelosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('paises', PaisesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('naves', NavesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -401,11 +372,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('vallas', VallasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('destinos-agregados', DestinosAgregadosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('medidas-neumaticos', MedidasNeumaticosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
 
         Route::resource('consecutivos', ConsecutivosController::class)
@@ -413,11 +380,7 @@ Route::middleware('auth')->group(function () {
 
 
 
-        Route::resource('grupos', GruposController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('colores', ColoresController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('talleres', TalleresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -426,17 +389,9 @@ Route::middleware('auth')->group(function () {
 
 
 
-        Route::resource('posiciones-neumaticos', PosicionesNeumaticosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('embalajes', EmbalajesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('organismos', OrganismosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('categorias-cargo', CategoriasCargoController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('grupos-escala', GruposEscalaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -546,12 +501,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-tractivos', TiposTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('historial-tractivos', HistorialTractivosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('motivos-baja-bateria', MotivosBajaBateriaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('motivos-entrada-taller', MotivosEntradaTallerController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('clasificaciones-ordenes-taller', ClasificacionesOrdenesTallerController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // ATM - Inventario (Fase 5.8)

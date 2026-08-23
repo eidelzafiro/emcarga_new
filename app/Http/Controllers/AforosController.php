@@ -323,10 +323,10 @@ class AforosController extends Controller
             'choferes' => Bolsa::select('id', 'nombre', 'apellidos')->where('activo', true)->orderBy('nombre')->get(),
             'tractivos' => Tractivo::whereNull('fecha_baja')
                 ->where(function ($q) {
-                    $q->whereNull('id_grupo')->orWhere('id_grupo', '!=', 8);
+                    $q->whereNull('id_grupo')->orWhere('id_grupo', '!=', \App\Support\Catalogos::grupoArrastresId());
                 })
                 ->orderBy('codigo')->get(['id', 'codigo', 'capacidad_toneladas']),
-            'arrastres' => Tractivo::whereNull('fecha_baja')->where('id_grupo', 8)
+            'arrastres' => Tractivo::whereNull('fecha_baja')->where('id_grupo', \App\Support\Catalogos::grupoArrastresId())
                 ->orderBy('codigo')->get(['id', 'codigo', 'capacidad_toneladas']),
             'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad')
                 ->with(['tractivo:id,codigo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos', 'chofer2:id,nombre,apellidos'])

@@ -38,7 +38,7 @@ class CajasController extends Controller
             'cajas' => $cajas,
             'filtros' => [
                 'lubricantes' => Lubricante::orderBy('nombre')->get(['id', 'nombre']),
-                'paises' => Pais::orderBy('nombre')->get(['id', 'nombre']),
+                'paises' => \App\Support\Catalogos::opciones('paises'),
                 'estados' => ['nuevo', 'activo', 'reparado', 'regular', 'baja'],
             ],
             'filters' => $request->only(['search', 'estado']),
@@ -95,7 +95,7 @@ class CajasController extends Controller
             'fecha_instalacion' => 'nullable|date',
             'fecha_baja' => 'nullable|date',
             'id_lubricante' => 'nullable|exists:lubricantes,id',
-            'id_pais' => 'nullable|exists:paises,id',
+            'id_pais' => 'nullable|exists:catalogo_items,id',
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'estado' => 'nullable|string|max:50',
         ];

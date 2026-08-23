@@ -31,7 +31,7 @@ class OtrosAgregadosController extends Controller
             'codigo' => 'required|unique:otros_agregados,codigo',
             'descripcion' => 'required|string|max:255',
             'numero_serie' => 'nullable|string|max:100',
-            'id_marca' => 'nullable|exists:marcas,id',
+            'id_marca' => 'nullable|exists:catalogo_items,id',
             'id_estado' => 'nullable|exists:estados_componentes,id',
             'fecha_baja' => 'nullable|date',
         ]);
@@ -50,7 +50,7 @@ class OtrosAgregadosController extends Controller
             'codigo' => 'required|unique:otros_agregados,codigo,'.$otrosAgregado->id,
             'descripcion' => 'required|string|max:255',
             'numero_serie' => 'nullable|string|max:100',
-            'id_marca' => 'nullable|exists:marcas,id',
+            'id_marca' => 'nullable|exists:catalogo_items,id',
             'id_estado' => 'nullable|exists:estados_componentes,id',
             'fecha_baja' => 'nullable|date',
         ]);

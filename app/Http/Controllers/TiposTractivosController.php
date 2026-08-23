@@ -4,13 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\ManagesCatalog;
 use App\Models\Lubricante;
-use App\Models\Marca;
-use App\Models\MedidaNeumatico;
-use App\Models\Modelo;
-use App\Models\Pais;
 use App\Models\TipoCombustible;
 use App\Models\TiposMantenimiento;
 use App\Models\TipoTractivo;
+use App\Support\Catalogos;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -79,8 +76,8 @@ class TiposTractivosController extends Controller
                 'fields' => ['nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true]],
                 'gridOnly' => ['id_marca', 'id_modelo', 'id_pais', 'tipo_equipo', 'id_tipo_mantenimiento'],
                 'filters' => [
-                    'id_marca' => $this->filterOptions(Marca::class, 'id_marca'),
-                    'id_modelo' => $this->filterOptions(Modelo::class, 'id_modelo'),
+                    'id_marca' => $this->filtroCatalogo('id_marca', 'marcas'),
+                    'id_modelo' => $this->filtroCatalogo('id_modelo', 'modelos'),
                     'tipo_equipo' => $this->filterTipoEquipo(),
                 ],
                 'extra' => $this->getExtraFields(),
@@ -91,9 +88,9 @@ class TiposTractivosController extends Controller
     protected function getExtraFields(): array
     {
         return [
-            'id_marca' => $this->select('Marca', Marca::class),
-            'id_modelo' => $this->select('Modelo', Modelo::class),
-            'id_pais' => $this->select('País', Pais::class),
+            'id_marca' => $this->select('Marca', 'marcas'),
+            'id_modelo' => $this->select('Modelo', 'modelos'),
+            'id_pais' => $this->select('País', 'paises'),
             'id_tipo_mantenimiento' => $this->select('Tipo de mantenimiento', TiposMantenimiento::class),
             'fabricacion' => $this->num('Año fabricación'),
             'tipo_equipo' => $this->texto('Tipo de equipo'),
@@ -102,9 +99,9 @@ class TiposTractivosController extends Controller
             'dif_cant' => $this->num('Diferenciales (cant)'),
             'dif_relacion' => $this->texto('Relación diferencial'),
             'dif_ancho' => $this->num('Ancho diferencial'),
-            'id_medida_del' => $this->select('Medida neum. delantero', MedidaNeumatico::class),
-            'id_medida_tra' => $this->select('Medida neum. trasero', MedidaNeumatico::class),
-            'id_medida_res' => $this->select('Medida neum. respaldo', MedidaNeumatico::class),
+            'id_medida_del' => $this->select('Medida neum. delantero', 'medidas_neumaticos'),
+            'id_medida_tra' => $this->select('Medida neum. trasero', 'medidas_neumaticos'),
+            'id_medida_res' => $this->select('Medida neum. respaldo', 'medidas_neumaticos'),
             'neum_del_cant' => $this->num('Neum. delanteros (cant)'),
             'neum_tras_cant' => $this->num('Neum. traseros (cant)'),
             'neum_resp_cant' => $this->num('Neum. respaldo (cant)'),
@@ -137,7 +134,7 @@ class TiposTractivosController extends Controller
         return $rules;
     }
 
-        private function base(string $etiqueta, string $tipo): array
+    private function base(string $etiqueta, string $tipo): array
     {
         return ['label' => $etiqueta, 'type' => $tipo, 'required' => false, 'grid' => false];
     }
@@ -152,11 +149,19 @@ class TiposTractivosController extends Controller
         return $this->base($etiqueta, 'number');
     }
 
-    private function select(string $etiqueta, string $model): array
+    private function select(string $etiqueta, string $tipo): array
     {
-        $options = $model::where('activo', true)->orderBy('nombre')
-            ->get()->map(fn ($f) => ['value' => $f->id, 'label' => (string) $f->nombre])->toArray();
+        $options = collect(Catalogos::opciones($tipo))
+            ->map(fn ($o) => ['value' => $o['id'], 'label' => (string) $o['nombre']])->toArray();
 
         return array_merge($this->base($etiqueta, 'select'), ['options' => $options]);
+    }
+
+    private function filtroCatalogo(string $key, string $tipo): array
+    {
+        $options = collect(Catalogos::opciones($tipo))
+            ->map(fn ($o) => ['value' => $o['id'], 'label' => (string) $o['nombre']])->toArray();
+
+        return ['key' => $key, 'label' => $key, 'options' => $options];
     }
 }

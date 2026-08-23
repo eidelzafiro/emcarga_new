@@ -50,14 +50,28 @@ class CatalogoTipoSeeder extends Seeder
         'tipos_especialidad' => 'Especialidad',
         'tipos_plantillas' => 'Plantillas',
         'tipos_calificadores' => 'Calificadores',
+        'marcas' => 'Marcas',
+        'modelos' => 'Modelos',
+        'paises' => 'Países',
+        'organismos' => 'Organismos',
+        'colores' => 'Colores',
+        'grupos' => 'Grupos',
+        'categorias_cargo' => 'Categorías Cargo',
+        'clasificaciones_ordenes_taller' => 'Clasif. Órdenes Taller',
+        'destinos_agregados' => 'Destinos Agregados',
+        'posiciones_neumaticos' => 'Posiciones Neumáticos',
+        'medidas_neumaticos' => 'Medidas Neumáticos',
+        'motivos_baja_bateria' => 'Motivos Baja Batería',
+        'motivos_entrada_taller' => 'Motivos Entrada Taller',
+        'embalajes' => 'Embalajes',
     ];
 
     public function run(): void
     {
         $grupos = [
             'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
-            'Comercial' => ['tipos_cargas', 'tipos_servicios', 'tipos_gastos'],
-            'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_sistemas', 'tipos_tractivos_alternativo', 'tipos_vehiculos'],
+            'Comercial' => ['tipos_cargas', 'tipos_servicios', 'tipos_gastos', 'organismos', 'categorias_cargo'],
+            'Técnica' => ['tipos_aceites', 'tipos_agregados', 'tipos_arrastres', 'tipos_combustibles', 'tipos_equipos', 'tipos_lubricantes', 'tipos_neumaticos', 'tipos_roturas', 'tipos_sistemas', 'tipos_tractivos_alternativo', 'tipos_vehiculos', 'marcas', 'modelos', 'paises', 'colores', 'grupos', 'clasificaciones_ordenes_taller', 'destinos_agregados', 'posiciones_neumaticos', 'medidas_neumaticos', 'motivos_baja_bateria', 'motivos_entrada_taller', 'embalajes'],
             'RRHH' => ['tipos_causas', 'tipos_color_piel', 'tipos_deducciones', 'tipos_modelo', 'tipos_estado_civil', 'tipos_estados', 'tipos_grupo_horario', 'tipos_incidencias', 'tipos_indicadores', 'tipos_integracion_politica', 'tipos_nivel_educacion', 'tipos_pagos_adicionales', 'tipos_penalizaciones', 'tipos_sistemas_pago', 'tipos_sexo', 'tipos_suspension', 'tipos_ubicacion_defensa', 'tipo_ingresos', 'tipos_mantenimiento', 'tipos_operaciones', 'tipos_causas_baja', 'tipos_causas_lab', 'tipos_causas_mov', 'tipos_tallas', 'tipos_especialidad', 'tipos_plantillas', 'tipos_calificadores'],
         ];
 

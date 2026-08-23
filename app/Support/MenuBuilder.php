@@ -7,6 +7,7 @@ use App\Models\Nave;
 use App\Models\Taller;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Spatie\Permission\Models\Role;
 
 class MenuBuilder
@@ -94,6 +95,11 @@ class MenuBuilder
             return true;
         }
 
-        return $perfilRole->hasPermissionTo($item->permission);
+        // Permiso no catalogado (menú obsoleto): se oculta en vez de explotar.
+        try {
+            return $perfilRole->hasPermissionTo($item->permission);
+        } catch (PermissionDoesNotExist) {
+            return false;
+        }
     }
 }

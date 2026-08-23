@@ -217,7 +217,7 @@ class CartaPorteController extends Controller
                 ]),
             'arrastres' => Tractivo::with('grupo:id,nombre')
                 ->select('id', 'codigo', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp')
-                ->where('id_grupo', 8)
+                ->where('id_grupo', \App\Support\Catalogos::grupoArrastresId())
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')

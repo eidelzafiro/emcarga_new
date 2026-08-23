@@ -59,7 +59,7 @@ class NeumaticosController extends Controller
             'kilometraje' => 'nullable|numeric',
             'precio_mn' => 'nullable|numeric',
             'precio_me' => 'nullable|numeric',
-            'id_posicion' => 'nullable|exists:posiciones_neumaticos,id',
+            'id_posicion' => 'nullable|exists:catalogo_items,id',
             'fecha_fabricacion' => 'nullable|date',
             'balanceada' => 'nullable|boolean',
             'profinicial' => 'nullable|integer',
@@ -80,7 +80,7 @@ class NeumaticosController extends Controller
             $validated['fecha_instalacion'] ?? now()->toDateString(),
             $validated['kilometraje'] ?? 0,
             $validated['id_posicion'] ?? null,
-            $validated['id_tractivo'] ? NeumaticoService::DESTINO_VEHICULO : null,
+            $validated['id_tractivo'] ? NeumaticoService::idDestinoVehiculo() : null,
         );
 
         return redirect()->route('neumaticos.index')
@@ -103,7 +103,7 @@ class NeumaticosController extends Controller
             'kilometraje' => 'nullable|numeric',
             'precio_mn' => 'nullable|numeric',
             'precio_me' => 'nullable|numeric',
-            'id_posicion' => 'nullable|exists:posiciones_neumaticos,id',
+            'id_posicion' => 'nullable|exists:catalogo_items,id',
             'fecha_fabricacion' => 'nullable|date',
             'balanceada' => 'nullable|boolean',
             'profinicial' => 'nullable|integer',
@@ -127,7 +127,7 @@ class NeumaticosController extends Controller
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'fecha_montaje' => 'nullable|date',
             'km_instalado' => 'nullable|numeric',
-            'id_posicion' => 'nullable|exists:posiciones_neumaticos,id',
+            'id_posicion' => 'nullable|exists:catalogo_items,id',
             'id_destino' => 'nullable|integer',
             'observaciones' => 'nullable|string',
         ]);
@@ -138,7 +138,7 @@ class NeumaticosController extends Controller
             $validated['fecha_montaje'] ?? null,
             isset($validated['km_instalado']) ? (float) $validated['km_instalado'] : null,
             $validated['id_posicion'] ?? null,
-            $validated['id_destino'] ?? NeumaticoService::DESTINO_VEHICULO,
+            $validated['id_destino'] ?? null,
             $validated['observaciones'] ?? null,
         );
 

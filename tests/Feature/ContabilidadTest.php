@@ -55,7 +55,6 @@ class ContabilidadTest extends TestCase
             'vales.index',
             'inventario.index',
             'servicentros.index',
-            'tipos-conceptos.index',
             'estados-tarjetas.index',
         ];
 

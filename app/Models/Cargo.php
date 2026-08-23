@@ -68,7 +68,7 @@ class Cargo extends Model
 
     public function nivel_educacion(): BelongsTo
     {
-        return $this->belongsTo(TipoNivelEducacion::class, 'id_nivel_educacion');
+        return $this->belongsTo(CatalogoItem::class, 'id_nivel_educacion');
     }
 
     public function grupo_escala(): BelongsTo
@@ -78,7 +78,7 @@ class Cargo extends Model
 
     public function clasificacion_laboral(): BelongsTo
     {
-        return $this->belongsTo(TipoClasificacionLaboral::class, 'id_clasificacion_laboral');
+        return $this->belongsTo(CatalogoItem::class, 'id_clasificacion_laboral');
     }
 
     public function categoria_cargo(): BelongsTo
@@ -88,6 +88,6 @@ class Cargo extends Model
 
     public function grupo_horario(): BelongsTo
     {
-        return $this->belongsTo(TipoGrupoHorario::class, 'id_grupo_horario');
+        return $this->belongsTo(CatalogoItem::class, 'id_grupo_horario');
     }
 }

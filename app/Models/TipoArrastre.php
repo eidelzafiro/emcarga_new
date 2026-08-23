@@ -81,7 +81,7 @@ class TipoArrastre extends Model
 
     public function tipoSuspension(): BelongsTo
     {
-        return $this->belongsTo(TipoSuspension::class, 'id_tipo_suspension');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_suspension');
     }
 
     public function tipoCombustible(): BelongsTo

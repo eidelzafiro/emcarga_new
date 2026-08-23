@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -49,7 +50,7 @@ class Salario extends Model
 
     public function tipoSistemaPago(): BelongsTo
     {
-        return $this->belongsTo(TipoSistemaPago::class, 'id_tipo_sistema_pago');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_sistema_pago');
     }
 
     public function user(): BelongsTo

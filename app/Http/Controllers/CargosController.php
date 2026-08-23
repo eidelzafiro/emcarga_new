@@ -7,8 +7,6 @@ use App\Models\Cargo;
 use App\Models\CategoriaCargo;
 use App\Models\FondoTiempo;
 use App\Models\GrupoEscala;
-use App\Models\TipoGrupoHorario;
-use App\Models\TipoNivelEducacion;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -261,7 +259,7 @@ class CargosController extends Controller
 
     private function comboNivelesEducacion(): array
     {
-        return TipoNivelEducacion::where('activo', true)
+        return collect(\App\Support\Catalogos::opciones('tipos_nivel_educacion'))
             ->orderBy('abreviatura')
             ->get()
             ->map(fn ($n) => ['value' => $n->id, 'label' => $n->abreviatura ?? $n->nombre])
@@ -286,7 +284,7 @@ class CargosController extends Controller
 
     private function comboGruposHorario(): array
     {
-        return TipoGrupoHorario::where('activo', true)
+        return collect(\App\Support\Catalogos::opciones('tipos_grupo_horario'))
             ->orderBy('nombre')
             ->get()
             ->map(fn ($g) => ['value' => $g->id, 'label' => $g->nombre])

@@ -153,10 +153,10 @@ class MenuSeeder extends Seeder
             // === Catálogos Comercial / Contabilidad ===
             ['parent' => 'Catálogos', 'label' => 'Tipos Servicio',           'route' => 'catalogo.index?tipo=tipos_servicios',           'permission' => 'catalogo.ver',       'orden' => 41],
             ['parent' => 'Catálogos', 'label' => 'Tipos Estado',             'route' => 'catalogo.index?tipo=tipos_estados',             'permission' => 'catalogo.ver',         'orden' => 42],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Tasa',               'route' => 'tipos-tasas.index',               'permission' => 'tipos-tasas.ver',           'orden' => 44],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Tasa',               'route' => 'catalogo.index?tipo=tipos_tasas',               'permission' => 'tipos-tasas.ver',           'orden' => 44],
             ['parent' => 'Catálogos', 'label' => 'Tipos Gasto',              'route' => 'catalogo.index?tipo=tipos_gastos',              'permission' => 'catalogo.ver',          'orden' => 45],
             ['parent' => 'Catálogos', 'label' => 'Tipo Ingresos',            'route' => 'catalogo.index?tipo=tipo_ingresos',             'permission' => 'catalogo.ver',         'orden' => 46],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Concepto',           'route' => 'tipos-conceptos.index',           'permission' => 'tipos-conceptos.ver',       'orden' => 47],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Concepto',           'route' => 'catalogo.index?tipo=tipos_conceptos',           'permission' => 'tipos-conceptos.ver',       'orden' => 47],
 
             // === Geográficos ===
             ['parent' => 'Catálogos', 'label' => 'Colores',                  'route' => 'catalogo.index?tipo=colores',                   'permission' => 'catalogo.ver',               'orden' => 51],
@@ -172,7 +172,7 @@ class MenuSeeder extends Seeder
 
             // === Catálogos RRHH — laboral ===
             ['parent' => 'Catálogos', 'label' => 'Tipos Grupo Horario',      'route' => 'catalogo.index?tipo=tipos_grupo_horario',       'permission' => 'catalogo.ver',   'orden' => 61],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Contrato',           'route' => 'tipos-contratos.index',           'permission' => 'tipos-contratos.ver',       'orden' => 62],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Contrato',           'route' => 'catalogo.index?tipo=tipos_contratos',           'permission' => 'tipos-contratos.ver',       'orden' => 62],
             ['parent' => 'Catálogos', 'label' => 'Tipos Deducción',          'route' => 'catalogo.index?tipo=tipos_deducciones',         'permission' => 'catalogo.ver',     'orden' => 63],
             ['parent' => 'Catálogos', 'label' => 'Tipos Sistema Pago',       'route' => 'catalogo.index?tipo=tipos_sistemas_pago',       'permission' => 'catalogo.ver',   'orden' => 64],
             ['parent' => 'Catálogos', 'label' => 'Tipos Pago Adicional',     'route' => 'catalogo.index?tipo=tipos_pagos_adicionales',   'permission' => 'catalogo.ver', 'orden' => 68],

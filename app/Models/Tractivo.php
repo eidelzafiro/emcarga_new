@@ -102,7 +102,7 @@ class Tractivo extends Model
 
     public function tipoServicio(): BelongsTo
     {
-        return $this->belongsTo(TipoServicio::class, 'id_tipo_servicio');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_servicio');
     }
 
     public function colorPrimario(): BelongsTo

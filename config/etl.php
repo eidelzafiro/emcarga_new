@@ -242,32 +242,7 @@ return [
         ],
 
 
-        'tipos_estados' => [
-            'legacy' => 'com_tipoestados',
-            'pk' => 'idtipoestados',
-            'columnas' => [
-                'tipoestados' => 'nombre',
-                'imgtipoestados' => 'imagen',
-                'siglas' => 'siglas',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'tipos_indicadores' => [
-            'legacy' => 'com_tipoindicadores',
-            'pk' => 'idtipoindicadores',
-            'columnas' => [
-                'tipoindicadores' => 'nombre',
-                'um' => 'unidad',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'tipos_modelo' => [
             'legacy' => 'com_tipomodelo',
@@ -284,17 +259,6 @@ return [
             ],
         ],
 
-        'tipos_servicios' => [
-            'legacy' => 'com_tiposervicios',
-            'pk' => 'idtiposervicios',
-            'columnas' => [
-                'tiposervicios' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
 
         // Tarjetas de combustible (legacy cont_tarjetas): campos originales
@@ -378,30 +342,8 @@ return [
             'cero_a_null' => ['id_provincia'],
         ],
 
-        'tipos_conceptos' => [
-            'legacy' => 'cont_tipoconceptos',
-            'pk' => 'idtipoconcepto',
-            'columnas' => [
-                'tipoconcepto' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
 
-        'tipos_gastos' => [
-            'legacy' => 'cont_tipogastos',
-            'pk' => 'idtipogastos',
-            'columnas' => [
-                'tipogastos' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         /*
          * ================================================================
@@ -580,75 +522,11 @@ return [
         // tipos_tallas fueron eliminadas intencionalmente del nuevo esquema
         // (migración 2026_07_31_010000_drop_unused_legacy_catalog_tables).
 
-        'tipos_clasificacion_laboral' => [
-            'legacy' => 'rh_tipoclasflaboral',
-            'pk' => 'idtipoclasflaboral',
-            'columnas' => [
-                'nombclasflaboral' => 'nombre',
-                'designado' => 'designado',
-                'cuadro' => 'cuadro',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_color_piel' => [
-            'legacy' => 'rh_tipocolorpiel',
-            'pk' => 'idcolorpiel',
-            'columnas' => [
-                'nombcolorpiel' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_contratos' => [
-            'legacy' => 'rh_tipocontratos',
-            'pk' => 'idtipocontratos',
-            'columnas' => [
-                'nombtipocontrato' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_deducciones' => [
-            'legacy' => 'rh_tipodeducciones',
-            'pk' => 'idtipodeducciones',
-            'columnas' => [
-                'tipodeducciones' => 'nombre',
-                'descripcion' => 'descripcion',
-                'clave' => 'clave',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_estado_civil' => [
-            'legacy' => 'rh_tipoestadocivil',
-            'pk' => 'idtipoestadocivil',
-            'columnas' => [
-                'nombestadocivil' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_grupo_horario' => [
-            'legacy' => 'rh_tipogrupohorario',
-            'pk' => 'idtipogrupohorario',
-            'columnas' => [
-                'grupohorario' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'tipos_incidencias' => [
             'legacy' => 'rh_tipoincidencias',
@@ -667,43 +545,10 @@ return [
             ],
         ],
 
-        'tipos_integracion_politica' => [
-            'legacy' => 'rh_tipointpolitica',
-            'pk' => 'idtipointpolitica',
-            'columnas' => [
-                'nombintpolitica' => 'nombre',
-                'politica' => 'politica',
-                'abreviatura' => 'abreviatura',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
 
 
-        'tipos_nivel_educacion' => [
-            'legacy' => 'rh_tiponiveducacion',
-            'pk' => 'idtiponiveducacion',
-            'columnas' => [
-                'nombniveducacion' => 'nombre',
-                'abreviatura' => 'abreviatura',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_pagos_adicionales' => [
-            'legacy' => 'rh_tipopagosadicionales',
-            'pk' => 'idtipopagosadicionales',
-            'columnas' => [
-                'nombpagosadicionales' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         'tipos_penalizaciones' => [
             'legacy' => 'rh_tipopenalizaciones',
@@ -719,49 +564,9 @@ return [
             ],
         ],
 
-        'tipos_sexo' => [
-            'legacy' => 'rh_tiposexo',
-            'pk' => 'idtiposexo',
-            'columnas' => [
-                'sexo' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_sistemas_pago' => [
-            'legacy' => 'rh_tiposistemaspago',
-            'pk' => 'idtiposistemapago',
-            'columnas' => [
-                'nombsistemapago' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_tasas' => [
-            'legacy' => 'rh_tipotasas',
-            'pk' => 'idtasa',
-            'columnas' => [
-                'nombtasa' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_ubicacion_defensa' => [
-            'legacy' => 'rh_tipoubicdefensa',
-            'pk' => 'idtipoubicdefensa',
-            'columnas' => [
-                'nombubicdefensa' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         // Arrastres: el legacy NO tiene tabla de arrastres (tec_naves está vacía).
         // Los arrastres son tractivos idgrupo=8 (grupo ARRASTRES), unificados en
@@ -1173,18 +978,6 @@ return [
             ],
         ],
 
-        'tipos_causas' => [
-            'legacy' => 'tec_motbajaneum',
-            'pk' => 'idmotbajaneum',
-            'columnas' => [
-                'motbajaneum' => 'nombre',
-            ],
-            'defaults' => [
-                'tipo' => 'baja',
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'tipos_combustibles' => [
             'legacy' => 'tec_tipocombustibles',
@@ -1215,17 +1008,6 @@ return [
             ],
         ],
 
-        'tipos_lubricantes' => [
-            'legacy' => 'tec_tipolubricantes',
-            'pk' => 'idtipolubricantes',
-            'columnas' => [
-                'tipolubricantes' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
         'tipos_mantenimiento' => [
             'legacy' => 'tec_tipomtto',
@@ -1269,40 +1051,8 @@ return [
             ],
         ],
 
-        'tipos_roturas' => [
-            'legacy' => 'tec_neumaticostiporoturas',
-            'pk' => 'idneumtiporoturas',
-            'columnas' => [
-                'tiporoturas' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
 
-        'tipos_sistemas' => [
-            'legacy' => 'tec_tiposistemas',
-            'pk' => 'idtiposistemas',
-            'columnas' => [
-                'tiposistemas' => 'nombre',
-                'codigo' => 'codigo',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
-        'tipos_suspension' => [
-            'legacy' => 'tec_tiposuspension',
-            'pk' => 'idtiposuspension',
-            'columnas' => [
-                'tiposuspension' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
 
         // NOTA: tractivos se migra con EtlService::migrarTractivos() (dedicado):
         // excluye dados de baja, sufijo -entidad en duplicados, estado mapeado

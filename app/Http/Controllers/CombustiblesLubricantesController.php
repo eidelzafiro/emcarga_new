@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CombustibleCarga;
 use App\Models\CombustibleLubricante;
-use App\Models\TipoCausa;
-use App\Models\TipoLubricante;
 use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,8 +21,8 @@ class CombustiblesLubricantesController extends Controller
 
         $cargas = CombustibleCarga::select('id', 'numero')->orderBy('numero')->get();
         $tractivos = Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
-        $lubricantes = TipoLubricante::select('id', 'nombre')->orderBy('nombre')->get();
-        $causas = TipoCausa::select('id', 'nombre')->orderBy('nombre')->get();
+        $lubricantes = \App\Support\Catalogos::opciones('tipos_lubricantes');
+        $causas = \App\Support\Catalogos::opciones('tipos_causas');
 
         return Inertia::render('CombustiblesLubricantes/Index', [
             'title' => 'Comb. Lubricantes',

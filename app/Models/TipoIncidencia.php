@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,7 +12,7 @@ class TipoIncidencia extends Model
 
     public function tipoDeduccione(): BelongsTo
     {
-        return $this->belongsTo(TipoDeduccione::class, 'id_tipo_deducciones');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_deducciones');
     }
 
     protected $fillable = [

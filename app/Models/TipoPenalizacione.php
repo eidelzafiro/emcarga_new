@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -34,6 +35,6 @@ class TipoPenalizacione extends Model
 
     public function tipoPagoAdicional(): BelongsTo
     {
-        return $this->belongsTo(TipoPagoAdicionale::class, 'tipo_pago_adicional_id');
+        return $this->belongsTo(CatalogoItem::class, 'tipo_pago_adicional_id');
     }
 }

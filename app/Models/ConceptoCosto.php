@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,6 +19,6 @@ class ConceptoCosto extends Model
 
     public function tipoGasto(): BelongsTo
     {
-        return $this->belongsTo(TipoGasto::class, 'id_tipo_gasto');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_gasto');
     }
 }

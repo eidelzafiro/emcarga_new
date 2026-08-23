@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Bolsa;
 use App\Models\OtrosGasto;
-use App\Models\TipoConcepto;
 use App\Models\Tractivo;
 use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
@@ -37,7 +36,7 @@ class OtrosGastosController extends Controller
             'otros_gastos' => $gastos,
             'bolsa' => $bolsa,
             'tractivos' => $tractivos,
-            'tipos_concepto' => TipoConcepto::select('id', 'nombre')->orderBy('nombre')->get(),
+            'tipos_concepto' => \App\Support\Catalogos::opciones('tipos_conceptos'),
             'filters' => $request->only(['search']),
         ]);
     }

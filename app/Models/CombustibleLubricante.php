@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -42,11 +43,11 @@ class CombustibleLubricante extends Model
 
     public function tipoLubricante(): BelongsTo
     {
-        return $this->belongsTo(TipoLubricante::class, 'id_tipo_lubricante');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_lubricante');
     }
 
     public function causa(): BelongsTo
     {
-        return $this->belongsTo(TipoCausa::class, 'id_causa');
+        return $this->belongsTo(CatalogoItem::class, 'id_causa');
     }
 }

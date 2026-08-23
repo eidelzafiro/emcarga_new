@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\PagosAdicionalesCargo;
 use App\Models\Cargo;
-use App\Models\TipoPagoAdicionale;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -21,7 +20,7 @@ class PagosAdicionalesCargoController extends Controller
             'items' => $items,
             'title' => 'Pagos Adicionales de Cargo',
             'cargos' => Cargo::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
-            'tiposPago' => TipoPagoAdicionale::orderBy('nombre')->get(['id', 'nombre']),
+            'tiposPago' => \App\Support\Catalogos::opciones('tipos_pagos_adicionales'),
             'filters' => $request->only(['search']),
         ]);
     }

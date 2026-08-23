@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -23,6 +24,6 @@ class NeumaticosRotura extends Model
 
     public function tipoCausa(): BelongsTo
     {
-        return $this->belongsTo(TipoCausa::class, 'id_tipo_causa');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_causa');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -46,7 +47,7 @@ class OtrosGasto extends Model
 
     public function tipoConcepto(): BelongsTo
     {
-        return $this->belongsTo(TipoConcepto::class, 'id_tipo_concepto');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_concepto');
     }
 
     public function user(): BelongsTo

@@ -87,9 +87,6 @@ use App\Http\Controllers\TalleresController;
 use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
 use App\Http\Controllers\TiposCargasReporteController;
-use App\Http\Controllers\TiposConceptosController;
-use App\Http\Controllers\TiposContratosController;
-use App\Http\Controllers\TiposTasasController;
 use App\Http\Controllers\TiposTractivosController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
@@ -322,13 +319,9 @@ Route::middleware('auth')->group(function () {
 
 
 
-        Route::resource('tipos-contratos', TiposContratosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
 
 
-        Route::resource('tipos-tasas', TiposTasasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         // RRHH - Tablas faltantes (Fase 5.5 parte 3)
         Route::resource('provincias', ProvinciasController::class)
@@ -435,8 +428,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('conciliaciones', ConciliacionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('tipos-conceptos', TiposConceptosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('otros-gastos', OtrosGastosController::class)
             ->only(['index', 'store', 'update', 'destroy']);

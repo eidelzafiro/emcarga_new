@@ -64,25 +64,25 @@ class PermisosModulosTest extends TestCase
     {
         // Usuario con permiso de lectura pero sin permiso de creación
         $user = $this->usuarioSinRol();
-        $user->givePermissionTo('tipos-contratos.ver');
+        $user->givePermissionTo('meses.ver');
 
         $this->actingAs($user)
-            ->post(route('tipos-contratos.store'), [
+            ->post(route('meses.store'), [
                 'codigo' => 'X1',
                 'nombre' => 'No permitido',
             ])
             ->assertForbidden();
 
-        $this->assertDatabaseMissing('tipos_contratos', ['codigo' => 'X1']);
+        $this->assertDatabaseMissing('meses', ['codigo' => 'X1']);
     }
 
     public function test_lectura_con_solo_permiso_ver_es_permitida(): void
     {
         $user = $this->usuarioSinRol();
-        $user->givePermissionTo('tipos-contratos.ver');
+        $user->givePermissionTo('meses.ver');
 
         $this->actingAs($user)
-            ->get(route('tipos-contratos.index'))
+            ->get(route('meses.index'))
             ->assertOk();
     }
 

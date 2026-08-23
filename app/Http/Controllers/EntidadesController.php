@@ -6,7 +6,6 @@ use App\Models\Entidad;
 use App\Models\Lugare;
 use App\Models\Municipio;
 use App\Models\Provincia;
-use App\Models\TipoSistema;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -34,7 +33,7 @@ class EntidadesController extends Controller
 
         $provincias = Provincia::orderBy('nombre')->get(['id', 'nombre']);
         $municipios = Municipio::orderBy('nombre')->get(['id', 'nombre', 'id_provincia']);
-        $sistemas = TipoSistema::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']);
+        $sistemas = \App\Support\Catalogos::opciones('tipos_sistemas');
         $lugares = Lugare::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']);
 
         if ($soloEntidad) {

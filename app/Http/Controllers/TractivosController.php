@@ -10,7 +10,6 @@ use App\Models\Grupo;
 use App\Models\Lubricante;
 use App\Models\Motore;
 use App\Models\TipoArrastre;
-use App\Models\TipoServicio;
 use App\Models\TipoTractivo;
 use App\Models\Tractivo;
 use App\Support\Catalogos;
@@ -81,7 +80,7 @@ class TractivosController extends Controller
                 'cajas' => $this->combos(Caja::class, 'descripcion'),
                 'diferenciales' => $this->combos(Diferenciale::class, 'descripcion'),
                 'grupos' => $this->combosCatalogo('grupos'),
-                'tiposServicio' => $this->combos(TipoServicio::class, 'nombre'),
+                'tiposServicio' => $this->combosCatalogo('tipos_servicio'),
                 'colores' => $this->combosCatalogo('colores'),
                 'estados' => $this->combos(EstadoComponente::class, 'nombre'),
                 'lubricantes' => $this->combos(Lubricante::class, 'nombre'),

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\CatalogoItem;
+use App\Support\TiposEquiposNormalizer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -174,6 +175,16 @@ class MigrarCatalogos extends Command
         }
 
         $this->newLine(2);
+
+        // Normalización de tipos de equipos (fusión de duplicados legacy).
+        // Ver App\Support\TiposEquiposNormalizer para el mapa de reglas.
+        if (! $dryRun && Schema::hasTable('tipos_equipos')
+            && (! $tipoFilter || $tipoFilter === 'tipos_equipos')) {
+            $reporte = TiposEquiposNormalizer::normalizar();
+            foreach ($reporte as $linea) {
+                $this->line("  [NORMALIZADO] {$linea}");
+            }
+        }
 
         if ($dryRun) {
             $this->info("=== DRY RUN: {$totalMigrados} registros listos para migrar, {$totalOmitidos} omitidos ===");

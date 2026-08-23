@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\EntidadScoping;
 use App\Http\Requests\CatalogoItemRequest;
 use App\Models\CatalogoItem;
 use App\Models\CatalogoTipo;
-use App\Http\Controllers\Traits\EntidadScoping;
 use App\Support\CatalogoSchema;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class CatalogoController extends Controller
@@ -155,6 +156,11 @@ class CatalogoController extends Controller
                     foreach ($item->extra as $k => $v) {
                         $row[$k] = $v;
                     }
+                }
+
+                // La ruta relativa del disco público se convierte en URL servible (/storage/...)
+                if (! empty($row['imagen']) && is_string($row['imagen'])) {
+                    $row['imagen'] = Storage::disk('public')->url($row['imagen']);
                 }
 
                 return $row;

@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\EntidadScoping;
 use App\Models\Lubricante;
 use App\Models\Motore;
-use App\Models\Pais;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class MotoresController extends Controller
@@ -15,7 +16,7 @@ class MotoresController extends Controller
 
     public function index(Request $request)
     {
-        
+
         $this->authorize('viewAny', \App\Models\Motore::class);
         $motores = Motore::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre', 'pais:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('codigo', 'like', "%{$s}%")
@@ -39,7 +40,8 @@ class MotoresController extends Controller
             'filtros' => [
                 'lubricantes' => Lubricante::orderBy('nombre')->get(['id', 'nombre']),
                 'paises' => \App\Support\Catalogos::opciones('paises'),
-                'estados' => ['nuevo', 'activo', 'reparado', 'regular', 'baja'],
+                'tractivos' => Tractivo::orderBy('descripcion')->get(['id', 'codigo', 'descripcion', 'placa']),
+                'estados' => ['disponible', 'nuevo', 'trabajando', 'reparado', 'regular', 'baja'],
             ],
             'filters' => $request->only(['search', 'estado']),
         ]);
@@ -47,30 +49,83 @@ class MotoresController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $this->authorize('create', \App\Models\Motore::class);
         $validated = $request->validate($this->reglas());
         $validated['id_entidad'] = (int) entidadActivaId() ?: null;
 
-        Motore::create($validated);
+        // Sin tractivo asignado el estado es obligatoriamente DISPONIBLE.
+        if (empty($validated['id_tractivo'])) {
+            $validated['id_tractivo'] = null;
+            $validated['estado'] = 'disponible';
+        }
+
+        DB::transaction(function () use ($validated) {
+            $motore = Motore::create($validated);
+
+            if ($motore->id_tractivo) {
+                \App\Models\Tractivo::where('id', $motore->id_tractivo)->update(['id_motor' => $motore->id]);
+            }
+        });
 
         return redirect()->route('motores.index')->with('success', 'Motor creado correctamente.');
     }
 
     public function update(Request $request, Motore $motore)
     {
-        
+
         $this->authorize('update', $motore);
         $this->autorizarEntidad($motore->id_entidad);
 
-        $motore->update($request->validate($this->reglas()));
+        $validated = $request->validate($this->reglas());
+
+        if (empty($validated['id_tractivo'])) {
+            $validated['id_tractivo'] = null;
+            // Solo un agregado sin tractivo es disponible; uno ya dado de baja
+            // conserva su estado.
+            if ($motore->estado !== 'baja') {
+                $validated['estado'] = 'disponible';
+            }
+        } else {
+            // Asignado a tractivo deja de estar disponible.
+            if ($validated['estado'] === 'disponible') {
+                $validated['estado'] = 'trabajando';
+            }
+        }
+
+        DB::transaction(function () use ($motore, $validated) {
+            $idAnterior = $motore->id_tractivo;
+            $motore->update($validated);
+
+            if ($idAnterior && $idAnterior !== $motore->id_tractivo) {
+                \App\Models\Tractivo::where('id', $idAnterior)->where('id_motor', $motore->id)->update(['id_motor' => null]);
+            }
+            if ($motore->id_tractivo) {
+                \App\Models\Tractivo::where('id', $motore->id_tractivo)->update(['id_motor' => $motore->id]);
+            }
+        });
 
         return redirect()->route('motores.index')->with('success', 'Motor actualizado correctamente.');
     }
 
+    /**
+     * Baja SIN cambio: el motor queda fuera de servicio y el tractivo
+     * queda INACTIVO (no puede operar sin sus tres agregados).
+     */
+    public function baja(Request $request, Motore $motore)
+    {
+
+        $this->authorize('update', $motore);
+        $this->autorizarEntidad($motore->id_entidad);
+
+        app(\App\Services\AgregadosTractivoService::class)->darBaja($motore);
+
+        return redirect()->route('motores.index')->with('success', 'Motor dado de baja. El tractivo quedó inactivo.');
+    }
+
     public function destroy(Motore $motore)
     {
-        
+
         $this->authorize('delete', $motore);
         $this->autorizarEntidad($motore->id_entidad);
 

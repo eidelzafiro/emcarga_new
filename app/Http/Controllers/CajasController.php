@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\EntidadScoping;
 use App\Models\Caja;
 use App\Models\Lubricante;
-use App\Models\Pais;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CajasController extends Controller
@@ -15,7 +16,7 @@ class CajasController extends Controller
 
     public function index(Request $request)
     {
-        
+
         $this->authorize('viewAny', \App\Models\Caja::class);
         $cajas = Caja::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre', 'pais:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('codigo', 'like', "%{$s}%")
@@ -39,7 +40,8 @@ class CajasController extends Controller
             'filtros' => [
                 'lubricantes' => Lubricante::orderBy('nombre')->get(['id', 'nombre']),
                 'paises' => \App\Support\Catalogos::opciones('paises'),
-                'estados' => ['nuevo', 'activo', 'reparado', 'regular', 'baja'],
+                'tractivos' => Tractivo::orderBy('descripcion')->get(['id', 'codigo', 'descripcion', 'placa']),
+                'estados' => ['disponible', 'nuevo', 'trabajando', 'reparado', 'regular', 'baja'],
             ],
             'filters' => $request->only(['search', 'estado']),
         ]);
@@ -47,30 +49,80 @@ class CajasController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $this->authorize('create', \App\Models\Caja::class);
         $validated = $request->validate($this->reglas());
         $validated['id_entidad'] = (int) entidadActivaId() ?: null;
 
-        Caja::create($validated);
+        // Sin tractivo asignado el estado es obligatoriamente DISPONIBLE.
+        if (empty($validated['id_tractivo'])) {
+            $validated['id_tractivo'] = null;
+            $validated['estado'] = 'disponible';
+        }
+
+        DB::transaction(function () use ($validated) {
+            $caja = Caja::create($validated);
+
+            if ($caja->id_tractivo) {
+                \App\Models\Tractivo::where('id', $caja->id_tractivo)->update(['id_caja' => $caja->id]);
+            }
+        });
 
         return redirect()->route('cajas.index')->with('success', 'Caja creada correctamente.');
     }
 
     public function update(Request $request, Caja $caja)
     {
-        
+
         $this->authorize('update', $caja);
         $this->autorizarEntidad($caja->id_entidad);
 
-        $caja->update($request->validate($this->reglas()));
+        $validated = $request->validate($this->reglas());
+
+        if (empty($validated['id_tractivo'])) {
+            $validated['id_tractivo'] = null;
+            if ($caja->estado !== 'baja') {
+                $validated['estado'] = 'disponible';
+            }
+        } else {
+            if ($validated['estado'] === 'disponible') {
+                $validated['estado'] = 'trabajando';
+            }
+        }
+
+        DB::transaction(function () use ($caja, $validated) {
+            $idAnterior = $caja->id_tractivo;
+            $caja->update($validated);
+
+            if ($idAnterior && $idAnterior !== $caja->id_tractivo) {
+                \App\Models\Tractivo::where('id', $idAnterior)->where('id_caja', $caja->id)->update(['id_caja' => null]);
+            }
+            if ($caja->id_tractivo) {
+                \App\Models\Tractivo::where('id', $caja->id_tractivo)->update(['id_caja' => $caja->id]);
+            }
+        });
 
         return redirect()->route('cajas.index')->with('success', 'Caja actualizada correctamente.');
     }
 
+    /**
+     * Baja SIN cambio: la caja queda fuera de servicio y el tractivo
+     * queda INACTIVO (no puede operar sin sus tres agregados).
+     */
+    public function baja(Request $request, Caja $caja)
+    {
+
+        $this->authorize('update', $caja);
+        $this->autorizarEntidad($caja->id_entidad);
+
+        app(\App\Services\AgregadosTractivoService::class)->darBaja($caja);
+
+        return redirect()->route('cajas.index')->with('success', 'Caja dada de baja. El tractivo quedó inactivo.');
+    }
+
     public function destroy(Caja $caja)
     {
-        
+
         $this->authorize('delete', $caja);
         $this->autorizarEntidad($caja->id_entidad);
 

@@ -13,6 +13,7 @@ use App\Models\SolicitudesServicio;
 use App\Models\Tractivo;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class KpiService
 {
@@ -129,51 +130,130 @@ class KpiService
 
     private function kpisTecnica(?int $entidadId): array
     {
-        $vehiculosActivos = Tractivo::when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
-            ->where('estado', 'activo')->count();
-        $vehiculosTotales = Tractivo::when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))->count();
+        $ids = $entidadId ? Entidad::idsPermitidos($entidadId) : null;
+        $inSql = $ids ? 'AND t.id_entidad IN ('.implode(',', $ids).')' : '';
+        $inSqlA = $ids ? 'AND a.id_entidad IN ('.implode(',', $ids).')' : '';
 
-        $arrastresQuery = Tractivo::where('id_grupo', \App\Support\Catalogos::grupoArrastresId());
-        $this->scopeEntidad($arrastresQuery, $entidadId);
+        // ── KPI Vehículos: agrupados por TIPO DE EQUIPO, activos/en taller ──
+        $enTallerSql = "(t.estado = 'taller' OR EXISTS (
+            SELECT 1 FROM ordenes_taller ot
+            WHERE ot.id_tractivo = t.id AND ot.deleted_at IS NULL
+              AND ot.cancelada = false AND ot.estado = 'abierta'))";
 
-        $bateriasQuery = Bateria::query();
-        $this->scopeEntidad($bateriasQuery, $entidadId);
+        $vehiculos = DB::select("
+            SELECT COALESCE(NULLIF(TRIM(tt.tipo_equipo), ''), NULLIF(TRIM(te.nombre), ''), 'Sin tipo') AS tipo,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN $enTallerSql THEN 1 ELSE 0 END) AS en_taller
+            FROM tractivos t
+            LEFT JOIN tipos_tractivos tt ON tt.id = t.id_tipo_vehiculo
+            LEFT JOIN tipos_arrastres ta ON ta.id = t.id_tipo_vehiculo
+            LEFT JOIN tipos_equipos te ON te.id = ta.id_tipo_equipo
+            WHERE t.deleted_at IS NULL ".$inSql."
+            GROUP BY 1
+            ORDER BY 1
+        ");
 
-        $conductoresEnRuta = HojasRuta::whereNull('fecha_cierre')
-            ->where('cancelada', false)
-            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
-            ->whereNotNull('id_chofer')
-            ->distinct('id_chofer')
-            ->count('id_chofer');
+        $totalVehiculos = array_sum(array_column($vehiculos, 'total'));
+        $totalTaller = (int) array_sum(array_column($vehiculos, 'en_taller'));
+        $detalleVehiculos = collect($vehiculos)
+            ->map(fn ($v) => [
+                'etiqueta' => $v->tipo,
+                'valor' => ((int) $v->total - (int) $v->en_taller).' act / '.$v->en_taller.' tall',
+            ])
+            ->values()
+            ->all();
+
+        // ── KPI Agregados: motores/cajas/diferenciales trabajando / en taller ──
+        // "En taller" = asignado a un tractivo en taller (o con OT abierta);
+        // "trabajando" = asignado a tractivo operativo; resto: disponible/baja.
+        $agregados = [];
+        foreach (['Motores' => 'motores', 'Cajas' => 'cajas', 'Diferenciales' => 'diferenciales'] as $etiqueta => $tabla) {
+            $fila = DB::selectOne("
+                SELECT COUNT(*) AS trabajando,
+                       SUM(CASE WHEN $enTallerSql THEN 1 ELSE 0 END) AS en_taller
+                FROM {$tabla} a
+                INNER JOIN tractivos t ON t.id = a.id_tractivo AND t.deleted_at IS NULL
+                WHERE a.deleted_at IS NULL AND a.estado NOT IN ('baja')
+                  ".$inSqlA."
+            ");
+            $agregados[] = [
+                'etiqueta' => $etiqueta,
+                'valor' => (int) ($fila->trabajando ?? 0).' trab / '.(int) ($fila->en_taller ?? 0).' tall',
+            ];
+        }
+
+        // ── KPI Baterías: cantidades por meses desde la fecha de instalación ──
+        $batFilas = Bateria::query()
+            ->whereNull('deleted_at')
+            ->whereNull('fecha_retiro')
+            ->whereNotNull('fecha_instalacion')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->selectRaw("
+                SUM(TIMESTAMPDIFF(MONTH, fecha_instalacion, NOW()) < 6) AS r1,
+                SUM(TIMESTAMPDIFF(MONTH, fecha_instalacion, NOW()) BETWEEN 6 AND 11) AS r2,
+                SUM(TIMESTAMPDIFF(MONTH, fecha_instalacion, NOW()) BETWEEN 12 AND 23) AS r3,
+                SUM(TIMESTAMPDIFF(MONTH, fecha_instalacion, NOW()) >= 24) AS r4
+            ")
+            ->first();
+        $detalleBaterias = [
+            ['etiqueta' => '< 6 meses', 'valor' => (int) ($batFilas->r1 ?? 0)],
+            ['etiqueta' => '6-11 meses', 'valor' => (int) ($batFilas->r2 ?? 0)],
+            ['etiqueta' => '12-23 meses', 'valor' => (int) ($batFilas->r3 ?? 0)],
+            ['etiqueta' => '≥ 24 meses', 'valor' => (int) ($batFilas->r4 ?? 0)],
+        ];
+
+        // ── KPI Neumáticos: cantidades por kms recorridos en rangos amplios ──
+        $neuFilas = \App\Models\Neumatico::query()
+            ->whereNull('deleted_at')
+            ->whereNull('fecha_retiro')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->selectRaw("
+                SUM(kilometraje < 20000) AS r1,
+                SUM(kilometraje BETWEEN 20000 AND 49999) AS r2,
+                SUM(kilometraje BETWEEN 50000 AND 79999) AS r3,
+                SUM(kilometraje >= 80000) AS r4
+            ")
+            ->first();
+        $detalleNeumaticos = [
+            ['etiqueta' => '< 20 mil kms', 'valor' => (int) ($neuFilas->r1 ?? 0)],
+            ['etiqueta' => '20-50 mil kms', 'valor' => (int) ($neuFilas->r2 ?? 0)],
+            ['etiqueta' => '50-80 mil kms', 'valor' => (int) ($neuFilas->r3 ?? 0)],
+            ['etiqueta' => '≥ 80 mil kms', 'valor' => (int) ($neuFilas->r4 ?? 0)],
+        ];
 
         return [
             [
-                'label' => 'Vehículos activos',
-                'valor' => $vehiculosTotales > 0 ? "{$vehiculosActivos}/{$vehiculosTotales}" : '—',
-                'subtexto' => 'En operación actualmente',
+                'label' => 'Vehículos',
+                'valor' => $totalVehiculos > 0 ? ($totalVehiculos - $totalTaller)." / {$totalVehiculos}" : '—',
+                'subtexto' => "Activos · {$totalTaller} en taller",
                 'icono' => 'pi pi-truck',
                 'color' => 'bg-emerald-500',
+                'detalle' => $detalleVehiculos,
             ],
             [
-                'label' => 'Arrastres',
-                'valor' => (string) $arrastresQuery->count(),
-                'subtexto' => 'Total de arrastres registrados',
-                'icono' => 'pi pi-link',
-                'color' => 'bg-amber-500',
+                'label' => 'Agregados',
+                'valor' => (string) array_sum(array_map(
+                    fn ($a) => (int) explode(' ', explode('/', $a['valor'])[0])[0], $agregados)),
+                'subtexto' => 'Trabajando / en taller',
+                'icono' => 'pi pi-cog',
+                'color' => 'bg-blue-500',
+                'detalle' => $agregados,
             ],
             [
                 'label' => 'Baterías',
-                'valor' => (string) $bateriasQuery->count(),
-                'subtexto' => 'Baterías en inventario',
+                'valor' => (string) array_sum(array_column($detalleBaterias, 'valor')),
+                'subtexto' => 'Montadas, por antigüedad',
                 'icono' => 'pi pi-bolt',
                 'color' => 'bg-orange-500',
+                'detalle' => $detalleBaterias,
             ],
             [
-                'label' => 'Conductores en ruta',
-                'valor' => $conductoresEnRuta > 0 ? (string) $conductoresEnRuta : '—',
-                'subtexto' => 'Choferes en hojas abiertas',
-                'icono' => 'pi pi-user',
-                'color' => 'bg-blue-500',
+                'label' => 'Neumáticos',
+                'valor' => (string) array_sum(array_column($detalleNeumaticos, 'valor')),
+                'subtexto' => 'Montados, por kms recorridos',
+                'icono' => 'pi pi-circle-fill',
+                'color' => 'bg-violet-500',
+                'detalle' => $detalleNeumaticos,
             ],
         ];
     }

@@ -28,6 +28,16 @@
                 <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ kpi.label }}</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ kpi.valor }}</p>
                 <p v-if="kpi.subtexto" class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ kpi.subtexto }}</p>
+                <ul v-if="kpi.detalle && kpi.detalle.length" class="mt-2 space-y-0.5">
+                  <li
+                    v-for="d in kpi.detalle"
+                    :key="d.etiqueta"
+                    class="flex items-center justify-between gap-3 text-xs"
+                  >
+                    <span class="text-gray-500 dark:text-gray-400 truncate">{{ d.etiqueta }}</span>
+                    <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums shrink-0">{{ d.valor }}</span>
+                  </li>
+                </ul>
               </div>
               <div
                 class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ml-3"

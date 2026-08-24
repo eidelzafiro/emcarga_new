@@ -29,6 +29,7 @@ class TractivosController extends Controller
 
         $this->authorize('viewAny', Tractivo::class);
         $tractivos = Tractivo::query()
+            ->with(['motor:id,codigo,descripcion', 'caja:id,codigo,descripcion', 'diferencial:id,codigo,descripcion'])
             ->when($request->grupo, function ($query, $grupo) {
                 $query->where('id_grupo', $grupo);
             })
@@ -76,9 +77,6 @@ class TractivosController extends Controller
             'catalogos' => [
                 'tiposArrastre' => $tiposArrastre,
                 'tiposTractivo' => $this->combosTipoTractivo(),
-                'motores' => $this->combos(Motore::class, 'descripcion'),
-                'cajas' => $this->combos(Caja::class, 'descripcion'),
-                'diferenciales' => $this->combos(Diferenciale::class, 'descripcion'),
                 'grupos' => $this->combosCatalogo('grupos'),
                 'tiposServicio' => $this->combosCatalogo('tipos_servicio'),
                 'colores' => $this->combosCatalogo('colores'),
@@ -86,6 +84,16 @@ class TractivosController extends Controller
                 'lubricantes' => $this->combos(Lubricante::class, 'nombre'),
             ],
         ]);
+    }
+
+    private function combos(string $clase, string $campo): array
+    {
+        return $clase::query()
+            ->orderBy($campo)
+            ->get(['id', $campo])
+            ->map(fn ($m) => ['value' => $m->id, 'label' => (string) $m->{$campo}])
+            ->values()
+            ->toArray();
     }
 
     private function combosCatalogo(string $tipo): array
@@ -152,25 +160,26 @@ class TractivosController extends Controller
             ->toArray();
     }
 
-    /**
-     * Store a newly created tractivo.
-     */
     public function store(Request $request)
     {
 
         $this->authorize('create', Tractivo::class);
         $validated = $request->validate($this->reglas());
 
+        // Las asociaciones motor/caja/diferencial son solo informativas desde
+        // el codificador: el componente se crea/gestiona por regla de negocio.
+        unset($validated['id_motor'], $validated['id_caja'], $validated['id_diferencial']);
+
         $validated['id_entidad'] = (int) entidadActivaId();
-        Tractivo::create($validated);
+        $tractivo = Tractivo::create($validated);
+
+        // Regla 2026-08-23: todo tractivo tiene SIEMPRE motor, caja y diferencial.
+        app(\App\Services\AgregadosTractivoService::class)->asegurar($tractivo);
 
         return redirect()->route('tractivos.index')
             ->with('success', 'Tractivo creado correctamente.');
     }
 
-    /**
-     * Update the specified tractivo.
-     */
     public function update(Request $request, Tractivo $tractivo)
     {
 
@@ -179,7 +188,13 @@ class TractivosController extends Controller
 
         $validated = $request->validate($this->reglas($tractivo->id));
 
+        // Solo informativas desde el codificador (se cambian por Orden de Taller).
+        unset($validated['id_motor'], $validated['id_caja'], $validated['id_diferencial']);
+
         $tractivo->update($validated);
+
+        // Garantiza los 3 agregados si el tractivo quedó sin alguno.
+        app(\App\Services\AgregadosTractivoService::class)->asegurar($tractivo);
 
         return redirect()->route('tractivos.index')
             ->with('success', 'Tractivo actualizado correctamente.');

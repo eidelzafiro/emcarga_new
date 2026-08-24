@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\EntidadScoping;
 use App\Models\Diferenciale;
 use App\Models\Lubricante;
-use App\Http\Controllers\Traits\EntidadScoping;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DiferencialesController extends Controller
@@ -14,11 +16,12 @@ class DiferencialesController extends Controller
 
     public function index(Request $request)
     {
-        
+
         $this->authorize('viewAny', \App\Models\Diferenciale::class);
         $diferenciales = Diferenciale::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%")
-                ->orWhere('codigo', 'like', "%{$s}%"))
+                ->orWhere('codigo', 'like', "%{$s}%")
+                ->orWhere('numero_serie', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $e) => $q->where('estado', $e))
             ->when(true, function ($q) {
                 $entidades = $this->entidadesPermitidas();
@@ -36,7 +39,8 @@ class DiferencialesController extends Controller
             'diferenciales' => $diferenciales,
             'filtros' => [
                 'lubricantes' => Lubricante::orderBy('nombre')->get(['id', 'nombre']),
-                'estados' => ['nuevo', 'activo', 'reparado', 'regular', 'baja'],
+                'tractivos' => Tractivo::orderBy('descripcion')->get(['id', 'codigo', 'descripcion', 'placa']),
+                'estados' => ['disponible', 'nuevo', 'trabajando', 'reparado', 'regular', 'baja'],
             ],
             'filters' => $request->only(['search', 'estado']),
         ]);
@@ -44,13 +48,25 @@ class DiferencialesController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $this->authorize('create', \App\Models\Diferenciale::class);
         $validated = $request->validate($this->reglas());
 
-        $validated['id_entidad'] = (int) entidadActivaId();
+        $validated['id_entidad'] = (int) entidadActivaId() ?: null;
 
-        Diferenciale::create($validated);
+        // Sin tractivo asignado el estado es obligatoriamente DISPONIBLE.
+        if (empty($validated['id_tractivo'])) {
+            $validated['id_tractivo'] = null;
+            $validated['estado'] = 'disponible';
+        }
+
+        DB::transaction(function () use ($validated) {
+            $diferencial = Diferenciale::create($validated);
+
+            if ($diferencial->id_tractivo) {
+                \App\Models\Tractivo::where('id', $diferencial->id_tractivo)->update(['id_diferencial' => $diferencial->id]);
+            }
+        });
 
         return redirect()->route('diferenciales.index')
             ->with('success', 'Diferencial creado correctamente.');
@@ -58,19 +74,57 @@ class DiferencialesController extends Controller
 
     public function update(Request $request, Diferenciale $diferencial)
     {
-        
+
         $this->authorize('update', $diferencial);
         $this->autorizarEntidad($diferencial->id_entidad);
 
-        $diferencial->update($request->validate($this->reglas()));
+        $validated = $request->validate($this->reglas());
+
+        if (empty($validated['id_tractivo'])) {
+            $validated['id_tractivo'] = null;
+            if ($diferencial->estado !== 'baja') {
+                $validated['estado'] = 'disponible';
+            }
+        } else {
+            if ($validated['estado'] === 'disponible') {
+                $validated['estado'] = 'trabajando';
+            }
+        }
+
+        DB::transaction(function () use ($diferencial, $validated) {
+            $idAnterior = $diferencial->id_tractivo;
+            $diferencial->update($validated);
+
+            if ($idAnterior && $idAnterior !== $diferencial->id_tractivo) {
+                \App\Models\Tractivo::where('id', $idAnterior)->where('id_diferencial', $diferencial->id)->update(['id_diferencial' => null]);
+            }
+            if ($diferencial->id_tractivo) {
+                \App\Models\Tractivo::where('id', $diferencial->id_tractivo)->update(['id_diferencial' => $diferencial->id]);
+            }
+        });
 
         return redirect()->route('diferenciales.index')
             ->with('success', 'Diferencial actualizado correctamente.');
     }
 
+    /**
+     * Baja SIN cambio: el diferencial queda fuera de servicio y el tractivo
+     * queda INACTIVO (no puede operar sin sus tres agregados).
+     */
+    public function baja(Request $request, Diferenciale $diferencial)
+    {
+
+        $this->authorize('update', $diferencial);
+        $this->autorizarEntidad($diferencial->id_entidad);
+
+        app(\App\Services\AgregadosTractivoService::class)->darBaja($diferencial);
+
+        return redirect()->route('diferenciales.index')->with('success', 'Diferencial dado de baja. El tractivo quedó inactivo.');
+    }
+
     public function destroy(Diferenciale $diferencial)
     {
-        
+
         $this->authorize('delete', $diferencial);
         $this->autorizarEntidad($diferencial->id_entidad);
 

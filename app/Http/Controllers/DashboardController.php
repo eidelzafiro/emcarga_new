@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BateriasMovimiento;
 use App\Models\CartaPorte;
+use App\Models\ControlLubricante;
+use App\Models\Entidad;
 use App\Models\HojasRuta;
+use App\Models\NeumaticosMovimiento;
+use App\Models\OrdenesTaller;
 use App\Models\SolicitudesServicio;
 use App\Services\KpiService;
 use Illuminate\Http\Request;
@@ -88,15 +93,64 @@ class DashboardController extends Controller
         return 'default';
     }
 
+    private function actividadTecnica(): array
+    {
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+        $ids = $entidadId ? Entidad::idsPermitidos($entidadId) : null;
+
+        $otsAbiertas = OrdenesTaller::where('cancelada', false)
+            ->where('estado', 'abierta')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->count();
+
+        $neuMontados = NeumaticosMovimiento::whereNull('fecha_retiro')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->count();
+
+        $batRotacion = BateriasMovimiento::whereNull('fecha_retiro')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->count();
+
+        $lubRecientes = ControlLubricante::when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->where('fecha_cambio', '>=', now()->subDays(30))
+            ->count();
+
+        return [
+            [
+                'titulo' => 'Órdenes de taller abiertas',
+                'descripcion' => $otsAbiertas > 0 ? "{$otsAbiertas} en curso" : 'Sin órdenes activas',
+                'icono' => 'pi pi-wrench',
+                'color' => 'bg-amber-500',
+                'hace' => $otsAbiertas > 0 ? 'Requiere atención' : 'Al día',
+            ],
+            [
+                'titulo' => 'Neumáticos montados',
+                'descripcion' => "{$neuMontados} en circulación",
+                'icono' => 'pi pi-circle-fill',
+                'color' => 'bg-violet-500',
+                'hace' => 'Inventario activo',
+            ],
+            [
+                'titulo' => 'Baterías en rotación',
+                'descripcion' => "{$batRotacion} instaladas",
+                'icono' => 'pi pi-bolt',
+                'color' => 'bg-orange-500',
+                'hace' => 'Monitoreo continuo',
+            ],
+            [
+                'titulo' => 'Lubricaciones recientes',
+                'descripcion' => "{$lubRecientes} en los últimos 30 días",
+                'icono' => 'pi pi-drop',
+                'color' => 'bg-cyan-500',
+                'hace' => 'Último mes',
+            ],
+        ];
+    }
+
     private function actividadPorRol(string $rol): array
     {
         return match ($rol) {
-            'TECNICA' => [
-                ['titulo' => 'Revisión de flota', 'descripcion' => 'Estado de tractivos y arrastres', 'icono' => 'pi pi-truck', 'color' => 'bg-blue-500', 'hace' => 'Panel técnico'],
-                ['titulo' => 'Mantenimiento programado', 'descripcion' => 'Próximos servicios de taller', 'icono' => 'pi pi-wrench', 'color' => 'bg-amber-500', 'hace' => 'Esta semana'],
-                ['titulo' => 'Baterías en rotación', 'descripcion' => 'Control de carga y descarga', 'icono' => 'pi pi-bolt', 'color' => 'bg-orange-500', 'hace' => 'Monitoreo continuo'],
-                ['titulo' => 'Asociaciones activas', 'descripcion' => 'Tractores con arrastres asignados', 'icono' => 'pi pi-link', 'color' => 'bg-emerald-500', 'hace' => 'Panel técnico'],
-            ],
+            'TECNICA' => $this->actividadTecnica(),
             'COMERCIAL' => [
                 ['titulo' => 'Cotizaciones pendientes', 'descripcion' => 'Aforos por facturar', 'icono' => 'pi pi-shopping-cart', 'color' => 'bg-blue-500', 'hace' => 'Por atender'],
                 ['titulo' => 'Facturación reciente', 'descripcion' => 'Últimas facturas emitidas', 'icono' => 'pi pi-file', 'color' => 'bg-emerald-500', 'hace' => 'Actualizado'],
@@ -143,6 +197,10 @@ class DashboardController extends Controller
      */
     private function movimientosPorRol(string $rol, ?int $entidadId = null, ?Carbon $fechaRef = null): array
     {
+        if ($rol === 'TECNICA') {
+            return $this->movimientosTecnica($entidadId);
+        }
+
         $movimientos = [];
         // Ventana: mes de operaciones (o el mes actual si no hay fecha en sesión).
         $inicioMes = ($fechaRef ?? now())->copy()->startOfMonth()->toDateString();
@@ -223,6 +281,127 @@ class DashboardController extends Controller
                 },
                 'fecha' => $sol->fecha_solicitud?->translatedFormat('d M y'),
                 '_ts' => $sol->fecha_solicitud ? $sol->fecha_solicitud->timestamp : 0,
+            ];
+        }
+
+        usort($movimientos, fn ($a, $b) => $b['_ts'] <=> $a['_ts']);
+
+        return collect(array_slice($movimientos, 0, 12))
+            ->map(fn ($m) => Arr::except($m, ['_ts']))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Movimientos reales del módulo técnico para el dashboard TECNICA:
+     * órdenes de taller abiertas/recientes, montajes de neumáticos,
+     * movimientos de baterías y cambios de lubricante. Se mezclan y ordenan
+     * por fecha descendente (principio de filtrado por entidad activa).
+     */
+    private function movimientosTecnica(?int $entidadId = null): array
+    {
+        $ids = $entidadId ? Entidad::idsPermitidos($entidadId) : null;
+        $movimientos = [];
+
+        // ── Órdenes de taller ──
+        $ots = OrdenesTaller::with('tractivo:id,codigo')
+            ->select('id', 'numero', 'estado', 'cancelada', 'fecha_ingreso', 'id_tractivo')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->where('cancelada', false)
+            ->orderByDesc('fecha_ingreso')
+            ->limit(6)
+            ->get();
+
+        foreach ($ots as $ot) {
+            $movimientos[] = [
+                'id' => $ot->id,
+                'tipo' => 'Orden de taller',
+                'icono' => 'pi pi-wrench',
+                'color' => '#d97706',
+                'descripcion' => "OT {$ot->numero}".($ot->tractivo ? " · {$ot->tractivo->codigo}" : ''),
+                'monto' => '—',
+                'estado' => match ($ot->estado) {
+                    'cerrada' => 'Cerrada',
+                    'abierta' => 'Abierta',
+                    default => ucfirst($ot->estado ?? 'Abierta'),
+                },
+                'claseBadge' => match ($ot->estado) {
+                    'cerrada' => 'status-badge-completado',
+                    default => 'status-badge-proceso',
+                },
+                'fecha' => $ot->fecha_ingreso?->translatedFormat('d M y'),
+                '_ts' => $ot->fecha_ingreso ? $ot->fecha_ingreso->timestamp : 0,
+            ];
+        }
+
+        // ── Montajes de neumáticos ──
+        $neu = NeumaticosMovimiento::with(['neumatico:id,folio', 'tractivo:id,codigo'])
+            ->select('id', 'id_neumatico', 'id_tractivo', 'fecha_montaje')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->whereNull('fecha_retiro')
+            ->orderByDesc('fecha_montaje')
+            ->limit(6)
+            ->get();
+
+        foreach ($neu as $n) {
+            $movimientos[] = [
+                'id' => $n->id,
+                'tipo' => 'Neumático',
+                'icono' => 'pi pi-circle-fill',
+                'color' => '#7c3aed',
+                'descripcion' => "Montaje ".($n->neumatico?->folio ?? "Nº{$n->id_neumatico}").($n->tractivo ? " · {$n->tractivo->codigo}" : ''),
+                'monto' => '—',
+                'estado' => 'Montaje',
+                'claseBadge' => 'status-badge-completado',
+                'fecha' => $n->fecha_montaje?->translatedFormat('d M y'),
+                '_ts' => $n->fecha_montaje ? $n->fecha_montaje->timestamp : 0,
+            ];
+        }
+
+        // ── Movimientos de baterías ──
+        $bat = BateriasMovimiento::with(['bateria:id,folio', 'tractivo:id,codigo'])
+            ->select('id', 'id_bateria', 'id_tractivo', 'fecha_movimiento')
+            ->when($ids, fn ($q) => $q->whereIn('id_entidad', $ids))
+            ->whereNull('fecha_retiro')
+            ->orderByDesc('fecha_movimiento')
+            ->limit(6)
+            ->get();
+
+        foreach ($bat as $b) {
+            $movimientos[] = [
+                'id' => $b->id,
+                'tipo' => 'Batería',
+                'icono' => 'pi pi-bolt',
+                'color' => '#ea580c',
+                'descripcion' => "Movimiento ".($b->bateria?->folio ?? "Nº{$b->id_bateria}").($b->tractivo ? " · {$b->tractivo->codigo}" : ''),
+                'monto' => '—',
+                'estado' => 'Movimiento',
+                'claseBadge' => 'status-badge-proceso',
+                'fecha' => $b->fecha_movimiento?->translatedFormat('d M y'),
+                '_ts' => $b->fecha_movimiento ? $b->fecha_movimiento->timestamp : 0,
+            ];
+        }
+
+        // ── Control de lubricantes ──
+        $lub = ControlLubricante::with('tractivo:id,codigo')
+            ->select('id', 'id_tractivo', 'fecha_cambio')
+            ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
+            ->orderByDesc('fecha_cambio')
+            ->limit(6)
+            ->get();
+
+        foreach ($lub as $l) {
+            $movimientos[] = [
+                'id' => $l->id,
+                'tipo' => 'Lubricante',
+                'icono' => 'pi pi-drop',
+                'color' => '#0891b2',
+                'descripcion' => "Cambio de lubricante".($l->tractivo ? " · {$l->tractivo->codigo}" : ''),
+                'monto' => '—',
+                'estado' => 'Cambio',
+                'claseBadge' => 'status-badge-completado',
+                'fecha' => $l->fecha_cambio?->translatedFormat('d M y'),
+                '_ts' => $l->fecha_cambio ? $l->fecha_cambio->timestamp : 0,
             ];
         }
 

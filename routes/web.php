@@ -169,12 +169,15 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('motores', MotoresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('motores/{motore}/baja', [MotoresController::class, 'baja'])->name('motores.baja');
 
         Route::resource('cajas', CajasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('cajas/{caja}/baja', [CajasController::class, 'baja'])->name('cajas.baja');
 
         Route::resource('diferenciales', DiferencialesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('diferenciales/{diferencial}/baja', [DiferencialesController::class, 'baja'])->name('diferenciales.baja');
 
         Route::resource('baterias', BateriasController::class)
             ->only(['index', 'store', 'update', 'destroy']);

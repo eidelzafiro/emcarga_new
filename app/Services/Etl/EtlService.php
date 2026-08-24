@@ -4,6 +4,7 @@ namespace App\Services\Etl;
 
 use App\Models\CatalogoItem;
 use App\Models\User;
+use App\Services\AgregadosTractivoService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -575,6 +576,20 @@ class EtlService
         foreach ($tiposHuerfanos as $idTipo => $n) {
             $avisos[] = "tipo {$idTipo} no existe en tipos_tractivos nueva ({$n} tractivos conservan el id legacy)";
         }
+
+        // Regla 2026-08-23: todo tractivo opera con motor, caja y diferencial.
+        // Los que quedaron sin alguno (FK huérfana o inexistente en legacy)
+        // reciben componentes auto-generados M-/C-/D-{código}.
+        $sinAgregados = DB::table('tractivos')
+            ->whereNull('deleted_at')
+            ->where(function ($q) {
+                $q->whereNull('id_motor')->orWhereNull('id_caja')->orWhereNull('id_diferencial');
+            })
+            ->count();
+        if ($sinAgregados > 0) {
+            app(AgregadosTractivoService::class)->asegurarTodos($sinAgregados, $avisos);
+        }
+
 
         $this->reporte['tractivos'] = [
             'legacy' => (int) $legacy->table('tec_tractivos')->count(),

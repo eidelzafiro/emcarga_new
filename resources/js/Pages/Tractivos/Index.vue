@@ -78,15 +78,15 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Motor</label>
-            <Select v-model="form.id_motor" :options="catalogos.motores" optionLabel="label" optionValue="value" class="w-full" showClear :disabled="esArrastre" />
+            <InputText :value="agregadoLabel('motor')" class="w-full" disabled v-tooltip.top="'Informativo — se cambia por Orden de Taller'" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Caja</label>
-            <Select v-model="form.id_caja" :options="catalogos.cajas" optionLabel="label" optionValue="value" class="w-full" showClear :disabled="esArrastre" />
+            <InputText :value="agregadoLabel('caja')" class="w-full" disabled v-tooltip.top="'Informativo — se cambia por Orden de Taller'" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Diferencial</label>
-            <Select v-model="form.id_diferencial" :options="catalogos.diferenciales" optionLabel="label" optionValue="value" class="w-full" showClear />
+            <InputText :value="agregadoLabel('diferencial')" class="w-full" disabled v-tooltip.top="'Informativo — se cambia por Orden de Taller'" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Color primario</label>
@@ -306,6 +306,17 @@ const form = ref(baseForm());
 
 const esArrastre = computed(() => Number(form.value.id_grupo) === 8);
 
+// Asociaciones motor/caja/diferencial: solo informativas (regla 2026-08-23).
+// El componente asignado se muestra como texto; los cambios se realizan por
+// la Orden de Taller, nunca desde este codificador.
+const agregadoEditando = ref({ motor: null, caja: null, diferencial: null });
+
+function agregadoLabel(tipo) {
+  const a = agregadoEditando.value[tipo];
+  if (!a) return '—';
+  return a.codigo ? `${a.codigo} · ${a.descripcion ?? ''}` : (a.descripcion ?? '—');
+}
+
 // Aplicar al form la ficha (marca/modelo/año) heredada del tipo seleccionado.
 // (Ya no se muestran en el formulario; se conserva el payar de control.)
 function aplicarFichaTipo() {
@@ -355,6 +366,7 @@ const onPage = (event) => {
 const openCreate = () => {
   editing.value = false;
   form.value = baseForm();
+  agregadoEditando.value = { motor: null, caja: null, diferencial: null };
   if (grupo.value) {
     form.value.id_grupo = grupo.value;
   }
@@ -366,6 +378,11 @@ const openEdit = (tractivo) => {
   form.value = { ...baseForm(), ...tractivo };
   form.value.id = tractivo.id;
   form.value.gps = !!tractivo.gps;
+  agregadoEditando.value = {
+    motor: tractivo.motor ?? null,
+    caja: tractivo.caja ?? null,
+    diferencial: tractivo.diferencial ?? null,
+  };
   showModal.value = true;
 };
 

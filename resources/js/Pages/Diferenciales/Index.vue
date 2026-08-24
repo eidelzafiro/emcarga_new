@@ -8,13 +8,14 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
+import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
 import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
 import { useConfirm } from 'primevue/useconfirm'
 
-const props = defineProps({ title: String, diferenciales: Object, filters: Object })
+const props = defineProps({ title: String, diferenciales: Object, filters: Object, filtros: Object })
 const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
@@ -23,9 +24,10 @@ const editing = ref(null)
 const estados = [
   { label: 'disponible', value: 'disponible' },
   { label: 'nuevo', value: 'nuevo' },
+  { label: 'trabajando', value: 'trabajando' },
   { label: 'reparado', value: 'reparado' },
   { label: 'regular', value: 'regular' },
-  { label: 'trabajando', value: 'trabajando' },
+  { label: 'baja', value: 'baja' },
 ]
 
 const baseForm = () => ({
@@ -42,6 +44,10 @@ const baseForm = () => ({
   cantidad: null,
   kms_acumulados: null,
   capacidad_carter: null,
+  fecha_instalacion: null,
+  fecha_baja: null,
+  id_lubricante: null,
+  id_tractivo: null,
 })
 
 const form = ref(baseForm())
@@ -79,6 +85,10 @@ function openEdit(item) {
     cantidad: item.cantidad ?? null,
     kms_acumulados: item.kms_acumulados ?? null,
     capacidad_carter: item.capacidad_carter ?? null,
+    fecha_instalacion: item.fecha_instalacion ?? null,
+    fecha_baja: item.fecha_baja ?? null,
+    id_lubricante: item.id_lubricante ?? null,
+    id_tractivo: item.id_tractivo ?? null,
   }
   showForm.value = true
 }
@@ -95,6 +105,19 @@ function submit() {
   })
 }
 
+// Baja SIN cambio: el diferencial queda fuera de servicio y el tractivo inactivo.
+function darBaja(item) {
+  confirmDialog.require({
+    message: `¿Dar de baja el diferencial ${item.codigo ?? item.id}? El tractivo asociado quedará INACTIVO hasta que se instale otro diferencial.`,
+    header: 'Baja de Diferencial',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Dar de baja',
+    rejectLabel: 'Volver',
+    acceptClass: 'p-button-danger',
+    accept: () => router.post(route('diferenciales.baja', { diferencial: item.id })),
+  })
+}
+
 function destroy(item) {
   confirmDialog.require({
     message: `¿Eliminar el diferencial ${item.codigo ?? item.id}?`,
@@ -106,6 +129,8 @@ function destroy(item) {
     accept: () => router.delete(route('diferenciales.destroy', { diferencial: item.id })),
   })
 }
+
+const estadoSeverity = (e) => e === 'disponible' ? 'success' : e === 'baja' ? 'danger' : e === 'trabajando' ? 'info' : 'warn'
 </script>
 
 <template>
@@ -131,37 +156,49 @@ function destroy(item) {
       <Column field="descripcion" header="Descripción" sortable />
       <Column field="marca" header="Marca" sortable />
       <Column field="modelo" header="Modelo" />
-      <Column field="durabilidad" header="Durabilidad" />
-      <Column field="relacion" header="Relación" />
-      <Column field="ancho" header="Ancho" />
-      <Column field="tractivo.descripcion" header="Tractivo" />
+      <Column field="numero_serie" header="N° Serie" />
+      <Column field="durabilidad" header="Durabilidad" style="width:100px" />
+      <Column field="relacion" header="Relación" style="width:90px" />
+      <Column field="ancho" header="Ancho" style="width:80px" />
+      <Column field="tractivo.descripcion" header="Tractivo">
+        <template #body="{ data }">{{ data.tractivo?.descripcion || '—' }}</template>
+      </Column>
+      <Column field="kms_acumulados" header="Kms" style="width:100px" />
       <Column field="estado" header="Estado" style="width:120px">
         <template #body="{ data }">
-          <Tag :value="data.estado || 'disponible'" :severity="data.estado === 'disponible' ? 'success' : 'warn'" />
+          <Tag :value="data.estado || 'disponible'" :severity="estadoSeverity(data.estado)" />
         </template>
       </Column>
-      <Column header="Acciones" style="width:120px">
+      <Column header="Acciones" style="width:150px">
         <template #body="{ data }">
-          <Button icon="pi pi-pencil" text rounded severity="info" @click="openEdit(data)" />
-          <Button icon="pi pi-trash" text rounded severity="danger" @click="destroy(data)" />
+          <Button icon="pi pi-pencil" text rounded severity="info" @click="openEdit(data)" v-tooltip.top="'Editar'" />
+          <Button icon="pi pi-minus-circle" text rounded severity="warning"
+            :disabled="data.estado === 'baja'" @click="darBaja(data)" v-tooltip.top="'Dar de baja'" />
+          <Button icon="pi pi-trash" text rounded severity="danger" @click="destroy(data)" v-tooltip.top="'Eliminar'" />
         </template>
       </Column>
     </DataTable>
 
     <Dialog v-model:visible="showForm" :header="editing ? 'Editar diferencial' : 'Nuevo diferencial'"
-      :style="{ width: '520px' }" modal>
-      <div class="grid grid-cols-2 gap-3 mt-2">
+      :style="{ width: '760px' }" modal>
+      <div class="grid grid-cols-3 gap-3 mt-2">
+        <div class="col-span-3 border-b border-gray-200 dark:border-gray-700 pb-1 mb-1 text-sm font-semibold text-gray-600 dark:text-gray-300">Identificación</div>
         <div class="flex flex-col gap-1">
           <label for="codigo" class="text-sm font-medium">Código *</label>
-          <InputText id="codigo" v-model="form.codigo" />
+          <InputText id="codigo" v-model="form.codigo" placeholder="D-..." />
         </div>
         <div class="flex flex-col gap-1">
           <label for="estado" class="text-sm font-medium">Estado</label>
           <Select id="estado" v-model="form.estado" :options="estados" optionLabel="label"
             optionValue="value" class="w-full" />
         </div>
-        <div class="flex flex-col gap-1 col-span-2">
-          <label for="descripcion" class="text-sm font-medium">Descripción *</label>
+        <div class="flex flex-col gap-1">
+          <label for="id_tractivo" class="text-sm font-medium">Tractivo</label>
+          <Select id="id_tractivo" v-model="form.id_tractivo" :options="filtros?.tractivos ?? []"
+            optionLabel="descripcion" optionValue="id" class="w-full" showClear filter />
+        </div>
+        <div class="flex flex-col gap-1 col-span-3">
+          <label for="descripcion" class="text-sm font-medium">Descripción</label>
           <InputText id="descripcion" v-model="form.descripcion" />
         </div>
         <div class="flex flex-col gap-1">
@@ -172,50 +209,66 @@ function destroy(item) {
           <label for="modelo" class="text-sm font-medium">Modelo</label>
           <InputText id="modelo" v-model="form.modelo" />
         </div>
-        <div class="flex flex-col gap-1 col-span-2">
+        <div class="flex flex-col gap-1">
           <label for="numero_serie" class="text-sm font-medium">N° Serie</label>
           <InputText id="numero_serie" v-model="form.numero_serie" />
         </div>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-        <h3 class="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">Ficha técnica</h3>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label for="durabilidad" class="text-sm font-medium">Durabilidad</label>
-            <InputNumber id="durabilidad" v-model="form.durabilidad" mode="decimal" :minFractionDigits="0"
-              :maxFractionDigits="2" class="w-full" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="relacion" class="text-sm font-medium">Relación</label>
-            <InputText id="relacion" v-model="form.relacion" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="ancho" class="text-sm font-medium">Ancho</label>
-            <InputNumber id="ancho" v-model="form.ancho" mode="decimal" :minFractionDigits="0"
-              :maxFractionDigits="2" class="w-full" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="cantidad_lubricante" class="text-sm font-medium">Cant. lubricante</label>
-            <InputNumber id="cantidad_lubricante" v-model="form.cantidad_lubricante" mode="decimal"
-              :minFractionDigits="0" :maxFractionDigits="3" class="w-full" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="cantidad" class="text-sm font-medium">Cantidad</label>
-            <InputNumber id="cantidad" v-model="form.cantidad" mode="decimal" :minFractionDigits="0"
-              :maxFractionDigits="3" class="w-full" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="kms_acumulados" class="text-sm font-medium">Kms acumulados</label>
-            <InputNumber id="kms_acumulados" v-model="form.kms_acumulados" mode="decimal" :minFractionDigits="0"
-              :maxFractionDigits="2" class="w-full" />
-          </div>
-          <div class="flex flex-col gap-1 col-span-2">
-            <label for="capacidad_carter" class="text-sm font-medium">Capacidad cárter</label>
-            <InputNumber id="capacidad_carter" v-model="form.capacidad_carter" mode="decimal"
-              :minFractionDigits="0" :maxFractionDigits="3" class="w-full" />
-          </div>
+
+        <div class="col-span-3 border-b border-gray-200 dark:border-gray-700 pb-1 mb-1 text-sm font-semibold text-gray-600 dark:text-gray-300">Ficha técnica</div>
+        <div class="flex flex-col gap-1">
+          <label for="durabilidad" class="text-sm font-medium">Durabilidad (kms)</label>
+          <InputNumber id="durabilidad" v-model="form.durabilidad" mode="decimal" :minFractionDigits="0"
+            :maxFractionDigits="2" class="w-full" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="relacion" class="text-sm font-medium">Relación</label>
+          <InputText id="relacion" v-model="form.relacion" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="ancho" class="text-sm font-medium">Ancho</label>
+          <InputNumber id="ancho" v-model="form.ancho" mode="decimal" :minFractionDigits="0"
+            :maxFractionDigits="2" class="w-full" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="cantidad_lubricante" class="text-sm font-medium">Cant. lubricante</label>
+          <InputNumber id="cantidad_lubricante" v-model="form.cantidad_lubricante" mode="decimal"
+            :minFractionDigits="0" :maxFractionDigits="3" class="w-full" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="cantidad" class="text-sm font-medium">Cantidad</label>
+          <InputNumber id="cantidad" v-model="form.cantidad" mode="decimal" :minFractionDigits="0"
+            :maxFractionDigits="3" class="w-full" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="capacidad_carter" class="text-sm font-medium">Capacidad cárter</label>
+          <InputNumber id="capacidad_carter" v-model="form.capacidad_carter" mode="decimal"
+            :minFractionDigits="0" :maxFractionDigits="3" class="w-full" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="kms_acumulados" class="text-sm font-medium">Kms acumulados</label>
+          <InputNumber id="kms_acumulados" v-model="form.kms_acumulados" mode="decimal" :minFractionDigits="0"
+            :maxFractionDigits="2" class="w-full" />
+        </div>
+
+        <div class="col-span-3 border-b border-gray-200 dark:border-gray-700 pb-1 mb-1 text-sm font-semibold text-gray-600 dark:text-gray-300">Lubricación / Fechas</div>
+        <div class="flex flex-col gap-1">
+          <label for="id_lubricante" class="text-sm font-medium">Lubricante</label>
+          <Select id="id_lubricante" v-model="form.id_lubricante" :options="filtros?.lubricantes ?? []"
+            optionLabel="nombre" optionValue="id" class="w-full" showClear />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="fecha_instalacion" class="text-sm font-medium">Fecha instalación</label>
+          <DatePicker id="fecha_instalacion" v-model="form.fecha_instalacion" dateFormat="yy-mm-dd" showIcon class="w-full" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="fecha_baja" class="text-sm font-medium">Fecha baja</label>
+          <DatePicker id="fecha_baja" v-model="form.fecha_baja" dateFormat="yy-mm-dd" showIcon class="w-full" />
         </div>
       </div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+        Sin tractivo asignado el estado es obligatoriamente <b>disponible</b>. Los cambios de diferencial del tractivo
+        se realizan mediante la Orden de Taller.
+      </p>
       <template #footer>
         <Button label="Cancelar" severity="secondary" text @click="showForm = false" />
         <Button label="Guardar" icon="pi pi-check" @click="submit" />

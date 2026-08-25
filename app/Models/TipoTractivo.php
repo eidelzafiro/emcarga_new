@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Facades\DB;
 
 class TipoTractivo extends Model
 {
     protected $table = 'tipos_tractivos';
 
     protected $fillable = [
-        'codigo', 'nombre', 'id_marca', 'id_modelo', 'id_pais',
-        'id_tipo_mantenimiento',
         'fabricacion', 'tipo_equipo',
         'bat_cant', 'bat_amp',
         'dif_cant', 'dif_relacion', 'dif_ancho',
@@ -30,29 +31,45 @@ class TipoTractivo extends Model
         return ['activo' => 'boolean'];
     }
 
-    public function marca(): BelongsTo
+    public function getCantidadVehiculosAttribute(): int
     {
-        return $this->belongsTo(CatalogoItem::class, 'id_marca');
+        if (array_key_exists('tractivos_count', $this->attributes)) {
+            return (int) $this->attributes['tractivos_count'];
+        }
+
+        $ids = TipoVehiculo::where('id_tipo_tractivo', $this->id)->pluck('id');
+
+        return (int) DB::table('tractivos')->whereIn('id_tipo_vehiculo', $ids)->count();
     }
 
-    public function modelo(): BelongsTo
+    /**
+     * Tipo de vehículo unificado (tabla tipo_vehiculos) que referencia a
+     * este tipo de tractivo. La marca/modelo/tipo_equipo/tipo_mantenimiento
+     * viven allí desde la Fase B.
+     */
+    public function tipoVehiculo(): HasOne
     {
-        return $this->belongsTo(CatalogoItem::class, 'id_modelo');
+        return $this->hasOne(TipoVehiculo::class, 'id_tipo_tractivo');
     }
 
-    public function pais(): BelongsTo
+    /**
+     * Vehículos (tractivos) que usan este tipo, a través de tipo_vehiculos.
+     */
+    public function tractivos(): HasManyThrough
     {
-        return $this->belongsTo(CatalogoItem::class, 'id_pais');
+        return $this->hasManyThrough(
+            Tractivo::class,
+            TipoVehiculo::class,
+            'id_tipo_tractivo',
+            'id_tipo_vehiculo',
+            'id',
+            'id'
+        );
     }
 
     public function tipoCombustible(): BelongsTo
     {
         return $this->belongsTo(TipoCombustible::class, 'id_tipo_combustible');
-    }
-
-    public function tipoMantenimiento(): BelongsTo
-    {
-        return $this->belongsTo(TiposMantenimiento::class, 'id_tipo_mantenimiento');
     }
 
     public function lubricanteMotor(): BelongsTo

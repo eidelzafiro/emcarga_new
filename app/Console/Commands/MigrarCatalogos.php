@@ -22,6 +22,8 @@ class MigrarCatalogos extends Command
         'tipos_cargas_reporte',
         'tipos_medios_cargo',
         'tipos_tractivos',
+        'tipos_equipos',
+        'tipos_arrastres',
     ];
 
     private array $withDeletedAt = [

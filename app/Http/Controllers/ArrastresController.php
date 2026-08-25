@@ -114,7 +114,7 @@ class ArrastresController extends Controller
         return [
             'descripcion' => 'required|string|max:255',
             'placa' => 'required|string|max:50|unique:tractivos,placa'.($id ? ','.$id : ''),
-            'id_tipo_vehiculo' => 'nullable|exists:tipos_arrastres,id',
+            'id_tipo_vehiculo' => 'nullable|exists:tipo_vehiculos,id',
             'capacidad_toneladas' => 'nullable|numeric',
             'lot' => 'nullable|string|max:100',
             'circulacion' => 'nullable|string|max:100',
@@ -145,18 +145,19 @@ class ArrastresController extends Controller
 
     private function tiposTipoArrastre(): array
     {
-        return \App\Models\TipoArrastre::with(['marca', 'modelo'])
+        return \App\Models\TipoVehiculo::with(['marca', 'modelo', 'tipoArrastre'])
+            ->whereNotNull('id_tipo_arrastre')
             ->orderBy('id')
             ->get()
-            ->map(function ($item) {
-                $marca = $item->marca?->nombre;
-                $modelo = $item->modelo?->nombre;
-                $anio = $item->fabricacion;
+            ->map(function ($tv) {
+                $marca = $tv->marca?->nombre;
+                $modelo = $tv->modelo?->nombre;
+                $anio = $tv->tipoArrastre?->fabricacion;
                 $partes = array_filter([$marca, $modelo, $anio]);
-                $etiqueta = $partes ? implode(' - ', $partes) : ('Tipo '.$item->id);
+                $etiqueta = $partes ? implode(' - ', $partes) : ('Tipo '.$tv->id);
 
                 return [
-                    'value' => $item->id,
+                    'value' => $tv->id,
                     'label' => $etiqueta,
                     'ficha' => ['marca' => $marca, 'modelo' => $modelo, 'anno' => $anio],
                 ];

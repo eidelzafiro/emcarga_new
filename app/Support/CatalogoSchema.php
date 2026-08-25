@@ -29,6 +29,18 @@ class CatalogoSchema
     ];
 
     /**
+     * Campos que viven como columna real en catalogo_items (no en el JSON
+     * `extra`). Hoy solo la marca guarda su país para derivarlo en los
+     * tipos/agregados que la referencian (normalización 2026-08-24).
+     */
+    private const COLUMN_FIELDS = [
+        'marcas' => [
+            'id_pais' => ['label' => 'País', 'type' => 'select', 'relation' => true],
+            'logo' => ['label' => 'Logo', 'type' => 'logo', 'relation' => false],
+        ],
+    ];
+
+    /**
      * Cache por request de los campos extra leídos de la BD.
      *
      * @var array<string, array|null>
@@ -87,7 +99,7 @@ class CatalogoSchema
         'tipos_equipos' => [
             'imagen' => ['label' => 'Imagen', 'type' => 'text'],
         ],
-        'marcas' => ['tipo' => ['label' => 'Tipo', 'type' => 'text']],
+        'marcas' => [],
         'modelos' => ['tipo' => ['label' => 'Tipo', 'type' => 'text']],
         'paises' => [],
         'organismos' => ['abreviatura' => ['label' => 'Abreviatura', 'type' => 'text']],
@@ -192,6 +204,15 @@ class CatalogoSchema
     }
 
     /**
+     * Campos que se persisten como columna real de catalogo_items (no en
+     * el JSON `extra`). Hoy solo la marca usa `id_pais`.
+     */
+    public static function columnFields(string $tipo): array
+    {
+        return self::COLUMN_FIELDS[$tipo] ?? [];
+    }
+
+    /**
      * Reglas de validación con los extras PLANOS (tal como los envía
      * el frontend). La conversión a la columna JSON `extra` se hace
      * en CatalogoItemRequest::itemData().
@@ -217,6 +238,14 @@ class CatalogoSchema
                     : ['nullable'],
                 default => ['nullable', 'string', 'max:255'],
             };
+        }
+
+        foreach (self::columnFields($tipo) as $key => $cfg) {
+            if (! empty($cfg['relation'])) {
+                $rules[$key] = ['nullable', Rule::exists('catalogo_items', 'id')];
+            } else {
+                $rules[$key] = ['nullable', 'string', 'max:512'];
+            }
         }
 
         return $rules;

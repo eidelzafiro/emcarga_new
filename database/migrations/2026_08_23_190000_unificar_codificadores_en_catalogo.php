@@ -34,8 +34,8 @@ return new class extends Migration
 {
     /** tipo => [titulo, tabla, extras => [col => label], fields JSON] */
     private const CATALOGOS = [
-        'marcas' => ['Marcas', 'marcas', ['tipo' => 'Tipo'],
-            '{"tipo":{"label":"Tipo","type":"text"}}'],
+        'marcas' => ['Marcas', 'marcas', [],
+            '{}'],
         'modelos' => ['Modelos', 'modelos', ['tipo' => 'Tipo'],
             '{"tipo":{"label":"Tipo","type":"text"}}'],
         'paises' => ['Países', 'paises', [], '{}'],

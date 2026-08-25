@@ -93,38 +93,14 @@ class TiposEquiposNormalizer
                     ->update(['id_tipo_equipo' => $sobreviviente->id]);
 
                 DB::table('tipos_equipos')->where('id', $fila->id)->delete();
-                DB::table('catalogo_items')
-                    ->where('tipo', 'tipos_equipos')
-                    ->where('origen_id', $fila->id)
-                    ->delete();
 
                 $reporte[] = "Absorbido {$fila->nombre} (id {$fila->id}) en {$final}"
                     .($movidas > 0 ? " [{$movidas} fichas re-asignadas]" : '');
             }
 
-            // Espejo en el catálogo unificado: renombrar/crear el ítem del sobreviviente.
-            $item = DB::table('catalogo_items')
-                ->where('tipo', 'tipos_equipos')
-                ->where('origen_id', $sobreviviente->id)
-                ->first();
-
-            if ($item) {
-                if ($item->nombre !== $final) {
-                    DB::table('catalogo_items')
-                        ->where('id', $item->id)
-                        ->update(['nombre' => $final, 'updated_at' => now()]);
-                }
-            } else {
-                DB::table('catalogo_items')->insert([
-                    'tipo' => 'tipos_equipos',
-                    'origen_id' => $sobreviviente->id,
-                    'nombre' => $final,
-                    'activo' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $reporte[] = "Creado ítem de catálogo faltante para {$final} (origen_id {$sobreviviente->id})";
-            }
+            // NOTA: tipos_equipos ya NO vive en el catálogo unificado (desde
+            // 2026-08-24 tiene controlador/rutas/vistas propias). El espejo en
+            // catalogo_items se eliminó para evitar re-sincronizarlo.
         }
 
         return $reporte;

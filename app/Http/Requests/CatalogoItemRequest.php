@@ -25,7 +25,17 @@ class CatalogoItemRequest extends FormRequest
 
     public function rules(): array
     {
-        return CatalogoSchema::validationRules($this->route('tipo'));
+        $rules = CatalogoSchema::validationRules($this->route('tipo'));
+
+        // El logo de la marca se sube como archivo (no como texto).
+        if ($this->route('tipo') === 'marcas') {
+            $rules['logo_archivo'] = [
+                'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048',
+                'dimensions:max_width=1024,max_height=1024',
+            ];
+        }
+
+        return $rules;
     }
 
     public function attributes(): array
@@ -76,6 +86,13 @@ class CatalogoItemRequest extends FormRequest
                 }
             }
             $data['extra'] = $extra ?: null;
+        }
+
+        // Campos columna real (p.ej. id_pais de la marca) no van al JSON extra.
+        foreach (CatalogoSchema::columnFields($tipo) as $key => $cfg) {
+            if (array_key_exists($key, $validados) && $validados[$key] !== null && $validados[$key] !== '') {
+                $data[$key] = $validados[$key];
+            }
         }
 
         return $data;

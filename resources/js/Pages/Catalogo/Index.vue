@@ -20,7 +20,7 @@ import { useConfirm } from 'primevue/useconfirm'
 const props = defineProps({ items: Object, filters: Object, catalogConfig: Object })
 const tipo = computed(() => props.catalogConfig?.tipo)
 // Tipos de equipos: vista de tarjetas con imagen grande + subida de archivo
-const esEquipos = computed(() => tipo.value === 'tipos_equipos')
+const esEquipos = computed(() => tipo.value === 'tipos_equipos' || props.catalogConfig?.route === 'tipos-equipos')
 const toast = useToast()
 const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
@@ -45,7 +45,9 @@ const aplicaFiltro = () => {
     search: search.value,
     id_marca: filterModel.value.id_marca,
     id_modelo: filterModel.value.id_modelo,
+    id_pais: filterModel.value.id_pais,
     tipo_equipo: filterModel.value.tipo_equipo ?? filterModel.value.id_tipo_equipo,
+    cantidad_vehiculos: filterModel.value.cantidad_vehiculos,
   }, { preserveState: true, replace: true })
 }
 
@@ -73,7 +75,9 @@ const onPage = (event) => {
     search: search.value,
     id_marca: filterModel.value.id_marca,
     id_modelo: filterModel.value.id_modelo,
+    id_pais: filterModel.value.id_pais,
     tipo_equipo: filterModel.value.tipo_equipo ?? filterModel.value.id_tipo_equipo,
+    cantidad_vehiculos: filterModel.value.cantidad_vehiculos,
   }, { preserveState: true, replace: true })
 }
 
@@ -137,6 +141,7 @@ function openCreate() {
   })
   form.value = f
   limpiarArchivo()
+  limpiarLogo()
   showForm.value = true
 }
 
@@ -156,6 +161,9 @@ function openEdit(item) {
   previewImagen.value = esEquipos.value ? (item.imagen || null) : null
   archivoImagen.value = null
   errorArchivo.value = ''
+  previewLogo.value = (tipo.value === 'marcas') ? (item.logo || null) : null
+  archivoLogo.value = null
+  errorLogo.value = ''
   showForm.value = true
 }
 
@@ -169,6 +177,35 @@ function limpiarArchivo() {
   archivoImagen.value = null
   previewImagen.value = null
   errorArchivo.value = ''
+}
+
+// ── Logo para marcas ──────────────────────────────────────────────────
+const archivoLogo = ref(null)
+const previewLogo = ref(null)
+const errorLogo = ref('')
+const EXT_LOGO = ['image/jpeg', 'image/png', 'image/webp']
+
+function limpiarLogo() {
+  archivoLogo.value = null
+  previewLogo.value = null
+  errorLogo.value = ''
+}
+
+function seleccionarLogo(evento) {
+  const file = evento.target.files?.[0]
+  evento.target.value = ''
+  if (!file) return
+  if (!EXT_LOGO.includes(file.type)) {
+    errorLogo.value = 'Formatos permitidos: JPG, PNG o WEBP.'
+    return
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    errorLogo.value = 'El logo no puede superar 2 MB.'
+    return
+  }
+  errorLogo.value = ''
+  archivoLogo.value = file
+  previewLogo.value = URL.createObjectURL(file)
 }
 
 function seleccionarArchivo(evento) {
@@ -197,7 +234,7 @@ function confirmarBorrado(item) {
     rejectLabel: 'Volver',
     acceptClass: 'p-button-danger',
     accept: () => {
-      router.delete(route(`${catalogConfig.route}.destroy`, { tipo: catalogConfig.tipo, id: item.id }), {
+      router.delete(route(`${props.catalogConfig.route}.destroy`, { tipo: props.catalogConfig.tipo, id: item.id }), {
         onSuccess: () => toast.add({ severity: 'success', summary: 'Eliminado', life: 3000 }),
         onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
       })
@@ -231,6 +268,34 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
       },
       onError: (e) => {
         errorArchivo.value = e.imagen_archivo || ''
+        toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 })
+      },
+    })
+    return
+  }
+
+  // Marcas: FormData para permitir subir el logo como archivo.
+  if (tipo.value === 'marcas') {
+    if (errorLogo.value) return
+    const fd = new FormData()
+    fd.append('nombre', form.value.nombre || '')
+    fd.append('activo', form.value.activo ? '1' : '0')
+    if (form.value.codigo) fd.append('codigo', form.value.codigo)
+    fd.append('id_pais', form.value.id_pais ?? '')
+    if (archivoLogo.value) {
+      fd.append('logo_archivo', archivoLogo.value)
+    }
+    if (continuarActivo) fd.append('_continuar', '1')
+    if (editing.value) fd.append('_method', 'PUT')
+    router.post(url, fd, {
+      onSuccess: () => {
+        toast.add({ severity: 'success', summary: editing.value ? 'Actualizado' : 'Creado', life: 3000 })
+        showForm.value = false
+        continuar.value = false
+        limpiarLogo()
+      },
+      onError: (e) => {
+        errorLogo.value = e.logo_archivo || ''
         toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 })
       },
     })
@@ -335,7 +400,9 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
         <template v-for="(cfg, key) in gridFields" :key="key">
           <Column v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :field="key" :header="cfg.label">
             <template #body="{ data }">
-              <span v-if="cfg.type === 'select' && cfg.options">{{ getSelectLabel(cfg.options, data[key]) }}</span>
+              <img v-if="cfg.type === 'logo' && data[key]" :src="data[key]" :alt="data.nombre"
+                   class="w-14 h-10 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-zoom-in hover:opacity-80 transition-opacity" />
+              <span v-else-if="cfg.type === 'select' && cfg.options">{{ getSelectLabel(cfg.options, data[key]) }}</span>
               <span v-else-if="cfg.type === 'boolean'">
                 <i :class="data[key] ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />
               </span>
@@ -394,7 +461,7 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
           </div>
 
           <template v-for="(cfg, key) in (catalogConfig?.fields || {})" :key="key">
-            <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo' && !(esEquipos && key === 'imagen')" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
+            <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo' && !cfg.noForm && !(esEquipos && key === 'imagen')" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Textarea v-else-if="cfg.type === 'textarea'" v-model="form[key]" class="w-full" :rows="3" />
@@ -403,11 +470,30 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
                 <ToggleSwitch v-model="form[key]" :inputId="'fld-' + key" />
                 <label :for="'fld-' + key" class="text-sm">{{ cfg.label }}</label>
               </div>
-              <InputText v-else v-model="form[key]" class="w-full" :type="cfg.type === 'email' ? 'email' : 'text'" />
+              <template v-else>
+                <div v-if="cfg.type === 'logo'" class="flex items-start gap-4 col-span-2">
+                  <div class="w-32 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                    <img v-if="previewLogo" :src="previewLogo" alt="Vista previa" class="w-full h-full object-contain" />
+                    <img v-else-if="form[key]" :src="form[key]" :alt="form.nombre" class="w-full h-full object-contain" />
+                    <i v-else class="pi pi-image text-3xl text-gray-300 dark:text-gray-600" />
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors w-fit">
+                      <i class="pi pi-upload" />
+                      {{ previewLogo ? 'Cambiar logo' : 'Seleccionar logo' }}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="seleccionarLogo" />
+                    </label>
+                    <small v-if="errorLogo" class="text-red-500">{{ errorLogo }}</small>
+                    <small v-else class="text-xs text-gray-400">JPG, PNG o WEBP · máx. 2 MB</small>
+                    <Button v-if="previewLogo && archivoLogo" label="Quitar" icon="pi pi-times" text severity="danger" size="small" class="w-fit" @click="limpiarLogo" />
+                  </div>
+                </div>
+                <InputText v-else v-model="form[key]" class="w-full" :type="cfg.type === 'email' ? 'email' : 'text'" />
+              </template>
             </div>
           </template>
           <template v-for="(cfg, key) in (catalogConfig?.extra || {})" :key="'x-' + key">
-            <div v-if="!(catalogConfig?.fields || {})[key] && key !== 'activo' && !(esEquipos && (key === 'imagen' || key === 'imagen_fuente'))" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
+            <div v-if="!(catalogConfig?.fields || {})[key] && key !== 'activo' && !cfg.noForm && !(esEquipos && (key === 'imagen' || key === 'imagen_fuente'))" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Select v-else-if="cfg.type === 'select' && cfg.options" v-model="form[key]" :options="cfg.options" optionLabel="label" optionValue="value" placeholder="Seleccionar..." class="w-full" :showClear="true" />
@@ -415,7 +501,26 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
                 <ToggleSwitch v-model="form[key]" :inputId="'x-fld-' + key" />
                 <label :for="'x-fld-' + key" class="text-sm">{{ cfg.label }}</label>
               </div>
-              <InputText v-else v-model="form[key]" class="w-full" :type="cfg.type === 'email' ? 'email' : 'text'" />
+              <template v-else>
+                <div v-if="cfg.type === 'logo'" class="flex items-start gap-4 col-span-2">
+                  <div class="w-32 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                    <img v-if="previewLogo" :src="previewLogo" alt="Vista previa" class="w-full h-full object-contain" />
+                    <img v-else-if="form[key]" :src="form[key]" :alt="form.nombre" class="w-full h-full object-contain" />
+                    <i v-else class="pi pi-image text-3xl text-gray-300 dark:text-gray-600" />
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors w-fit">
+                      <i class="pi pi-upload" />
+                      {{ previewLogo ? 'Cambiar logo' : 'Seleccionar logo' }}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="seleccionarLogo" />
+                    </label>
+                    <small v-if="errorLogo" class="text-red-500">{{ errorLogo }}</small>
+                    <small v-else class="text-xs text-gray-400">JPG, PNG o WEBP · máx. 2 MB</small>
+                    <Button v-if="previewLogo && archivoLogo" label="Quitar" icon="pi pi-times" text severity="danger" size="small" class="w-fit" @click="limpiarLogo" />
+                  </div>
+                </div>
+                <InputText v-else v-model="form[key]" class="w-full" :type="cfg.type === 'email' ? 'email' : 'text'" />
+              </template>
             </div>
           </template>
         </div>

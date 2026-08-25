@@ -7,6 +7,7 @@ use App\Http\Requests\CatalogoItemRequest;
 use App\Models\CatalogoItem;
 use App\Models\CatalogoTipo;
 use App\Support\CatalogoSchema;
+use App\Support\Catalogos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -164,22 +165,62 @@ class CatalogoController extends Controller
                 if (! empty($row['imagen']) && is_string($row['imagen'])) {
                     $row['imagen'] = Storage::disk('public')->url($row['imagen']);
                 }
+                if (! empty($row['logo']) && is_string($row['logo'])) {
+                    $row['logo'] = Storage::disk('public')->url($row['logo']);
+                }
 
                 return $row;
             }),
             'filters' => $request->only('search'),
-            'catalogConfig' => [
-                'route' => 'catalogo',
-                'title' => $this->getTitle($tipo),
-                'codigoManual' => CatalogoSchema::usaCodigoManual($tipo),
-                'tipo' => $tipo,
-                'fields' => array_merge(
-                    ['nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true]],
-                    $gridFields
-                ),
-                'extra' => $gridFields,
-            ],
+            'catalogConfig' => $this->catalogConfig($tipo, $gridFields),
         ]);
+    }
+
+    /**
+     * Configuración del catálogo unificado para un tipo (grid + form).
+     */
+    private function catalogConfig(string $tipo, ?array $gridFields = null): array
+    {
+        $gridFields ??= CatalogoSchema::extraFields($tipo);
+
+        return [
+            'route' => 'catalogo',
+            'title' => $this->getTitle($tipo),
+            'codigoManual' => CatalogoSchema::usaCodigoManual($tipo),
+            'tipo' => $tipo,
+            'fields' => $this->buildCatalogFields($tipo, $gridFields),
+            'extra' => $gridFields,
+        ];
+    }
+
+    /**
+     * Campos base del formulario/grid de un tipo de catálogo. Para las
+     * marcas se añade el país como columna real (se deriva hacia los
+     * tipos/agregados que la referencian).
+     */
+    private function buildCatalogFields(string $tipo, array $gridFields): array
+    {
+        $fields = array_merge(
+            ['nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true]],
+            $gridFields
+        );
+
+        if ($tipo === 'marcas') {
+            $fields['id_pais'] = [
+                'label' => 'País',
+                'type' => 'select',
+                'options' => collect(Catalogos::opciones('paises'))
+                    ->map(fn ($o) => ['value' => $o['id'], 'label' => (string) $o['nombre']])
+                    ->values()
+                    ->all(),
+            ];
+            $fields['logo'] = [
+                'label' => 'Logo',
+                'type' => 'logo',
+            ];
+        }
+
+        return $fields;
     }
 
     public function store(CatalogoItemRequest $request, string $tipo)
@@ -206,6 +247,12 @@ class CatalogoController extends Controller
                 $extra['id_entidad'] = $entidadId;
                 $itemData['extra'] = $extra ?: null;
             }
+        }
+
+        // Logo de la marca: se sube como archivo y se guarda la ruta en la
+        // columna real `logo` de catalogo_items.
+        if ($tipo === 'marcas' && ($ruta = $this->guardarLogoMarca($request))) {
+            $itemData['logo'] = $ruta;
         }
 
         if (! isset($itemData['codigo']) && ! CatalogoSchema::usaCodigoManual($tipo)) {
@@ -236,6 +283,15 @@ class CatalogoController extends Controller
             unset($itemData['extra']['imagen_fuente']);
             $extra = array_merge($extra, $itemData['extra'] ?? [], ['imagen' => $ruta]);
             $itemData['extra'] = $extra;
+        }
+
+        // Logo nuevo de la marca: elimina el anterior y guarda la ruta.
+        if ($tipo === 'marcas' && ($ruta = $this->guardarLogoMarca($request))) {
+            $anterior = $item->logo;
+            if ($anterior) {
+                Storage::disk('public')->delete($anterior);
+            }
+            $itemData['logo'] = $ruta;
         }
 
         if ($this->esCatalogoPorEntidad($tipo)) {
@@ -286,6 +342,20 @@ class CatalogoController extends Controller
         ]);
 
         return $request->file('imagen_archivo')->store('tipos_equipos', 'public');
+    }
+
+    /**
+     * Valida y guarda el logo de la marca subido por el usuario.
+     * Devuelve la ruta relativa en el disco público o null si no vino archivo.
+     * La regla de validación del archivo vive en CatalogoItemRequest.
+     */
+    private function guardarLogoMarca(Request $request): ?string
+    {
+        if (! $request->hasFile('logo_archivo')) {
+            return null;
+        }
+
+        return $request->file('logo_archivo')->store('marcas', 'public');
     }
 
     public function destroy(string $tipo, $id)

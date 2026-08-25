@@ -142,7 +142,9 @@ class MenuSeeder extends Seeder
             // === Catálogos Técnica ===
             ['parent' => 'Catálogos', 'label' => 'Tipos Combustible',        'route' => 'catalogo.index?tipo=tipos_combustibles',        'permission' => 'catalogo.ver',    'orden' => 31],
             ['parent' => 'Catálogos', 'label' => 'Tipos Neumático',          'route' => 'catalogo.index?tipo=tipos_neumaticos',          'permission' => 'catalogo.ver',      'orden' => 32],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Equipo',             'route' => 'catalogo.index?tipo=tipos_equipos',             'permission' => 'catalogo.ver',         'orden' => 33],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Equipo',             'route' => 'tipos-equipos.index',                         'permission' => 'tipos-equipos.ver',     'orden' => 33],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Tractivos',          'route' => 'tipos-tractivos.index',                       'permission' => 'tipos-tractivos.ver',  'orden' => 331],
+            ['parent' => 'Catálogos', 'label' => 'Tipos Arrastres',          'route' => 'tipos-arrastres.index',                       'permission' => 'tipos-arrastres.ver',  'orden' => 332],
             ['parent' => 'Catálogos', 'label' => 'Tipos Agregado',           'route' => 'catalogo.index?tipo=tipos_agregados',           'permission' => 'catalogo.ver',       'orden' => 34],
             ['parent' => 'Catálogos', 'label' => 'Tipos Aceite',             'route' => 'catalogo.index?tipo=tipos_aceites',             'permission' => 'catalogo.ver',         'orden' => 35],
             ['parent' => 'Catálogos', 'label' => 'Tipos Rotura',             'route' => 'catalogo.index?tipo=tipos_roturas',             'permission' => 'catalogo.ver',         'orden' => 36],

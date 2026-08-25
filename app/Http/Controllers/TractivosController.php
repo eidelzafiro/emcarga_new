@@ -10,6 +10,7 @@ use App\Models\Grupo;
 use App\Models\Lubricante;
 use App\Models\Motore;
 use App\Models\TipoArrastre;
+use App\Models\TipoVehiculo;
 use App\Models\TipoTractivo;
 use App\Models\Tractivo;
 use App\Support\Catalogos;
@@ -29,7 +30,13 @@ class TractivosController extends Controller
 
         $this->authorize('viewAny', Tractivo::class);
         $tractivos = Tractivo::query()
-            ->with(['motor:id,codigo,descripcion', 'caja:id,codigo,descripcion', 'diferencial:id,codigo,descripcion'])
+            ->with([
+                'motor:id,codigo,descripcion',
+                'caja:id,codigo,descripcion',
+                'diferencial:id,codigo,descripcion',
+                'tipoEquipo:id,nombre',
+                'tipoCombustible:id,nombre',
+            ])
             ->when($request->grupo, function ($query, $grupo) {
                 $query->where('id_grupo', $grupo);
             })
@@ -47,22 +54,18 @@ class TractivosController extends Controller
             })
             ->paginate(20);
 
-        $tiposArrastre = $this->combosArrastre();
-        $tiposTractivo = $this->combosTipoTractivo();
+        $tiposVehiculo = $this->combosTipoVehiculo();
 
-        // La descripción del equipo sale de su "tipo" (ficha compuesta
-        // marca + modelo + año). Para los arrastres (grupo 8) la ficha se
-        // resuelve desde tipos_arrastres (p. ej. COSIC ST-TVO) y para el
-        // resto desde tipos_tractivos (p. ej. NORTH BENZ 25325 2005). En
-        // legacy el idtipotractivos colisiona entre ambas fichas: el mismo
-        // id 100 es GAZ 69 en tipos_tractivos y COSIC ST-TVO en tipos_arrastres.
-        $tractivos->getCollection()->transform(function ($tractivo) use ($tiposArrastre, $tiposTractivo) {
-            $gidArrastre = Catalogos::grupoArrastresId();
-            $catalogo = $gidArrastre !== null && (int) $tractivo->id_grupo === $gidArrastre ? $tiposArrastre : $tiposTractivo;
-            $tipo = collect($catalogo)->firstWhere('value', $tractivo->id_tipo_vehiculo);
+        $tractivos->getCollection()->transform(function ($tractivo) use ($tiposVehiculo) {
+            $tipo = collect($tiposVehiculo)->firstWhere('value', $tractivo->id_tipo_vehiculo);
             $tractivo->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$tractivo->id_tipo_vehiculo);
             $tractivo->tipo_equipo_label = $tipo['tipo_equipo'] ?? null;
             $tractivo->tipo_mtto_label = $tipo['tipo_mtto'] ?? null;
+
+            // Nombres normalizados desde las relaciones del modelo
+            // (id_tipo_equipo / id_tipo_combustible poblados en la migración).
+            $tractivo->tipo_equipo_nombre = $tractivo->tipoEquipo?->nombre;
+            $tractivo->tipo_combustible_nombre = $tractivo->tipoCombustible?->nombre;
 
             // Ficha heredada del tipo (marca/modelo/año) para el formulario.
             $tractivo->tipo_ficha = $tipo['ficha'] ?? null;
@@ -75,8 +78,7 @@ class TractivosController extends Controller
             'tractivos' => $tractivos,
             'filters' => $request->only(['search', 'grupo']),
             'catalogos' => [
-                'tiposArrastre' => $tiposArrastre,
-                'tiposTractivo' => $this->combosTipoTractivo(),
+                'tiposVehiculo' => $this->combosTipoVehiculo(),
                 'grupos' => $this->combosCatalogo('grupos'),
                 'tiposServicio' => $this->combosCatalogo('tipos_servicio'),
                 'colores' => $this->combosCatalogo('colores'),
@@ -104,51 +106,23 @@ class TractivosController extends Controller
             ->toArray();
     }
 
-    private function combosArrastre(): array
+    private function combosTipoVehiculo(): array
     {
-        return TipoArrastre::with(['marca', 'modelo', 'tipoEquipo', 'tipoMantenimiento'])
+        return TipoVehiculo::with(['marca', 'modelo', 'tipoEquipo', 'tipoMantenimiento', 'tipoTractivo', 'tipoArrastre'])
             ->orderBy('id')
             ->get()
-            ->map(function ($item) {
-                $marca = $item->marca?->nombre;
-                $modelo = $item->modelo?->nombre;
-                $anio = $item->fabricacion;
+            ->map(function ($tv) {
+                $marca = $tv->marca?->nombre;
+                $modelo = $tv->modelo?->nombre;
+                $anio = $tv->tipoTractivo?->fabricacion ?? $tv->tipoArrastre?->fabricacion;
                 $partes = array_filter([$marca, $modelo, $anio]);
-                $etiqueta = $partes ? implode(' - ', $partes) : ('Tipo '.$item->id);
+                $etiqueta = $partes ? implode(' - ', $partes) : ('Tipo '.$tv->id);
 
                 return [
-                    'value' => $item->id,
+                    'value' => $tv->id,
                     'label' => $etiqueta,
-                    'tipo_equipo' => $item->tipoEquipo?->nombre ?? null,
-                    'tipo_mtto' => $item->tipoMantenimiento?->nombre ?? null,
-                    'ficha' => [
-                        'marca' => $marca,
-                        'modelo' => $modelo,
-                        'anno' => $anio,
-                    ],
-                ];
-            })
-            ->values()
-            ->toArray();
-    }
-
-    private function combosTipoTractivo(): array
-    {
-        return TipoTractivo::with(['marca', 'modelo'])
-            ->orderBy('id')
-            ->get()
-            ->map(function ($item) {
-                $marca = $item->marca?->nombre;
-                $modelo = $item->modelo?->nombre;
-                $anio = $item->fabricacion;
-                $partes = array_filter([$marca, $modelo, $anio]);
-                $etiqueta = $partes ? implode(' - ', $partes) : ('Tipo '.$item->id);
-
-                return [
-                    'value' => $item->id,
-                    'label' => $etiqueta,
-                    'tipo_equipo' => $item->tipo_equipo ?? null,
-                    'tipo_mtto' => array_key_exists('id_tipo_mantenimiento', $item->getAttributes()) && $item->tipoMtto ? $item->tipoMtto?->nombre : null,
+                    'tipo_equipo' => $tv->tipoEquipo?->nombre ?? null,
+                    'tipo_mtto' => $tv->tipoMantenimiento?->nombre ?? null,
                     'ficha' => [
                         'marca' => $marca,
                         'modelo' => $modelo,
@@ -205,18 +179,7 @@ class TractivosController extends Controller
         return [
             'descripcion' => 'required|string|max:255',
             'placa' => 'required|string|max:50|unique:tractivos,placa'.($id ? ','.$id : ''),
-            'id_tipo_vehiculo' => ['required', function ($attr, $value, $fail) {
-                if (! $value) {
-                    $fail('El tipo de vehículo es obligatorio.');
-
-                    return;
-                }
-                $enTractivos = DB::table('tipos_tractivos')->where('id', $value)->exists();
-                $enArrastres = DB::table('tipos_arrastres')->where('id', $value)->exists();
-                if (! $enTractivos && ! $enArrastres) {
-                    $fail('El tipo de vehículo seleccionado no existe.');
-                }
-            }],
+            'id_tipo_vehiculo' => ['required', 'exists:tipo_vehiculos,id'],
             'id_motor' => 'nullable|exists:motores,id',
             'id_caja' => 'nullable|exists:cajas,id',
             'id_diferencial' => 'nullable|exists:diferenciales,id',

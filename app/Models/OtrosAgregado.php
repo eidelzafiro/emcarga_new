@@ -15,7 +15,7 @@ class OtrosAgregado extends Model
 
     protected $fillable = [
         'codigo', 'descripcion', 'numero_serie',
-        'id_marca', 'id_modelo', 'id_pais', 'id_estado', 'id_lubricante',
+            'id_marca', 'id_modelo', 'id_estado', 'id_lubricante',
         'nro_cilindros', 'nro_tiempos', 'caballaje', 'cantidad_lubricante',
         'fecha_baja',
     ];

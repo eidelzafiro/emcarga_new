@@ -21,6 +21,7 @@ class Tractivo extends Model
      */
     protected $fillable = [
         'id_entidad', 'codigo', 'descripcion', 'placa', 'id_tipo_vehiculo',
+        'id_tipo_equipo', 'id_tipo_combustible',
         'id_motor', 'id_caja', 'id_diferencial',
         'id_grupo', 'id_tipo_servicio', 'id_color_primario', 'id_color_secundario',
         'id_tipo_estado', 'id_lubricante_hidraulico',
@@ -77,7 +78,17 @@ class Tractivo extends Model
 
     public function tipoVehiculo(): BelongsTo
     {
-        return $this->belongsTo(TipoTractivo::class, 'id_tipo_vehiculo');
+        return $this->belongsTo(TipoVehiculo::class, 'id_tipo_vehiculo');
+    }
+
+    public function tipoEquipo(): BelongsTo
+    {
+        return $this->belongsTo(TipoEquipo::class, 'id_tipo_equipo');
+    }
+
+    public function tipoCombustible(): BelongsTo
+    {
+        return $this->belongsTo(TipoCombustible::class, 'id_tipo_combustible');
     }
 
     public function motor(): BelongsTo

@@ -2,31 +2,30 @@
 
 namespace App\Models;
 
-use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class TipoArrastre extends Model
 {
     protected $table = 'tipos_arrastres';
 
     protected $fillable = [
-        'codigo', 'nombre', 'descripcion', 'capacidad_toneladas',
-        'id_marca', 'id_modelo', 'id_pais', 'id_tipo_equipo',
         'fabricacion', 'frecuencia',
         'id_medida_del', 'id_medida_tra', 'id_medida_res',
         'neum_del_cant', 'neum_tras_cant', 'neum_resp_cant',
         'id_tipo_suspension', 'ejes_cant', 'eject_trac',
         'dist_frente', 'dist_trasera', 'largo_garganta', 'altura_piso',
         'altura_total', 'largo_total', 'ancho_total',
-        'id_tipo_combustible', 'id_lubricante', 'id_lub_cubo',
-        'id_tipo_mantenimiento', 'activo',
+        'id_lubricante', 'id_lub_cubo',
+        'activo',
     ];
 
     protected function casts(): array
     {
         return [
-            'capacidad_toneladas' => 'decimal:2',
             'fabricacion' => 'integer',
             'frecuencia' => 'integer',
             'neum_del_cant' => 'integer',
@@ -44,24 +43,40 @@ class TipoArrastre extends Model
         ];
     }
 
-    public function marca(): BelongsTo
+    public function getCantidadVehiculosAttribute(): int
     {
-        return $this->belongsTo(CatalogoItem::class, 'id_marca');
+        if (array_key_exists('tractivos_count', $this->attributes)) {
+            return (int) $this->attributes['tractivos_count'];
+        }
+
+        $ids = TipoVehiculo::where('id_tipo_arrastre', $this->id)->pluck('id');
+
+        return (int) DB::table('tractivos')->whereIn('id_tipo_vehiculo', $ids)->count();
     }
 
-    public function modelo(): BelongsTo
+    /**
+     * Tipo de vehículo unificado (tabla tipo_vehiculos) que referencia a
+     * este tipo de arrastre. La marca/modelo/tipo_equipo/tipo_mantenimiento
+     * viven allí desde la Fase B.
+     */
+    public function tipoVehiculo(): HasOne
     {
-        return $this->belongsTo(CatalogoItem::class, 'id_modelo');
+        return $this->hasOne(TipoVehiculo::class, 'id_tipo_arrastre');
     }
 
-    public function pais(): BelongsTo
+    /**
+     * Vehículos (arrastres) que usan este tipo, a través de tipo_vehiculos.
+     */
+    public function tractivos(): HasManyThrough
     {
-        return $this->belongsTo(CatalogoItem::class, 'id_pais');
-    }
-
-    public function tipoEquipo(): BelongsTo
-    {
-        return $this->belongsTo(TipoEquipo::class, 'id_tipo_equipo');
+        return $this->hasManyThrough(
+            Tractivo::class,
+            TipoVehiculo::class,
+            'id_tipo_arrastre',
+            'id_tipo_vehiculo',
+            'id',
+            'id'
+        );
     }
 
     public function medidaDel(): BelongsTo
@@ -84,11 +99,6 @@ class TipoArrastre extends Model
         return $this->belongsTo(CatalogoItem::class, 'id_tipo_suspension');
     }
 
-    public function tipoCombustible(): BelongsTo
-    {
-        return $this->belongsTo(TipoCombustible::class, 'id_tipo_combustible');
-    }
-
     public function lubricante(): BelongsTo
     {
         return $this->belongsTo(Lubricante::class, 'id_lubricante');
@@ -97,10 +107,5 @@ class TipoArrastre extends Model
     public function lubCubo(): BelongsTo
     {
         return $this->belongsTo(Lubricante::class, 'id_lub_cubo');
-    }
-
-    public function tipoMantenimiento(): BelongsTo
-    {
-        return $this->belongsTo(TiposMantenimiento::class, 'id_tipo_mantenimiento');
     }
 }

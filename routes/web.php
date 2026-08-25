@@ -86,7 +86,9 @@ use App\Http\Controllers\TallerController;
 use App\Http\Controllers\TalleresController;
 use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
+use App\Http\Controllers\TiposArrastresController;
 use App\Http\Controllers\TiposCargasReporteController;
+use App\Http\Controllers\TipoEquiposController;
 use App\Http\Controllers\TiposTractivosController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
@@ -334,7 +336,8 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('osdes', OsdesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['osdes' => 'id']);
 
         Route::resource('firmas', FirmasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -372,7 +375,8 @@ Route::middleware('auth')->group(function () {
 
 
         Route::resource('consecutivos', ConsecutivosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['consecutivos' => 'id']);
 
 
 
@@ -390,7 +394,8 @@ Route::middleware('auth')->group(function () {
 
 
         Route::resource('grupos-escala', GruposEscalaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['grupos-escala' => 'id']);
 
         Route::resource('entidades', EntidadesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -493,9 +498,17 @@ Route::middleware('auth')->group(function () {
             ->parameters(['arrastres' => 'tractivo'])
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-tractivos', TiposTractivosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['tipos-tractivos' => 'id']);
+        Route::resource('tipos-arrastres', TiposArrastresController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['tipos-arrastres' => 'id']);
+        Route::resource('tipos-equipos', TipoEquiposController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['tipos-equipos' => 'id']);
         Route::resource('historial-tractivos', HistorialTractivosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['historial-tractivos' => 'id']);
 
         // ATM - Inventario (Fase 5.8)
         Route::resource('movimientos-inventario', MovimientosInventarioController::class)
@@ -522,7 +535,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('penalizaciones', PenalizacionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('vacaciones', VacacionesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['vacaciones' => 'id']);
         Route::resource('estadisticas-explotacion', EstadisticasExplotacionController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('registro-ordenes-taller', RegistroOrdenesTallerController::class)

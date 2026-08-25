@@ -26,7 +26,7 @@
           <Column field="placa" header="Chapa" sortable />
           <Column header="Tipo equipo">
             <template #body="{ data }">
-              <span>{{ data.tipo_equipo_label || '—' }}</span>
+              <span>{{ data.tipo_equipo_nombre || data.tipo_equipo_label || '—' }}</span>
             </template>
           </Column>
           <Column header="Tipo de vehículo">
@@ -36,6 +36,11 @@
           </Column>
           <Column field="capacidad_toneladas" header="Capacidad" sortable />
           <Column field="indice_consumo" header="Índice" sortable />
+          <Column header="Combustible">
+            <template #body="{ data }">
+              <span>{{ data.tipo_combustible_nombre || '—' }}</span>
+            </template>
+          </Column>
           <Column header="Tipo mtto">
             <template #body="{ data }">
               <span>{{ data.tipo_mtto_label || '—' }}</span>
@@ -73,8 +78,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Vehículo *</label>
-            <Select v-if="esArrastre" v-model="form.id_tipo_vehiculo" :options="catalogos.tiposArrastre" optionLabel="label" optionValue="value" class="w-full" showClear required @change="aplicarFichaTipo" />
-            <Select v-else v-model="form.id_tipo_vehiculo" :options="catalogos.tiposTractivo" optionLabel="label" optionValue="value" class="w-full" showClear required @change="aplicarFichaTipo" />
+            <Select v-model="form.id_tipo_vehiculo" :options="catalogos.tiposVehiculo" optionLabel="label" optionValue="value" class="w-full" showClear required @change="aplicarFichaTipo" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Motor</label>

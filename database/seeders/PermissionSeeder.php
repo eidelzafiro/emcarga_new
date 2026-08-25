@@ -141,6 +141,8 @@ class PermissionSeeder extends Seeder
             // Técnica - Tablas faltantes
             'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
             'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
+            'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
+            'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
             'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
             'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',
             'locales-electricos.ver', 'locales-electricos.crear', 'locales-electricos.editar', 'locales-electricos.eliminar',
@@ -210,6 +212,8 @@ class PermissionSeeder extends Seeder
                 // Técnica - Tablas faltantes
                                  'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
                 'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
+                'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
+                'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
                 'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
 
                 'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',

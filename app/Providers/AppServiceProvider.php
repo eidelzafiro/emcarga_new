@@ -6,6 +6,8 @@ use App\Database\Grammars\MariaDbGrammarOverride;
 use App\Database\Processors\MariaDbProcessorOverride;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\Tractivo;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -36,6 +38,13 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(config('app.env') === 'local');
 
         Schema::defaultStringLength(191);
+
+        // Fase C: tipo polimórfico de las fichas de vehículo (amortización,
+        // planes, documentación). Debe coincidir con el valor insertado en las
+        // tablas vehiculos_* ('tractivo' / 'arrastre' tras la Fase D).
+        Relation::morphMap([
+            'tractivo' => Tractivo::class,
+        ]);
 
         // dompdf requiere un directorio de fuentes/caché escribible por el
         // proceso (www-data). Se crea con permisos amplios de forma idempotente

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\CatalogoItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Facades\DB;
 
 class Tractivo extends Model
 {
@@ -33,11 +35,7 @@ class Tractivo extends Model
         'indice_consumo', 'indice_aceite',
         'estado', 'fecha_alta', 'fecha_baja', 'kilometraje_actual',
         'kms_disp', 'kms_plan_mtto',
-        'plan_comb', 'plan_tn', 'plan_viajes', 'plan_gastos', 'plan_cdt', 'plan_diario',
-        'ficav', 'femision_ficav', 'fvence_ficav',
-        'lot', 'femision_lot', 'fvence_lot',
-        'circulacion', 'femision_circ', 'fvence_circ',
-        'f_reconstruccion', 'gps',
+        'gps',
     ];
 
     /**
@@ -52,24 +50,178 @@ class Tractivo extends Model
         'indice_aceite' => 'decimal:2',
         'kms_disp' => 'decimal:2',
         'kms_plan_mtto' => 'integer',
-        'plan_comb' => 'decimal:2',
-        'plan_tn' => 'decimal:2',
-        'plan_viajes' => 'decimal:2',
-        'plan_gastos' => 'decimal:2',
-        'plan_cdt' => 'decimal:2',
-        'plan_diario' => 'decimal:2',
-        'femision_ficav' => 'date',
-        'fvence_ficav' => 'date',
-        'femision_lot' => 'date',
-        'fvence_lot' => 'date',
-        'femision_circ' => 'date',
-        'fvence_circ' => 'date',
-        'f_reconstruccion' => 'date',
         'fecha_alta' => 'date',
         'fecha_baja' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Fichas extraídas a tablas polimórficas (Fase C). Se exponen como
+     * atributos virtuales para no romper el código existente (formularios,
+     * CostoCalculoService, etc.).
+     */
+    public function amortizacion(): MorphOne
+    {
+        return $this->morphOne(VehiculoAmortizacion::class, 'vehiculo');
+    }
+
+    public function planes(): MorphOne
+    {
+        return $this->morphOne(VehiculoPlan::class, 'vehiculo');
+    }
+
+    public function documentacion(): MorphOne
+    {
+        return $this->morphOne(VehiculoDocumentacion::class, 'vehiculo');
+    }
+
+    public function getAmortmnAttribute()
+    {
+        return $this->amortizacion?->amortmn;
+    }
+
+    public function getAmortmeAttribute()
+    {
+        return $this->amortizacion?->amortme;
+    }
+
+    public function getVchapaAttribute()
+    {
+        return $this->amortizacion?->vchapa;
+    }
+
+    public function getPlanCombAttribute()
+    {
+        return $this->planes?->plan_comb;
+    }
+
+    public function getPlanTnAttribute()
+    {
+        return $this->planes?->plan_tn;
+    }
+
+    public function getPlanViajesAttribute()
+    {
+        return $this->planes?->plan_viajes;
+    }
+
+    public function getPlanGastosAttribute()
+    {
+        return $this->planes?->plan_gastos;
+    }
+
+    public function getPlanCdtAttribute()
+    {
+        return $this->planes?->plan_cdt;
+    }
+
+    public function getPlanDiarioAttribute()
+    {
+        return $this->planes?->plan_diario;
+    }
+
+    public function getFicavAttribute()
+    {
+        return $this->documentacion?->ficav;
+    }
+
+    public function getFemisionFicavAttribute()
+    {
+        return $this->documentacion?->femision_ficav;
+    }
+
+    public function getFvenceFicavAttribute()
+    {
+        return $this->documentacion?->fvence_ficav;
+    }
+
+    public function getLotAttribute()
+    {
+        return $this->documentacion?->lot;
+    }
+
+    public function getFemisionLotAttribute()
+    {
+        return $this->documentacion?->femision_lot;
+    }
+
+    public function getFvenceLotAttribute()
+    {
+        return $this->documentacion?->fvence_lot;
+    }
+
+    public function getCirculacionAttribute()
+    {
+        return $this->documentacion?->circulacion;
+    }
+
+    public function getFemisionCircAttribute()
+    {
+        return $this->documentacion?->femision_circ;
+    }
+
+    public function getFvenceCircAttribute()
+    {
+        return $this->documentacion?->fvence_circ;
+    }
+
+    public function getFReconstruccionAttribute()
+    {
+        return $this->documentacion?->f_reconstruccion;
+    }
+
+    /**
+     * Persiste las fichas polimórficas desde los campos del formulario.
+     */
+    public function syncVehiculoExtra(array $datos): void
+    {
+        $amort = array_filter([
+            'amortmn' => $datos['amortmn'] ?? null,
+            'amortme' => $datos['amortme'] ?? null,
+            'vchapa' => $datos['vchapa'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        $plan = array_filter([
+            'plan_comb' => $datos['plan_comb'] ?? null,
+            'plan_tn' => $datos['plan_tn'] ?? null,
+            'plan_viajes' => $datos['plan_viajes'] ?? null,
+            'plan_gastos' => $datos['plan_gastos'] ?? null,
+            'plan_cdt' => $datos['plan_cdt'] ?? null,
+            'plan_diario' => $datos['plan_diario'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        $doc = array_filter([
+            'ficav' => $datos['ficav'] ?? null,
+            'femision_ficav' => $datos['femision_ficav'] ?? null,
+            'fvence_ficav' => $datos['fvence_ficav'] ?? null,
+            'lot' => $datos['lot'] ?? null,
+            'femision_lot' => $datos['femision_lot'] ?? null,
+            'fvence_lot' => $datos['fvence_lot'] ?? null,
+            'circulacion' => $datos['circulacion'] ?? null,
+            'femision_circ' => $datos['femision_circ'] ?? null,
+            'fvence_circ' => $datos['fvence_circ'] ?? null,
+            'f_reconstruccion' => $datos['f_reconstruccion'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        DB::transaction(function () use ($amort, $plan, $doc) {
+            if (! empty($amort)) {
+                $this->amortizacion()->updateOrCreate([], $amort);
+            } else {
+                $this->amortizacion()?->delete();
+            }
+            if (! empty($plan)) {
+                $this->planes()->updateOrCreate([], $plan);
+            } else {
+                $this->planes()?->delete();
+            }
+            if (! empty($doc)) {
+                $this->documentacion()->updateOrCreate([], $doc);
+            } else {
+                $this->documentacion()?->delete();
+            }
+        });
+    }
 
     public function entidad(): BelongsTo
     {

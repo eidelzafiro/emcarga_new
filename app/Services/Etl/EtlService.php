@@ -518,17 +518,43 @@ class EtlService
                                 'kms_disp' => $fila->kmsdisp ?: null,
                                 'kms_plan_mtto' => $fila->kmsplanmtto ?: null,
                                 'kilometraje_actual' => $fila->kmsacum ?? 0,
+                                // Estado / fechas
+                                'estado' => $estados[$fila->idtipoestados] ?? 'activo',
+                                'fecha_alta' => $falta,
+                                'fecha_baja' => null,
+                                'gps' => $fila->gps ?: null,
+                                'id_entidad' => $fila->idunidad ?: null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+
+                        // Fase C: fichas polimórficas extraídas de tractivos.
+                        $vehiculoId = $fila->idtractivos;
+                        DB::table('vehiculos_amortizacion')->updateOrInsert(
+                            ['vehiculo_type' => 'tractivo', 'vehiculo_id' => $vehiculoId],
+                            [
+                                'amortmn' => $fila->amortmn ?? 0,
+                                'amortme' => $fila->amortme ?? 0,
+                                'vchapa' => $fila->vchapa ?? 0,
+                                'updated_at' => now(),
+                            ]
+                        );
+                        DB::table('vehiculos_planes')->updateOrInsert(
+                            ['vehiculo_type' => 'tractivo', 'vehiculo_id' => $vehiculoId],
+                            [
                                 'plan_comb' => $fila->plancomb ?? null,
                                 'plan_tn' => $fila->plantn ?? null,
                                 'plan_viajes' => $fila->planviajes ?? null,
                                 'plan_gastos' => $fila->plangastos ?? null,
                                 'plan_cdt' => $fila->plancdt ?? null,
                                 'plan_diario' => $fila->plandiario ?: null,
-                                // Estado / fechas
-                                'estado' => $estados[$fila->idtipoestados] ?? 'activo',
-                                'fecha_alta' => $falta,
-                                'fecha_baja' => null,
-                                // Vencimientos
+                                'updated_at' => now(),
+                            ]
+                        );
+                        DB::table('vehiculos_documentacion')->updateOrInsert(
+                            ['vehiculo_type' => 'tractivo', 'vehiculo_id' => $vehiculoId],
+                            [
                                 'ficav' => trim((string) ($fila->ficav ?? '')) ?: null,
                                 'femision_ficav' => $fecha($fila->femision_ficav),
                                 'fvence_ficav' => $fecha($fila->fvence_ficav),
@@ -539,13 +565,6 @@ class EtlService
                                 'femision_circ' => $fecha($fila->femision_circ),
                                 'fvence_circ' => $fecha($fila->fvence_circ),
                                 'f_reconstruccion' => $fecha($fila->fureconstruccion),
-                                'gps' => $fila->gps ?: null,
-                                'id_entidad' => $fila->idunidad ?: null,
-                                // Costos (amortización y chapa por tractivo)
-                                'amortmn' => $fila->amortmn ?? 0,
-                                'amortme' => $fila->amortme ?? 0,
-                                'vchapa' => $fila->vchapa ?? 0,
-                                'created_at' => now(),
                                 'updated_at' => now(),
                             ]
                         );

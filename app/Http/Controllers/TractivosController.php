@@ -36,6 +36,9 @@ class TractivosController extends Controller
                 'diferencial:id,codigo,descripcion',
                 'tipoEquipo:id,nombre',
                 'tipoCombustible:id,nombre',
+                'amortizacion',
+                'planes',
+                'documentacion',
             ])
             ->when($request->grupo, function ($query, $grupo) {
                 $query->where('id_grupo', $grupo);
@@ -69,6 +72,27 @@ class TractivosController extends Controller
 
             // Ficha heredada del tipo (marca/modelo/año) para el formulario.
             $tractivo->tipo_ficha = $tipo['ficha'] ?? null;
+
+            // Fichas extraídas a tablas polimórficas (Fase C) para el formulario.
+            $tractivo->amortmn = $tractivo->amortizacion?->amortmn;
+            $tractivo->amortme = $tractivo->amortizacion?->amortme;
+            $tractivo->vchapa = $tractivo->amortizacion?->vchapa;
+            $tractivo->plan_comb = $tractivo->planes?->plan_comb;
+            $tractivo->plan_tn = $tractivo->planes?->plan_tn;
+            $tractivo->plan_viajes = $tractivo->planes?->plan_viajes;
+            $tractivo->plan_gastos = $tractivo->planes?->plan_gastos;
+            $tractivo->plan_cdt = $tractivo->planes?->plan_cdt;
+            $tractivo->plan_diario = $tractivo->planes?->plan_diario;
+            $tractivo->ficav = $tractivo->documentacion?->ficav;
+            $tractivo->femision_ficav = $tractivo->documentacion?->femision_ficav;
+            $tractivo->fvence_ficav = $tractivo->documentacion?->fvence_ficav;
+            $tractivo->lot = $tractivo->documentacion?->lot;
+            $tractivo->femision_lot = $tractivo->documentacion?->femision_lot;
+            $tractivo->fvence_lot = $tractivo->documentacion?->fvence_lot;
+            $tractivo->circulacion = $tractivo->documentacion?->circulacion;
+            $tractivo->femision_circ = $tractivo->documentacion?->femision_circ;
+            $tractivo->fvence_circ = $tractivo->documentacion?->fvence_circ;
+            $tractivo->f_reconstruccion = $tractivo->documentacion?->f_reconstruccion;
 
             return $tractivo;
         });
@@ -147,6 +171,9 @@ class TractivosController extends Controller
         $validated['id_entidad'] = (int) entidadActivaId();
         $tractivo = Tractivo::create($validated);
 
+        // Fichas polimórficas (amortización/planes/documentación) extraídas en Fase C.
+        $tractivo->syncVehiculoExtra($validated);
+
         // Regla 2026-08-23: todo tractivo tiene SIEMPRE motor, caja y diferencial.
         app(\App\Services\AgregadosTractivoService::class)->asegurar($tractivo);
 
@@ -166,6 +193,9 @@ class TractivosController extends Controller
         unset($validated['id_motor'], $validated['id_caja'], $validated['id_diferencial']);
 
         $tractivo->update($validated);
+
+        // Fichas polimórficas (amortización/planes/documentación) extraídas en Fase C.
+        $tractivo->syncVehiculoExtra($validated);
 
         // Garantiza los 3 agregados si el tractivo quedó sin alguno.
         app(\App\Services\AgregadosTractivoService::class)->asegurar($tractivo);

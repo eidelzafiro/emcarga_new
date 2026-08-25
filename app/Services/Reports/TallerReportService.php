@@ -248,8 +248,12 @@ class TallerReportService extends BaseReportService
     public function crtCirculacion(array $filtros): \Illuminate\Http\Response
     {
         $rows = Tractivo::query()
-            ->selectRaw("codigo as codigo, COALESCE(circulacion,'') as circulacion, COALESCE(femision_circ,'') as femision_circ, COALESCE(fvence_circ,'') as fvence_circ, COALESCE(ficav,'') as ficav, COALESCE(fvence_ficav,'') as fvence_ficav, COALESCE(lot,'') as lot, COALESCE(fvence_lot,'') as fvence_lot")
-            ->orderBy('codigo')->limit(1500)->get();
+            ->leftJoin('vehiculos_documentacion as d', function ($j) {
+                $j->on('d.vehiculo_id', '=', 'tractivos.id')
+                    ->where('d.vehiculo_type', '=', 'tractivo');
+            })
+            ->selectRaw("tractivos.codigo as codigo, COALESCE(d.circulacion,'') as circulacion, COALESCE(d.femision_circ,'') as femision_circ, COALESCE(d.fvence_circ,'') as fvence_circ, COALESCE(d.ficav,'') as ficav, COALESCE(d.fvence_ficav,'') as fvence_ficav, COALESCE(d.lot,'') as lot, COALESCE(d.fvence_lot,'') as fvence_lot")
+            ->orderBy('tractivos.codigo')->limit(1500)->get();
 
         return $this->reporteTablaPdf('CRT - Circulación - Licencia Operativa',
             [

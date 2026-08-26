@@ -61,6 +61,10 @@ class Tractivo extends Model
      * atributos virtuales para no romper el código existente (formularios,
      * CostoCalculoService, etc.).
      */
+    /**
+     * Fichas polimórficas (vehiculo_type = 'tractivo' / 'arrastre'). La clase
+     * que resuelve (Tractivo o Arrastre) determina el tipo vía el morph map.
+     */
     public function amortizacion(): MorphOne
     {
         return $this->morphOne(VehiculoAmortizacion::class, 'vehiculo');
@@ -176,6 +180,8 @@ class Tractivo extends Model
      */
     public function syncVehiculoExtra(array $datos): void
     {
+        $tipo = $this instanceof Arrastre ? 'arrastre' : 'tractivo';
+
         $amort = array_filter([
             'amortmn' => $datos['amortmn'] ?? null,
             'amortme' => $datos['amortme'] ?? null,
@@ -204,19 +210,28 @@ class Tractivo extends Model
             'f_reconstruccion' => $datos['f_reconstruccion'] ?? null,
         ], fn ($v) => $v !== null);
 
-        DB::transaction(function () use ($amort, $plan, $doc) {
+        DB::transaction(function () use ($tipo, $amort, $plan, $doc) {
             if (! empty($amort)) {
-                $this->amortizacion()->updateOrCreate([], $amort);
+                $this->amortizacion()->updateOrCreate(
+                    ['vehiculo_type' => $tipo],
+                    $amort + ['vehiculo_type' => $tipo]
+                );
             } else {
                 $this->amortizacion()?->delete();
             }
             if (! empty($plan)) {
-                $this->planes()->updateOrCreate([], $plan);
+                $this->planes()->updateOrCreate(
+                    ['vehiculo_type' => $tipo],
+                    $plan + ['vehiculo_type' => $tipo]
+                );
             } else {
                 $this->planes()?->delete();
             }
             if (! empty($doc)) {
-                $this->documentacion()->updateOrCreate([], $doc);
+                $this->documentacion()->updateOrCreate(
+                    ['vehiculo_type' => $tipo],
+                    $doc + ['vehiculo_type' => $tipo]
+                );
             } else {
                 $this->documentacion()?->delete();
             }

@@ -410,6 +410,7 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
             </template>
           </Column>
         </template>
+        <Column v-if="['modelos', 'marcas'].includes(catalogConfig?.tipo)" field="usos" header="Cantidad de usos" />
         <Column field="activo" header="Activo" :style="{ width: '100px' }">
           <template #body="{ data }">
             <i v-if="data.activo !== undefined" :class="data.activo ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />

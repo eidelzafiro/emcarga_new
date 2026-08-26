@@ -14,7 +14,6 @@ class TipoTractivo extends Model
     protected $table = 'tipos_tractivos';
 
     protected $fillable = [
-        'fabricacion', 'tipo_equipo',
         'bat_cant', 'bat_amp',
         'dif_cant', 'dif_relacion', 'dif_ancho',
         'id_medida_del', 'id_medida_tra', 'id_medida_res',

@@ -13,7 +13,7 @@ class TipoArrastre extends Model
     protected $table = 'tipos_arrastres';
 
     protected $fillable = [
-        'fabricacion', 'frecuencia',
+        'frecuencia',
         'id_medida_del', 'id_medida_tra', 'id_medida_res',
         'neum_del_cant', 'neum_tras_cant', 'neum_resp_cant',
         'id_tipo_suspension', 'ejes_cant', 'eject_trac',
@@ -26,7 +26,6 @@ class TipoArrastre extends Model
     protected function casts(): array
     {
         return [
-            'fabricacion' => 'integer',
             'frecuencia' => 'integer',
             'neum_del_cant' => 'integer',
             'neum_tras_cant' => 'integer',

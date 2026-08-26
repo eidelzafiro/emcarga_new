@@ -444,6 +444,7 @@ class EtlService
             ->groupBy('codtractivo')->havingRaw('COUNT(*) > 1')->pluck('codtractivo')->flip();
 
         $legacy->table('tec_tractivos')
+            ->where('idgrupo', '!=', 8)
             ->orderBy('idtractivos')
             ->chunk($chunk, function ($filas) use (&$procesados, &$omitidosBaja, &$avisos, &$tiposHuerfanos, $tipos, $marcas, $modelos, $colores, $motores, $cajas, $tiposNuevos, $estados, $dupChapas, $dupCodigos, $fecha, $fk) {
                 foreach ($filas as $fila) {
@@ -1191,10 +1192,20 @@ class EtlService
         // Ids reales de tipos de arrastre en BD nueva (heredan id del legacy).
         $tiposA = DB::table('tipos_arrastres')->pluck('id')->flip();
 
+        // Sanitiza fechas legacy 0000-00-00.
+        $fecha = function ($v): ?string {
+            if ($v === null) {
+                return null;
+            }
+            $s = (string) $v;
+
+            return str_starts_with($s, '0000-00-00') ? null : $s;
+        };
+
         $legacy->table('tec_tractivos')
             ->where('idgrupo', 8)
             ->orderBy('idtractivos')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidos, &$avisos, $tiposA) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidos, &$avisos, $tiposA, $fecha) {
                 foreach ($filas as $fila) {
                     // El tractivo referencia idtipotractivos (coincide con id de
                     // tec_tipoarrastres/tipos_arrastres) → id_tipo_vehiculo.
@@ -1205,30 +1216,55 @@ class EtlService
                         $avisos[] = "arrastre#{$fila->idtractivos}: tipo {$fila->idtipotractivos} no existe en tipos_arrastres nueva";
                     }
 
-                    // migrarTractivos excluye los de baja (fbaja != null): no hay
-                    // fila en tractivos sobre la que actualizar.
-                    $existe = DB::table('tractivos')->where('id', $fila->idtractivos)->exists();
-                    if (! $existe) {
-                        $omitidos++;
+                    $falta = $fecha($fila->falta);
+                    $fbaja = $fecha($fila->fbaja);
+                    $placa = trim((string) ($fila->chapa ?? '')) ?: null;
+                    $codigo = trim((string) ($fila->codtractivo ?? '')) ?: null;
 
-                        continue;
-                    }
-
-                    DB::table('tractivos')
-                        ->where('id', $fila->idtractivos)
-                        ->update([
+                    DB::table('arrastres')->updateOrInsert(
+                        ['id' => $fila->idtractivos],
+                        [
+                            'codigo' => $codigo,
+                            'placa' => $placa ?? '',
                             'id_tipo_vehiculo' => $idTipoVehiculo,
                             'id_entidad' => $fila->idunidad ?: null,
+                            'tara' => $fila->tara && $fila->tara < 100000000 ? $fila->tara : null,
+                            'indice_aceite' => $fila->indiceac ?? null,
+                            'estado' => $fbaja ? 'baja' : 'activo',
+                            'fecha_alta' => $falta,
+                            'fecha_baja' => $fbaja,
+                            'deleted_at' => $fbaja ? $fbaja : null,
+                            'created_at' => now(),
                             'updated_at' => now(),
-                        ]);
+                        ]
+                    );
+
+                    // Fichas polimórficas del arrastre (tipo 'arrastre').
+                    $vehiculoId = $fila->idtractivos;
+                    DB::table('vehiculos_amortizacion')->updateOrInsert(
+                        ['vehiculo_type' => 'arrastre', 'vehiculo_id' => $vehiculoId],
+                        ['amortmn' => $fila->amortmn ?? 0, 'amortme' => $fila->amortme ?? 0, 'vchapa' => $fila->vchapa ?? 0, 'updated_at' => now()]
+                    );
+                    DB::table('vehiculos_documentacion')->updateOrInsert(
+                        ['vehiculo_type' => 'arrastre', 'vehiculo_id' => $vehiculoId],
+                        [
+                            'ficav' => trim((string) ($fila->ficav ?? '')) ?: null,
+                            'femision_ficav' => $fecha($fila->femision_ficav),
+                            'fvence_ficav' => $fecha($fila->fvence_ficav),
+                            'lot' => trim((string) ($fila->lot ?? '')) ?: null,
+                            'femision_lot' => $fecha($fila->femision_lot),
+                            'fvence_lot' => $fecha($fila->fvence_lot),
+                            'circulacion' => trim((string) ($fila->circulacion ?? '')) ?: null,
+                            'femision_circ' => $fecha($fila->femision_circ),
+                            'fvence_circ' => $fecha($fila->fvence_circ),
+                            'f_reconstruccion' => $fecha($fila->fureconstruccion),
+                            'updated_at' => now(),
+                        ]
+                    );
 
                     $procesados++;
                 }
             });
-
-        $avisos[] = (int) $legacy->table('tec_tractivos')
-            ->where('idgrupo', 8)
-            ->whereNotNull('fbaja')->count().' arrastres con fecha de baja (no migrados como tractivos)';
 
         $this->reporte['arrastres'] = [
             'legacy' => (int) $legacy->table('tec_tractivos')
@@ -1252,7 +1288,7 @@ class EtlService
 
         $legacy = DB::connection('legacy');
 
-        $arrastres = DB::table('tractivos')->where('id_grupo', 8)->pluck('id')->flip();
+        $arrastres = DB::table('arrastres')->pluck('id')->flip();
         $tractivos = DB::table('tractivos')->pluck('id')->flip();
 
         $legacy->table('tec_asociaciones')
@@ -2191,7 +2227,7 @@ class EtlService
         $legacy = DB::connection('legacy');
 
         $idsTractivos = DB::table('tractivos')->pluck('id')->flip();
-        $idsArrastres = DB::table('tractivos')->where('id_grupo', 8)->pluck('id')->flip();
+        $idsArrastres = DB::table('arrastres')->pluck('id')->flip();
         $idsChoferes = DB::table('bolsa')->pluck('id')->flip();
         $idsParqueos = DB::table('lugares')->pluck('id')->flip();
         $idsGrupos = DB::table('grupos')->pluck('id')->flip();
@@ -4175,7 +4211,7 @@ class EtlService
         );
         $resultado['arrastres'] = [
             'legacy' => $legacyArrastres,
-            'nueva' => (int) DB::table('tractivos')->where('id_grupo', 8)->count(),
+            'nueva' => (int) DB::table('arrastres')->count(),
         ];
         $resultado['arrastre_tractivo'] = [
             'legacy' => $this->contarLegacy(

@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tractivo;
-use App\Models\Grupo;
+use App\Models\Arrastre;
 use App\Http\Controllers\Traits\EntidadScoping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,13 +10,11 @@ use Inertia\Inertia;
 /**
  * Módulo "Arrastres".
  *
- * Fuente de datos ÚNICA: la tabla `tractivos` filtrando por id_grupo=8
- * (grupo ARRASTRES). El arrastre NO guarda marca/modelo/año propios: su
- * ficha se hereda del "tipo de arrastre" (tipos_arrastres), igual que los
- * tractores heredan de tipos_tractivos.
- *
- * La tabla física `arrastres` se conserva como capa legacy (referenciada por
- * arrastre_tractivo) pero NO es la fuente de este módulo.
+ * Fuente de datos ÚNICA: la tabla `arrastres` (modelo Arrastre). Los arrastres
+ * ya NO viven en `tractivos`; son filas propias con el subconjunto de campos
+ * definido por el usuario: codigo, placa, id_tipo_vehiculo, indice_aceite,
+ * tara, id_color_primario, id_color_secundario, estado, fecha_alta,
+ * fecha_baja, id_entidad.
  */
 class ArrastresController extends Controller
 {
@@ -25,9 +22,8 @@ class ArrastresController extends Controller
 
     public function index(Request $request)
     {
-        
         $this->authorize('viewAny', [\App\Models\Tractivo::class, \App\Policies\ArrastrePolicy::class]);
-        $query = Tractivo::query()->where('id_grupo', \App\Support\Catalogos::grupoArrastresId());
+        $query = Arrastre::query();
 
         $entidades = $this->entidadesPermitidas();
         if (! empty($entidades)) {
@@ -36,19 +32,18 @@ class ArrastresController extends Controller
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('descripcion', 'like', "%{$request->search}%")
+                $q->where('codigo', 'like', "%{$request->search}%")
                     ->orWhere('placa', 'like', "%{$request->search}%");
             });
         }
 
-        $items = $query->orderBy('descripcion')->paginate(20)->withQueryString();
+        $items = $query->orderBy('placa')->paginate(20)->withQueryString();
 
-        $items->getCollection()->transform(function ($tractivo) {
-            $tipo = collect($this->combosTipoArrastre())->firstWhere('value', $tractivo->id_tipo_vehiculo);
-            $tractivo->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$tractivo->id_tipo_vehiculo);
-            $tractivo->tipo_ficha = $tipo['ficha'] ?? null;
+        $items->getCollection()->transform(function ($arrastre) {
+            $tipo = collect($this->tiposTipoArrastre())->firstWhere('value', $arrastre->id_tipo_vehiculo);
+            $arrastre->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$arrastre->id_tipo_vehiculo);
 
-            return $tractivo;
+            return $arrastre;
         });
 
         return Inertia::render('Arrastres/Index', [
@@ -57,53 +52,41 @@ class ArrastresController extends Controller
             'filters' => $request->only('search'),
             'catalogos' => [
                 'tiposArrastre' => $this->tiposTipoArrastre(),
-                'grupos' => [$this->grupoArrastre()],
+                'colores' => \App\Models\CatalogoItem::where('tipo', 'colores')->orderBy('nombre')->get(['id', 'nombre']),
             ],
         ]);
     }
 
     public function store(Request $request)
     {
-        
         $this->authorize('create', [\App\Models\Tractivo::class, \App\Policies\ArrastrePolicy::class]);
         $validated = $request->validate($this->reglas());
 
         $validated['id_entidad'] = (int) entidadActivaId();
-        $validated['id_grupo'] = \App\Support\Catalogos::grupoArrastresId();
-        $this->aplicarFichaTipo($validated);
-        Tractivo::create($validated);
+        Arrastre::create($validated);
 
         return redirect()->route('arrastres.index')
             ->with('success', 'Arrastre creado correctamente.');
     }
 
-    public function update(Request $request, Tractivo $tractivo)
+    public function update(Request $request, Arrastre $arrastre)
     {
-        
-        $this->authorize('update', [$tractivo, \App\Policies\ArrastrePolicy::class]);if ((int) $tractivo->id_grupo !== 8) {
-            abort(404);
-        }
+        $this->authorize('update', [$arrastre, \App\Policies\ArrastrePolicy::class]);
+        $this->autorizarEntidad($arrastre->id_entidad);
 
-        $this->autorizarEntidad($tractivo->id_entidad);
-
-        $validated = $request->validate($this->reglas($tractivo->id));
-        $this->aplicarFichaTipo($validated);
-        $tractivo->update($validated);
+        $validated = $request->validate($this->reglas($arrastre->id));
+        $arrastre->update($validated);
 
         return redirect()->route('arrastres.index')
             ->with('success', 'Arrastre actualizado correctamente.');
     }
 
-    public function destroy(Tractivo $tractivo)
+    public function destroy(Arrastre $arrastre)
     {
-        
-        $this->authorize('delete', [$tractivo, \App\Policies\ArrastrePolicy::class]);if ((int) $tractivo->id_grupo !== 8) {
-            abort(404);
-        }
+        $this->authorize('delete', [$arrastre, \App\Policies\ArrastrePolicy::class]);
+        $this->autorizarEntidad($arrastre->id_entidad);
 
-        $this->autorizarEntidad($tractivo->id_entidad);
-
-        $tractivo->delete();
+        $arrastre->delete();
 
         return redirect()->route('arrastres.index')
             ->with('success', 'Arrastre eliminado correctamente.');
@@ -112,69 +95,38 @@ class ArrastresController extends Controller
     private function reglas(?int $id = null): array
     {
         return [
-            'descripcion' => 'required|string|max:255',
-            'placa' => 'required|string|max:50|unique:tractivos,placa'.($id ? ','.$id : ''),
+            'codigo' => 'nullable|string|max:50',
+            'placa' => 'required|string|max:50|unique:arrastres,placa'.($id ? ','.$id : ''),
             'id_tipo_vehiculo' => 'nullable|exists:tipo_vehiculos,id',
-            'capacidad_toneladas' => 'nullable|numeric',
-            'lot' => 'nullable|string|max:100',
-            'circulacion' => 'nullable|string|max:100',
+            'tara' => 'nullable|numeric',
+            'indice_aceite' => 'nullable|numeric',
+            'id_color_primario' => 'nullable|exists:catalogo_items,id',
+            'id_color_secundario' => 'nullable|exists:catalogo_items,id',
             'estado' => 'nullable|string|max:50',
+            'fecha_alta' => 'nullable|date',
+            'fecha_baja' => 'nullable|date',
         ];
-    }
-
-    /**
-     * Carga en el payload la marca/modelo/año heredados del tipo de arrastre.
-     */
-    private function aplicarFichaTipo(array &$datos): void
-    {
-        $idTipo = $datos['id_tipo_vehiculo'] ?? null;
-        if (! $idTipo) {
-            $datos['marca'] = null;
-            $datos['modelo'] = null;
-            $datos['anno'] = null;
-
-            return;
-        }
-
-        $tipo = collect($this->tiposTipoArrastre())->firstWhere('value', $idTipo);
-        $ficha = $tipo['ficha'] ?? null;
-        $datos['marca'] = $ficha['marca'] ?? null;
-        $datos['modelo'] = $ficha['modelo'] ?? null;
-        $datos['anno'] = $ficha['anno'] ?? null;
     }
 
     private function tiposTipoArrastre(): array
     {
         return \App\Models\TipoVehiculo::with(['marca', 'modelo', 'tipoArrastre'])
-            ->whereNotNull('id_tipo_arrastre')
+            ->where('clase', 'arrastre')
             ->orderBy('id')
             ->get()
             ->map(function ($tv) {
                 $marca = $tv->marca?->nombre;
                 $modelo = $tv->modelo?->nombre;
-                $anio = $tv->tipoArrastre?->fabricacion;
+                $anio = $tv->fabricacion;
                 $partes = array_filter([$marca, $modelo, $anio]);
                 $etiqueta = $partes ? implode(' - ', $partes) : ('Tipo '.$tv->id);
 
                 return [
                     'value' => $tv->id,
                     'label' => $etiqueta,
-                    'ficha' => ['marca' => $marca, 'modelo' => $modelo, 'anno' => $anio],
                 ];
             })
             ->values()
             ->toArray();
-    }
-
-    private function combosTipoArrastre(): array
-    {
-        return $this->tiposTipoArrastre();
-    }
-
-    private function grupoArrastre(): array
-    {
-        $grupo = \App\Models\CatalogoItem::where('tipo', 'grupos')->where('nombre', 'LIKE', '%ARRASTRE%')->first();
-
-        return ['value' => $grupo?->id ?? 8, 'label' => $grupo?->nombre ?? 'Arrastres'];
     }
 }

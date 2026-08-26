@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\ManagesCatalog;
 use App\Models\Lubricante;
 use App\Models\TipoCombustible;
+use App\Models\TipoEquipo;
 use App\Models\TipoTractivo;
 use App\Support\Catalogos;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class TiposTractivosController extends Controller
             ->withCount('tractivos')
             ->select('tipos_tractivos.*')
             ->leftJoin('tipo_vehiculos as tv', 'tv.id_tipo_tractivo', '=', 'tipos_tractivos.id')
+            ->leftJoin('tipos_equipos as te', 'te.id', '=', 'tv.id_tipo_equipo')
             ->leftJoin('catalogo_items as marca_ord', 'marca_ord.id', '=', 'tv.id_marca')
             ->leftJoin('catalogo_items as modelo_ord', 'modelo_ord.id', '=', 'tv.id_modelo')
             ->leftJoin('catalogo_items as pais_ord', 'pais_ord.id', '=', 'marca_ord.id_pais')
@@ -50,8 +52,8 @@ class TiposTractivosController extends Controller
         $search = $request->get('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('tipo_equipo', 'like', "%{$search}%")
-                    ->orWhere('fabricacion', 'like', "%{$search}%");
+                $q->where('te.nombre', 'like', "%{$search}%")
+                    ->orWhere('tv.fabricacion', 'like', "%{$search}%");
             });
         }
 
@@ -61,8 +63,8 @@ class TiposTractivosController extends Controller
         if ($request->filled('id_modelo')) {
             $query->where('tv.id_modelo', $request->get('id_modelo'));
         }
-        if ($request->filled('tipo_equipo')) {
-            $query->where('tipo_equipo', 'like', "%{$request->get('tipo_equipo')}%");
+        if ($request->filled('id_tipo_equipo')) {
+            $query->where('tv.id_tipo_equipo', $request->get('id_tipo_equipo'));
         }
         if ($request->filled('id_pais')) {
             $query->where('marca_ord.id_pais', $request->get('id_pais'));
@@ -94,7 +96,7 @@ class TiposTractivosController extends Controller
         return Inertia::render('Catalogo/Index', [
             'title' => $this->getTitle(),
             'items' => $items,
-            'filters' => $request->only(['search', 'id_marca', 'id_modelo', 'tipo_equipo', 'id_pais', 'cantidad_vehiculos']),
+            'filters' => $request->only(['search', 'id_marca', 'id_modelo', 'id_tipo_equipo', 'id_pais', 'cantidad_vehiculos']),
             'catalogConfig' => [
                 'route' => $this->getRouteName(),
                 'title' => $this->getTitle(),
@@ -109,7 +111,7 @@ class TiposTractivosController extends Controller
                     'id_marca' => $this->filtroCatalogo('id_marca', 'marcas'),
                     'id_modelo' => $this->filtroCatalogo('id_modelo', 'modelos'),
                     'id_pais' => $this->filtroCatalogo('id_pais', 'paises'),
-                    'tipo_equipo' => $this->filterTipoEquipo(),
+                    'id_tipo_equipo' => $this->filtroTipoEquipo(),
                     'cantidad_vehiculos' => [
                         'key' => 'cantidad_vehiculos',
                         'label' => 'Vehículos',
@@ -125,12 +127,10 @@ class TiposTractivosController extends Controller
         ]);
     }
 
-    protected function getExtraFields(): array
+    public function getExtraFields(): array
     {
         return [
             'id_pais' => $this->select('País', 'paises'),
-            'fabricacion' => $this->num('Año fabricación'),
-            'tipo_equipo' => $this->texto('Tipo de equipo'),
             'bat_cant' => $this->num('Baterías (cant)'),
             'bat_amp' => $this->num('Baterías (Amp)'),
             'dif_cant' => $this->num('Diferenciales (cant)'),
@@ -206,5 +206,14 @@ class TiposTractivosController extends Controller
             ->map(fn ($o) => ['value' => $o['id'], 'label' => (string) $o['nombre']])->toArray();
 
         return ['key' => $key, 'label' => $key, 'options' => $options];
+    }
+
+    private function filtroTipoEquipo(): array
+    {
+        $valores = TipoEquipo::where('activo', true)->orderBy('nombre')
+            ->get()->map(fn ($v) => ['value' => (int) $v->id, 'label' => (string) $v->nombre])
+            ->toArray();
+
+        return ['key' => 'id_tipo_equipo', 'label' => 'Tipo de equipo', 'options' => $valores];
     }
 }

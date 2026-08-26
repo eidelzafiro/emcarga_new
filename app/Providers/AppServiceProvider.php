@@ -7,6 +7,7 @@ use App\Database\Processors\MariaDbProcessorOverride;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\Arrastre;
 use App\Models\Tractivo;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         // tablas vehiculos_* ('tractivo' / 'arrastre' tras la Fase D).
         Relation::morphMap([
             'tractivo' => Tractivo::class,
+            'arrastre' => Arrastre::class,
         ]);
 
         // dompdf requiere un directorio de fuentes/caché escribible por el

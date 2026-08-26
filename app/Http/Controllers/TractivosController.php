@@ -133,12 +133,13 @@ class TractivosController extends Controller
     private function combosTipoVehiculo(): array
     {
         return TipoVehiculo::with(['marca', 'modelo', 'tipoEquipo', 'tipoMantenimiento', 'tipoTractivo', 'tipoArrastre'])
+            ->where('clase', 'tractivo')
             ->orderBy('id')
             ->get()
             ->map(function ($tv) {
                 $marca = $tv->marca?->nombre;
                 $modelo = $tv->modelo?->nombre;
-                $anio = $tv->tipoTractivo?->fabricacion ?? $tv->tipoArrastre?->fabricacion;
+                $anio = $tv->fabricacion;
                 $partes = array_filter([$marca, $modelo, $anio]);
                 $etiqueta = $partes ? implode(' - ', $partes) : ('Tipo '.$tv->id);
 

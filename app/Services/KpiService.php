@@ -141,13 +141,12 @@ class KpiService
               AND ot.cancelada = false AND ot.estado = 'abierta'))";
 
         $vehiculos = DB::select("
-            SELECT COALESCE(NULLIF(TRIM(tt.tipo_equipo), ''), NULLIF(TRIM(te.nombre), ''), 'Sin tipo') AS tipo,
+            SELECT COALESCE(NULLIF(TRIM(te.nombre), ''), 'Sin tipo') AS tipo,
                    COUNT(*) AS total,
                    SUM(CASE WHEN $enTallerSql THEN 1 ELSE 0 END) AS en_taller
             FROM tractivos t
-            LEFT JOIN tipos_tractivos tt ON tt.id = t.id_tipo_vehiculo
-            LEFT JOIN tipos_arrastres ta ON ta.id = t.id_tipo_vehiculo
-            LEFT JOIN tipos_equipos te ON te.id = ta.id_tipo_equipo
+            LEFT JOIN tipo_vehiculos tv ON tv.id = t.id_tipo_vehiculo
+            LEFT JOIN tipos_equipos te ON te.id = tv.id_tipo_equipo
             WHERE t.deleted_at IS NULL ".$inSql."
             GROUP BY 1
             ORDER BY 1

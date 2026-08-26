@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "room": "bugs",
+      "wing": "zafiro26",
+      "content": "Fix 2026-08-23 — Reportes PDF se mostraban como texto crudo (%PDF-1.7...): el botón Generar del catálogo de reportes (resources/js/Pages/Reportes/Index.vue) usaba router.post (XHR Inertia); el binario PDF vía ->stream() no puede procesarse por XHR Inertia. Fix: PDF usa navegación real del navegador window.open(route('reportes.generar', id)+'?filtros='+JSON,'_blank'); las exportaciones en cola conservan router.post ramificando por rep.es_exportacion. routes/web.php: reportes.generar ahora Route::match(['get','post'],...). ReportesController::generar decodifica filtros con json_decode cuando llega como string (GET). ReporteCatalogoService::agrupar añade es_exportacion via ReportesDispatcher::esExportacion($id). REGLA GENERAL Inertia+descargas: cualquier PDF/binario debe servirse con petición REAL (GET + window.open/target=_blank o <a download>), nunca router.get/post."
+    },
+    {
+      "room": "backend",
+      "wing": "zafiro26",
+      "content": "Fix 2026-08-23 — zafiro:salva estaba roto: DatabaseBackupService::salvar() comprobaba command -v mysqldump y siempre usaba dumpConBin(), pero mysqldump fallaba con TLS/SSL error 2026 self-signed certificate y el código NUNCA caía al dump PDO de respaldo. Fix app/Services/DatabaseBackupService.php: dumpConBin añade --skip-ssl al comando mysqldump (+ --events por paridad); salvar envuelve dumpConBin en try/catch, si falla elimina el archivo parcial y degrada a salvarConPdo(). Verificado: php artisan zafiro:salva genera ~20.66 MB válidos. La BD es MariaDB (no MySQL estricto), dumps generan 'MariaDB dump 10.19'."
+    },
+    {
+      "room": "etl",
+      "wing": "zafiro26",
+      "content": "Fix 2026-08-23 — Mojibake sistémico en BD emcarga_new (raíz de entidades con caracteres raros): legacy emcarga era latin1/CP1252 y el ETL insertó esos bytes en columnas utf8mb4 sin transcodificar → UTF-8 doblemente codificado (ej. Pinar del Río → Pinar del RÃ­o). Reparación: doble decode CP1252→UTF-8 con guarda a 3328 filas en 61 columnas (clientes, bolsa, cargos, catalogo_items, lugares, firmas, tasas, motores, cajas, facturas, entidades...). Re-scan confirmó 0 filas con mojibake. Idioma idempotente: mb_convert_encoding(mb_convert_encoding($s,'CP1252','UTF-8'),'CP1252','UTF-8') con guarda preg_match('/[ÃÂƒâ€]/u',$s); para casos profundos iterar hasta 5 decodes eligiendo la versión válida UTF-8 sin marcadores; EXCLUIR columnas JSON/extra (json|extra|fields|config|datos|metadata|parametros|props|settings|permisos). Rollback previo: database/backups/emcarga_new_2026-08-23_00-55_pre_moji.sql (21 MB)."
+    },
+    {
+      "room": "general",
+      "wing": "zafiro26",
+      "content": "Entorno 2026-08-23: npm run build debe correr en el HOST (/home/eidel/.npm-global/bin/npm), NO en el contenedor app (no tiene node/npm en PATH). Comandos Docker desde emcarga-new/ con docker compose exec -T app php artisan ... La matriz es entidad id=23 (parent=NULL 'EMPRESA CAMIONES EMCARGA'); entidad id=1 es filial hoja (parent=23). Entidad::idsPermitidos(1)=[1]; idsPermitidos(23)=23 entidades (matriz+hijas)."
+    },
+    {
+      "room": "technical",
+      "wing": "zafiro26",
+      "content": "Módulo Técnico 2026-08-23 (8/9 tareas hechas, falta render frontend + actividades + verificación): migraciones 2026_08_23_210000_diferenciales_campos_faltantes (fecha_instalacion/fecha_baja/id_lubricante en diferenciales) y 2026_08_23_210100_eliminar_menu_lubricantes (borra menú id=9 Lubricantes de Flota, reordena parent_id=2; AUTORIZADO por EIDEL: se usa el control de lubricantes en su lugar). Nuevo AgregadosTractivoService::asegurar(Tractivo) crea motor/caja/diferencial faltantes con códigos M-/C-/D-{codigo}, marca/modelo del tractivo, estado trabajando, idempotente; darBaja($agregado) baja SIN cambio: estado baja+fecha_baja, libera tractivo y lo deja INACTIVO. Comando zafiro:completar-agregados (backfill idempotente). EtlService::migrarTractivos() llama asegurarTodos(). TractivosController store/update hace unset(id_motor,id_caja,id_diferencial)+asegurar(); FIX bug preexistente combos() no existía→implementado; index eager load motor/caja/diferencial. Motores/Cajas/DiferencialesController+routes: reglas completas legacy, regla sin-tractivo→disponible, asignado→trabajando, endpoint POST {x}/baja. Vistas Motores/Cajas/Diferenciales/Index.vue reescritas con todos los campos legacy + botón 🚫 Dar de baja con confirmación. KpiService::kpisTecnica() nuevo formato campo detalle [{etiqueta,valor}]: vehículos por tipo_equipo activos vs en taller, agregados trabajando vs en taller, baterías montadas por meses (<6/6-11/12-23/≥24), neumáticos por kms (<20k/20-50k/50-80k/≥80k)."
+    },
+    {
+      "room": "technical",
+      "wing": "zafiro26",
+      "content": "2026-08-24 continuación (ox-alpha): completados pendientes A-F del HANDOFF. A) Dashboard.vue renderiza kpi.detalle como mini-lista (etiqueta/valor) bajo el valor principal. B) DashboardController::movimientosPorRol() ramifica TECNICA → movimientosTecnica(): órdenes de taller abiertas (numero, tractivo, estado), montajes neumáticos (fecha_montaje), movimientos baterías (fecha_movimiento), cambios lubricante (fecha_cambio), mezclados y ordenados por _ts; actividadPorRol('TECNICA')→actividadTecnica() con conteos reales (OT abiertas, neumáticos montados, baterías en rotación, lubricaciones 30d). Clave: técnicos usan Entidad::idsPermitidos($entidadId) (matriz=23 ve 23+hijas; entidad 1 es filial hoja, idsPermitidos(1)=[1]); corregí también KpiService::kpisTecnica para usar idsPermitidos en vez de id_entidad directo (la matriz antes veía 0). C) migrate aplicó las 2 migraciones; zafiro:completar-agregados creó 1584 motores/cajas/diferenciales. D) composer test:fast 214 ✓ + npm run build ok. E) smoke matriz(23): MOV=12, KPIs Vehículos 1318/1584 detalle18, Agregados/Baterías/Neumáticos poblados. F) commit+push a main."
+    }
+  ],
+  "diary": {
+    "agent_name": "ox-alpha",
+    "entry": "SESSION:2026-08-24|recupero.sesion.2026-08-23.desde.ficheros.locales(HANDOFF+memoria_sesion)|causa:fallo.palacio(peer.writer)→fichado.hoy|hecho.ayer:fix.PDF.crudo(window.open.no.router)+zafiro:salva(--skip-ssl+fallback.PDO)+mojibake.latin1→utf8(3328.filas.61.cols,0.residuo)+npm.build.en.HOST+KpiService.fecha_operaciones|modulo.tecnico:8/9(AgregadosTractivoService+migraciones.diferenciales+menu.lubricantes.borrado(id=9,AUTORIZADO.EIDEL)+KpiService.detalle)|HOY.completado.pendientes.A-F:A)Dashboard.vue.render.kpi.detalle B)movimientosPorRol.TECNICA.real+actividadPorRol.real C)migrate+completar-agregados(1584x3) D)test.fast.214✓+npm.build.ok E)smoke.matriz(23):MOV12/KPIs.poblados F)commit+push|fix.clave:matriz=entidad.23(NO.1);idsPermitidos(1)=hoja,idsPermitidos(23)=23+hijas→tecnicos.usan.idsPermitidos|★★★",
+    "topic": "recuperacion-sesion",
+    "wing": "zafiro26"
+  }
+}

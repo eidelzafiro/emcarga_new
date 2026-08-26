@@ -38,7 +38,7 @@ class TiposArrastresController extends Controller
 
     protected function getSearchFields(): array
     {
-        return ['fabricacion'];
+        return ['eject_trac'];
     }
 
     public function index(Request $request)
@@ -57,8 +57,8 @@ class TiposArrastresController extends Controller
         $search = $request->get('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('fabricacion', 'like', "%{$search}%")
-                    ->orWhere('eject_trac', 'like', "%{$search}%");
+            $q->where('tv.fabricacion', 'like', "%{$search}%")
+                ->orWhere('eject_trac', 'like', "%{$search}%");
             });
         }
 
@@ -133,11 +133,10 @@ class TiposArrastresController extends Controller
         ]);
     }
 
-    protected function getExtraFields(): array
+    public function getExtraFields(): array
     {
         return [
             'id_pais' => $this->select('País', 'paises'),
-            'fabricacion' => $this->num('Año fabricación'),
             'frecuencia' => $this->num('Frecuencia'),
             'id_medida_del' => $this->select('Medida neum. delantero', 'medidas_neumaticos'),
             'id_medida_tra' => $this->select('Medida neum. trasero', 'medidas_neumaticos'),

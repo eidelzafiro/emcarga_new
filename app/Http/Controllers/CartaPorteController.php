@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Arrastre;
 use App\Models\Bolsa;
 use App\Models\CartaPorte;
 use App\Models\Cliente;
@@ -215,9 +216,7 @@ class CartaPorteController extends Controller
                     'marca' => $t->marca,
                     'placa' => $t->placa,
                 ]),
-            'arrastres' => Tractivo::with('grupo:id,nombre')
-                ->select('id', 'codigo', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp')
-                ->where('id_grupo', \App\Support\Catalogos::grupoArrastresId())
+            'arrastres' => Arrastre::select('id', 'codigo', 'placa')
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')
@@ -225,7 +224,7 @@ class CartaPorteController extends Controller
                 ->map(fn ($t) => [
                     'id' => $t->id,
                     'codigo' => $t->codigo,
-                    'marca' => $t->marca,
+                    'marca' => null,
                     'placa' => $t->placa,
                 ]),
             'choferes' => Bolsa::select('id', 'nombre', 'apellidos', 'ci', 'categorias_licencia')

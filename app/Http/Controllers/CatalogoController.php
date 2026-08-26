@@ -151,9 +151,27 @@ class CatalogoController extends Controller
 
         $gridFields = CatalogoSchema::extraFields($tipo);
 
+        // Modelos y Marcas se ordenan por cantidad de usos (referencias desde tipo_vehiculos)
+        $ordenarPorUsos = in_array($tipo, ['modelos', 'marcas'], true);
+
+        if ($ordenarPorUsos) {
+            $colRef = $tipo === 'modelos' ? 'id_modelo' : 'id_marca';
+            $query->leftJoin('tipo_vehiculos', function ($join) use ($colRef) {
+                $join->on('tipo_vehiculos.' . $colRef, '=', 'catalogo_items.id');
+            })
+            ->selectRaw('catalogo_items.*, COUNT(tipo_vehiculos.id) as usos')
+            ->groupBy('catalogo_items.id')
+            ->orderByDesc('usos')
+            ->orderBy('nombre');
+        } else {
+            $query->orderBy('nombre');
+        }
+
+        $paginator = $query->paginate(20);
+
         return Inertia::render('Catalogo/Index', [
             'title' => $this->getTitle($tipo),
-            'items' => $query->orderBy('nombre')->paginate(20)->through(function ($item) {
+            'items' => $paginator->through(function ($item) use ($ordenarPorUsos) {
                 $row = $item->toArray();
                 if ($item->extra && is_array($item->extra)) {
                     foreach ($item->extra as $k => $v) {
@@ -167,6 +185,10 @@ class CatalogoController extends Controller
                 }
                 if (! empty($row['logo']) && is_string($row['logo'])) {
                     $row['logo'] = Storage::disk('public')->url($row['logo']);
+                }
+
+                if ($ordenarPorUsos) {
+                    $row['usos'] = (int) ($item->usos ?? 0);
                 }
 
                 return $row;

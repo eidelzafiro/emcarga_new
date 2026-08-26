@@ -90,6 +90,7 @@ use App\Http\Controllers\TiposArrastresController;
 use App\Http\Controllers\TiposCargasReporteController;
 use App\Http\Controllers\TipoEquiposController;
 use App\Http\Controllers\TiposTractivosController;
+use App\Http\Controllers\TipoVehiculoController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VacacionesController;
@@ -495,7 +496,7 @@ Route::middleware('auth')->group(function () {
 
         // Técnica - Tablas faltantes (Fase 5.8)
         Route::resource('arrastres', ArrastresController::class)
-            ->parameters(['arrastres' => 'tractivo'])
+            ->parameters(['arrastres' => 'arrastre'])
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tipos-tractivos', TiposTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy'])
@@ -503,6 +504,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('tipos-arrastres', TiposArrastresController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['tipos-arrastres' => 'id']);
+        Route::resource('tipo-vehiculos', TipoVehiculoController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+            ->parameters(['tipo-vehiculos' => 'tipoVehiculo']);
         Route::resource('tipos-equipos', TipoEquiposController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['tipos-equipos' => 'id']);

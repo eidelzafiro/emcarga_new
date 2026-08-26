@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Arrastre;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TipoVehiculo extends Model
 {
@@ -11,7 +13,7 @@ class TipoVehiculo extends Model
 
     protected $fillable = [
         'id_tipo_equipo', 'id_marca', 'id_modelo', 'id_tipo_mantenimiento',
-        'id_tipo_tractivo', 'id_tipo_arrastre', 'clase', 'activo',
+        'id_tipo_tractivo', 'id_tipo_arrastre', 'clase', 'fabricacion', 'activo',
     ];
 
     protected $casts = [
@@ -46,5 +48,15 @@ class TipoVehiculo extends Model
     public function tipoArrastre(): BelongsTo
     {
         return $this->belongsTo(TipoArrastre::class, 'id_tipo_arrastre');
+    }
+
+    public function tractivos(): HasMany
+    {
+        return $this->hasMany(Tractivo::class, 'id_tipo_vehiculo');
+    }
+
+    public function arrastres(): HasMany
+    {
+        return $this->hasMany(Arrastre::class, 'id_tipo_vehiculo');
     }
 }

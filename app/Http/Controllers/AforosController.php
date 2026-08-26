@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Aforo;
 use App\Models\AforoIndicadore;
 use App\Models\AforoLinea;
+use App\Models\Arrastre;
 use App\Models\Bolsa;
 use App\Models\CartaPorte;
 use App\Models\Cliente;
@@ -326,8 +327,8 @@ class AforosController extends Controller
                     $q->whereNull('id_grupo')->orWhere('id_grupo', '!=', \App\Support\Catalogos::grupoArrastresId());
                 })
                 ->orderBy('codigo')->get(['id', 'codigo', 'capacidad_toneladas']),
-            'arrastres' => Tractivo::whereNull('fecha_baja')->where('id_grupo', \App\Support\Catalogos::grupoArrastresId())
-                ->orderBy('codigo')->get(['id', 'codigo', 'capacidad_toneladas']),
+            'arrastres' => Arrastre::whereNull('fecha_baja')
+                ->orderBy('codigo')->get(['id', 'codigo', 'tara']),
             'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'fecha_cierre', 'id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2', 'id_entidad')
                 ->with(['tractivo:id,codigo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos', 'chofer2:id,nombre,apellidos'])
                 ->selectRaw('COALESCE(fecha_cierre, fecha_emision) as ref_fecha')

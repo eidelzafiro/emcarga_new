@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Arrastre;
 use App\Models\Bolsa;
 use App\Models\Entidad;
 use App\Models\Grupo;
@@ -84,9 +85,7 @@ class HojasRutaController extends Controller
                     'kms_disp' => $t->kms_disp,
                     'indice_consumo' => $t->indice_consumo,
                 ]),
-            'arrastres' => Tractivo::with('grupo:id,nombre')
-                ->select('id', 'codigo', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp')
-                ->where('id_grupo', \App\Support\Catalogos::grupoArrastresId())
+            'arrastres' => Arrastre::select('id', 'codigo', 'placa', 'tara')
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')
@@ -94,10 +93,10 @@ class HojasRutaController extends Controller
                 ->map(fn ($t) => [
                     'id' => $t->id,
                     'codigo' => $t->codigo,
-                    'marca' => $t->marca,
+                    'marca' => null,
                     'placa' => $t->placa,
-                    'tipo' => $t->grupo?->nombre,
-                    'kms_disp' => $t->kms_disp,
+                    'tipo' => null,
+                    'kms_disp' => $t->tara,
                 ]),
             // Choferes: solo con licencia de conducción válida
             'choferes' => Bolsa::select('id', 'nombre', 'apellidos', 'ci', 'categorias_licencia', 'licencia_vencimiento')

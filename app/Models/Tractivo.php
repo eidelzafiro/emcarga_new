@@ -27,10 +27,10 @@ class Tractivo extends Model
         'id_motor', 'id_caja', 'id_diferencial',
         'id_grupo', 'id_tipo_servicio', 'id_color_primario', 'id_color_secundario',
         'id_tipo_estado', 'id_lubricante_hidraulico',
-        'marca', 'modelo', 'anno', 'color',
-        'numero_motor', 'numero_chasis', 'numero_caja',
+        'anno',
+        'numero_chasis',
         'capacidad_toneladas', 'capacidad_m3',
-        'vin', 'nro_carroceria', 'nro_registro', 'nro_resolucion',
+        'vin',
         'tara', 'cap_deposito', 'cap_hidraulico', 'cta_combustible',
         'indice_consumo', 'indice_aceite',
         'estado', 'fecha_alta', 'fecha_baja', 'kilometraje_actual',
@@ -208,6 +208,9 @@ class Tractivo extends Model
             'femision_circ' => $datos['femision_circ'] ?? null,
             'fvence_circ' => $datos['fvence_circ'] ?? null,
             'f_reconstruccion' => $datos['f_reconstruccion'] ?? null,
+            'nro_carroceria' => $datos['nro_carroceria'] ?? null,
+            'nro_registro' => $datos['nro_registro'] ?? null,
+            'nro_resolucion' => $datos['nro_resolucion'] ?? null,
         ], fn ($v) => $v !== null);
 
         DB::transaction(function () use ($tipo, $amort, $plan, $doc) {

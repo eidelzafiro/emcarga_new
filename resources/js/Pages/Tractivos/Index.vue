@@ -120,7 +120,7 @@
           <div class="col-span-3 border-b border-gray-200 pb-1 mb-1 text-sm font-semibold text-gray-600">Números / Físico</div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">No. Motor</label>
-            <InputText v-model="form.numero_motor" class="w-full" :disabled="esArrastre" />
+            <div class="p-2 border rounded bg-gray-50 text-gray-700">{{ agregadoLabel('motor') }}</div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">No. Chasis</label>
@@ -128,7 +128,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">No. Caja</label>
-            <InputText v-model="form.numero_caja" class="w-full" />
+            <div class="p-2 border rounded bg-gray-50 text-gray-700">{{ agregadoLabel('caja') }}</div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">VIN</label>
@@ -321,12 +321,11 @@ function agregadoLabel(tipo) {
   return a.codigo ? `${a.codigo} · ${a.descripcion ?? ''}` : (a.descripcion ?? '—');
 }
 
-// Aplicar al form la ficha (marca/modelo/año) heredada del tipo seleccionado.
-// (Ya no se muestran en el formulario; se conserva el payar de control.)
+// Aplicar al form la ficha heredada del tipo seleccionado.
+// (marca/modelo/color ahora se derivan del FK id_tipo_vehiculo; ya no
+// se almacenan en la tabla tractivos).
 function aplicarFichaTipo() {
   const id = form.value.id_tipo_vehiculo;
-  form.value.marca = '';
-  form.value.modelo = '';
   form.value.anno = null;
 }
 
@@ -337,7 +336,7 @@ function baseForm() {
     id_tipo_vehiculo: null, id_motor: null, id_caja: null, id_diferencial: null,
     id_grupo: null, id_tipo_servicio: null, id_color_primario: null, id_color_secundario: null,
     id_tipo_estado: null, id_lubricante_hidraulico: null,
-    numero_motor: '', numero_chasis: '', numero_caja: '', vin: '', nro_carroceria: '', nro_registro: '', nro_resolucion: '',
+    numero_chasis: '', vin: '', nro_carroceria: '', nro_registro: '', nro_resolucion: '',
     capacidad_toneladas: null, tara: null, cap_deposito: null, cap_hidraulico: null, cta_combustible: '',
     indice_consumo: null, indice_aceite: null, gps: false,
     kilometraje_actual: null, kms_disp: null, kms_plan_mtto: null,
@@ -382,6 +381,10 @@ const openEdit = (tractivo) => {
   form.value = { ...baseForm(), ...tractivo };
   form.value.id = tractivo.id;
   form.value.gps = !!tractivo.gps;
+  // Los nro_* viven en la documentación polimórfica, no en la tabla tractivos.
+  form.value.nro_carroceria = tractivo.documentacion?.nro_carroceria ?? '';
+  form.value.nro_registro = tractivo.documentacion?.nro_registro ?? '';
+  form.value.nro_resolucion = tractivo.documentacion?.nro_resolucion ?? '';
   agregadoEditando.value = {
     motor: tractivo.motor ?? null,
     caja: tractivo.caja ?? null,

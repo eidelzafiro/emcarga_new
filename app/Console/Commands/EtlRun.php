@@ -228,6 +228,11 @@ class EtlRun extends Command
             $this->info('Re-asociando arrastres (idgrupo=8, ficha tec_tipoarrastres)...');
             $etl->migrarArrastres($chunk);
             $this->mostrarResultado($etl->getReporte(), 'arrastres');
+
+            // Tipo de equipo de los arrastres (desde tec_tipoarrastres.idtipoequipos)
+            $this->info('Identificando tipo de equipo de arrastres (legacy)...');
+            $etl->migrarEquiposArrastres($chunk);
+            $this->mostrarResultado($etl->getReporte(), 'equipos_arrastres');
         }
 
         // Asociaciones tractivos ↔ arrastres (requiere arrastres ya migrados)

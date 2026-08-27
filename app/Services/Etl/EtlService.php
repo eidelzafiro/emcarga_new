@@ -497,15 +497,12 @@ class EtlService
                                 'id_color_secundario' => $fk('colores', $fila->idcolorsecundario),
                                 'id_tipo_estado' => $fk('estados_componentes', $fila->idtipoestados),
                                 'id_lubricante_hidraulico' => $fk('lubricantes', $fila->idlubricantes),
-                                // Descripción / identidad
-                                'marca' => $tipo ? ($marcas[$tipo->idmarca] ?? null) : null,
-                                'modelo' => $tipo ? ($modelos[$tipo->idmodelo] ?? null) : null,
+                                // Descripción / identidad. marca/modelo/color/numero_motor/
+                                // numero_caja se derivan de FKs (id_tipo_vehiculo, id_color_*,
+                                // id_motor, id_caja) — normalización 2026-08-27.
                                 'anno' => $anno,
-                                'color' => $colores[$fila->idcolorprimario] ?? null,
                                 'vin' => trim((string) ($fila->vin ?? '')) ?: null,
-                                'numero_motor' => $motores[$fila->idmotores] ?? null,
                                 'numero_chasis' => trim((string) ($fila->chassis ?? '')) ?: null,
-                                'numero_caja' => $cajas[$fila->idcajas] ?? null,
                                 'capacidad_toneladas' => $fila->capacidad,
                                 // Físico / capacidad de combustible
                                 // tara > 99.999.999 no cabe en decimal(10,2): valores corruptos legacy → null
@@ -1273,6 +1270,115 @@ class EtlService
             'nueva' => $procesados,
             'avisos' => $avisos,
         ];
+    }
+
+    /**
+     * ETL: resuelve tipo_vehiculos.id_tipo_equipo para los arrastres a partir del
+     * legacy (tec_tipoarrastres.idtipoequipos), igual que el comando
+     * zafiro:identificar-equipo-arrastres pero integrado en el flujo ETL.
+     *
+     * Cadena: tipo_vehiculos.id_tipo_arrastre (= tipos_arrastres.id = legacy
+     * idtipoarrastres) → tec_tipoarrastres.idtipoequipos → tec_tipoequipos
+     * (nombre normalizado) → tipos_equipos.id.
+     *
+     * Idempotente. Debe ejecutarse tras migrar tipos_equipos y arrastres.
+     */
+    public function migrarEquiposArrastres(int $chunk = 1000): void
+    {
+        $avisos = [];
+        $procesados = 0;
+        $sinMapa = 0;
+
+        $mapTE = $this->mapaTipoEquipoLegacy();
+
+        $legTA = DB::connection('legacy')->table('tec_tipoarrastres')
+            ->whereNotNull('idtipoequipos')
+            ->pluck('idtipoequipos', 'idtipoarrastres');
+
+        DB::table('tipo_vehiculos')
+            ->where('clase', 'arrastre')
+            ->whereNotNull('id_tipo_arrastre')
+            ->select('id', 'id_tipo_arrastre', 'id_tipo_equipo')
+            ->orderBy('id')
+            ->chunk($chunk, function ($filas) use ($mapTE, $legTA, &$procesados, &$sinMapa, &$avisos) {
+                foreach ($filas as $f) {
+                    $legId = $legTA[$f->id_tipo_arrastre] ?? null;
+                    if ($legId === null) {
+                        $sinMapa++;
+                        continue;
+                    }
+                    $nuevoTeId = $mapTE[$legId] ?? null;
+                    if ($nuevoTeId === null) {
+                        $sinMapa++;
+                        $avisos[] = "tipo_vehiculos#{$f->id}: sin mapeo de equipo legacy (eq legacy {$legId})";
+                        continue;
+                    }
+                    if ((int) $f->id_tipo_equipo === (int) $nuevoTeId) {
+                        $procesados++;
+                        continue;
+                    }
+                    DB::table('tipo_vehiculos')
+                        ->where('id', $f->id)
+                        ->update(['id_tipo_equipo' => $nuevoTeId, 'updated_at' => now()]);
+                    $procesados++;
+                }
+            });
+
+        $this->reporte['equipos_arrastres'] = [
+            'legacy' => $legTA->count(),
+            'nueva' => $procesados,
+            'sin_mapa' => $sinMapa,
+            'avisos' => $avisos,
+        ];
+    }
+
+    /**
+     * Mapa legacy idtipoequipos → nuevo tipos_equipos.id, usando el nombre
+     * normalizado (aplica absorciones del TiposEquiposNormalizer y quita acentos).
+     */
+    private function mapaTipoEquipoLegacy(): array
+    {
+        $grupos = [
+            'CUÑA TRACTORA' => ['CUÑAS TRACTORAS'],
+            'OMNIBUS' => [],
+            'CISTERNA' => ['CAMION CISTERNA AGUA'],
+            'AUTO' => ['AUTO LIGERO', 'AUTO ESPECIAL', 'AUTO ESPECIALIZADO', 'AUTO PASEO'],
+            'GRUA' => ['CAMION GRUA'],
+            'VOLTEO' => ['CAMION VOLTEO', 'S/R VOLTEO'],
+        ];
+        $absorbidoAFinal = [];
+        foreach ($grupos as $final => $abs) {
+            foreach ($abs as $a) {
+                $absorbidoAFinal[mb_strtoupper($a)] = $final;
+            }
+        }
+
+        $norm = function (string $nombre): string {
+            $s = mb_strtoupper(trim($nombre));
+
+            return strtr($s, [
+                'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+                'Ñ' => 'N', 'Â' => 'A', 'Ê' => 'E', 'Î' => 'I', 'Ô' => 'O', 'Û' => 'U',
+            ]);
+        };
+
+        $nuevos = DB::table('tipos_equipos')->pluck('id', 'nombre');
+        $nuevosNorm = [];
+        foreach ($nuevos as $nombre => $id) {
+            $nuevosNorm[$norm($nombre)] = $id;
+        }
+
+        $legacyTE = DB::connection('legacy')->table('tec_tipoequipos')
+            ->pluck('tipoequipos', 'idtipoequipos');
+
+        $map = [];
+        foreach ($legacyTE as $legId => $nombre) {
+            $u = mb_strtoupper(trim($nombre));
+            $final = $absorbidoAFinal[$u] ?? $u;
+            $map[$legId] = $nuevosNorm[$norm($final)] ?? null;
+        }
+
+        return $map;
     }
 
     /**
@@ -2510,10 +2616,10 @@ class EtlService
             ->whereYear('fsolicitud', $anio)
             ->where('idcartaporte', '>', 0)
             ->orderBy('idsolicitud')
-            ->chunk($chunk, function ($filas) use (
-                &$procesadasLegacy, &$omitidasLegacy, &$avisos, &$secuencia, $numero, $fechaValida,
-                $idsCartas, $idsClientes, $idsLugares, $idsProductos, $idsTiposCarga, $idsUsers, $idsEntidades, $idsSolicitudes
-            ) {
+                ->chunk($chunk, function ($filas) use (
+                    &$procesadasLegacy, &$omitidasLegacy, &$avisos, &$secuencia, $anio, $numero, $fechaValida,
+                    $idsCartas, $idsClientes, $idsLugares, $idsProductos, $idsTiposCarga, $idsUsers, $idsEntidades, $idsSolicitudes
+                ) {
                 foreach ($filas as $fila) {
                     $idCarta = (int) $fila->idcartaporte;
 
@@ -3018,7 +3124,7 @@ class EtlService
     {
         DB::connection('legacy')->table($legacyTabla)
             ->orderBy('idtarifas')
-            ->chunk($chunk, function ($filas) use ($version, &$procesados, &$avisos) {
+            ->chunk($chunk, function ($filas) use ($legacyTabla, $version, &$procesados, &$avisos) {
                 foreach ($filas as $fila) {
                     try {
                         DB::table('tarifas')->updateOrInsert(
@@ -3217,7 +3323,15 @@ class EtlService
 
         foreach ($config['columnas'] ?? [] as $colLegacy => $colNueva) {
             $valor = $fila->{$colLegacy} ?? null;
-            $datos[$colNueva] = is_string($valor) ? (trim($valor) !== '' ? trim($valor) : null) : $valor;
+            if (is_string($valor)) {
+                $v = trim($valor);
+                // Repara doble codificación UTF-8 (mojibake tipo "CUÃ' A" → "CUÑA")
+                // que el legacy a veces trae. Idempotente y solo actúa sobre
+                // cadenas ya corruptas, dejando intacto el texto legítimo.
+                $datos[$colNueva] = $v !== '' ? $this->repararMojibake($v) : null;
+            } else {
+                $datos[$colNueva] = $valor;
+            }
 
             // Fechas legacy '0000-00-00' son inválidas en MySQL estricto → NULL
             if (is_string($datos[$colNueva]) && str_starts_with($datos[$colNueva], '0000-00-00')) {
@@ -3261,6 +3375,36 @@ class EtlService
         $datos['updated_at'] = now();
 
         return $datos;
+    }
+
+    /**
+     * Repara doble codificación UTF-8 (mojibake) en cadenas provenientes del legacy.
+     *
+     * El síntoma típico es "Ã" / "Â" incrustados (p. ej. "CUÃ' A" en vez de
+     * "CUÑA"): ocurre cuando bytes UTF-8 se interpretaron como Windows-1252 y se
+     * re-codificaron a UTF-8. Se detecta por la presencia de esos marcadores y
+     * se revierte con mb_convert_encoding(..., 'Windows-1252', 'UTF-8').
+     *
+     * Es idempotente: si la cadena ya es válida y no tiene marcadores, se
+     * devuelve sin cambios. No corrompe texto legítimo (el español no usa Ã/Â).
+     */
+    private function repararMojibake(?string $valor): ?string
+    {
+        if ($valor === null || $valor === '' || ! mb_check_encoding($valor, 'UTF-8')) {
+            return $valor;
+        }
+
+        if (! preg_match('/[ÃÂ]/u', $valor)) {
+            return $valor;
+        }
+
+        $candidato = @mb_convert_encoding($valor, 'Windows-1252', 'UTF-8');
+
+        if ($candidato !== false && $candidato !== $valor && mb_check_encoding($candidato, 'UTF-8')) {
+            return $candidato;
+        }
+
+        return $valor;
     }
 
     private function insertarFila(string $tabla, array $datos, int &$procesados, array &$avisos): void

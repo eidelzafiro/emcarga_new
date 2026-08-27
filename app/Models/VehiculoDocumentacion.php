@@ -15,6 +15,7 @@ class VehiculoDocumentacion extends Model
         'lot', 'femision_lot', 'fvence_lot',
         'circulacion', 'femision_circ', 'fvence_circ',
         'f_reconstruccion',
+        'nro_carroceria', 'nro_registro', 'nro_resolucion',
     ];
 
     protected $casts = [

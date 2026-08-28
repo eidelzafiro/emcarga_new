@@ -15,7 +15,7 @@ class Neumatico extends Model
     protected $table = 'neumaticos';
 
     protected $fillable = [
-        'id_entidad', 'folio', 'marca', 'modelo', 'medida', 'id_tractivo',
+        'id_entidad', 'folio', 'id_marca', 'id_modelo', 'medida', 'id_tractivo',
         'fecha_instalacion', 'fecha_retiro', 'kilometraje', 'estado',
         'precio_mn', 'precio_me', 'id_posicion', 'fecha_fabricacion', 'balanceada',
         'profinicial', 'explotacion_anterior', 'kms_promedio',
@@ -43,6 +43,16 @@ class Neumatico extends Model
     public function tractivo(): BelongsTo
     {
         return $this->belongsTo(Tractivo::class, 'id_tractivo');
+    }
+
+    public function marca(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'id_marca');
+    }
+
+    public function modelo(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'id_modelo');
     }
 
     public function posicion(): BelongsTo

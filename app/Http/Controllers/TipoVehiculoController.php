@@ -11,6 +11,7 @@ use App\Models\TipoTractivo;
 use App\Support\Catalogos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class TipoVehiculoController extends Controller
@@ -38,15 +39,84 @@ class TipoVehiculoController extends Controller
                   ->orWhere('fabricacion', 'like', "%{$search}%");
             });
         }
+        if ($idEquipo = $request->get('id_tipo_equipo')) {
+            $query->where('tipo_vehiculos.id_tipo_equipo', $idEquipo);
+        }
+        if ($idMarca = $request->get('id_marca')) {
+            $query->where('tipo_vehiculos.id_marca', $idMarca);
+        }
+        if ($idModelo = $request->get('id_modelo')) {
+            $query->where('tipo_vehiculos.id_modelo', $idModelo);
+        }
 
-        $items = $query->orderByDesc('vehiculos_count')->orderBy('id')->paginate(20)
-            ->withQueryString();
+        // Orden: tipo de equipo, marca y modelo (sin paginar: se muestran todos).
+        $query->leftJoin('tipos_equipos as te', 'te.id', '=', 'tipo_vehiculos.id_tipo_equipo')
+              ->leftJoin('catalogo_items as m', 'm.id', '=', 'tipo_vehiculos.id_marca')
+              ->leftJoin('catalogo_items as mo', 'mo.id', '=', 'tipo_vehiculos.id_modelo')
+              ->orderBy('te.nombre')
+              ->orderBy('m.nombre')
+              ->orderBy('mo.nombre');
+
+        $tipos = $query->get();
+
+        // Agrupar por tipo de equipo y, dentro de cada uno, por marca:
+        // una tarjeta por marca con sus modelos listados en líneas.
+        $grupos = [];
+        foreach ($tipos as $tv) {
+            $equipo = $tv->tipoEquipo;
+            $equipoId = $equipo?->id ?? 0;
+
+            if (! isset($grupos[$equipoId])) {
+                $grupos[$equipoId] = [
+                    'equipo_id'     => $equipoId,
+                    'equipo_nombre' => $equipo?->nombre ?? 'Sin equipo',
+                    'equipo_imagen' => $equipo?->imagen ? Storage::disk('public')->url($equipo->imagen) : null,
+                    'marcas'        => [],
+                ];
+            }
+
+            $marcaId = $tv->marca?->id ?? 0;
+            $marcaNombre = $tv->marca?->nombre ?? 'Sin marca';
+            $marcaImagen = null;
+            if (! empty($tv->marca?->logo)) {
+                $marcaImagen = Storage::disk('public')->url($tv->marca->logo);
+            } elseif (! empty($tv->marca?->extra['imagen'])) {
+                $marcaImagen = Storage::disk('public')->url($tv->marca->extra['imagen']);
+            }
+
+            if (! isset($grupos[$equipoId]['marcas'][$marcaId])) {
+                $grupos[$equipoId]['marcas'][$marcaId] = [
+                    'marca_id'        => $marcaId,
+                    'marca_nombre'    => $marcaNombre,
+                    'marca_imagen'    => $marcaImagen,
+                    'vehiculos_count' => 0,
+                    'modelos'         => [],
+                ];
+            }
+
+            $grupos[$equipoId]['marcas'][$marcaId]['vehiculos_count'] += (int) $tv->vehiculos_count;
+            $grupos[$equipoId]['marcas'][$marcaId]['modelos'][] = [
+                'id'              => $tv->id,
+                'modelo'          => $tv->modelo?->nombre,
+                'vehiculos_count' => $tv->vehiculos_count,
+                'clase'           => $tv->clase,
+                'fabricacion'     => $tv->fabricacion,
+                'activo'          => (bool) $tv->activo,
+                'mantenimiento'   => $tv->tipoMantenimiento?->nombre,
+            ];
+        }
+
+        // Normalizar marcas a un array indexado para iterar en la vista.
+        foreach ($grupos as &$g) {
+            $g['marcas'] = array_values($g['marcas']);
+        }
+        unset($g);
 
         return Inertia::render('TipoVehiculos/Index', [
-            'title' => 'Tipos de Vehículo',
-            'items' => $items,
-            'filters' => $request->only(['clase', 'search']),
-            'clases' => [
+            'title'   => 'Tipos de Vehículo',
+            'grupos'  => array_values($grupos),
+            'filters' => $request->only(['clase', 'search', 'id_tipo_equipo', 'id_marca', 'id_modelo']),
+            'clases'  => [
                 ['value' => '', 'label' => 'Todos'],
                 ['value' => 'tractivo', 'label' => 'Tractivo'],
                 ['value' => 'arrastre', 'label' => 'Arrastre'],

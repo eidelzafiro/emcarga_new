@@ -9,7 +9,7 @@
             <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
             <InputText
               v-model="search"
-              placeholder="Buscar por descripción o placa…"
+              placeholder="Buscar por código o placa…"
               class="w-full pl-9"
               @input="debouncedSearch"
             />
@@ -22,7 +22,6 @@
 
         <DataTable :value="tractivos.data" stripedRows size="small" :rows="10" :paginator="true" :totalRecords="tractivos.total" :lazy="true" :first="(tractivos.current_page - 1) * tractivos.per_page" @page="onPage" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
           <Column field="codigo" header="Código" sortable />
-          <Column field="descripcion" header="Descripción" sortable />
           <Column field="placa" header="Chapa" sortable />
           <Column header="Tipo equipo">
             <template #body="{ data }">
@@ -69,10 +68,6 @@
         <div class="grid grid-cols-3 gap-4">
           <div class="col-span-3 border-b border-gray-200 pb-2 mb-1 text-sm font-semibold text-gray-600">Identificación</div>
           <div class="col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
-            <InputText v-model="form.descripcion" required class="w-full" />
-          </div>
-          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Chapa *</label>
             <InputText v-model="form.placa" required class="w-full" />
           </div>
@@ -124,7 +119,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">No. Chasis</label>
-            <InputText v-model="form.numero_chasis" class="w-full" />
+            <InputText v-model="form.nro_chasis" class="w-full" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">No. Caja</label>
@@ -161,10 +156,6 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Cap. hidráulico</label>
             <InputNumber v-model="form.cap_hidraulico" mode="decimal" class="w-full" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cuenta combustible</label>
-            <InputText v-model="form.cta_combustible" class="w-full" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Índice consumo *</label>
@@ -332,12 +323,12 @@ function aplicarFichaTipo() {
 function baseForm() {
   return {
     id: null,
-    descripcion: '', placa: '',
+    placa: '',
     id_tipo_vehiculo: null, id_motor: null, id_caja: null, id_diferencial: null,
     id_grupo: null, id_tipo_servicio: null, id_color_primario: null, id_color_secundario: null,
     id_tipo_estado: null, id_lubricante_hidraulico: null,
-    numero_chasis: '', vin: '', nro_carroceria: '', nro_registro: '', nro_resolucion: '',
-    capacidad_toneladas: null, tara: null, cap_deposito: null, cap_hidraulico: null, cta_combustible: '',
+    nro_chasis: '', vin: '', nro_carroceria: '', nro_registro: '', nro_resolucion: '',
+    capacidad_toneladas: null, tara: null, cap_deposito: null, cap_hidraulico: null,
     indice_consumo: null, indice_aceite: null, gps: false,
     kilometraje_actual: null, kms_disp: null, kms_plan_mtto: null,
     plan_comb: null, plan_tn: null, plan_viajes: null, plan_gastos: null, plan_cdt: null, plan_diario: null,
@@ -382,6 +373,8 @@ const openEdit = (tractivo) => {
   form.value.id = tractivo.id;
   form.value.gps = !!tractivo.gps;
   // Los nro_* viven en la documentación polimórfica, no en la tabla tractivos.
+  form.value.nro_chasis = tractivo.documentacion?.nro_chasis ?? '';
+  form.value.vin = tractivo.documentacion?.vin ?? '';
   form.value.nro_carroceria = tractivo.documentacion?.nro_carroceria ?? '';
   form.value.nro_registro = tractivo.documentacion?.nro_registro ?? '';
   form.value.nro_resolucion = tractivo.documentacion?.nro_resolucion ?? '';

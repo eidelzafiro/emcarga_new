@@ -19,6 +19,12 @@ class PermissionResolver
      */
     public static function puede(User $user, string $permiso): bool
     {
+        // El SUPERADMIN siempre tiene todos los permisos, sin importar el
+        // perfil activo de sesión (equivalente a $user->can($permiso)).
+        if ($user->hasRole('SUPERADMIN')) {
+            return true;
+        }
+
         $perfil = session('perfil_activo');
 
         if (! $perfil) {

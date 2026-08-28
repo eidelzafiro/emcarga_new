@@ -20,9 +20,8 @@ class BateriasController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\Bateria::class);
-        $baterias = Bateria::with('tractivo:id,descripcion,placa', 'motivoBaja:id,nombre')
-            ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%")
-                ->orWhere('marca', 'like', "%{$s}%"))
+        $baterias = Bateria::with('tractivo:id,placa', 'marca:id,nombre', 'modelo:id,nombre', 'motivoBaja:id,nombre')
+            ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $e) => $q->where('estado', $e))
             ->when(true, function ($q) {
                 $entidades = $this->entidadesPermitidas();
@@ -43,6 +42,10 @@ class BateriasController extends Controller
                 'motivos_baja' => \App\Support\Catalogos::opciones('motivos_baja_bateria'),
                 'destinos' => \App\Support\Catalogos::opciones('destinos_agregados'),
             ],
+            'catalogos' => [
+                'marcas' => \App\Support\Catalogos::opciones('marcas'),
+                'modelos' => \App\Support\Catalogos::opciones('modelos'),
+            ],
             'filters' => $request->only(['search', 'estado']),
         ]);
     }
@@ -53,8 +56,8 @@ class BateriasController extends Controller
         $this->authorize('create', \App\Models\Bateria::class);
         $validated = $request->validate([
             'folio' => 'required|string|max:50',
-            'marca' => 'nullable|string|max:100',
-            'modelo' => 'nullable|string|max:100',
+            'id_marca' => 'nullable|exists:catalogo_items,id',
+            'id_modelo' => 'nullable|exists:catalogo_items,id',
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'fecha_instalacion' => 'nullable|date',
             'voltaje' => 'nullable|integer',
@@ -91,8 +94,8 @@ class BateriasController extends Controller
 
         $validated = $request->validate([
             'folio' => 'required|string|max:50',
-            'marca' => 'nullable|string|max:100',
-            'modelo' => 'nullable|string|max:100',
+            'id_marca' => 'nullable|exists:catalogo_items,id',
+            'id_modelo' => 'nullable|exists:catalogo_items,id',
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'fecha_instalacion' => 'nullable|date',
             'voltaje' => 'nullable|integer',

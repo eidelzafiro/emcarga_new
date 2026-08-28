@@ -13,7 +13,7 @@ import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
 import { useConfirm } from 'primevue/useconfirm'
 
-const props = defineProps({ title: String, baterias: Object, filtros: Object, filters: Object })
+const props = defineProps({ title: String, baterias: Object, filtros: Object, filters: Object, catalogos: Object })
 const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
@@ -25,10 +25,13 @@ const current = ref(null)
 const motivos = props.filtros?.motivos_baja || []
 const destinos = props.filtros?.destinos || []
 
+const marcasOptions = computed(() => props.catalogos?.marcas ?? [])
+const modelosOptions = computed(() => props.catalogos?.modelos ?? [])
+
 const baseForm = () => ({
   folio: 'AUTOMATICO',
-  marca: '',
-  modelo: '',
+  id_marca: null,
+  id_modelo: null,
   id_tractivo: null,
   fecha_instalacion: new Date().toISOString().slice(0, 10),
   voltaje: null,
@@ -60,8 +63,8 @@ function openEdit(item) {
   editing.value = item
   form.value = {
     folio: item.folio ?? '',
-    marca: item.marca ?? '',
-    modelo: item.modelo ?? '',
+    id_marca: item.id_marca ?? null,
+    id_modelo: item.id_modelo ?? null,
     id_tractivo: item.id_tractivo ?? null,
     fecha_instalacion: item.fecha_instalacion ?? null,
     voltaje: item.voltaje ?? null,
@@ -115,7 +118,7 @@ function submitBaja() {
       <template #start><h2 class="text-xl font-bold m-0">{{ title ?? 'Baterías' }}</h2></template>
       <template #end>
         <div class="flex gap-2">
-          <InputText v-model="search" placeholder="Buscar por folio o marca..." class="w-64" />
+          <InputText v-model="search" placeholder="Buscar por folio..." class="w-64" />
           <Button icon="pi pi-plus" label="Nueva batería" @click="openCreate" />
         </div>
       </template>
@@ -127,10 +130,14 @@ function submitBaja() {
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
       currentPageReportTemplate="Total: {totalRecords} registros">
       <Column field="folio" header="Folio" sortable style="width:120px" />
-      <Column field="marca" header="Marca" sortable />
+      <Column field="marca" header="Marca" sortable>
+        <template #body="{ data }">{{ data.marca?.nombre || '—' }}</template>
+      </Column>
       <Column field="voltaje" header="Voltaje" />
       <Column field="amperaje" header="Amperaje" />
-      <Column field="tractivo.descripcion" header="Tractivo" />
+      <Column field="tractivo" header="Tractivo">
+        <template #body="{ data }">{{ data.tractivo?.placa ?? '—' }}</template>
+      </Column>
       <Column field="estado" header="Estado" style="width:110px">
         <template #body="{ data }">
           <Tag :value="data.estado || 'activa'" :severity="data.estado === 'baja' ? 'danger' : 'success'" />
@@ -150,8 +157,8 @@ function submitBaja() {
       <div class="grid grid-cols-2 gap-3 mt-2">
         <div class="flex flex-col gap-1"><label class="text-sm font-medium">Folio</label><InputText v-model="form.folio" /></div>
         <div class="flex flex-col gap-1"><label class="text-sm font-medium">Estado</label><Select v-model="form.estado" :options="['activa','baja']" class="w-full" /></div>
-        <div class="flex flex-col gap-1"><label class="text-sm font-medium">Marca</label><InputText v-model="form.marca" /></div>
-        <div class="flex flex-col gap-1"><label class="text-sm font-medium">Modelo</label><InputText v-model="form.modelo" /></div>
+        <div class="flex flex-col gap-1"><label class="text-sm font-medium">Marca</label><Select v-model="form.id_marca" :options="marcasOptions" optionLabel="nombre" optionValue="id" class="w-full" showClear placeholder="Seleccione" /></div>
+        <div class="flex flex-col gap-1"><label class="text-sm font-medium">Modelo</label><Select v-model="form.id_modelo" :options="modelosOptions" optionLabel="nombre" optionValue="id" class="w-full" showClear placeholder="Seleccione" /></div>
         <div class="flex flex-col gap-1"><label class="text-sm font-medium">Voltaje</label><InputText type="number" v-model="form.voltaje" /></div>
         <div class="flex flex-col gap-1"><label class="text-sm font-medium">Amperaje</label><InputText type="number" v-model="form.amperaje" /></div>
         <div class="flex flex-col gap-1"><label class="text-sm font-medium">Precio MN</label><InputText type="number" v-model="form.precio_mn" /></div>

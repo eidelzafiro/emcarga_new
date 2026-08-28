@@ -34,7 +34,6 @@ class TractivosController extends Controller
                 'motor:id,codigo,descripcion',
                 'caja:id,codigo,descripcion',
                 'diferencial:id,codigo,descripcion',
-                'tipoEquipo:id,nombre',
                 'tipoCombustible:id,nombre',
                 'amortizacion',
                 'planes',
@@ -44,7 +43,7 @@ class TractivosController extends Controller
                 $query->where('id_grupo', $grupo);
             })
             ->when($request->search, function ($query, $search) {
-                $query->where('descripcion', 'like', "%{$search}%")
+                $query->where('codigo', 'like', "%{$search}%")
                     ->orWhere('placa', 'like', "%{$search}%");
             })
             ->when(true, function ($q) {
@@ -65,9 +64,9 @@ class TractivosController extends Controller
             $tractivo->tipo_equipo_label = $tipo['tipo_equipo'] ?? null;
             $tractivo->tipo_mtto_label = $tipo['tipo_mtto'] ?? null;
 
-            // Nombres normalizados desde las relaciones del modelo
-            // (id_tipo_equipo / id_tipo_combustible poblados en la migración).
-            $tractivo->tipo_equipo_nombre = $tractivo->tipoEquipo?->nombre;
+            // Nombres normalizados. El tipo de equipo se deriva del tipo de
+            // vehículo (id_tipo_equipo ya no existe en la tabla tractivos).
+            $tractivo->tipo_equipo_nombre = $tipo['tipo_equipo'] ?? null;
             $tractivo->tipo_combustible_nombre = $tractivo->tipoCombustible?->nombre;
 
             // Ficha heredada del tipo (marca/modelo/año) para el formulario.
@@ -208,7 +207,6 @@ class TractivosController extends Controller
     private function reglas(?int $id = null): array
     {
         return [
-            'descripcion' => 'required|string|max:255',
             'placa' => 'required|string|max:50|unique:tractivos,placa'.($id ? ','.$id : ''),
             'id_tipo_vehiculo' => ['required', 'exists:tipo_vehiculos,id'],
             'id_motor' => 'nullable|exists:motores,id',
@@ -220,7 +218,7 @@ class TractivosController extends Controller
             'id_color_secundario' => 'nullable|exists:catalogo_items,id',
             'id_tipo_estado' => 'nullable|exists:estados_componentes,id',
             'id_lubricante_hidraulico' => 'nullable|exists:lubricantes,id',
-            'numero_chasis' => 'nullable|string|max:100',
+            'nro_chasis' => 'nullable|string|max:100',
             'capacidad_toneladas' => 'required|numeric',
             'vin' => 'nullable|string|max:100',
             'nro_carroceria' => 'nullable|string|max:100',
@@ -229,10 +227,8 @@ class TractivosController extends Controller
             'tara' => 'nullable|numeric',
             'cap_deposito' => 'nullable|numeric',
             'cap_hidraulico' => 'nullable|numeric',
-            'cta_combustible' => 'nullable|string|max:50',
             'indice_consumo' => 'required|numeric',
             'indice_aceite' => 'nullable|numeric',
-            'estado' => 'nullable|string|max:50',
             'fecha_alta' => 'nullable|date',
             'fecha_baja' => 'nullable|date',
             'kilometraje_actual' => 'nullable|numeric',

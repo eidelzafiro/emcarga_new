@@ -176,13 +176,16 @@ DROP TABLE IF EXISTS `amortizaciones`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `amortizaciones` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `amortizacion_mn` decimal(12,2) NOT NULL,
   `fecha` date NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `amortizaciones_id_tractivo_foreign` (`id_tractivo`),
+  KEY `amortizaciones_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `amortizaciones_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `amortizaciones_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -217,8 +220,39 @@ CREATE TABLE `arrastre_tractivo` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_tractivo`,`id_arrastre`),
   KEY `arrastre_tractivo_id_arrastre_foreign` (`id_arrastre`),
-  CONSTRAINT `arrastre_tractivo_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `tractivos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `arrastre_tractivo_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `arrastre_tractivo_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `arrastres`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `arrastres` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `placa` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_tipo_vehiculo` bigint unsigned DEFAULT NULL,
+  `id_color_primario` bigint unsigned DEFAULT NULL,
+  `id_color_secundario` bigint unsigned DEFAULT NULL,
+  `tara` decimal(10,2) DEFAULT NULL,
+  `indice_aceite` decimal(12,2) DEFAULT NULL,
+  `fecha_alta` date DEFAULT NULL,
+  `fecha_baja` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `id_entidad` bigint unsigned DEFAULT NULL,
+  `id_tipo_estado` bigint unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tractivos_placa_unique` (`placa`),
+  UNIQUE KEY `tractivos_codigo_unique` (`codigo`),
+  KEY `tractivos_placa_index` (`placa`),
+  KEY `tractivos_id_tipo_vehiculo_index` (`id_tipo_vehiculo`),
+  KEY `tractivos_id_entidad_foreign` (`id_entidad`),
+  KEY `tractivos_id_color_primario_foreign` (`id_color_primario`),
+  KEY `tractivos_id_color_secundario_foreign` (`id_color_secundario`),
+  KEY `arrastres_id_tipo_estado_foreign` (`id_tipo_estado`),
+  CONSTRAINT `arrastres_id_tipo_estado_foreign` FOREIGN KEY (`id_tipo_estado`) REFERENCES `estados_componentes` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `baterias`;
@@ -227,8 +261,6 @@ DROP TABLE IF EXISTS `baterias`;
 CREATE TABLE `baterias` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `folio` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `marca` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `modelo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `voltaje` int DEFAULT NULL,
   `amperaje` int DEFAULT NULL,
   `precio_mn` decimal(10,2) DEFAULT NULL,
@@ -236,6 +268,7 @@ CREATE TABLE `baterias` (
   `id_motivo_baja` bigint unsigned DEFAULT NULL,
   `id_destino` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `fecha_instalacion` date DEFAULT NULL,
   `fecha_movimiento` date DEFAULT NULL,
   `fecha_retiro` date DEFAULT NULL,
@@ -244,6 +277,8 @@ CREATE TABLE `baterias` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `id_entidad` bigint unsigned DEFAULT NULL,
+  `id_marca` bigint unsigned DEFAULT NULL,
+  `id_modelo` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `baterias_folio_unique` (`folio`),
   KEY `baterias_id_tractivo_index` (`id_tractivo`),
@@ -251,7 +286,13 @@ CREATE TABLE `baterias` (
   KEY `baterias_id_entidad_foreign` (`id_entidad`),
   KEY `baterias_id_motivo_baja_foreign` (`id_motivo_baja`),
   KEY `baterias_id_destino_foreign` (`id_destino`),
+  KEY `baterias_id_arrastre_foreign` (`id_arrastre`),
+  KEY `baterias_id_marca_foreign` (`id_marca`),
+  KEY `baterias_id_modelo_foreign` (`id_modelo`),
+  CONSTRAINT `baterias_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `baterias_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `baterias_id_marca_foreign` FOREIGN KEY (`id_marca`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `baterias_id_modelo_foreign` FOREIGN KEY (`id_modelo`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
   CONSTRAINT `baterias_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
   CONSTRAINT `fk_baterias_id_destino_catalogo` FOREIGN KEY (`id_destino`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_baterias_id_motivo_baja_catalogo` FOREIGN KEY (`id_motivo_baja`) REFERENCES `catalogo_items` (`id`)
@@ -264,10 +305,11 @@ CREATE TABLE `baterias_movimientos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `id_bateria` bigint unsigned NOT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `fecha_movimiento` date NOT NULL,
   `tipo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `fecha_retiro` date DEFAULT NULL,
-  `tiempo_trabajo` int DEFAULT NULL COMMENT 'dÃƒÂ­as',
+  `tiempo_trabajo` int DEFAULT NULL COMMENT 'dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­as',
   `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `id_destino` bigint unsigned DEFAULT NULL,
   `id_entidad` bigint unsigned DEFAULT NULL,
@@ -279,6 +321,8 @@ CREATE TABLE `baterias_movimientos` (
   KEY `baterias_movimientos_id_destino_foreign` (`id_destino`),
   KEY `baterias_movimientos_id_entidad_foreign` (`id_entidad`),
   KEY `baterias_movimientos_id_bateria_index` (`id_bateria`),
+  KEY `baterias_movimientos_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `baterias_movimientos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `baterias_movimientos_id_bateria_foreign` FOREIGN KEY (`id_bateria`) REFERENCES `baterias` (`id`) ON DELETE CASCADE,
   CONSTRAINT `baterias_movimientos_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
   CONSTRAINT `baterias_movimientos_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
@@ -584,6 +628,7 @@ CREATE TABLE `choferes` (
   `nombre` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ci` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_empleado` bigint unsigned DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
@@ -594,6 +639,8 @@ CREATE TABLE `choferes` (
   UNIQUE KEY `choferes_ci_unique` (`ci`),
   KEY `choferes_id_tractivo_foreign` (`id_tractivo`),
   KEY `choferes_id_empleado_foreign` (`id_empleado`),
+  KEY `choferes_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `choferes_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `choferes_id_empleado_foreign` FOREIGN KEY (`id_empleado`) REFERENCES `empleados` (`id`),
   CONSTRAINT `choferes_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -778,7 +825,8 @@ DROP TABLE IF EXISTS `combustibles_lubricantes`;
 CREATE TABLE `combustibles_lubricantes` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `id_carga` bigint unsigned DEFAULT NULL,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_tipo_lubricante` bigint unsigned DEFAULT NULL,
   `id_causa` bigint unsigned DEFAULT NULL,
   `fecha` date NOT NULL,
@@ -794,6 +842,8 @@ CREATE TABLE `combustibles_lubricantes` (
   KEY `combustibles_lubricantes_id_causa_foreign` (`id_causa`),
   KEY `combustibles_lubricantes_id_tractivo_index` (`id_tractivo`),
   KEY `combustibles_lubricantes_fecha_index` (`fecha`),
+  KEY `combustibles_lubricantes_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `combustibles_lubricantes_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `combustibles_lubricantes_id_carga_foreign` FOREIGN KEY (`id_carga`) REFERENCES `combustible_cargas` (`id`),
   CONSTRAINT `combustibles_lubricantes_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
   CONSTRAINT `fk_combustibles_lubricantes_id_causa_catalogo` FOREIGN KEY (`id_causa`) REFERENCES `catalogo_items` (`id`),
@@ -949,6 +999,7 @@ CREATE TABLE `consumo_lubricantes` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `folio` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_tipo_aceite` bigint unsigned DEFAULT NULL,
   `id_causa` bigint unsigned DEFAULT NULL,
   `cantidad` decimal(10,2) NOT NULL,
@@ -963,6 +1014,8 @@ CREATE TABLE `consumo_lubricantes` (
   KEY `consumo_lubricantes_id_tractivo_foreign` (`id_tractivo`),
   KEY `consumo_lubricantes_id_tipo_aceite_foreign` (`id_tipo_aceite`),
   KEY `consumo_lubricantes_id_causa_foreign` (`id_causa`),
+  KEY `consumo_lubricantes_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `consumo_lubricantes_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `consumo_lubricantes_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
   CONSTRAINT `fk_consumo_lubricantes_id_causa_catalogo` FOREIGN KEY (`id_causa`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_consumo_lubricantes_id_tipo_aceite_catalogo` FOREIGN KEY (`id_tipo_aceite`) REFERENCES `catalogo_items` (`id`)
@@ -975,6 +1028,7 @@ CREATE TABLE `consumo_piezas` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `folio` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_concepto` bigint unsigned DEFAULT NULL,
   `cantidad` decimal(10,2) NOT NULL,
   `importe_mn` decimal(12,2) DEFAULT NULL,
@@ -986,6 +1040,8 @@ CREATE TABLE `consumo_piezas` (
   UNIQUE KEY `consumo_piezas_folio_unique` (`folio`),
   KEY `consumo_piezas_id_tractivo_foreign` (`id_tractivo`),
   KEY `consumo_piezas_id_concepto_foreign` (`id_concepto`),
+  KEY `consumo_piezas_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `consumo_piezas_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `consumo_piezas_id_concepto_foreign` FOREIGN KEY (`id_concepto`) REFERENCES `conceptos_costos` (`id`),
   CONSTRAINT `consumo_piezas_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1060,6 +1116,7 @@ DROP TABLE IF EXISTS `control_lubricantes`;
 CREATE TABLE `control_lubricantes` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_unidad` bigint unsigned DEFAULT NULL,
   `fecha_cambio` date DEFAULT NULL,
   `tipo_operacion` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'RELLENO',
@@ -1096,7 +1153,9 @@ CREATE TABLE `control_lubricantes` (
   KEY `control_lubricantes_id_entidad_foreign` (`id_entidad`),
   KEY `control_lubricantes_fecha_cambio_id_tractivo_index` (`fecha_cambio`,`id_tractivo`),
   KEY `control_lubricantes_tipo_operacion_index` (`tipo_operacion`),
+  KEY `control_lubricantes_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `control_lubricantes_id_agua_foreign` FOREIGN KEY (`id_agua`) REFERENCES `lubricantes` (`id`),
+  CONSTRAINT `control_lubricantes_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `control_lubricantes_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
   CONSTRAINT `control_lubricantes_id_grasa_copillas_foreign` FOREIGN KEY (`id_grasa_copillas`) REFERENCES `lubricantes` (`id`),
   CONSTRAINT `control_lubricantes_id_grasa_rollete_foreign` FOREIGN KEY (`id_grasa_rollete`) REFERENCES `lubricantes` (`id`),
@@ -1114,13 +1173,16 @@ DROP TABLE IF EXISTS `costos_taller`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `costos_taller` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `horas_taller` decimal(10,2) NOT NULL DEFAULT '0.00',
   `fecha` date NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `costos_taller_id_tractivo_foreign` (`id_tractivo`),
+  KEY `costos_taller_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `costos_taller_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `costos_taller_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1299,6 +1361,7 @@ CREATE TABLE `devoluciones` (
   `id_carta_porte` bigint unsigned NOT NULL,
   `id_cliente` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_empleado` bigint unsigned DEFAULT NULL,
   `fecha` date NOT NULL,
   `aumento_flete_mn` decimal(12,2) NOT NULL DEFAULT '0.00',
@@ -1321,6 +1384,8 @@ CREATE TABLE `devoluciones` (
   KEY `devoluciones_id_cliente_foreign` (`id_cliente`),
   KEY `devoluciones_id_tractivo_foreign` (`id_tractivo`),
   KEY `devoluciones_id_empleado_foreign` (`id_empleado`),
+  KEY `devoluciones_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `devoluciones_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `devoluciones_id_carta_porte_foreign` FOREIGN KEY (`id_carta_porte`) REFERENCES `cartas_porte` (`id`),
   CONSTRAINT `devoluciones_id_cliente_foreign` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id`),
   CONSTRAINT `devoluciones_id_empleado_foreign` FOREIGN KEY (`id_empleado`) REFERENCES `empleados` (`id`),
@@ -1344,6 +1409,7 @@ CREATE TABLE `dietas` (
   `otros` decimal(10,2) NOT NULL DEFAULT '0.00',
   `id_monedas` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_reembolso` bigint unsigned DEFAULT NULL,
   `f_liquidacion` date DEFAULT NULL,
   `folio_caja` int DEFAULT NULL,
@@ -1362,6 +1428,8 @@ CREATE TABLE `dietas` (
   KEY `dietas_id_tractivo_foreign` (`id_tractivo`),
   KEY `dietas_id_reembolso_foreign` (`id_reembolso`),
   KEY `dietas_id_entidad_foreign` (`id_entidad`),
+  KEY `dietas_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `dietas_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `dietas_id_bolsa_foreign` FOREIGN KEY (`id_bolsa`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `dietas_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
   CONSTRAINT `dietas_id_hoja_ruta_foreign` FOREIGN KEY (`id_hoja_ruta`) REFERENCES `hojas_ruta` (`id`),
@@ -1823,6 +1891,7 @@ CREATE TABLE `giros` (
   `numero_carta_porte` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_solicitud` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_cliente` bigint unsigned NOT NULL,
   `id_lugar_origen` bigint unsigned DEFAULT NULL,
   `id_lugar_destino` bigint unsigned DEFAULT NULL,
@@ -1848,7 +1917,9 @@ CREATE TABLE `giros` (
   KEY `giros_id_moneda_foreign` (`id_moneda`),
   KEY `giros_id_user_foreign` (`id_user`),
   KEY `giros_estado_index` (`estado`),
+  KEY `giros_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `fk_giros_id_tipo_carga_tiposcargas` FOREIGN KEY (`id_tipo_carga`) REFERENCES `tipos_cargas` (`id`),
+  CONSTRAINT `giros_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `giros_id_cliente_foreign` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id`),
   CONSTRAINT `giros_id_lugar_destino_foreign` FOREIGN KEY (`id_lugar_destino`) REFERENCES `lugares` (`id`),
   CONSTRAINT `giros_id_lugar_origen_foreign` FOREIGN KEY (`id_lugar_origen`) REFERENCES `lugares` (`id`),
@@ -1908,7 +1979,8 @@ DROP TABLE IF EXISTS `historial_tractivos`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `historial_tractivos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_grupo` bigint unsigned DEFAULT NULL,
   `id_caja` bigint unsigned DEFAULT NULL,
   `id_motor` bigint unsigned DEFAULT NULL,
@@ -1932,7 +2004,9 @@ CREATE TABLE `historial_tractivos` (
   KEY `historial_tractivos_id_motor_foreign` (`id_motor`),
   KEY `historial_tractivos_id_diferencial_foreign` (`id_diferencial`),
   KEY `historial_tractivos_id_entidad_foreign` (`id_entidad`),
+  KEY `historial_tractivos_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `fk_historial_tractivos_id_grupo_catalogo` FOREIGN KEY (`id_grupo`) REFERENCES `catalogo_items` (`id`),
+  CONSTRAINT `historial_tractivos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `historial_tractivos_id_caja_foreign` FOREIGN KEY (`id_caja`) REFERENCES `cajas` (`id`),
   CONSTRAINT `historial_tractivos_id_diferencial_foreign` FOREIGN KEY (`id_diferencial`) REFERENCES `diferenciales` (`id`),
   CONSTRAINT `historial_tractivos_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`) ON DELETE SET NULL,
@@ -1997,7 +2071,7 @@ CREATE TABLE `hojas_ruta` (
   KEY `hojas_ruta_id_chofer_index` (`id_chofer`),
   KEY `hojas_ruta_id_entidad_index` (`id_entidad`),
   CONSTRAINT `fk_hojas_ruta_id_grupo_catalogo` FOREIGN KEY (`id_grupo`) REFERENCES `catalogo_items` (`id`),
-  CONSTRAINT `hojas_ruta_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `tractivos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `hojas_ruta_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `hojas_ruta_id_chofer2_foreign` FOREIGN KEY (`id_chofer2`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `hojas_ruta_id_chofer_foreign` FOREIGN KEY (`id_chofer`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `hojas_ruta_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
@@ -2102,7 +2176,7 @@ DROP TABLE IF EXISTS `indicadores_planes`;
 CREATE TABLE `indicadores_planes` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `id_tipo_indicador` bigint unsigned DEFAULT NULL,
-  `periodo` int NOT NULL COMMENT 'aÃƒÂ±o',
+  `periodo` int NOT NULL COMMENT 'aÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â±o',
   `valores_mensuales` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `plan_periodo` decimal(12,2) DEFAULT NULL,
   `ajuste_periodo` decimal(12,2) DEFAULT NULL,
@@ -2561,6 +2635,7 @@ CREATE TABLE `motores_movimientos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `id_motor` bigint unsigned NOT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `fecha_movimiento` date NOT NULL,
   `tipo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'instalacion, retiro, reparacion',
   `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -2569,6 +2644,8 @@ CREATE TABLE `motores_movimientos` (
   PRIMARY KEY (`id`),
   KEY `motores_movimientos_id_motor_foreign` (`id_motor`),
   KEY `motores_movimientos_id_tractivo_foreign` (`id_tractivo`),
+  KEY `motores_movimientos_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `motores_movimientos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `motores_movimientos_id_motor_foreign` FOREIGN KEY (`id_motor`) REFERENCES `motores` (`id`) ON DELETE CASCADE,
   CONSTRAINT `motores_movimientos_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2638,6 +2715,7 @@ CREATE TABLE `movimientos_rrhh` (
   `id_bolsa` bigint unsigned DEFAULT NULL,
   `nronomina` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_plantilla` bigint unsigned DEFAULT NULL,
   `fbaja` date DEFAULT NULL,
   `cubreplaza` int NOT NULL DEFAULT '0',
@@ -2651,6 +2729,8 @@ CREATE TABLE `movimientos_rrhh` (
   KEY `movimientos_rrhh_id_tractivo_foreign` (`id_tractivo`),
   KEY `movimientos_rrhh_id_plantilla_foreign` (`id_plantilla`),
   KEY `movimientos_rrhh_id_user_foreign` (`id_user`),
+  KEY `movimientos_rrhh_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `movimientos_rrhh_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `movimientos_rrhh_id_bolsa_foreign` FOREIGN KEY (`id_bolsa`) REFERENCES `bolsa` (`id`) ON DELETE SET NULL,
   CONSTRAINT `movimientos_rrhh_id_plantilla_foreign` FOREIGN KEY (`id_plantilla`) REFERENCES `plantilla` (`id`) ON DELETE SET NULL,
   CONSTRAINT `movimientos_rrhh_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`) ON DELETE SET NULL,
@@ -2746,10 +2826,9 @@ DROP TABLE IF EXISTS `neumaticos`;
 CREATE TABLE `neumaticos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `folio` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `marca` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `modelo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `medida` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `fecha_instalacion` date DEFAULT NULL,
   `fecha_retiro` date DEFAULT NULL,
   `kilometraje` decimal(12,2) NOT NULL DEFAULT '0.00',
@@ -2768,14 +2847,22 @@ CREATE TABLE `neumaticos` (
   `kms_promedio` decimal(12,2) DEFAULT NULL,
   `fecha_plan_retiro` date DEFAULT NULL,
   `fecha_plan_aviso` date DEFAULT NULL,
+  `id_marca` bigint unsigned DEFAULT NULL,
+  `id_modelo` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `neumaticos_folio_unique` (`folio`),
   KEY `neumaticos_id_tractivo_index` (`id_tractivo`),
   KEY `neumaticos_estado_index` (`estado`),
   KEY `neumaticos_id_entidad_foreign` (`id_entidad`),
   KEY `neumaticos_id_posicion_foreign` (`id_posicion`),
+  KEY `neumaticos_id_arrastre_foreign` (`id_arrastre`),
+  KEY `neumaticos_id_marca_foreign` (`id_marca`),
+  KEY `neumaticos_id_modelo_foreign` (`id_modelo`),
   CONSTRAINT `fk_neumaticos_id_posicion_catalogo` FOREIGN KEY (`id_posicion`) REFERENCES `catalogo_items` (`id`),
+  CONSTRAINT `neumaticos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `neumaticos_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `neumaticos_id_marca_foreign` FOREIGN KEY (`id_marca`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `neumaticos_id_modelo_foreign` FOREIGN KEY (`id_modelo`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
   CONSTRAINT `neumaticos_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2786,6 +2873,7 @@ CREATE TABLE `neumaticos_movimientos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `id_neumatico` bigint unsigned NOT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `fecha_montaje` date DEFAULT NULL,
   `fecha_retiro` date DEFAULT NULL,
   `km_instalado` decimal(12,2) DEFAULT NULL,
@@ -2802,7 +2890,9 @@ CREATE TABLE `neumaticos_movimientos` (
   KEY `neumaticos_movimientos_id_destino_foreign` (`id_destino`),
   KEY `neumaticos_movimientos_id_entidad_foreign` (`id_entidad`),
   KEY `neumaticos_movimientos_id_neumatico_index` (`id_neumatico`),
+  KEY `neumaticos_movimientos_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `fk_neumaticos_movimientos_id_destino_catalogo` FOREIGN KEY (`id_destino`) REFERENCES `catalogo_items` (`id`),
+  CONSTRAINT `neumaticos_movimientos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `neumaticos_movimientos_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
   CONSTRAINT `neumaticos_movimientos_id_neumatico_foreign` FOREIGN KEY (`id_neumatico`) REFERENCES `neumaticos` (`id`) ON DELETE CASCADE,
   CONSTRAINT `neumaticos_movimientos_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`)
@@ -2888,6 +2978,7 @@ CREATE TABLE `ordenes_taller` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `numero` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_tipo_mantenimiento` bigint unsigned DEFAULT NULL,
   `fecha_ingreso` date DEFAULT NULL,
   `hora_ingreso` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -2957,9 +3048,11 @@ CREATE TABLE `ordenes_taller` (
   KEY `ordenes_taller_id_entidad_foreign` (`id_entidad`),
   KEY `ordenes_taller_fecha_ingreso_id_tractivo_index` (`fecha_ingreso`,`id_tractivo`),
   KEY `ordenes_taller_cancelada_index` (`cancelada`),
+  KEY `ordenes_taller_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `fk_ordenes_taller_id_clasificacion_catalogo` FOREIGN KEY (`id_clasificacion`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_ordenes_taller_id_motivo_entrada_catalogo` FOREIGN KEY (`id_motivo_entrada`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_ordenes_taller_id_tipo_mantenimiento_catalogo` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `catalogo_items` (`id`),
+  CONSTRAINT `ordenes_taller_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `ordenes_taller_id_confeccionado_foreign` FOREIGN KEY (`id_confeccionado`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `ordenes_taller_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
   CONSTRAINT `ordenes_taller_id_motor_foreign` FOREIGN KEY (`id_motor`) REFERENCES `motores` (`id`),
@@ -3027,6 +3120,7 @@ CREATE TABLE `otros_gastos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `id_bolsa` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `id_tipo_concepto` bigint unsigned DEFAULT NULL,
   `fecha` date NOT NULL,
   `concepto` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -3045,7 +3139,9 @@ CREATE TABLE `otros_gastos` (
   KEY `otros_gastos_id_user_foreign` (`id_user`),
   KEY `otros_gastos_fecha_index` (`fecha`),
   KEY `otros_gastos_estado_index` (`estado`),
+  KEY `otros_gastos_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `fk_otros_gastos_id_tipo_concepto_catalogo` FOREIGN KEY (`id_tipo_concepto`) REFERENCES `catalogo_items` (`id`),
+  CONSTRAINT `otros_gastos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `otros_gastos_id_bolsa_foreign` FOREIGN KEY (`id_bolsa`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `otros_gastos_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
   CONSTRAINT `otros_gastos_id_user_foreign` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`)
@@ -3191,7 +3287,8 @@ DROP TABLE IF EXISTS `pizarra`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pizarra` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `tractivo_id` bigint unsigned NOT NULL,
+  `tractivo_id` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `conductor_id` bigint unsigned DEFAULT NULL,
   `estado` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'disponible',
   `ubicacion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -3208,7 +3305,9 @@ CREATE TABLE `pizarra` (
   PRIMARY KEY (`id`),
   KEY `pizarra_tractivo_id_foreign` (`tractivo_id`),
   KEY `pizarra_conductor_id_foreign` (`conductor_id`),
+  KEY `pizarra_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `pizarra_conductor_id_foreign` FOREIGN KEY (`conductor_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `pizarra_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `pizarra_tractivo_id_foreign` FOREIGN KEY (`tractivo_id`) REFERENCES `tractivos` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -3219,13 +3318,16 @@ CREATE TABLE `pizarra_tractivos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `mes` int NOT NULL,
   `ano` int NOT NULL,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `dias` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `pizarra_tractivos_mes_ano_id_tractivo_unique` (`mes`,`ano`,`id_tractivo`),
   KEY `pizarra_tractivos_id_tractivo_foreign` (`id_tractivo`),
+  KEY `pizarra_tractivos_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `pizarra_tractivos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `pizarra_tractivos_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -3376,7 +3478,8 @@ DROP TABLE IF EXISTS `registro_ordenes_taller`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `registro_ordenes_taller` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `fecha_salida_taller` date NOT NULL,
   `tiempo_minutos` int NOT NULL DEFAULT '0' COMMENT 'Minutos en taller',
   `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -3384,6 +3487,8 @@ CREATE TABLE `registro_ordenes_taller` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `registro_ordenes_taller_id_tractivo_foreign` (`id_tractivo`),
+  KEY `registro_ordenes_taller_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `registro_ordenes_taller_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `registro_ordenes_taller_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -3393,7 +3498,8 @@ DROP TABLE IF EXISTS `reportes_costos`;
 CREATE TABLE `reportes_costos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `fecha_reporte` date NOT NULL,
-  `id_tractivo` bigint unsigned NOT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `combustible_mn` decimal(12,2) NOT NULL DEFAULT '0.00',
   `lubricante_mn` decimal(12,2) NOT NULL DEFAULT '0.00',
   `piezas_mn` decimal(12,2) NOT NULL DEFAULT '0.00',
@@ -3430,6 +3536,8 @@ CREATE TABLE `reportes_costos` (
   KEY `reportes_costos_id_user_foreign` (`id_user`),
   KEY `reportes_costos_fecha_reporte_index` (`fecha_reporte`),
   KEY `reportes_costos_id_tractivo_index` (`id_tractivo`),
+  KEY `reportes_costos_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `reportes_costos_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `reportes_costos_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
   CONSTRAINT `reportes_costos_id_user_foreign` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -3921,6 +4029,38 @@ CREATE TABLE `tipo_ingresos` (
   UNIQUE KEY `tipo_ingresos_codigo_unique` (`codigo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `tipo_vehiculos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tipo_vehiculos` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `id_tipo_equipo` bigint unsigned DEFAULT NULL,
+  `id_marca` bigint unsigned DEFAULT NULL,
+  `id_modelo` bigint unsigned DEFAULT NULL,
+  `id_tipo_mantenimiento` bigint unsigned DEFAULT NULL,
+  `id_tipo_tractivo` bigint unsigned DEFAULT NULL,
+  `id_tipo_arrastre` bigint unsigned DEFAULT NULL,
+  `clase` enum('tractivo','arrastre') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fabricacion` int DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tipo_vehiculos_id_tipo_equipo_foreign` (`id_tipo_equipo`),
+  KEY `tipo_vehiculos_id_marca_foreign` (`id_marca`),
+  KEY `tipo_vehiculos_id_modelo_foreign` (`id_modelo`),
+  KEY `tipo_vehiculos_id_tipo_mantenimiento_foreign` (`id_tipo_mantenimiento`),
+  KEY `tipo_vehiculos_id_tipo_tractivo_foreign` (`id_tipo_tractivo`),
+  KEY `tipo_vehiculos_id_tipo_arrastre_foreign` (`id_tipo_arrastre`),
+  KEY `tipo_vehiculos_clase_index` (`clase`),
+  CONSTRAINT `tipo_vehiculos_id_marca_foreign` FOREIGN KEY (`id_marca`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tipo_vehiculos_id_modelo_foreign` FOREIGN KEY (`id_modelo`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tipo_vehiculos_id_tipo_arrastre_foreign` FOREIGN KEY (`id_tipo_arrastre`) REFERENCES `tipos_arrastres` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tipo_vehiculos_id_tipo_equipo_foreign` FOREIGN KEY (`id_tipo_equipo`) REFERENCES `tipos_equipos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tipo_vehiculos_id_tipo_mantenimiento_foreign` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `tipos_mantenimiento` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tipo_vehiculos_id_tipo_tractivo_foreign` FOREIGN KEY (`id_tipo_tractivo`) REFERENCES `tipos_tractivos` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tipos_agregados`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -3940,10 +4080,6 @@ DROP TABLE IF EXISTS `tipos_arrastres`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tipos_arrastres` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `id_marca` bigint unsigned DEFAULT NULL,
-  `id_modelo` bigint unsigned DEFAULT NULL,
-  `id_tipo_equipo` bigint unsigned DEFAULT NULL,
-  `fabricacion` int DEFAULT NULL,
   `frecuencia` int DEFAULT NULL,
   `id_medida_del` bigint unsigned DEFAULT NULL,
   `id_medida_tra` bigint unsigned DEFAULT NULL,
@@ -3961,36 +4097,24 @@ CREATE TABLE `tipos_arrastres` (
   `altura_total` decimal(8,2) DEFAULT NULL,
   `largo_total` decimal(8,2) DEFAULT NULL,
   `ancho_total` decimal(8,2) DEFAULT NULL,
-  `id_tipo_combustible` bigint unsigned DEFAULT NULL,
   `id_lubricante` bigint unsigned DEFAULT NULL,
   `id_lub_cubo` bigint unsigned DEFAULT NULL,
-  `id_tipo_mantenimiento` bigint unsigned DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `tipos_arrastres_id_marca_foreign` (`id_marca`),
-  KEY `tipos_arrastres_id_modelo_foreign` (`id_modelo`),
-  KEY `tipos_arrastres_id_tipo_equipo_foreign` (`id_tipo_equipo`),
   KEY `tipos_arrastres_id_medida_del_foreign` (`id_medida_del`),
   KEY `tipos_arrastres_id_medida_tra_foreign` (`id_medida_tra`),
   KEY `tipos_arrastres_id_medida_res_foreign` (`id_medida_res`),
   KEY `tipos_arrastres_id_tipo_suspension_foreign` (`id_tipo_suspension`),
-  KEY `tipos_arrastres_id_tipo_combustible_foreign` (`id_tipo_combustible`),
   KEY `tipos_arrastres_id_lubricante_foreign` (`id_lubricante`),
   KEY `tipos_arrastres_id_lub_cubo_foreign` (`id_lub_cubo`),
-  KEY `tipos_arrastres_id_tipo_mantenimiento_foreign` (`id_tipo_mantenimiento`),
-  CONSTRAINT `fk_tipos_arrastres_id_marca_catalogo` FOREIGN KEY (`id_marca`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_arrastres_id_medida_del_catalogo` FOREIGN KEY (`id_medida_del`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_arrastres_id_medida_res_catalogo` FOREIGN KEY (`id_medida_res`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_arrastres_id_medida_tra_catalogo` FOREIGN KEY (`id_medida_tra`) REFERENCES `catalogo_items` (`id`),
-  CONSTRAINT `fk_tipos_arrastres_id_modelo_catalogo` FOREIGN KEY (`id_modelo`) REFERENCES `catalogo_items` (`id`),
-  CONSTRAINT `fk_tipos_arrastres_id_tipo_equipo_catalogo` FOREIGN KEY (`id_tipo_equipo`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_arrastres_id_tipo_suspension_catalogo` FOREIGN KEY (`id_tipo_suspension`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `tipos_arrastres_id_lub_cubo_foreign` FOREIGN KEY (`id_lub_cubo`) REFERENCES `lubricantes` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `tipos_arrastres_id_lubricante_foreign` FOREIGN KEY (`id_lubricante`) REFERENCES `lubricantes` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `tipos_arrastres_id_tipo_combustible_foreign` FOREIGN KEY (`id_tipo_combustible`) REFERENCES `tipos_combustibles` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `tipos_arrastres_id_tipo_mantenimiento_foreign` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `tipos_mantenimiento` (`id`) ON DELETE SET NULL
+  CONSTRAINT `tipos_arrastres_id_lubricante_foreign` FOREIGN KEY (`id_lubricante`) REFERENCES `lubricantes` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tipos_cargas`;
@@ -4169,11 +4293,6 @@ DROP TABLE IF EXISTS `tipos_tractivos`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tipos_tractivos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `id_marca` bigint unsigned DEFAULT NULL,
-  `id_modelo` bigint unsigned DEFAULT NULL,
-  `id_tipo_mantenimiento` bigint unsigned DEFAULT NULL,
-  `fabricacion` int DEFAULT NULL,
-  `tipo_equipo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `bat_cant` int DEFAULT NULL,
   `bat_amp` decimal(8,2) DEFAULT NULL,
   `dif_cant` int DEFAULT NULL,
@@ -4201,25 +4320,23 @@ CREATE TABLE `tipos_tractivos` (
   `activo` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `id_lubricante_hidraulico` bigint unsigned DEFAULT NULL,
+  `cap_hidraulico` decimal(8,2) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `tipos_tractivos_id_marca_foreign` (`id_marca`),
-  KEY `tipos_tractivos_id_modelo_foreign` (`id_modelo`),
   KEY `tipos_tractivos_id_medida_del_foreign` (`id_medida_del`),
   KEY `tipos_tractivos_id_medida_tra_foreign` (`id_medida_tra`),
   KEY `tipos_tractivos_id_medida_res_foreign` (`id_medida_res`),
   KEY `tipos_tractivos_id_tipo_combustible_foreign` (`id_tipo_combustible`),
   KEY `tipos_tractivos_id_lubricante_motor_foreign` (`id_lubricante_motor`),
   KEY `tipos_tractivos_id_lubricante_cubo_foreign` (`id_lubricante_cubo`),
-  KEY `tipos_tractivos_id_tipo_mantenimiento_foreign` (`id_tipo_mantenimiento`),
+  KEY `tipos_tractivos_id_lubricante_hidraulico_foreign` (`id_lubricante_hidraulico`),
   CONSTRAINT `fk_tipos_tractivos_id_lubricante_cubo_catalogo` FOREIGN KEY (`id_lubricante_cubo`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_tractivos_id_lubricante_motor_catalogo` FOREIGN KEY (`id_lubricante_motor`) REFERENCES `catalogo_items` (`id`),
-  CONSTRAINT `fk_tipos_tractivos_id_marca_catalogo` FOREIGN KEY (`id_marca`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_tractivos_id_medida_del_catalogo` FOREIGN KEY (`id_medida_del`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_tractivos_id_medida_res_catalogo` FOREIGN KEY (`id_medida_res`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_tractivos_id_medida_tra_catalogo` FOREIGN KEY (`id_medida_tra`) REFERENCES `catalogo_items` (`id`),
-  CONSTRAINT `fk_tipos_tractivos_id_modelo_catalogo` FOREIGN KEY (`id_modelo`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tipos_tractivos_id_tipo_combustible_catalogo` FOREIGN KEY (`id_tipo_combustible`) REFERENCES `catalogo_items` (`id`),
-  CONSTRAINT `tipos_tractivos_id_tipo_mantenimiento_foreign` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `tipos_mantenimiento` (`id`) ON DELETE SET NULL
+  CONSTRAINT `tipos_tractivos_id_lubricante_hidraulico_foreign` FOREIGN KEY (`id_lubricante_hidraulico`) REFERENCES `lubricantes` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tractivos`;
@@ -4228,9 +4345,9 @@ DROP TABLE IF EXISTS `tractivos`;
 CREATE TABLE `tractivos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `descripcion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `placa` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_tipo_vehiculo` bigint unsigned DEFAULT NULL,
+  `id_tipo_combustible` bigint unsigned DEFAULT NULL,
   `id_motor` bigint unsigned DEFAULT NULL,
   `id_caja` bigint unsigned DEFAULT NULL,
   `id_diferencial` bigint unsigned DEFAULT NULL,
@@ -4240,60 +4357,27 @@ CREATE TABLE `tractivos` (
   `id_color_secundario` bigint unsigned DEFAULT NULL,
   `id_tipo_estado` bigint unsigned DEFAULT NULL,
   `id_lubricante_hidraulico` bigint unsigned DEFAULT NULL,
-  `marca` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `modelo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `anno` int DEFAULT NULL,
-  `color` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `vin` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `nro_carroceria` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `nro_registro` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `nro_resolucion` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `tara` decimal(10,2) DEFAULT NULL,
   `cap_deposito` decimal(10,2) DEFAULT NULL,
   `cap_hidraulico` decimal(10,2) DEFAULT NULL,
-  `cta_combustible` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `indice_consumo` decimal(12,2) DEFAULT NULL,
   `indice_aceite` decimal(12,2) DEFAULT NULL,
-  `numero_motor` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `numero_chasis` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `numero_caja` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `capacidad_toneladas` decimal(8,2) DEFAULT NULL,
-  `capacidad_m3` decimal(8,2) DEFAULT NULL,
-  `estado` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'activo',
   `fecha_alta` date DEFAULT NULL,
   `fecha_baja` date DEFAULT NULL,
   `gps` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `kilometraje_actual` decimal(12,2) NOT NULL DEFAULT '0.00',
   `kms_disp` decimal(12,2) DEFAULT NULL,
   `kms_plan_mtto` int DEFAULT NULL,
-  `plan_comb` decimal(12,2) DEFAULT NULL,
-  `plan_tn` decimal(12,2) DEFAULT NULL,
-  `plan_viajes` decimal(12,2) DEFAULT NULL,
-  `plan_gastos` decimal(12,2) DEFAULT NULL,
-  `plan_cdt` decimal(12,2) DEFAULT NULL,
-  `plan_diario` decimal(12,2) DEFAULT NULL,
-  `ficav` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `femision_ficav` date DEFAULT NULL,
-  `fvence_ficav` date DEFAULT NULL,
-  `lot` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `femision_lot` date DEFAULT NULL,
-  `fvence_lot` date DEFAULT NULL,
-  `circulacion` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `femision_circ` date DEFAULT NULL,
-  `fvence_circ` date DEFAULT NULL,
-  `f_reconstruccion` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `id_entidad` bigint unsigned DEFAULT NULL,
-  `amortmn` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `amortme` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `vchapa` decimal(10,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`id`),
   UNIQUE KEY `tractivos_placa_unique` (`placa`),
   UNIQUE KEY `tractivos_codigo_unique` (`codigo`),
   KEY `tractivos_placa_index` (`placa`),
-  KEY `tractivos_estado_index` (`estado`),
   KEY `tractivos_id_tipo_vehiculo_index` (`id_tipo_vehiculo`),
   KEY `tractivos_id_entidad_foreign` (`id_entidad`),
   KEY `tractivos_id_motor_foreign` (`id_motor`),
@@ -4305,6 +4389,7 @@ CREATE TABLE `tractivos` (
   KEY `tractivos_id_grupo_index` (`id_grupo`),
   KEY `tractivos_id_tipo_servicio_index` (`id_tipo_servicio`),
   KEY `tractivos_id_tipo_estado_index` (`id_tipo_estado`),
+  KEY `tractivos_id_tipo_combustible_foreign` (`id_tipo_combustible`),
   CONSTRAINT `fk_tractivos_id_color_primario_catalogo` FOREIGN KEY (`id_color_primario`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tractivos_id_color_secundario_catalogo` FOREIGN KEY (`id_color_secundario`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_tractivos_id_grupo_catalogo` FOREIGN KEY (`id_grupo`) REFERENCES `catalogo_items` (`id`),
@@ -4314,8 +4399,9 @@ CREATE TABLE `tractivos` (
   CONSTRAINT `tractivos_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tractivos_id_lubricante_hidraulico_foreign` FOREIGN KEY (`id_lubricante_hidraulico`) REFERENCES `lubricantes` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tractivos_id_motor_foreign` FOREIGN KEY (`id_motor`) REFERENCES `motores` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tractivos_id_tipo_combustible_foreign` FOREIGN KEY (`id_tipo_combustible`) REFERENCES `tipos_combustibles` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tractivos_id_tipo_estado_foreign` FOREIGN KEY (`id_tipo_estado`) REFERENCES `estados_componentes` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `tractivos_id_tipo_vehiculo_foreign` FOREIGN KEY (`id_tipo_vehiculo`) REFERENCES `tipos_tractivos` (`id`)
+  CONSTRAINT `tractivos_id_tipo_vehiculo_foreign` FOREIGN KEY (`id_tipo_vehiculo`) REFERENCES `tipo_vehiculos` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `turnos`;
@@ -4395,6 +4481,7 @@ CREATE TABLE `vales` (
   `numero` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_bolsa` bigint unsigned DEFAULT NULL,
   `id_tractivo` bigint unsigned DEFAULT NULL,
+  `id_arrastre` bigint unsigned DEFAULT NULL,
   `fecha_emision` date NOT NULL,
   `tipo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'almacen, combustible, repuesto',
   `concepto` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -4410,6 +4497,8 @@ CREATE TABLE `vales` (
   KEY `vales_id_user_foreign` (`id_user`),
   KEY `vales_fecha_emision_index` (`fecha_emision`),
   KEY `vales_estado_index` (`estado`),
+  KEY `vales_id_arrastre_foreign` (`id_arrastre`),
+  CONSTRAINT `vales_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `vales_id_bolsa_foreign` FOREIGN KEY (`id_bolsa`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `vales_id_tractivo_foreign` FOREIGN KEY (`id_tractivo`) REFERENCES `tractivos` (`id`),
   CONSTRAINT `vales_id_user_foreign` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`)
@@ -4430,6 +4519,69 @@ CREATE TABLE `vallas` (
   UNIQUE KEY `vallas_codigo_unique` (`codigo`),
   KEY `vallas_id_nave_foreign` (`id_nave`),
   CONSTRAINT `vallas_id_nave_foreign` FOREIGN KEY (`id_nave`) REFERENCES `naves` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `vehiculos_amortizacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vehiculos_amortizacion` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `vehiculo_type` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vehiculo_id` bigint unsigned NOT NULL,
+  `amortmn` decimal(12,2) DEFAULT NULL,
+  `amortme` decimal(12,2) DEFAULT NULL,
+  `vchapa` decimal(12,2) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `vehiculos_amortizacion_vehiculo_type_vehiculo_id_index` (`vehiculo_type`,`vehiculo_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `vehiculos_documentacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vehiculos_documentacion` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `vehiculo_type` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vehiculo_id` bigint unsigned NOT NULL,
+  `ficav` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `femision_ficav` date DEFAULT NULL,
+  `fvence_ficav` date DEFAULT NULL,
+  `lot` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `femision_lot` date DEFAULT NULL,
+  `fvence_lot` date DEFAULT NULL,
+  `circulacion` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `femision_circ` date DEFAULT NULL,
+  `fvence_circ` date DEFAULT NULL,
+  `f_reconstruccion` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `nro_carroceria` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nro_registro` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nro_resolucion` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nro_chasis` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vin` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `vehiculos_documentacion_vehiculo_type_vehiculo_id_index` (`vehiculo_type`,`vehiculo_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `vehiculos_planes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vehiculos_planes` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `vehiculo_type` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vehiculo_id` bigint unsigned NOT NULL,
+  `plan_comb` decimal(12,2) DEFAULT NULL,
+  `plan_tn` decimal(12,2) DEFAULT NULL,
+  `plan_viajes` decimal(12,2) DEFAULT NULL,
+  `plan_gastos` decimal(12,2) DEFAULT NULL,
+  `plan_cdt` decimal(12,2) DEFAULT NULL,
+  `plan_diario` decimal(12,2) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `vehiculos_planes_vehiculo_type_vehiculo_id_index` (`vehiculo_type`,`vehiculo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -4592,3 +4744,22 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (158,'2026_08_23_21
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (159,'2026_08_24_100000_drop_blank_columns_tipos_equipos',46);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (160,'2026_08_24_110000_drop_columns_tipos_tractivos_arrastres',47);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (161,'2026_08_24_120000_mover_pais_a_marca',48);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (162,'2026_08_24_130000_ocultar_campo_tipo_marcas',49);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (163,'2026_08_24_140000_add_logo_to_catalogo_items',50);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (164,'2026_08_25_100000_normalizar_tipo_equipo_combustible',51);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (165,'2026_08_25_110000_repoblar_cuna_tractora',52);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (166,'2026_08_25_200000_crear_tipo_vehiculos',53);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (167,'2026_08_25_210000_limpiar_subtablas_tipo_vehiculo',54);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (168,'2026_08_25_220000_crear_tablas_polimorficas_vehiculo',55);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (169,'2026_08_25_230000_add_fabricacion_to_tipo_vehiculos',56);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (170,'2026_08_25_250000_limpiar_modelos_catalogo',57);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (171,'2026_08_25_260000_eliminar_columnas_redundantes_tipos',58);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (172,'2026_08_25_270000_identificar_arrastres_polimorficos',59);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (173,'2026_08_25_280000_crear_tabla_arrastres',60);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (174,'2026_08_25_290000_arrastres_split_id_arrastre',61);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (175,'2026_08_25_300000_arrastres_split_limpio',62);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (176,'2026_08_25_310000_arrastres_slim',63);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (177,'2026_08_25_320000_borrar_espejo_tractivos',64);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (178,'2026_08_27_100000_normalize_tractivos_columns',65);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (179,'2026_08_27_200000_vehicle_schema_normalization',66);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (180,'2026_08_27_210000_drop_marca_modelo_tractivos',67);

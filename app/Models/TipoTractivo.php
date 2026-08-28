@@ -20,6 +20,7 @@ class TipoTractivo extends Model
         'neum_del_cant', 'neum_tras_cant', 'neum_resp_cant', 'neum_tractivos',
         'ejes_cant', 'eject_trac',
         'id_tipo_combustible', 'id_lubricante_motor', 'id_lubricante_cubo',
+        'id_lubricante_hidraulico', 'cap_hidraulico',
         'lub_norma', 'lub_caja',
         'dist_eje_inter', 'dist_eje_tras',
         'cama_largo', 'cama_ancho', 'cama_altura', 'activo',
@@ -79,6 +80,11 @@ class TipoTractivo extends Model
     public function lubricanteCubo(): BelongsTo
     {
         return $this->belongsTo(Lubricante::class, 'id_lubricante_cubo');
+    }
+
+    public function lubricanteHidraulico(): BelongsTo
+    {
+        return $this->belongsTo(Lubricante::class, 'id_lubricante_hidraulico');
     }
 
     public function medidaDel(): BelongsTo

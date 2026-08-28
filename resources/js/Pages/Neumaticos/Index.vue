@@ -14,7 +14,7 @@ import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
 import { useConfirm } from 'primevue/useconfirm'
 
-const props = defineProps({ title: String, neumaticos: Object, filtros: Object, filters: Object })
+const props = defineProps({ title: String, neumaticos: Object, filtros: Object, filters: Object, catalogos: Object })
 const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
@@ -26,10 +26,13 @@ const kms = ref(0)
 
 const estados = props.filtros?.estados || ['activo', 'recauchado', 'regular', 'nuevo', 'baja']
 
+const marcasOptions = computed(() => props.catalogos?.marcas ?? [])
+const modelosOptions = computed(() => props.catalogos?.modelos ?? [])
+
 const baseForm = () => ({
   folio: 'AUTOMATICO',
-  marca: '',
-  modelo: '',
+  id_marca: null,
+  id_modelo: null,
   medida: '',
   id_tractivo: null,
   fecha_instalacion: new Date().toISOString().slice(0, 10),
@@ -66,8 +69,8 @@ function openEdit(item) {
   editing.value = item
   form.value = {
     folio: item.folio ?? '',
-    marca: item.marca ?? '',
-    modelo: item.modelo ?? '',
+    id_marca: item.id_marca ?? null,
+    id_modelo: item.id_modelo ?? null,
     medida: item.medida ?? '',
     id_tractivo: item.id_tractivo ?? null,
     fecha_instalacion: item.fecha_instalacion ?? null,
@@ -131,7 +134,7 @@ function submitRetiro() {
       <template #start><h2 class="text-xl font-bold m-0">{{ title ?? 'Neumáticos' }}</h2></template>
       <template #end>
         <div class="flex gap-2">
-          <InputText v-model="search" placeholder="Buscar por folio o marca..." class="w-64" />
+          <InputText v-model="search" placeholder="Buscar por folio..." class="w-64" />
           <Button icon="pi pi-plus" label="Nuevo neumático" @click="openCreate" />
         </div>
       </template>
@@ -143,9 +146,13 @@ function submitRetiro() {
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
       currentPageReportTemplate="Total: {totalRecords} registros">
       <Column field="folio" header="Folio" sortable style="width:120px" />
-      <Column field="marca" header="Marca" sortable />
+      <Column field="marca" header="Marca" sortable>
+        <template #body="{ data }">{{ data.marca?.nombre || '—' }}</template>
+      </Column>
       <Column field="medida" header="Medida" />
-      <Column field="tractivo.descripcion" header="Tractivo" />
+      <Column field="tractivo" header="Tractivo">
+        <template #body="{ data }">{{ data.tractivo?.placa ?? '—' }}</template>
+      </Column>
       <Column field="id_posicion" header="Posición">
         <template #body="{ data }">{{ data.posicion?.nombre ?? data.id_posicion }}</template>
       </Column>
@@ -177,11 +184,11 @@ function submitRetiro() {
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium">Marca</label>
-          <InputText v-model="form.marca" />
+          <Select v-model="form.id_marca" :options="marcasOptions" optionLabel="nombre" optionValue="id" class="w-full" showClear placeholder="Seleccione" />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium">Modelo</label>
-          <InputText v-model="form.modelo" />
+          <Select v-model="form.id_modelo" :options="modelosOptions" optionLabel="nombre" optionValue="id" class="w-full" showClear placeholder="Seleccione" />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium">Medida</label>

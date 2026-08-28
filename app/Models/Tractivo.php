@@ -22,18 +22,16 @@ class Tractivo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'id_entidad', 'codigo', 'descripcion', 'placa', 'id_tipo_vehiculo',
-        'id_tipo_equipo', 'id_tipo_combustible',
+        'id_entidad', 'codigo', 'placa', 'id_tipo_vehiculo',
+        'id_tipo_combustible',
         'id_motor', 'id_caja', 'id_diferencial',
         'id_grupo', 'id_tipo_servicio', 'id_color_primario', 'id_color_secundario',
         'id_tipo_estado', 'id_lubricante_hidraulico',
         'anno',
-        'numero_chasis',
-        'capacidad_toneladas', 'capacidad_m3',
-        'vin',
-        'tara', 'cap_deposito', 'cap_hidraulico', 'cta_combustible',
+        'capacidad_toneladas',
+        'tara', 'cap_deposito', 'cap_hidraulico',
         'indice_consumo', 'indice_aceite',
-        'estado', 'fecha_alta', 'fecha_baja', 'kilometraje_actual',
+        'fecha_alta', 'fecha_baja', 'kilometraje_actual',
         'kms_disp', 'kms_plan_mtto',
         'gps',
     ];
@@ -176,6 +174,19 @@ class Tractivo extends Model
     }
 
     /**
+     * Chasis/VIN ahora viven en la ficha polimórfica de documentación (normalización 2026-08-27).
+     */
+    public function getNumeroChasisAttribute()
+    {
+        return $this->documentacion?->nro_chasis;
+    }
+
+    public function getVinAttribute()
+    {
+        return $this->documentacion?->vin;
+    }
+
+    /**
      * Persiste las fichas polimórficas desde los campos del formulario.
      */
     public function syncVehiculoExtra(array $datos): void
@@ -208,6 +219,8 @@ class Tractivo extends Model
             'femision_circ' => $datos['femision_circ'] ?? null,
             'fvence_circ' => $datos['fvence_circ'] ?? null,
             'f_reconstruccion' => $datos['f_reconstruccion'] ?? null,
+            'nro_chasis' => $datos['nro_chasis'] ?? null,
+            'vin' => $datos['vin'] ?? null,
             'nro_carroceria' => $datos['nro_carroceria'] ?? null,
             'nro_registro' => $datos['nro_registro'] ?? null,
             'nro_resolucion' => $datos['nro_resolucion'] ?? null,

@@ -20,9 +20,8 @@ class NeumaticosController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\Neumatico::class);
-        $neumaticos = Neumatico::with('tractivo:id,descripcion,placa', 'posicion:id,nombre')
-            ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%")
-                ->orWhere('marca', 'like', "%{$s}%"))
+        $neumaticos = Neumatico::with('tractivo:id,placa', 'posicion:id,nombre', 'marca:id,nombre')
+            ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $e) => $q->where('estado', $e))
             ->when(true, function ($q) {
                 $entidades = $this->entidadesPermitidas();
@@ -41,6 +40,10 @@ class NeumaticosController extends Controller
             'filtros' => [
                 'estados' => ['activo', 'recauchado', 'regular', 'nuevo', 'baja'],
             ],
+            'catalogos' => [
+                'marcas' => \App\Support\Catalogos::opciones('marcas'),
+                'modelos' => \App\Support\Catalogos::opciones('modelos'),
+            ],
             'filters' => $request->only(['search', 'estado']),
         ]);
     }
@@ -51,8 +54,8 @@ class NeumaticosController extends Controller
         $this->authorize('create', \App\Models\Neumatico::class);
         $validated = $request->validate([
             'folio' => 'required|string|max:50',
-            'marca' => 'nullable|string|max:100',
-            'modelo' => 'nullable|string|max:100',
+            'id_marca' => 'nullable|exists:catalogo_items,id',
+            'id_modelo' => 'nullable|exists:catalogo_items,id',
             'medida' => 'nullable|string|max:50',
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'fecha_instalacion' => 'nullable|date',
@@ -95,8 +98,8 @@ class NeumaticosController extends Controller
 
         $validated = $request->validate([
             'folio' => 'required|string|max:50',
-            'marca' => 'nullable|string|max:100',
-            'modelo' => 'nullable|string|max:100',
+            'id_marca' => 'nullable|exists:catalogo_items,id',
+            'id_modelo' => 'nullable|exists:catalogo_items,id',
             'medida' => 'nullable|string|max:50',
             'id_tractivo' => 'nullable|exists:tractivos,id',
             'fecha_instalacion' => 'nullable|date',

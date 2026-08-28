@@ -15,7 +15,7 @@ class Bateria extends Model
     protected $table = 'baterias';
 
     protected $fillable = [
-        'id_entidad', 'folio', 'marca', 'modelo', 'id_tractivo',
+        'id_entidad', 'folio', 'id_marca', 'id_modelo', 'id_tractivo',
         'fecha_instalacion', 'fecha_retiro', 'estado',
         'voltaje', 'amperaje', 'precio_mn', 'precio_me', 'id_motivo_baja', 'id_destino',
         'fecha_movimiento',
@@ -37,6 +37,16 @@ class Bateria extends Model
     public function tractivo(): BelongsTo
     {
         return $this->belongsTo(Tractivo::class, 'id_tractivo');
+    }
+
+    public function marca(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'id_marca');
+    }
+
+    public function modelo(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'id_modelo');
     }
 
     public function motivoBaja(): BelongsTo

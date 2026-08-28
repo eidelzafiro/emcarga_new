@@ -134,8 +134,15 @@ class KpiService
         $inSql = $ids ? 'AND t.id_entidad IN ('.implode(',', $ids).')' : '';
         $inSqlA = $ids ? 'AND a.id_entidad IN ('.implode(',', $ids).')' : '';
 
+        // La columna `estado` (varchar) de tractivos fue reemplazada por
+        // `id_tipo_estado` (FK a estados_componentes). El estado "en taller"
+        // corresponde al registro cuyo nombre es "EN TALLER".
+        $tallerEstadoId = (int) \App\Models\EstadoComponente::where('codigo', 'taller')
+            ->orWhere('nombre', 'LIKE', 'EN TALLER%')
+            ->value('id');
+
         // ── KPI Vehículos: agrupados por TIPO DE EQUIPO, activos/en taller ──
-        $enTallerSql = "(t.estado = 'taller' OR EXISTS (
+        $enTallerSql = "(t.id_tipo_estado = {$tallerEstadoId} OR EXISTS (
             SELECT 1 FROM ordenes_taller ot
             WHERE ot.id_tractivo = t.id AND ot.deleted_at IS NULL
               AND ot.cancelada = false AND ot.estado = 'abierta'))";

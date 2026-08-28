@@ -31,9 +31,9 @@
           </Column>
           <Column field="tara" header="Tara" sortable />
           <Column field="indice_aceite" header="Índice aceite" sortable />
-          <Column field="estado" header="Estado" style="width:110px">
+          <Column field="id_tipo_estado" header="Estado" style="width:130px">
             <template #body="{ data }">
-              <Tag :value="data.estado || 'activo'" :severity="(data.estado || 'activo') === 'activo' ? 'success' : 'warn'" />
+              <Tag :value="estadoLabel(data.id_tipo_estado)" :severity="estadoLabel(data.id_tipo_estado) === 'Activo' ? 'success' : 'warn'" />
             </template>
           </Column>
           <Column header="Acciones" :exportable="false">
@@ -68,7 +68,15 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de arrastre</label>
             <Select v-model="form.id_tipo_vehiculo" :options="catalogos.tiposArrastre ?? []"
-              optionLabel="label" optionValue="value" class="w-full" showClear placeholder="Seleccione" />
+              optionLabel="label" optionValue="value" class="w-full" showClear placeholder="Seleccione" @change="aplicarFichaTipo" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+            <InputText :value="fichaTipo?.marca || ''" class="w-full" disabled />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+            <InputText :value="fichaTipo?.modelo || ''" class="w-full" disabled />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Color primario</label>
@@ -88,7 +96,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-            <Select v-model="form.estado" :options="estadosOptions" optionLabel="label" optionValue="value" class="w-full" />
+            <Select v-model="form.id_tipo_estado" :options="estadosOptions" optionLabel="nombre" optionValue="id" class="w-full" showClear placeholder="Seleccione" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Fecha alta</label>
@@ -134,12 +142,19 @@ const editing = ref(false)
 const form = ref(baseForm())
 
 const coloresOptions = computed(() => (props.catalogos?.colores ?? []).map((c) => ({ value: c.id, label: c.nombre })))
-const estadosOptions = [
-  { label: 'Activo', value: 'activo' },
-  { label: 'Baja', value: 'baja' },
-]
+const estadosOptions = computed(() => props.catalogos?.estados ?? [])
 
 const colorLabel = (id) => coloresOptions.value.find((c) => c.value === id)?.label ?? '—'
+const estadoLabel = (id) => estadosOptions.value.find((e) => e.id === id)?.nombre ?? '—'
+
+// Marca/modelo derivados del tipo de vehículo (no se almacenan en arrastres).
+const fichaTipo = computed(() => {
+  if (!form.value.id_tipo_vehiculo) return null
+  return (props.catalogos?.tiposArrastre ?? []).find((t) => t.value === form.value.id_tipo_vehiculo) ?? null
+})
+function aplicarFichaTipo() {
+  // La marca/modelo se muestran en disabled; no se asignan al form.
+}
 
 function baseForm() {
   return {
@@ -151,7 +166,7 @@ function baseForm() {
     id_color_secundario: null,
     tara: null,
     indice_aceite: null,
-    estado: 'activo',
+    id_tipo_estado: null,
     fecha_alta: null,
     fecha_baja: null,
   }
@@ -182,7 +197,7 @@ function openEdit(item) {
     id_color_secundario: item.id_color_secundario ?? null,
     tara: item.tara ?? null,
     indice_aceite: item.indice_aceite ?? null,
-    estado: item.estado ?? 'activo',
+    id_tipo_estado: item.id_tipo_estado ?? null,
     fecha_alta: item.fecha_alta ?? null,
     fecha_baja: item.fecha_baja ?? null,
   }
@@ -198,7 +213,7 @@ function submit() {
     id_color_secundario: form.value.id_color_secundario,
     tara: form.value.tara,
     indice_aceite: form.value.indice_aceite,
-    estado: form.value.estado,
+    id_tipo_estado: form.value.id_tipo_estado,
     fecha_alta: form.value.fecha_alta,
     fecha_baja: form.value.fecha_baja,
   }

@@ -53,6 +53,7 @@ class ArrastresController extends Controller
             'catalogos' => [
                 'tiposArrastre' => $this->tiposTipoArrastre(),
                 'colores' => \App\Models\CatalogoItem::where('tipo', 'colores')->orderBy('nombre')->get(['id', 'nombre']),
+                'estados' => \App\Models\EstadoComponente::orderBy('nombre')->get(['id', 'nombre']),
             ],
         ]);
     }
@@ -102,7 +103,7 @@ class ArrastresController extends Controller
             'indice_aceite' => 'nullable|numeric',
             'id_color_primario' => 'nullable|exists:catalogo_items,id',
             'id_color_secundario' => 'nullable|exists:catalogo_items,id',
-            'estado' => 'nullable|string|max:50',
+            'id_tipo_estado' => 'nullable|exists:estados_componentes,id',
             'fecha_alta' => 'nullable|date',
             'fecha_baja' => 'nullable|date',
         ];
@@ -124,6 +125,8 @@ class ArrastresController extends Controller
                 return [
                     'value' => $tv->id,
                     'label' => $etiqueta,
+                    'marca' => $marca,
+                    'modelo' => $modelo,
                 ];
             })
             ->values()

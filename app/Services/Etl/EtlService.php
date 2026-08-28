@@ -483,7 +483,6 @@ class EtlService
                             ['id' => $fila->idtractivos],
                             [
                                 'codigo' => $codigoFinal,
-                                'descripcion' => trim((string) ($fila->codtractivo ?? '')) ?: '',
                                 'placa' => $placaFinal ?? '',
                                 'id_tipo_vehiculo' => $idTipoVehiculo,
                                 // FKs componentes (id legacy preservado, validado contra destino)
@@ -496,28 +495,20 @@ class EtlService
                                 'id_color_primario' => $fk('colores', $fila->idcolorprimario),
                                 'id_color_secundario' => $fk('colores', $fila->idcolorsecundario),
                                 'id_tipo_estado' => $fk('estados_componentes', $fila->idtipoestados),
-                                'id_lubricante_hidraulico' => $fk('lubricantes', $fila->idlubricantes),
-                                // Descripción / identidad. marca/modelo/color/numero_motor/
-                                // numero_caja se derivan de FKs (id_tipo_vehiculo, id_color_*,
-                                // id_motor, id_caja) — normalización 2026-08-27.
+                                // Marca/modelo se derivan del tipo de vehículo (id_tipo_vehiculo → tipo_vehiculos).
                                 'anno' => $anno,
-                                'vin' => trim((string) ($fila->vin ?? '')) ?: null,
-                                'numero_chasis' => trim((string) ($fila->chassis ?? '')) ?: null,
                                 'capacidad_toneladas' => $fila->capacidad,
                                 // Físico / capacidad de combustible
                                 // tara > 99.999.999 no cabe en decimal(10,2): valores corruptos legacy → null
                                 'tara' => $fila->tara && $fila->tara < 100000000 ? $fila->tara : null,
                                 'cap_deposito' => $fila->captanque ?: null,
-                                'cap_hidraulico' => $fila->caphidraulico ?: null,
-                                'cta_combustible' => trim((string) ($fila->ctacomb ?? '')) ?: null,
                                 'indice_consumo' => $fila->indice ?: null,
                                 'indice_aceite' => $fila->indiceac ?? null,
                                 // Kilometrajes / planes
                                 'kms_disp' => $fila->kmsdisp ?: null,
                                 'kms_plan_mtto' => $fila->kmsplanmtto ?: null,
                                 'kilometraje_actual' => $fila->kmsacum ?? 0,
-                                // Estado / fechas
-                                'estado' => $estados[$fila->idtipoestados] ?? 'activo',
+                                // Estado / fechas (estado es id_tipo_estado; nunca columna texto)
                                 'fecha_alta' => $falta,
                                 'fecha_baja' => null,
                                 'gps' => $fila->gps ?: null,
@@ -526,6 +517,15 @@ class EtlService
                                 'updated_at' => now(),
                             ]
                         );
+
+                        // Lubricante/capacidad hidráulica viven en el TIPO de tractivo (tipos_tractivos).
+                        if ($idTipoVehiculo !== null) {
+                            DB::table('tipos_tractivos')->where('id', $idTipoVehiculo)->update([
+                                'id_lubricante_hidraulico' => $fk('lubricantes', $fila->idlubricantes),
+                                'cap_hidraulico' => $fila->caphidraulico ?: null,
+                                'updated_at' => now(),
+                            ]);
+                        }
 
                         // Fase C: fichas polimórficas extraídas de tractivos.
                         $vehiculoId = $fila->idtractivos;
@@ -563,6 +563,9 @@ class EtlService
                                 'femision_circ' => $fecha($fila->femision_circ),
                                 'fvence_circ' => $fecha($fila->fvence_circ),
                                 'f_reconstruccion' => $fecha($fila->fureconstruccion),
+                                // Chasis/VIN: extraídos de tractivos (tec_tractivos.chassis/vin) — normalización 2026-08-27.
+                                'nro_chasis' => trim((string) ($fila->chassis ?? '')) ?: null,
+                                'vin' => trim((string) ($fila->vin ?? '')) ?: null,
                                 'updated_at' => now(),
                             ]
                         );
@@ -800,8 +803,10 @@ class EtlService
 
         $legacy = DB::connection('legacy');
 
-        $marcas = $legacy->table('tec_marca')->pluck('marca', 'idmarca');
+        // Marca/modelo unificados en catalogo_items (origen_id = id legacy de tec_marca).
+        $mapMarca = DB::table('catalogo_items')->where('tipo', 'marcas')->pluck('id', 'origen_id');
         $medidas = $legacy->table('tec_neumaticosmedidas')->pluck('neumaticosmedidas', 'idneumaticosmedidas');
+        $tractivosIds = DB::table('tractivos')->pluck('id')->flip();
 
         $estados = [
             27 => 'nuevo',
@@ -812,14 +817,14 @@ class EtlService
 
         $legacy->table('tec_neumaticos')
             ->orderBy('idneumaticos')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $medidas, $estados) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $mapMarca, $medidas, $estados, $tractivosIds) {
                 foreach ($filas as $fila) {
                     $folio = trim((string) ($fila->codigo ?? '')) ?: null;
-                    $marca = $marcas[$fila->idmarca] ?? null;
+                    $idMarca = $mapMarca[$fila->idmarca] ?? null;
                     $medida = $medidas[$fila->idneumaticosmedidas] ?? null;
                     $estado = $estados[$fila->idtipoestados] ?? 'activo';
 
-                    if (! $marca) {
+                    if (! $idMarca) {
                         $avisos[] = "neumatico#{$fila->idneumaticos}: marca legacy {$fila->idmarca} inexistente, se deja NULL";
                     }
                     if (! $medida) {
@@ -847,10 +852,9 @@ class EtlService
                         ['id' => $fila->idneumaticos],
                         [
                             'folio' => $folio,
-                            'marca' => $marca,
-                            'modelo' => null,
+                            'id_marca' => $idMarca,
                             'medida' => $medida,
-                            'id_tractivo' => $fila->idtractivos,
+                            'id_tractivo' => $tractivosIds->has($fila->idtractivos) ? $fila->idtractivos : null,
                             'fecha_instalacion' => $fmontado,
                             'fecha_retiro' => $fretirado,
                             'kilometraje' => $fila->kminstalado ?? 0,
@@ -1188,6 +1192,21 @@ class EtlService
 
         // Ids reales de tipos de arrastre en BD nueva (heredan id del legacy).
         $tiposA = DB::table('tipos_arrastres')->pluck('id')->flip();
+        // Marca/modelo viven a nivel de tipo_vehiculos (catálogo) y se copian al vehículo.
+        $tvInfo = DB::table('tipo_vehiculos')->select('id', 'id_marca', 'id_modelo')->get()->keyBy('id');
+        $estados = DB::table('estados_componentes')->pluck('id', 'codigo')->flip();
+        // Resuelve FK legacy→nueva (null si 0/inválido).
+        $idsNuevos = [
+            'estados_componentes' => DB::table('estados_componentes')->pluck('id')->flip(),
+        ];
+        $fk = function (string $tabla, $v) use ($idsNuevos): ?int {
+            if ($v === null || (int) $v === 0) {
+                return null;
+            }
+            $id = (int) $v;
+
+            return isset($idsNuevos[$tabla][$id]) ? $id : null;
+        };
 
         // Sanitiza fechas legacy 0000-00-00.
         $fecha = function ($v): ?string {
@@ -1202,7 +1221,7 @@ class EtlService
         $legacy->table('tec_tractivos')
             ->where('idgrupo', 8)
             ->orderBy('idtractivos')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidos, &$avisos, $tiposA, $fecha) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$omitidos, &$avisos, $tiposA, $tvInfo, $estados, $fk, $fecha) {
                 foreach ($filas as $fila) {
                     // El tractivo referencia idtipotractivos (coincide con id de
                     // tec_tipoarrastres/tipos_arrastres) → id_tipo_vehiculo.
@@ -1225,9 +1244,11 @@ class EtlService
                             'placa' => $placa ?? '',
                             'id_tipo_vehiculo' => $idTipoVehiculo,
                             'id_entidad' => $fila->idunidad ?: null,
+                            'id_tipo_estado' => $fk('estados_componentes', $fila->idtipoestados),
+                            'id_marca' => $idTipoVehiculo !== null ? ($tvInfo->get($idTipoVehiculo)->id_marca ?? null) : null,
+                            'id_modelo' => $idTipoVehiculo !== null ? ($tvInfo->get($idTipoVehiculo)->id_modelo ?? null) : null,
                             'tara' => $fila->tara && $fila->tara < 100000000 ? $fila->tara : null,
                             'indice_aceite' => $fila->indiceac ?? null,
-                            'estado' => $fbaja ? 'baja' : 'activo',
                             'fecha_alta' => $falta,
                             'fecha_baja' => $fbaja,
                             'deleted_at' => $fbaja ? $fbaja : null,
@@ -1254,10 +1275,13 @@ class EtlService
                             'circulacion' => trim((string) ($fila->circulacion ?? '')) ?: null,
                             'femision_circ' => $fecha($fila->femision_circ),
                             'fvence_circ' => $fecha($fila->fvence_circ),
-                            'f_reconstruccion' => $fecha($fila->fureconstruccion),
-                            'updated_at' => now(),
-                        ]
-                    );
+                                'f_reconstruccion' => $fecha($fila->fureconstruccion),
+                                // Chasis/VIN extraídos de tec_tractivos (normalización 2026-08-27).
+                                'nro_chasis' => trim((string) ($fila->chassis ?? '')) ?: null,
+                                'vin' => trim((string) ($fila->vin ?? '')) ?: null,
+                                'updated_at' => now(),
+                            ]
+                        );
 
                     $procesados++;
                 }
@@ -1447,7 +1471,9 @@ class EtlService
 
         $legacy = DB::connection('legacy');
 
-        $marcas = $legacy->table('tec_marca')->pluck('marca', 'idmarca');
+        // Marca unificada en catalogo_items (origen_id = id legacy de tec_marca).
+        $mapMarca = DB::table('catalogo_items')->where('tipo', 'marcas')->pluck('id', 'origen_id');
+        $tractivosIds = DB::table('tractivos')->pluck('id')->flip();
 
         $dupCodigos = $legacy->table('tec_baterias')
             ->whereRaw('codigo != 0')
@@ -1455,15 +1481,15 @@ class EtlService
 
         $legacy->table('tec_baterias')
             ->orderBy('idbaterias')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $marcas, $dupCodigos) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $mapMarca, $dupCodigos, $tractivosIds) {
                 foreach ($filas as $fila) {
                     $folio = trim((string) ($fila->codigo ?? '')) ?: null;
                     if ($folio !== null && isset($dupCodigos[$fila->codigo])) {
                         $folio = $folio.'-'.$fila->idbaterias;
                     }
 
-                    $marca = $marcas[$fila->idmarca] ?? null;
-                    if (! $marca) {
+                    $idMarca = $mapMarca[$fila->idmarca] ?? null;
+                    if (! $idMarca) {
                         $avisos[] = "bateria#{$fila->idbaterias}: marca legacy {$fila->idmarca} inexistente, se deja NULL";
                     }
 
@@ -1480,9 +1506,8 @@ class EtlService
                         ['id' => $fila->idbaterias],
                         [
                             'folio' => $folio,
-                            'marca' => $marca,
-                            'modelo' => null,
-                            'id_tractivo' => $fila->idtractivos ?: null,
+                            'id_marca' => $idMarca,
+                            'id_tractivo' => ($fila->idtractivos && $tractivosIds->has($fila->idtractivos)) ? $fila->idtractivos : null,
                             'fecha_instalacion' => $finstalada,
                             'fecha_retiro' => $fbaja,
                             'fecha_movimiento' => $fila->fmovimiento,

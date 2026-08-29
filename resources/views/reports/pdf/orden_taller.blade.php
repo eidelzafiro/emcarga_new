@@ -3,6 +3,25 @@
 @section('title', $title)
 
 @section('content')
+    @php
+        // El bug histórico de calcularTiempo dejó las columnas `tiempo`/`ottiempo`
+        // en 0. Se recalculan desde las fechas/horas (siempre correctas en BD).
+        function _duracionHorasOT($fi, $hi, $ff, $hf) {
+            if (! $fi || ! $ff) {
+                return 0;
+            }
+            try {
+                $inicio = \Carbon\Carbon::parse($fi->format('Y-m-d').' '.($hi ?: '00:00'));
+                $final  = \Carbon\Carbon::parse($ff->format('Y-m-d').' '.($hf ?: '00:00'));
+                return round(abs($final->diffInMinutes($inicio)) / 60, 2);
+            } catch (\Throwable) {
+                return 0;
+            }
+        }
+        $tiempoTotal = $orden->operaciones->isNotEmpty()
+            ? $orden->operaciones->sum(fn ($op) => _duracionHorasOT($op->fecha_inicio, $op->hora_inicio, $op->fecha_final, $op->hora_final))
+            : _duracionHorasOT($orden->fecha_ingreso, $orden->hora_ingreso, $orden->fecha_salida, $orden->hora_salida);
+    @endphp
     <table>
         <tr>
             <td style="border:none"><strong>N°:</strong> {{ $orden->numero }}</td>
@@ -21,7 +40,7 @@
         </tr>
         <tr>
             <td style="border:none"><strong>Combustible taller:</strong> {{ $orden->combtaller }}</td>
-            <td style="border:none"><strong>Tiempo total:</strong> {{ $orden->ottiempo }}</td>
+            <td style="border:none"><strong>Tiempo total:</strong> {{ $tiempoTotal }}</td>
             <td style="border:none"><strong>Paralizado:</strong> {{ $orden->ot_paralizado ?: '-' }}</td>
         </tr>
     </table>
@@ -50,7 +69,7 @@
                     <td>{{ $op->hora_inicio }}</td>
                     <td>{{ optional($op->fecha_final)->format('d/m/Y') }}</td>
                     <td>{{ $op->hora_final }}</td>
-                    <td style="text-align:right">{{ $op->tiempo }}</td>
+                    <td style="text-align:right">{{ _duracionHorasOT($op->fecha_inicio, $op->hora_inicio, $op->fecha_final, $op->hora_final) }}</td>
                 </tr>
             @endforeach
         </table>
@@ -95,7 +114,7 @@
                     <td>{{ $m->hora_inicio }}</td>
                     <td>{{ optional($m->fecha_final)->format('d/m/Y') }}</td>
                     <td>{{ $m->hora_final }}</td>
-                    <td style="text-align:right">{{ $m->tiempo }}</td>
+                    <td style="text-align:right">{{ _duracionHorasOT($m->fecha_inicio, $m->hora_inicio, $m->fecha_final, $m->hora_final) }}</td>
                     <td>{{ $m->observaciones }}</td>
                 </tr>
             @endforeach

@@ -216,10 +216,22 @@ Route::middleware('auth')->group(function () {
             ->name('taller.cancelar');
         Route::post('taller/{ordene}/operaciones', [TallerController::class, 'agregarOperacion'])
             ->name('taller.operaciones');
+        Route::put('taller/{ordene}/operaciones/{operacione}', [TallerController::class, 'actualizarOperacion'])
+            ->name('taller.operaciones.update');
+        Route::delete('taller/{ordene}/operaciones/{operacione}', [TallerController::class, 'eliminarOperacion'])
+            ->name('taller.operaciones.destroy');
         Route::post('taller/{ordene}/gastos', [TallerController::class, 'agregarGasto'])
             ->name('taller.gastos');
+        Route::put('taller/{ordene}/gastos/{gasto}', [TallerController::class, 'actualizarGasto'])
+            ->name('taller.gastos.update');
+        Route::delete('taller/{ordene}/gastos/{gasto}', [TallerController::class, 'eliminarGasto'])
+            ->name('taller.gastos.destroy');
         Route::post('taller/{ordene}/movimientos', [TallerController::class, 'agregarMovimiento'])
             ->name('taller.movimientos');
+        Route::put('taller/{ordene}/movimientos/{movimiento}', [TallerController::class, 'actualizarMovimiento'])
+            ->name('taller.movimientos.update');
+        Route::delete('taller/{ordene}/movimientos/{movimiento}', [TallerController::class, 'eliminarMovimiento'])
+            ->name('taller.movimientos.destroy');
 
         // Módulo Comercial
         Route::resource('clientes', ClientesController::class)

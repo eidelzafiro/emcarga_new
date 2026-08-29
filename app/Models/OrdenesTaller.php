@@ -108,7 +108,7 @@ class OrdenesTaller extends Model
             $inicio = \Carbon\Carbon::parse($this->fecha_ingreso.($this->hora_ingreso ? ' '.$this->hora_ingreso : ''));
             $final = \Carbon\Carbon::parse($this->fecha_salida.($this->hora_salida ? ' '.$this->hora_salida : ''));
 
-            return round(max(0, $final->diffInMinutes($inicio) / 60), 2);
+            return round(abs($final->diffInMinutes($inicio) / 60), 2);
         } catch (\Throwable) {
             return $this->ottiempo ?? 0;
         }

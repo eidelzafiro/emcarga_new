@@ -13,7 +13,7 @@ class OrdenTallerReportService extends BaseReportService
     public function pdfOrdenTaller(int $id): Response
     {
         $orden = OrdenesTaller::with(
-            'tractivo:id,descripcion,placa,marca,modelo',
+            'tractivo:id,descripcion,placa',
             'tipoMantenimiento:id,nombre',
             'motivoEntrada:id,nombre',
             'clasificacion:id,nombre',

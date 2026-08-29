@@ -120,6 +120,51 @@ class OrdenTallerService
     }
 
     /**
+     * Actualiza una operación y recalcula su tiempo y el ottiempo de la OT.
+     */
+    public function actualizarOperacion(OrdenesOperacione $op, array $datos): OrdenesOperacione
+    {
+        $ot = $op->orden;
+        $anterior = (float) $op->tiempo;
+
+        $tiempo = $this->calcularTiempo($datos['fecha_inicio'] ?? null, $datos['hora_inicio'] ?? null, $datos['fecha_final'] ?? null, $datos['hora_final'] ?? null);
+
+        $op->update([
+            'id_tipo_operacion' => $datos['id_tipo_operacion'] ?? null,
+            'id_operario' => $datos['id_operario'] ?? null,
+            'id_operario2' => $datos['id_operario2'] ?? null,
+            'id_operario3' => $datos['id_operario3'] ?? null,
+            'fecha_inicio' => $datos['fecha_inicio'] ?? null,
+            'hora_inicio' => $datos['hora_inicio'] ?? null,
+            'fecha_final' => $datos['fecha_final'] ?? null,
+            'hora_final' => $datos['hora_final'] ?? null,
+            'tiempo' => $tiempo,
+            'id_nave' => $datos['id_nave'] ?? null,
+            'id_valla' => $datos['id_valla'] ?? null,
+        ]);
+
+        if ($ot) {
+            $ot->update(['ottiempo' => max(0, (float) $ot->ottiempo - $anterior + $tiempo)]);
+        }
+
+        return $op;
+    }
+
+    /**
+     * Elimina una operación y descuenta su tiempo del ottiempo de la OT.
+     */
+    public function eliminarOperacion(OrdenesOperacione $op): void
+    {
+        $ot = $op->orden;
+        $anterior = (float) $op->tiempo;
+        $op->delete();
+
+        if ($ot) {
+            $ot->update(['ottiempo' => max(0, (float) $ot->ottiempo - $anterior)]);
+        }
+    }
+
+    /**
      * Registra una pieza/recurso de almacén en la OT (copia el motor del tractivo).
      */
     public function agregarGasto(OrdenesTaller $ot, array $datos): GastosOrden
@@ -140,6 +185,35 @@ class OrdenTallerService
     }
 
     /**
+     * Actualiza una pieza/recurso de almacén de la OT.
+     */
+    public function actualizarGasto(GastosOrden $gasto, array $datos): GastosOrden
+    {
+        $idMotor = $datos['id_motor'] ?? $gasto->id_motor;
+
+        $gasto->update([
+            'importe_me' => $datos['importe_me'] ?? 0,
+            'vale' => $datos['vale'] ?? null,
+            'id_tipo_agregado' => $datos['id_tipo_agregado'] ?? null,
+            'nombre' => $datos['nombre'] ?? null,
+            'cantidad' => $datos['cantidad'] ?? 0,
+            'codigo_pieza' => $datos['codigo_pieza'] ?? null,
+            'motivo' => $datos['motivo'] ?? null,
+            'id_motor' => $idMotor,
+        ]);
+
+        return $gasto;
+    }
+
+    /**
+     * Elimina una pieza/recurso de almacén de la OT.
+     */
+    public function eliminarGasto(GastosOrden $gasto): void
+    {
+        $gasto->delete();
+    }
+
+    /**
      * Registra un movimiento en taller (nave/valla).
      */
     public function agregarMovimiento(OrdenesTaller $ot, array $datos): MovimientosTaller
@@ -157,6 +231,35 @@ class OrdenTallerService
             'observaciones' => $datos['observaciones'] ?? null,
             'id_entidad' => $ot->id_entidad,
         ]);
+    }
+
+    /**
+     * Actualiza un movimiento en taller (nave/valla).
+     */
+    public function actualizarMovimiento(MovimientosTaller $movimiento, array $datos): MovimientosTaller
+    {
+        $tiempo = $this->calcularTiempo($datos['fecha_inicio'] ?? null, $datos['hora_inicio'] ?? null, $datos['fecha_final'] ?? null, $datos['hora_final'] ?? null);
+
+        $movimiento->update([
+            'id_nave' => $datos['id_nave'] ?? null,
+            'id_valla' => $datos['id_valla'] ?? null,
+            'fecha_inicio' => $datos['fecha_inicio'] ?? null,
+            'hora_inicio' => $datos['hora_inicio'] ?? null,
+            'fecha_final' => $datos['fecha_final'] ?? null,
+            'hora_final' => $datos['hora_final'] ?? null,
+            'tiempo' => $tiempo,
+            'observaciones' => $datos['observaciones'] ?? null,
+        ]);
+
+        return $movimiento;
+    }
+
+    /**
+     * Elimina un movimiento en taller.
+     */
+    public function eliminarMovimiento(MovimientosTaller $movimiento): void
+    {
+        $movimiento->delete();
     }
 
     /**
@@ -189,7 +292,7 @@ class OrdenTallerService
         try {
             $inicio = \Carbon\Carbon::parse($fi.($hi ? ' '.$hi : ''));
             $final = \Carbon\Carbon::parse($ff.($hf ? ' '.$hf : ''));
-            $minutos = max(0, $final->diffInMinutes($inicio));
+            $minutos = abs($final->diffInMinutes($inicio));
 
             return round($minutos / 60, 2);
         } catch (\Throwable) {

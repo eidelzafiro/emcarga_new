@@ -97,4 +97,65 @@ class TallerTest extends TestCase
         $this->assertTrue($ot->fresh()->cancelada);
         $this->assertEquals('cancelada', $ot->fresh()->estado);
     }
+
+    public function test_operaciones_recalcular_ottiempo()
+    {
+        $tractivo = Tractivo::factory()->create(['id_tipo_vehiculo' => null]);
+        $svc = app(OrdenTallerService::class);
+        $ot = $svc->crear(['id_tractivo' => $tractivo->id, 'fecha_ingreso' => '2026-08-17'], 23);
+
+        $op = $svc->agregarOperacion($ot, [
+            'fecha_inicio' => '2026-08-17', 'hora_inicio' => '08:00',
+            'fecha_final' => '2026-08-17', 'hora_final' => '10:00',
+        ]);
+        $this->assertEquals(2.0, (float) $ot->fresh()->ottiempo);
+
+        $svc->actualizarOperacion($op, [
+            'fecha_inicio' => '2026-08-17', 'hora_inicio' => '08:00',
+            'fecha_final' => '2026-08-17', 'hora_final' => '11:30',
+        ]);
+        $this->assertEquals(3.5, (float) $ot->fresh()->ottiempo);
+
+        $svc->eliminarOperacion($op);
+        $this->assertEquals(0.0, (float) $ot->fresh()->ottiempo);
+    }
+
+    public function test_gasto_crud()
+    {
+        $tractivo = Tractivo::factory()->create(['id_tipo_vehiculo' => null]);
+        $svc = app(OrdenTallerService::class);
+        $ot = $svc->crear(['id_tractivo' => $tractivo->id, 'fecha_ingreso' => '2026-08-17'], 23);
+
+        $g = $svc->agregarGasto($ot, ['vale' => 'V1', 'nombre' => 'Filtro', 'cantidad' => 2]);
+        $this->assertEquals('V1', $g->vale);
+
+        $svc->actualizarGasto($g, ['vale' => 'V2', 'nombre' => 'Filtro', 'cantidad' => 5]);
+        $this->assertEquals('V2', $g->fresh()->vale);
+        $this->assertEquals(5.0, (float) $g->fresh()->cantidad);
+
+        $svc->eliminarGasto($g);
+        $this->assertNull(\App\Models\GastosOrden::find($g->id));
+    }
+
+    public function test_movimiento_crud()
+    {
+        $tractivo = Tractivo::factory()->create(['id_tipo_vehiculo' => null]);
+        $svc = app(OrdenTallerService::class);
+        $ot = $svc->crear(['id_tractivo' => $tractivo->id, 'fecha_ingreso' => '2026-08-17'], 23);
+
+        $m = $svc->agregarMovimiento($ot, [
+            'fecha_inicio' => '2026-08-17', 'hora_inicio' => '08:00',
+            'fecha_final' => '2026-08-17', 'hora_final' => '09:30',
+        ]);
+        $this->assertEquals(1.5, (float) $m->tiempo);
+
+        $svc->actualizarMovimiento($m, [
+            'fecha_inicio' => '2026-08-17', 'hora_inicio' => '08:00',
+            'fecha_final' => '2026-08-17', 'hora_final' => '10:00',
+        ]);
+        $this->assertEquals(2.0, (float) $m->fresh()->tiempo);
+
+        $svc->eliminarMovimiento($m);
+        $this->assertNull(\App\Models\MovimientosTaller::find($m->id));
+    }
 }

@@ -68,6 +68,7 @@ class AgregadosTractivoService
         $conteo = ['motor' => 0, 'caja' => 0, 'diferencial' => 0];
 
         Tractivo::query()
+            ->with('tipoVehiculo.marca')
             ->whereNull('deleted_at')
             ->where(function ($q) {
                 $q->whereNull('id_motor')->orWhereNull('id_caja')->orWhereNull('id_diferencial');
@@ -103,6 +104,9 @@ class AgregadosTractivoService
                     'id_entidad' => $tractivo->id_entidad,
                     'id_tractivo' => $tractivo->id,
                     'estado' => self::ESTADO_TRABAJANDO,
+                    'kms_acumulados' => $tractivo->kilometraje_actual,
+                    'fecha_instalacion' => $tractivo->fecha_alta,
+                    'id_pais' => $this->paisTractivo($tractivo),
                 ]);
             }
 
@@ -126,6 +130,9 @@ class AgregadosTractivoService
                     'id_entidad' => $tractivo->id_entidad,
                     'id_tractivo' => $tractivo->id,
                     'estado' => self::ESTADO_TRABAJANDO,
+                    'kms_acumulados' => $tractivo->kilometraje_actual,
+                    'fecha_instalacion' => $tractivo->fecha_alta,
+                    'id_pais' => $this->paisTractivo($tractivo),
                 ]);
             }
 
@@ -149,6 +156,8 @@ class AgregadosTractivoService
                     'id_entidad' => $tractivo->id_entidad,
                     'id_tractivo' => $tractivo->id,
                     'estado' => self::ESTADO_TRABAJANDO,
+                    'kms_acumulados' => $tractivo->kilometraje_actual,
+                    'fecha_instalacion' => $tractivo->fecha_alta,
                 ]);
             }
 
@@ -156,6 +165,14 @@ class AgregadosTractivoService
 
             return $existente;
         });
+    }
+
+    /**
+     * País del vehículo (origen de su marca), vía ficha tipo_vehiculos.
+     */
+    private function paisTractivo(Tractivo $tractivo): ?int
+    {
+        return $tractivo->tipoVehiculo?->marca?->id_pais;
     }
 
     /**

@@ -106,6 +106,8 @@ const gridFields = computed(() => {
   const orden = permitidas?.length ? permitidas : Object.keys(allFields.value)
   orden.forEach((k) => {
     if (k === 'activo' || !allFields.value[k]) return
+    // Para tipos_estados la imagen ya se muestra en la columna dedicada "Imagen".
+    if (k === 'imagen' && tipo.value === 'tipos_estados') return
     result[k] = allFields.value[k]
   })
   return result
@@ -161,7 +163,8 @@ function openEdit(item) {
   previewImagen.value = esEquipos.value ? (item.imagen || null) : null
   archivoImagen.value = null
   errorArchivo.value = ''
-  previewLogo.value = (tipo.value === 'marcas') ? (item.logo || null) : null
+  previewLogo.value = (tipo.value === 'marcas') ? (item.logo || null)
+    : (tipo.value === 'tipos_estados' ? (item.extra?.imagen || null) : null)
   archivoLogo.value = null
   errorLogo.value = ''
   showForm.value = true
@@ -274,8 +277,8 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
     return
   }
 
-  // Marcas: FormData para permitir subir el logo como archivo.
-  if (tipo.value === 'marcas') {
+  // Marcas y tipos de estado: FormData para permitir subir el logo/imagen como archivo.
+  if (tipo.value === 'marcas' || tipo.value === 'tipos_estados') {
     if (errorLogo.value) return
     const fd = new FormData()
     fd.append('nombre', form.value.nombre || '')
@@ -400,8 +403,8 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
         <template v-for="(cfg, key) in gridFields" :key="key">
           <Column v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo'" :field="key" :header="cfg.label">
             <template #body="{ data }">
-              <img v-if="cfg.type === 'logo' && data[key]" :src="data[key]" :alt="data.nombre"
-                   class="w-14 h-10 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-zoom-in hover:opacity-80 transition-opacity" />
+              <img v-if="cfg.type === 'logo' && (data[key] || (data.extra && data.extra[key]))" :src="data[key] || (data.extra && data.extra[key])" :alt="data.nombre"
+                    class="w-14 h-10 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-zoom-in hover:opacity-80 transition-opacity" />
               <span v-else-if="cfg.type === 'select' && cfg.options">{{ getSelectLabel(cfg.options, data[key]) }}</span>
               <span v-else-if="cfg.type === 'boolean'">
                 <i :class="data[key] ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />

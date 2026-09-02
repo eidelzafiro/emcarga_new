@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -50,7 +50,7 @@ watch(search, () => {
 })
 
 const onPage = (event) => {
-  router.get(route('baterias.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true })
+  router.get(route('baterias.index'), { page: event.page + 1, per_page: event.rows, search: search.value }, { preserveState: true, replace: true })
 }
 
 function openCreate() {

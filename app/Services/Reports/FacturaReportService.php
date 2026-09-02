@@ -23,6 +23,7 @@ class FacturaReportService extends BaseReportService
             'aforos.cartaPorte.lugarOrigen:id,nombre',
             'aforos.cartaPorte.lugarDestino:id,nombre',
             'aforos.cartaPorte.producto',
+            'pagos.moneda',
         ])->findOrFail($id);
 
         $this->setTitle('Factura '.$factura->numero);

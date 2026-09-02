@@ -32,7 +32,7 @@ class NeumaticosController extends Controller
                 return $q;
             })
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate($request->integer('per_page', 20));
 
         return Inertia::render('Neumaticos/Index', [
             'title' => 'Neumáticos',
@@ -43,6 +43,7 @@ class NeumaticosController extends Controller
             'catalogos' => [
                 'marcas' => \App\Support\Catalogos::opciones('marcas'),
                 'modelos' => \App\Support\Catalogos::opciones('modelos'),
+                'medidas' => \App\Support\Catalogos::opciones('medidas_neumaticos'),
             ],
             'filters' => $request->only(['search', 'estado']),
         ]);
@@ -70,6 +71,8 @@ class NeumaticosController extends Controller
         ]);
 
         $validated['id_entidad'] = (int) entidadActivaId() ?: null;
+        // La columna kilometraje es NOT NULL (default 0); normalizar.
+        $validated['kilometraje'] = $validated['kilometraje'] ?? 0;
         $validated['folio'] = $request->input('folio', 'AUTOMATICO') === 'AUTOMATICO'
             ? $this->siguienteFolio()
             : $validated['folio'];
@@ -182,7 +185,7 @@ class NeumaticosController extends Controller
 
         return response()->json([
             'movimientos' => $neumatico->movimientos()
-                ->with('tractivo:id,descripcion,placa')
+                ->with('tractivo:id,codigo,placa')
                 ->orderByDesc('id')->get(),
             'kms_recorridos' => $this->neumaticoService->kmsRecorridos($neumatico),
         ]);

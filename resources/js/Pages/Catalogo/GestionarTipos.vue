@@ -9,6 +9,7 @@
 
         <DataTable
           :value="tipos"
+          v-model:globalFilter="filtro"
           :globalFilterFields="['tipo', 'titulo', 'agrupacion']"
           stripedRows
           showGridlines

@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -133,8 +133,14 @@ import Tag from 'primevue/tag'
 import { useConfirm } from 'primevue/useconfirm'
 import { debounce } from 'lodash'
 
-const props = defineProps({ title: String, items: Object, filters: Object, catalogos: Object })
+const props = defineProps({ title: String, items: Object, filters: Object, catalogos: Object, editItem: Object })
 const confirmDialog = useConfirm()
+
+onMounted(() => {
+  if (props.editItem) {
+    openEdit(props.editItem)
+  }
+})
 
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)

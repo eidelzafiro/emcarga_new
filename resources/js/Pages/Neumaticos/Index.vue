@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -28,6 +28,7 @@ const estados = props.filtros?.estados || ['activo', 'recauchado', 'regular', 'n
 
 const marcasOptions = computed(() => props.catalogos?.marcas ?? [])
 const modelosOptions = computed(() => props.catalogos?.modelos ?? [])
+const medidasOptions = computed(() => (props.catalogos?.medidas ?? []).map(m => ({ value: m.medida ?? m.nombre, label: m.medida ?? m.nombre })))
 
 const baseForm = () => ({
   folio: 'AUTOMATICO',
@@ -56,7 +57,7 @@ watch(search, () => {
 })
 
 const onPage = (event) => {
-  router.get(route('neumaticos.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true })
+  router.get(route('neumaticos.index'), { page: event.page + 1, per_page: event.rows, search: search.value }, { preserveState: true, replace: true })
 }
 
 function openCreate() {
@@ -192,7 +193,7 @@ function submitRetiro() {
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium">Medida</label>
-          <InputText v-model="form.medida" />
+          <Select v-model="form.medida" :options="medidasOptions" optionLabel="label" optionValue="value" class="w-full" showClear filter placeholder="Seleccione medida" />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium">Fecha instalación</label>

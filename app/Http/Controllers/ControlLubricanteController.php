@@ -38,7 +38,7 @@ class ControlLubricanteController extends Controller
             })
             ->orderByDesc('fecha_cambio')
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate(2000);
 
         return Inertia::render('Lubricantes/Control', [
             'title' => 'Control de Lubricantes (CT-7)',

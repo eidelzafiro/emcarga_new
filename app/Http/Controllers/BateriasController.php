@@ -32,7 +32,7 @@ class BateriasController extends Controller
                 return $q;
             })
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate($request->integer('per_page', 20));
 
         return Inertia::render('Baterias/Index', [
             'title' => 'Baterías',

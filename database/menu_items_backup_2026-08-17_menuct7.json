@@ -21,12 +21,12 @@
     },
     {
         "id": 3,
-        "parent_id": 2,
-        "label": "VehÃ­culos",
+        "parent_id": 18,
+        "label": "CT1-Vehículos",
         "icon": "pi pi-truck",
         "route": "tractivos.index",
         "permission": "tractivos.ver",
-        "orden": 1,
+        "orden": 4,
         "activo": true
     },
     {
@@ -36,7 +36,7 @@
         "icon": "pi pi-cog",
         "route": "motores.index",
         "permission": "motores.ver",
-        "orden": 2,
+        "orden": 4,
         "activo": true
     },
     {
@@ -46,7 +46,7 @@
         "icon": "pi pi-cog",
         "route": "cajas.index",
         "permission": "cajas.ver",
-        "orden": 3,
+        "orden": 5,
         "activo": true
     },
     {
@@ -56,37 +56,27 @@
         "icon": "pi pi-cog",
         "route": "diferenciales.index",
         "permission": "diferenciales.ver",
-        "orden": 4,
+        "orden": 6,
         "activo": true
     },
     {
         "id": 7,
-        "parent_id": 2,
-        "label": "BaterÃ­as",
+        "parent_id": 18,
+        "label": "CT8-Baterías",
         "icon": "pi pi-bolt",
         "route": "baterias.index",
         "permission": "baterias.ver",
-        "orden": 5,
+        "orden": 9,
         "activo": true
     },
     {
         "id": 8,
-        "parent_id": 2,
-        "label": "NeumÃ¡ticos",
+        "parent_id": 18,
+        "label": "CN1-Neumáticos",
         "icon": "pi pi-cog",
         "route": "neumaticos.index",
         "permission": "neumaticos.ver",
-        "orden": 10,
-        "activo": true
-    },
-    {
-        "id": 9,
-        "parent_id": 2,
-        "label": "Lubricantes",
-        "icon": "pi pi-eye-dropper",
-        "route": "lubricantes.index",
-        "permission": "lubricantes.ver",
-        "orden": 11,
+        "orden": 6,
         "activo": true
     },
     {
@@ -96,7 +86,7 @@
         "icon": "pi pi-cog",
         "route": "otros-agregados.index",
         "permission": "otros-agregados.ver",
-        "orden": 13,
+        "orden": 18,
         "activo": true
     },
     {
@@ -104,9 +94,9 @@
         "parent_id": 67,
         "label": "Motivos Entrada Taller",
         "icon": "pi pi-sign-in",
-        "route": "motivos-entrada-taller.index",
-        "permission": "motivos-entrada-taller.ver",
-        "orden": 9,
+        "route": "catalogo.index?tipo=motivos_entrada_taller",
+        "permission": "catalogo.motivos_entrada_taller.ver",
+        "orden": 16,
         "activo": true
     },
     {
@@ -114,19 +104,19 @@
         "parent_id": 67,
         "label": "Clasif. OT",
         "icon": "pi pi-tags",
-        "route": "clasificaciones-ordenes-taller.index",
-        "permission": "clasificaciones-ordenes-taller.ver",
-        "orden": 7,
+        "route": "catalogo.index?tipo=clasificaciones_ordenes_taller",
+        "permission": "catalogo.clasificaciones_ordenes_taller.ver",
+        "orden": 14,
         "activo": true
     },
     {
         "id": 14,
         "parent_id": 67,
-        "label": "Motivos Baja BaterÃ­a",
+        "label": "Motivos Baja Batería",
         "icon": "pi pi-bolt",
-        "route": "motivos-baja-bateria.index",
-        "permission": "motivos-baja-bateria.ver",
-        "orden": 8,
+        "route": "catalogo.index?tipo=motivos_baja_bateria",
+        "permission": "catalogo.motivos_baja_bateria.ver",
+        "orden": 15,
         "activo": true
     },
     {
@@ -136,17 +126,17 @@
         "icon": "pi pi-history",
         "route": "historial-tractivos.index",
         "permission": "historial-tractivos.ver",
-        "orden": 14,
+        "orden": 19,
         "activo": true
     },
     {
         "id": 17,
         "parent_id": 2,
-        "label": "Estad. ExplotaciÃ³n",
+        "label": "Estad. Explotación",
         "icon": "pi pi-chart-line",
         "route": "estadisticas-explotacion.index",
         "permission": "estadisticas-explotacion.ver",
-        "orden": 15,
+        "orden": 20,
         "activo": true
     },
     {
@@ -157,7 +147,7 @@
         "route": "taller.index",
         "permission": "taller.ver",
         "orden": 5,
-        "activo": false
+        "activo": true
     },
     {
         "id": 19,
@@ -176,7 +166,7 @@
         "icon": "pi pi-users",
         "route": "clientes.index",
         "permission": "clientes.ver",
-        "orden": 6,
+        "orden": 13,
         "activo": true
     },
     {
@@ -186,7 +176,7 @@
         "icon": "pi pi-map-marker",
         "route": "lugares.index",
         "permission": "lugares.ver",
-        "orden": 5,
+        "orden": 12,
         "activo": true
     },
     {
@@ -196,7 +186,7 @@
         "icon": "pi pi-arrows-alt",
         "route": "distancias.index",
         "permission": "distancias.ver",
-        "orden": 4,
+        "orden": 11,
         "activo": true
     },
     {
@@ -262,7 +252,7 @@
     {
         "id": 33,
         "parent_id": 93,
-        "label": "Config. Modelo",
+        "label": "Configurar Impresión Documentos",
         "icon": "pi pi-sliders-h",
         "route": "configuraciones-modelo.index",
         "permission": "configuraciones-modelo.ver",
@@ -272,17 +262,17 @@
     {
         "id": 35,
         "parent_id": 67,
-        "label": "CategorÃ­as Productos",
+        "label": "Categorías Productos",
         "icon": "pi pi-tags",
         "route": "categorias-productos.index",
         "permission": "categorias-productos.ver",
-        "orden": 3,
+        "orden": 10,
         "activo": true
     },
     {
         "id": 37,
         "parent_id": null,
-        "label": "FacturaciÃ³n",
+        "label": "Facturación",
         "icon": "pi pi-file",
         "route": null,
         "permission": null,
@@ -377,16 +367,6 @@
         "route": "firmas.index",
         "permission": "firmas.ver",
         "orden": 6,
-        "activo": true
-    },
-    {
-        "id": 48,
-        "parent_id": 40,
-        "label": "Centros Costo",
-        "icon": "pi pi-dollar",
-        "route": "centros-costos.index",
-        "permission": "centros-costos.ver",
-        "orden": 7,
         "activo": true
     },
     {
@@ -550,19 +530,9 @@
         "activo": true
     },
     {
-        "id": 66,
-        "parent_id": 53,
-        "label": "Elementos Gasto",
-        "icon": "pi pi-receipt",
-        "route": "elementos-gasto.index",
-        "permission": "elementos-gasto.ver",
-        "orden": 14,
-        "activo": true
-    },
-    {
         "id": 67,
         "parent_id": null,
-        "label": "CatÃ¡logos",
+        "label": "Catálogos",
         "icon": "pi pi-bookmark",
         "route": null,
         "permission": null,
@@ -572,11 +542,11 @@
     {
         "id": 68,
         "parent_id": 67,
-        "label": "CatÃ¡logos",
+        "label": "Catálogos",
         "icon": "pi pi-book",
         "route": "catalogo.gestionar",
         "permission": "catalogo.editar",
-        "orden": 10,
+        "orden": 17,
         "activo": true
     },
     {
@@ -584,8 +554,8 @@
         "parent_id": 67,
         "label": "Marcas",
         "icon": "pi pi-tag",
-        "route": "marcas.index",
-        "permission": "marcas.ver",
+        "route": "catalogo.index?tipo=marcas",
+        "permission": "catalogo.marcas.ver",
         "orden": 1,
         "activo": true
     },
@@ -594,8 +564,8 @@
         "parent_id": 67,
         "label": "Modelos",
         "icon": "pi pi-cog",
-        "route": "modelos.index",
-        "permission": "modelos.ver",
+        "route": "catalogo.index?tipo=modelos",
+        "permission": "catalogo.modelos.ver",
         "orden": 2,
         "activo": true
     },
@@ -604,9 +574,9 @@
         "parent_id": 67,
         "label": "Grupos",
         "icon": "pi pi-bullseye",
-        "route": "grupos.index",
-        "permission": "grupos.ver",
-        "orden": 11,
+        "route": "catalogo.index?tipo=grupos",
+        "permission": "catalogo.grupos.ver",
+        "orden": 18,
         "activo": true
     },
     {
@@ -616,7 +586,7 @@
         "icon": "pi pi-wrench",
         "route": "talleres.index",
         "permission": "talleres.ver",
-        "orden": 12,
+        "orden": 19,
         "activo": true
     },
     {
@@ -626,7 +596,7 @@
         "icon": "pi pi-building",
         "route": "naves.index",
         "permission": "naves.ver",
-        "orden": 13,
+        "orden": 20,
         "activo": true
     },
     {
@@ -636,7 +606,7 @@
         "icon": "pi pi-th-large",
         "route": "vallas.index",
         "permission": "vallas.ver",
-        "orden": 14,
+        "orden": 21,
         "activo": true
     },
     {
@@ -644,29 +614,29 @@
         "parent_id": 67,
         "label": "Destinos Agregados",
         "icon": "pi pi-map",
-        "route": "destinos-agregados.index",
-        "permission": "destinos-agregados.ver",
-        "orden": 15,
+        "route": "catalogo.index?tipo=destinos_agregados",
+        "permission": "catalogo.destinos_agregados.ver",
+        "orden": 22,
         "activo": true
     },
     {
         "id": 76,
         "parent_id": 67,
-        "label": "Medidas NeumÃ¡ticos",
+        "label": "Medidas Neumáticos",
         "icon": "pi pi-arrows-h",
-        "route": "medidas-neumaticos.index",
-        "permission": "medidas-neumaticos.ver",
-        "orden": 16,
+        "route": "catalogo.index?tipo=medidas_neumaticos",
+        "permission": "catalogo.medidas_neumaticos.ver",
+        "orden": 23,
         "activo": true
     },
     {
         "id": 77,
         "parent_id": 67,
-        "label": "Posiciones NeumÃ¡ticos",
+        "label": "Posiciones Neumáticos",
         "icon": "pi pi-arrows-alt",
-        "route": "posiciones-neumaticos.index",
-        "permission": "posiciones-neumaticos.ver",
-        "orden": 17,
+        "route": "catalogo.index?tipo=posiciones_neumaticos",
+        "permission": "catalogo.posiciones_neumaticos.ver",
+        "orden": 24,
         "activo": true
     },
     {
@@ -684,9 +654,9 @@
         "parent_id": 67,
         "label": "Embalajes",
         "icon": "pi pi-box",
-        "route": "embalajes.index",
-        "permission": "embalajes.ver",
-        "orden": 18,
+        "route": "catalogo.index?tipo=embalajes",
+        "permission": "catalogo.embalajes.ver",
+        "orden": 25,
         "activo": true
     },
     {
@@ -694,9 +664,9 @@
         "parent_id": 67,
         "label": "Incidencias",
         "icon": "pi pi-exclamation-circle",
-        "route": "tipos-incidencias.index",
-        "permission": "tipos-incidencias.ver",
-        "orden": 19,
+        "route": "catalogo.index?tipo=tipos_incidencias",
+        "permission": "catalogo.tipos_incidencias.ver",
+        "orden": 26,
         "activo": true
     },
     {
@@ -704,19 +674,9 @@
         "parent_id": 67,
         "label": "Penalizaciones",
         "icon": "pi pi-ban",
-        "route": "tipos-penalizaciones.index",
-        "permission": "tipos-penalizaciones.ver",
-        "orden": 20,
-        "activo": true
-    },
-    {
-        "id": 82,
-        "parent_id": 67,
-        "label": "Navieras",
-        "icon": "pi pi-globe",
-        "route": "navieras.index",
-        "permission": "navieras.ver",
-        "orden": 22,
+        "route": "catalogo.index?tipo=tipos_penalizaciones",
+        "permission": "catalogo.tipos_penalizaciones.ver",
+        "orden": 27,
         "activo": true
     },
     {
@@ -724,19 +684,19 @@
         "parent_id": 67,
         "label": "Organismos",
         "icon": "pi pi-building",
-        "route": "organismos.index",
-        "permission": "organismos.ver",
-        "orden": 21,
+        "route": "catalogo.index?tipo=organismos",
+        "permission": "catalogo.organismos.ver",
+        "orden": 28,
         "activo": true
     },
     {
         "id": 84,
         "parent_id": 67,
-        "label": "CategorÃ­as Cargo",
+        "label": "Categorías Cargo",
         "icon": "pi pi-tags",
-        "route": "categorias-cargo.index",
-        "permission": "categorias-cargo.ver",
-        "orden": 23,
+        "route": "catalogo.index?tipo=categorias_cargo",
+        "permission": "catalogo.categorias_cargo.ver",
+        "orden": 30,
         "activo": true
     },
     {
@@ -746,17 +706,17 @@
         "icon": "pi pi-chart-bar",
         "route": "grupos-escala.index",
         "permission": "grupos-escala.ver",
-        "orden": 24,
+        "orden": 31,
         "activo": true
     },
     {
         "id": 86,
         "parent_id": 67,
-        "label": "Ãreas",
+        "label": "Áreas",
         "icon": "pi pi-building",
         "route": "areas.index",
         "permission": "areas.ver",
-        "orden": 25,
+        "orden": 32,
         "activo": true
     },
     {
@@ -766,7 +726,7 @@
         "icon": "pi pi-briefcase",
         "route": "cargos.index",
         "permission": "cargos.ver",
-        "orden": 26,
+        "orden": 33,
         "activo": true
     },
     {
@@ -776,53 +736,13 @@
         "icon": "pi pi-calendar",
         "route": "meses.index",
         "permission": "meses.ver",
-        "orden": 27,
-        "activo": true
-    },
-    {
-        "id": 89,
-        "parent_id": null,
-        "label": "Reportes",
-        "icon": "pi pi-file-pdf",
-        "route": null,
-        "permission": "reportes.ver",
-        "orden": 10,
-        "activo": true
-    },
-    {
-        "id": 90,
-        "parent_id": 89,
-        "label": "Listado de Marcas",
-        "icon": "pi pi-tag",
-        "route": "reportes.marcas",
-        "permission": "reportes.generar",
-        "orden": 1,
-        "activo": true
-    },
-    {
-        "id": 91,
-        "parent_id": 89,
-        "label": "Listado de Modelos",
-        "icon": "pi pi-cog",
-        "route": "reportes.modelos",
-        "permission": "reportes.generar",
-        "orden": 2,
-        "activo": true
-    },
-    {
-        "id": 92,
-        "parent_id": 89,
-        "label": "Listado de PaÃ­ses",
-        "icon": "pi pi-globe",
-        "route": "reportes.paises",
-        "permission": "reportes.generar",
-        "orden": 3,
+        "orden": 34,
         "activo": true
     },
     {
         "id": 93,
         "parent_id": null,
-        "label": "AdministraciÃ³n",
+        "label": "Administración",
         "icon": "pi pi-cog",
         "route": null,
         "permission": null,
@@ -852,7 +772,7 @@
     {
         "id": 96,
         "parent_id": 93,
-        "label": "MenÃºs",
+        "label": "Menús",
         "icon": "pi pi-bars",
         "route": "menu-items.index",
         "permission": "menus.admin",
@@ -872,51 +792,31 @@
     {
         "id": 98,
         "parent_id": 93,
-        "label": "Tipos de Modelo",
+        "label": "Tipos de Documentos",
         "icon": "pi pi-circle-fill",
-        "route": "tipos-modelo.index",
-        "permission": "tipos-modelo.ver",
+        "route": "catalogo.index?tipo=tipos_modelo",
+        "permission": "catalogo.tipos_modelo.ver",
         "orden": 7,
-        "activo": true
-    },
-    {
-        "id": 99,
-        "parent_id": 2,
-        "label": "Tipos de Arrastres",
-        "icon": "pi pi-box",
-        "route": "tipos-arrastres.index",
-        "permission": "tipos-arrastres.ver",
-        "orden": 9,
-        "activo": true
-    },
-    {
-        "id": 100,
-        "parent_id": 2,
-        "label": "Tipos de Tractivos",
-        "icon": "pi pi-truck",
-        "route": "tipos-tractivos.index",
-        "permission": "tipos-tractivos.ver",
-        "orden": 8,
         "activo": true
     },
     {
         "id": 101,
-        "parent_id": 2,
-        "label": "Tipos de Equipos",
+        "parent_id": 67,
+        "label": "Tipos Equipo",
         "icon": "pi pi-database",
         "route": "tipos-equipos.index",
         "permission": "tipos-equipos.ver",
-        "orden": 6,
+        "orden": 3,
         "activo": true
     },
     {
         "id": 102,
-        "parent_id": 2,
+        "parent_id": 67,
         "label": "Tipos de Mantenimiento",
         "icon": "pi pi-wrench",
-        "route": "tipos-mantenimientos.index",
-        "permission": "tipos-mantenimientos.ver",
-        "orden": 7,
+        "route": "tipos-mantenimiento.index",
+        "permission": "tipos-mantenimiento.ver",
+        "orden": 5,
         "activo": true
     },
     {
@@ -951,12 +851,72 @@
     },
     {
         "id": 106,
-        "parent_id": 2,
-        "label": "Control Lubricantes",
+        "parent_id": 18,
+        "label": "CT7-Control Lubricantes",
         "icon": "pi pi-eye-dropper",
         "route": "control-lubricante.index",
         "permission": "control-lubricante.ver",
-        "orden": 12,
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 107,
+        "parent_id": null,
+        "label": "Reportes",
+        "icon": "pi pi-chart-bar",
+        "route": "reportes.catalogo",
+        "permission": "reportes.ver",
+        "orden": 10,
+        "activo": true
+    },
+    {
+        "id": 109,
+        "parent_id": 67,
+        "label": "Tipos de Vehículo",
+        "icon": "pi pi-car",
+        "route": "tipo-vehiculos.index",
+        "permission": "tipo-vehiculos.ver",
+        "orden": 7,
+        "activo": true
+    },
+    {
+        "id": 110,
+        "parent_id": 18,
+        "label": "CT1-Arrastres",
+        "icon": "pi pi-truck",
+        "route": "arrastres.index",
+        "permission": "arrastres.ver",
+        "orden": 5,
+        "activo": true
+    },
+    {
+        "id": 112,
+        "parent_id": 18,
+        "label": "CT4-Orden de Taller",
+        "icon": "pi pi-wrench",
+        "route": "taller.index",
+        "permission": "taller.ver",
+        "orden": 11,
+        "activo": true
+    },
+    {
+        "id": 113,
+        "parent_id": 67,
+        "label": "Tipo de Lubricantes",
+        "icon": "pi pi-eye-dropper",
+        "route": "tipos-lubricantes.index",
+        "permission": "lubricantes.ver",
+        "orden": 6,
+        "activo": true
+    },
+    {
+        "id": 114,
+        "parent_id": 67,
+        "label": "Fusionar CatÃ¡logos",
+        "icon": "pi pi-objects-column",
+        "route": "fusionar-catalogos.index",
+        "permission": "catalogo.editar",
+        "orden": 35,
         "activo": true
     }
 ]

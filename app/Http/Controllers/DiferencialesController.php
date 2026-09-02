@@ -18,7 +18,7 @@ class DiferencialesController extends Controller
     {
 
         $this->authorize('viewAny', \App\Models\Diferenciale::class);
-        $diferenciales = Diferenciale::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre')
+        $diferenciales = Diferenciale::with('tractivo:id,codigo,placa', 'lubricante:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('descripcion', 'like', "%{$s}%")
                 ->orWhere('codigo', 'like', "%{$s}%")
                 ->orWhere('numero_serie', 'like', "%{$s}%"))
@@ -32,14 +32,14 @@ class DiferencialesController extends Controller
                 return $q;
             })
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate($request->integer('per_page', 20));
 
         return Inertia::render('Diferenciales/Index', [
             'title' => 'Diferenciales',
             'diferenciales' => $diferenciales,
             'filtros' => [
                 'lubricantes' => Lubricante::orderBy('nombre')->get(['id', 'nombre']),
-                'tractivos' => Tractivo::orderBy('descripcion')->get(['id', 'codigo', 'descripcion', 'placa']),
+                'tractivos' => Tractivo::orderBy('codigo')->get(['id', 'codigo', 'placa']),
                 'estados' => ['disponible', 'nuevo', 'trabajando', 'reparado', 'regular', 'baja'],
             ],
             'filters' => $request->only(['search', 'estado']),

@@ -68,8 +68,8 @@ class HojasRutaController extends Controller
         $catalogos = [
             'parqueo_default' => $entidadDefault?->id_parqueo ?? null,
             // Equipos (tractores): incluye tipo, marca y chapa para la vista read-only
-            'tractivos' => Tractivo::with('grupo:id,nombre')
-                ->select('id', 'codigo', 'id_entidad', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp', 'indice_consumo')
+            'tractivos' => Tractivo::with(['grupo:id,nombre', 'tipoVehiculo.marca:id,nombre', 'tipoVehiculo.modelo:id,nombre'])
+                ->select('id', 'codigo', 'id_entidad', 'placa', 'id_grupo', 'kms_disp', 'indice_consumo')
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')
@@ -78,7 +78,7 @@ class HojasRutaController extends Controller
                     'id' => $t->id,
                     'codigo' => $t->codigo,
                     'id_entidad' => $t->id_entidad,
-                    'marca' => $t->marca,
+                    'marca' => $t->tipoVehiculo?->marca?->nombre,
                     'placa' => $t->placa,
                     'tipo' => $t->grupo?->nombre,
                     'id_grupo' => $t->id_grupo,

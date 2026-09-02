@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\CatalogoItem;
 use App\Models\GastosOrden;
 use App\Models\MovimientosTaller;
 use App\Models\OrdenesOperacione;
 use App\Models\OrdenesTaller;
+use App\Models\TiposMantenimiento;
 use App\Models\Tractivo;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Lógica de negocio de Órdenes de Taller (réplica del legacy CI3 ModTaller).
@@ -33,34 +36,255 @@ class OrdenTallerService
             throw new \InvalidArgumentException('EXISTE UNA ORDEN ABIERTA VINCULADA A ESE VEHÍCULO. CIERRE PRIMERO LA ORDEN.');
         }
 
-        $ot = OrdenesTaller::create([
-            'numero' => $datos['numero'] ?? $this->siguienteNumero($idEntidad),
-            'id_tractivo' => $datos['id_tractivo'],
-            'id_tipo_mantenimiento' => $datos['id_tipo_mantenimiento'] ?? null,
-            'id_motivo_entrada' => $datos['id_motivo_entrada'] ?? null,
-            'id_clasificacion' => $datos['id_clasificacion'] ?? null,
-            'fecha_ingreso' => $datos['fecha_ingreso'] ?? now()->toDateString(),
-            'hora_ingreso' => $datos['hora_ingreso'] ?? null,
-            'fecha_salida' => $datos['fecha_salida'] ?? null,
-            'hora_salida' => $datos['hora_salida'] ?? null,
-            'id_reporte' => $datos['id_reporte'] ?? null,
-            'id_confeccionado' => $datos['id_confeccionado'] ?? null,
-            'id_operario' => $datos['id_operario'] ?? null,
-            'notas' => $datos['notas'] ?? null,
-            'cancelada' => false,
-            'ot_largo_plazo' => $datos['ot_largo_plazo'] ?? null,
-            'combtaller' => $datos['combtaller'] ?? 0,
-            'id_motor' => $datos['id_motor'] ?? null,
-            'id_taller' => $datos['id_taller'] ?? null,
-            'id_entidad' => $idEntidad,
-            'id_unidad' => $idEntidad,
-            'estado' => 'abierta',
-            'kilometraje' => $datos['kilometraje'] ?? null,
-        ]);
+        // Cálculo de mantenimiento programado (réplica del legacy ModTaller).
+        // Si el motivo es ciclo de mantenimiento, el tipo se resuelve de la
+        // ficha del vehículo (tipo_vehiculos.id_tipo_mantenimiento) y el plan
+        // completo se calcula automáticamente.
+        $tractivo = Tractivo::find($datos['id_tractivo']);
+        if ($this->esMantenimientoProgramado($datos['id_motivo_entrada'] ?? null) && $tractivo) {
+            $plan = $this->calcularPlanTractivo($tractivo, $datos['kilometraje'] ?? null);
+            if ($plan['id_tipo_mantenimiento']) {
+                $datos['id_tipo_mantenimiento'] = $plan['id_tipo_mantenimiento'];
+            }
+        } else {
+            $plan = $this->calcularPlanMantenimiento(
+                $datos['id_motivo_entrada'] ?? null,
+                $datos['id_tipo_mantenimiento'] ?? null,
+                $datos['kilometraje'] ?? null
+            );
+        }
 
-        $this->aplicarEstadoTractivo($ot, true);
+        return DB::transaction(function () use ($datos, $idEntidad, $plan) {
+            $ot = OrdenesTaller::create([
+                'numero' => $datos['numero'] ?? $this->siguienteNumero($idEntidad),
+                'id_tractivo' => $datos['id_tractivo'],
+                'id_tipo_mantenimiento' => $datos['id_tipo_mantenimiento'] ?? null,
+                'id_motivo_entrada' => $datos['id_motivo_entrada'] ?? null,
+                'id_clasificacion' => $datos['id_clasificacion'] ?? null,
+                'fecha_ingreso' => $datos['fecha_ingreso'] ?? now()->toDateString(),
+                'hora_ingreso' => $datos['hora_ingreso'] ?? null,
+                'fecha_salida' => $datos['fecha_salida'] ?? null,
+                'hora_salida' => $datos['hora_salida'] ?? null,
+                'id_reporte' => $datos['id_reporte'] ?? null,
+                'id_confeccionado' => $datos['id_confeccionado'] ?? null,
+                'id_operario' => $datos['id_operario'] ?? null,
+                'notas' => $datos['notas'] ?? null,
+                'cancelada' => false,
+                'ot_largo_plazo' => $datos['ot_largo_plazo'] ?? null,
+                'ot_paralizado' => $datos['ot_paralizado'] ?? null,
+                'ot_rotura_en_linea' => $datos['ot_rotura_en_linea'] ?? null,
+                'combtaller' => $datos['combtaller'] ?? 0,
+                'id_motor' => $datos['id_motor'] ?? null,
+                'id_taller' => $datos['id_taller'] ?? null,
+                'id_entidad' => $idEntidad,
+                'id_unidad' => $idEntidad,
+                'estado' => 'abierta',
+                'kilometraje' => $datos['kilometraje'] ?? null,
+                'tipo_mtto' => $plan['tipo_mtto'],
+                'km_mtto' => $plan['km_mtto'],
+                'planificacion' => $plan['planificacion'],
+                'km_mtto_prox' => $plan['km_mtto_prox'],
+                'pl_cil1' => $datos['pl_cil1'] ?? null,
+                'pl_cil2' => $datos['pl_cil2'] ?? null,
+                'pl_cil3' => $datos['pl_cil3'] ?? null,
+                'pl_cil4' => $datos['pl_cil4'] ?? null,
+                'pl_cil5' => $datos['pl_cil5'] ?? null,
+                'pl_cil6' => $datos['pl_cil6'] ?? null,
+                'pl_cil7' => $datos['pl_cil7'] ?? null,
+                'pl_cil8' => $datos['pl_cil8'] ?? null,
+                'pl_cons_comb' => $datos['pl_cons_comb'] ?? null,
+                'pl_cons_aceite' => $datos['pl_cons_aceite'] ?? null,
+                'pl_presion_aceite_baja' => $datos['pl_presion_aceite_baja'] ?? null,
+                'pl_presion_aceite_alta' => $datos['pl_presion_aceite_alta'] ?? null,
+                'pl_temp_agua' => $datos['pl_temp_agua'] ?? null,
+                'pl_temp_aceite' => $datos['pl_temp_aceite'] ?? null,
+                'pl_observacion' => $datos['pl_observacion'] ?? null,
+            ]);
 
-        return $ot;
+            // Filas del formulario único (operaciones / piezas / movimientos).
+            foreach ($datos['operaciones'] ?? [] as $op) {
+                $this->agregarOperacion($ot, $op);
+            }
+            foreach ($datos['gastos'] ?? [] as $g) {
+                $this->agregarGasto($ot, $g);
+            }
+            foreach ($datos['movimientos'] ?? [] as $m) {
+                $this->agregarMovimiento($ot, $m);
+            }
+
+            $this->aplicarEstadoTractivo($ot, true);
+
+            return $ot;
+        });
+    }
+
+    /**
+     * Reemplaza las filas (operaciones / gastos / movimientos) de una OT con las
+     * del formulario. Se usa tanto en alta como en edición (semántica replace).
+     */
+    public function reemplazarFilas(OrdenesTaller $ot, array $datos): void
+    {
+        $ot->operaciones()->delete();
+        $ot->gastos()->delete();
+        $ot->movimientos()->delete();
+
+        foreach ($datos['operaciones'] ?? [] as $op) {
+            $this->agregarOperacion($ot, $op);
+        }
+        foreach ($datos['gastos'] ?? [] as $g) {
+            $this->agregarGasto($ot, $g);
+        }
+        foreach ($datos['movimientos'] ?? [] as $m) {
+            $this->agregarMovimiento($ot, $m);
+        }
+    }
+
+    /**
+     * Calcula el plan de mantenimiento programado (fórmula legacy de ModTaller::
+     * mostrar_ciclo_mtto / actualizar_submit). Solo aplica cuando el motivo de
+     * entrada es "CICLO DE MANTENIMIENTOS" (origen_id 6 del catálogo unificado).
+     *
+     * kmmtto      = round(km / frecuencia) * frecuencia
+     * planificacion = km + frecuencia
+     * kmmttoprox  = round(planificacion / frecuencia) * frecuencia
+     */
+    public function calcularPlanMantenimiento(?int $idMotivoEntrada, ?int $idTipoMantenimiento, $kilometraje): array
+    {
+        $vacio = ['tipo_mtto' => null, 'km_mtto' => null, 'planificacion' => null, 'km_mtto_prox' => null];
+
+        if (! $this->esMantenimientoProgramado($idMotivoEntrada)) {
+            return $vacio;
+        }
+
+        $tm = $idTipoMantenimiento ? TiposMantenimiento::find($idTipoMantenimiento) : null;
+        if (! $tm || empty($tm->frecuencia) || ! is_numeric($kilometraje)) {
+            return $vacio;
+        }
+
+        $frec = (float) $tm->frecuencia;
+        $km = (float) $kilometraje;
+
+        $kmmtto = round($km / $frec) * $frec;
+        $planificacion = $km + $frec;
+        $kmMttoProx = round($planificacion / $frec) * $frec;
+
+        return [
+            'tipo_mtto' => $tm->nombre,
+            'km_mtto' => $kmmtto,
+            'planificacion' => $planificacion,
+            'km_mtto_prox' => $kmMttoProx,
+        ];
+    }
+
+    /**
+     * Calcula el plan de mantenimiento de un tractivo (réplica del legacy
+     * ModTaller::mostrar_ciclo_mtto + Taller::actualizar_submit).
+     *
+     * - El ciclo (tipo de mantenimiento) sale de la ficha del vehículo:
+     *   tractivo.id_tipo_vehiculo → tipo_vehiculos.id_tipo_mantenimiento.
+     * - km_mtto = round(km / frecuencia) * frecuencia; el tipo de mtto que le
+     *   corresponde ('Rev' o el ciclo: 5000, 15000, ...) es la descripción de
+     *   la línea del plan en ese kilometraje (lineas_mantenimiento).
+     * - planificación:
+     *   - con línea 'Rev': si la entidad planifica por tipo 0 → última
+     *     planificación de OT de ciclo del tractivo (o kms_plan_mtto) +
+     *     frecuencia; si no → km + frecuencia.
+     *   - con línea distinta de 'Rev': km + frecuencia.
+     *   - sin línea en el plan: frecuencia.
+     * - km_mtto_prox = round(planificación / frecuencia) * frecuencia.
+     *
+     * @return array{id_tipo_mantenimiento:?int, tipo_mtto:?string, tipo_mtto_label:?string, km_mtto:?float, planificacion:?float, km_mtto_prox:?float}
+     */
+    public function calcularPlanTractivo(Tractivo $tractivo, $kilometraje): array
+    {
+        $vacio = [
+            'id_tipo_mantenimiento' => null,
+            'tipo_mtto' => null,
+            'tipo_mtto_label' => null,
+            'km_mtto' => null,
+            'planificacion' => null,
+            'km_mtto_prox' => null,
+        ];
+
+        $idTipoMtto = $tractivo->tipoVehiculo?->id_tipo_mantenimiento;
+        $tm = $idTipoMtto ? TiposMantenimiento::find($idTipoMtto) : null;
+        $frec = (float) ($tm?->frecuencia ?? 0);
+
+        if (! $tm || $frec <= 0 || ! is_numeric($kilometraje)) {
+            return $vacio + ['id_tipo_mantenimiento' => $idTipoMtto];
+        }
+
+        $km = (float) $kilometraje;
+        $kmMtto = round($km / $frec) * $frec;
+
+        // Línea del plan en ese kilometraje (legacy mostrar_ciclo_mtto).
+        $tipoLinea = \App\Models\LineasMantenimiento::where('id_tipo_mantenimiento', $tm->id)
+            ->where('kilometraje', $kmMtto)
+            ->value('descripcion');
+        $tipoLinea = $tipoLinea !== null ? trim((string) $tipoLinea) : null;
+        $tipoLinea = $tipoLinea === '' ? null : $tipoLinea;
+
+        // Planificación (legacy Taller::actualizar_submit).
+        if ($tipoLinea !== null) {
+            if (strcasecmp($tipoLinea, 'Rev') === 0 && (int) ($tractivo->entidad?->tipo_planificacion ?? 0) === 0) {
+                $base = $this->ultimaPlanificacionCiclo($tractivo) ?? (float) ($tractivo->kms_plan_mtto ?? 0);
+                $planificacion = $base + $frec;
+            } else {
+                $planificacion = $km + $frec;
+            }
+        } else {
+            $planificacion = $frec;
+        }
+
+        return [
+            'id_tipo_mantenimiento' => $tm->id,
+            'tipo_mtto' => $tipoLinea,
+            'tipo_mtto_label' => $tipoLinea === null
+                ? null
+                : (strcasecmp($tipoLinea, 'Rev') === 0 ? 'REVISION MECANICA' : 'MTTO '.$tipoLinea),
+            'km_mtto' => $kmMtto,
+            'planificacion' => $planificacion,
+            'km_mtto_prox' => round($planificacion / $frec) * $frec,
+        ];
+    }
+
+    /**
+     * Última planificación registrada en una OT de ciclo de mantenimiento del
+     * tractivo (legacy mostrar_ordentaller_tractivo_mtto 'ULTIMA': motivo
+     * origen_id=6, entrada anterior o igual a la fecha de operaciones).
+     */
+    private function ultimaPlanificacionCiclo(Tractivo $tractivo): ?float
+    {
+        $motivoCicloId = \App\Support\Catalogos::idDe('motivos_entrada_taller', 6);
+        if (! $motivoCicloId) {
+            return null;
+        }
+
+        $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
+
+        $valor = OrdenesTaller::where('id_tractivo', $tractivo->id)
+            ->where('id_motivo_entrada', $motivoCicloId)
+            ->whereDate('fecha_ingreso', '<=', $fechaOperaciones)
+            ->orderByDesc('fecha_ingreso')
+            ->value('planificacion');
+
+        return $valor !== null ? (float) $valor : null;
+    }
+
+    /**
+     * Determina si el motivo de entrada corresponde a mantenimiento programado.
+     * El legacy marca idmotentrada = 6 (CICLO DE MANTENIMIENTOS).
+     */
+    public function esMantenimientoProgramado(?int $idMotivoEntrada): bool
+    {
+        if (! $idMotivoEntrada) {
+            return false;
+        }
+
+        return (bool) CatalogoItem::where('id', $idMotivoEntrada)
+            ->where('tipo', 'motivos_entrada_taller')
+            ->where('origen_id', 6)
+            ->exists();
     }
 
     /**

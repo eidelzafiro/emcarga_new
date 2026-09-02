@@ -244,8 +244,6 @@ CREATE TABLE `arrastres` (
   `id_entidad` bigint unsigned DEFAULT NULL,
   `id_tipo_estado` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `tractivos_placa_unique` (`placa`),
-  UNIQUE KEY `tractivos_codigo_unique` (`codigo`),
   KEY `tractivos_placa_index` (`placa`),
   KEY `tractivos_id_tipo_vehiculo_index` (`id_tipo_vehiculo`),
   KEY `tractivos_id_entidad_foreign` (`id_entidad`),
@@ -2361,7 +2359,7 @@ CREATE TABLE `lineas_mantenimiento` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `lineas_mantenimiento_id_tipo_mantenimiento_foreign` (`id_tipo_mantenimiento`),
-  CONSTRAINT `fk_lineas_mantenimiento_id_tipo_mantenimiento_catalogo` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `catalogo_items` (`id`)
+  CONSTRAINT `fk_lineas_mantenimiento_id_tipo_mantenimiento_mtto` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `tipos_mantenimiento` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `lineas_neumatico`;
@@ -3051,7 +3049,7 @@ CREATE TABLE `ordenes_taller` (
   KEY `ordenes_taller_id_arrastre_foreign` (`id_arrastre`),
   CONSTRAINT `fk_ordenes_taller_id_clasificacion_catalogo` FOREIGN KEY (`id_clasificacion`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_ordenes_taller_id_motivo_entrada_catalogo` FOREIGN KEY (`id_motivo_entrada`) REFERENCES `catalogo_items` (`id`),
-  CONSTRAINT `fk_ordenes_taller_id_tipo_mantenimiento_catalogo` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `catalogo_items` (`id`),
+  CONSTRAINT `fk_ordenes_taller_id_tipo_mantenimiento_mtto` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `tipos_mantenimiento` (`id`),
   CONSTRAINT `ordenes_taller_id_arrastre_foreign` FOREIGN KEY (`id_arrastre`) REFERENCES `arrastres` (`id`),
   CONSTRAINT `ordenes_taller_id_confeccionado_foreign` FOREIGN KEY (`id_confeccionado`) REFERENCES `bolsa` (`id`),
   CONSTRAINT `ordenes_taller_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
@@ -3092,6 +3090,12 @@ CREATE TABLE `otros_agregados` (
   `id_marca` bigint unsigned DEFAULT NULL,
   `id_modelo` bigint unsigned DEFAULT NULL,
   `id_estado` bigint unsigned DEFAULT NULL,
+  `id_entidad` bigint unsigned DEFAULT NULL,
+  `id_tractivo` bigint unsigned DEFAULT NULL,
+  `fecha_instalado` date DEFAULT NULL,
+  `km_acumulados` int DEFAULT NULL,
+  `km_retirarse` int DEFAULT NULL,
+  `notas` text COLLATE utf8mb4_unicode_ci,
   `id_lubricante` bigint unsigned DEFAULT NULL,
   `nro_cilindros` int DEFAULT NULL,
   `nro_tiempos` int DEFAULT NULL,
@@ -3107,6 +3111,8 @@ CREATE TABLE `otros_agregados` (
   KEY `otros_agregados_id_modelo_foreign` (`id_modelo`),
   KEY `otros_agregados_id_estado_foreign` (`id_estado`),
   KEY `otros_agregados_id_lubricante_foreign` (`id_lubricante`),
+  KEY `otros_agregados_id_entidad_index` (`id_entidad`),
+  KEY `otros_agregados_id_tractivo_index` (`id_tractivo`),
   CONSTRAINT `fk_otros_agregados_id_lubricante_catalogo` FOREIGN KEY (`id_lubricante`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_otros_agregados_id_marca_catalogo` FOREIGN KEY (`id_marca`) REFERENCES `catalogo_items` (`id`),
   CONSTRAINT `fk_otros_agregados_id_modelo_catalogo` FOREIGN KEY (`id_modelo`) REFERENCES `catalogo_items` (`id`),
@@ -3367,7 +3373,7 @@ CREATE TABLE `planes_mantenimiento` (
   PRIMARY KEY (`id`),
   KEY `planes_mantenimiento_id_orden_taller_foreign` (`id_orden_taller`),
   KEY `planes_mantenimiento_id_tipo_mantenimiento_foreign` (`id_tipo_mantenimiento`),
-  CONSTRAINT `fk_planes_mantenimiento_id_tipo_mantenimiento_catalogo` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `catalogo_items` (`id`),
+  CONSTRAINT `fk_planes_mantenimiento_id_tipo_mantenimiento_mtto` FOREIGN KEY (`id_tipo_mantenimiento`) REFERENCES `tipos_mantenimiento` (`id`),
   CONSTRAINT `planes_mantenimiento_id_orden_taller_foreign` FOREIGN KEY (`id_orden_taller`) REFERENCES `ordenes_taller` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -4346,6 +4352,7 @@ CREATE TABLE `tractivos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `placa` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `id_tipo_vehiculo` bigint unsigned DEFAULT NULL,
   `id_tipo_combustible` bigint unsigned DEFAULT NULL,
   `id_motor` bigint unsigned DEFAULT NULL,
@@ -4375,8 +4382,6 @@ CREATE TABLE `tractivos` (
   `deleted_at` timestamp NULL DEFAULT NULL,
   `id_entidad` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `tractivos_placa_unique` (`placa`),
-  UNIQUE KEY `tractivos_codigo_unique` (`codigo`),
   KEY `tractivos_placa_index` (`placa`),
   KEY `tractivos_id_tipo_vehiculo_index` (`id_tipo_vehiculo`),
   KEY `tractivos_id_entidad_foreign` (`id_entidad`),
@@ -4763,3 +4768,10 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (177,'2026_08_25_32
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (178,'2026_08_27_100000_normalize_tractivos_columns',65);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (179,'2026_08_27_200000_vehicle_schema_normalization',66);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (180,'2026_08_27_210000_drop_marca_modelo_tractivos',67);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (181,'2026_08_27_220000_drop_marca_modelo_arrastres',68);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (182,'2026_08_27_231000_drop_unique_placa_codigo_vehiculos',69);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (183,'2026_08_28_120000_add_descripcion_to_tractivos',70);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (184,'2026_08_28_121000_backfill_entidad_tecnicos',70);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (185,'2026_08_28_130000_add_id_entidad_to_otros_agregados',71);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (186,'2026_08_28_140000_align_otros_agregados_legacy',72);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (188,'2026_08_30_120000_fix_lineas_mantenimiento_huerfanas',73);

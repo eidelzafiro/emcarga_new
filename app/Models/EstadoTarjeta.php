@@ -14,9 +14,6 @@ class EstadoTarjeta extends Model
         'fecha_movimiento',
         'id_entrega',
         'id_recibe',
-        'saldo_mn',
-        'saldo_mlc',
-        'comprobante',
         'observaciones',
     ];
 
@@ -24,8 +21,6 @@ class EstadoTarjeta extends Model
     {
         return [
             'fecha_movimiento' => 'date',
-            'saldo_mn' => 'decimal:2',
-            'saldo_mlc' => 'decimal:2',
         ];
     }
 

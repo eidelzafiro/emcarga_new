@@ -17,7 +17,7 @@ class ClientesController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\Cliente::class);
-        $clientes = Cliente::with('organismo:id,nombre,abreviatura', 'moneda:id,codigo,nombre')
+        $clientes = Cliente::with('organismo:id,nombre,codigo', 'moneda:id,codigo,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('nombre', 'like', "%{$s}%")
                 ->orWhere('codigo', 'like', "%{$s}%")
                 ->orWhere('nrocontrato', 'like', "%{$s}%"))

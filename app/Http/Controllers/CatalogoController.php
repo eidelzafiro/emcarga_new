@@ -151,18 +151,24 @@ class CatalogoController extends Controller
 
         $gridFields = CatalogoSchema::extraFields($tipo);
 
-        // Modelos y Marcas se ordenan por cantidad de usos (referencias desde tipo_vehiculos)
+        // Modelos y Marcas: orden alfabético por nombre. El conteo "usos" suma
+        // las referencias de TODAS las tablas de negocio (no solo tipo_vehiculos).
         $ordenarPorUsos = in_array($tipo, ['modelos', 'marcas'], true);
 
         if ($ordenarPorUsos) {
             $colRef = $tipo === 'modelos' ? 'id_modelo' : 'id_marca';
-            $query->leftJoin('tipo_vehiculos', function ($join) use ($colRef) {
-                $join->on('tipo_vehiculos.' . $colRef, '=', 'catalogo_items.id');
-            })
-            ->selectRaw('catalogo_items.*, COUNT(tipo_vehiculos.id) as usos')
-            ->groupBy('catalogo_items.id')
-            ->orderByDesc('usos')
-            ->orderBy('nombre');
+            $tablas = ['tipo_vehiculos', 'baterias', 'neumaticos', 'otros_agregados', 'tarjetero'];
+
+            $subqueries = [];
+            foreach ($tablas as $tabla) {
+                if (Schema::hasColumn($tabla, $colRef)) {
+                    $subqueries[] = "(SELECT COUNT(*) FROM {$tabla} WHERE {$tabla}.{$colRef} = catalogo_items.id)";
+                }
+            }
+            $usosSql = $subqueries ? '('.implode(' + ', $subqueries).')' : '0';
+
+            $query->selectRaw("catalogo_items.*, {$usosSql} as usos")
+                ->orderBy('nombre');
         } else {
             $query->orderBy('nombre');
         }
@@ -277,6 +283,18 @@ class CatalogoController extends Controller
             $itemData['logo'] = $ruta;
         }
 
+        // Tipos de estado: la imagen ilustrativa se sube como archivo y se
+        // guarda en el JSON extra (`imagen`), igual que los tipos de equipos.
+        if ($tipo === 'tipos_estados' && $request->hasFile('logo_archivo')) {
+            $request->validate([
+                'logo_archivo' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=1024,max_height=1024'],
+            ]);
+            $ruta = $request->file('logo_archivo')->store('tipos_estados', 'public');
+            $extra = $itemData['extra'] ?? [];
+            $extra['imagen'] = $ruta;
+            $itemData['extra'] = $extra;
+        }
+
         if (! isset($itemData['codigo']) && ! CatalogoSchema::usaCodigoManual($tipo)) {
             $itemData['codigo'] = $this->generarCodigo($tipo);
         }
@@ -314,6 +332,26 @@ class CatalogoController extends Controller
                 Storage::disk('public')->delete($anterior);
             }
             $itemData['logo'] = $ruta;
+        }
+
+        // Imagen de tipos de estado: se sube como archivo y se guarda en el
+        // JSON extra. Se preserva la imagen previa salvo que venga una nueva,
+        // y se mantienen los demás campos extra (p.ej. siglas).
+        if ($tipo === 'tipos_estados') {
+            $extraExistente = $item->extra ?? [];
+            $imagen = $extraExistente['imagen'] ?? null;
+            if ($request->hasFile('logo_archivo')) {
+                $request->validate([
+                    'logo_archivo' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=1024,max_height=1024'],
+                ]);
+                if ($imagen) {
+                    Storage::disk('public')->delete($imagen);
+                }
+                $imagen = $request->file('logo_archivo')->store('tipos_estados', 'public');
+            }
+            $nuevoExtra = $itemData['extra'] ?? [];
+            $nuevoExtra['imagen'] = $imagen;
+            $itemData['extra'] = $nuevoExtra;
         }
 
         if ($this->esCatalogoPorEntidad($tipo)) {

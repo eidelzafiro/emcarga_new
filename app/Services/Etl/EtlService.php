@@ -3317,6 +3317,12 @@ class EtlService
 
                         continue;
                     }
+                    // Regla 2026-08-28: derivar id_entidad desde el tractivo asignado.
+                    if (! empty($config['derivar_entidad_desde']) && ! empty($datos[$config['derivar_entidad_desde']])) {
+                        $datos['id_entidad'] = DB::table('tractivos')
+                            ->where('id', $datos[$config['derivar_entidad_desde']])
+                            ->value('id_entidad');
+                    }
                     $datos['id'] = $fila->{$pk};
                     $this->insertarFila($nombre, $datos, $procesados, $avisos);
                 }
@@ -4180,8 +4186,6 @@ class EtlService
             'motores' => DB::table('motores')->pluck('id')->flip(),
             'talleres' => DB::table('talleres')->pluck('id')->flip(),
             'entidades' => DB::table('entidades')->pluck('id')->flip(),
-            'motivos_entrada' => DB::table('motivos_entrada_taller')->pluck('id')->flip(),
-            'clasificaciones' => DB::table('clasificaciones_ordenes_taller')->pluck('id')->flip(),
             'tipos_mantenimiento' => DB::table('tipos_mantenimiento')->pluck('id')->flip(),
             'tractivos' => DB::table('tractivos')->pluck('id')->flip(),
         ];
@@ -4191,9 +4195,36 @@ class EtlService
             return $v && isset($ids[$key][$v]) ? $v : null;
         };
 
+        // Motivo de entrada y clasificación se unificaron en catalogo_items
+        // (FASE 3): el origen_id legacy mapea al id nuevo de catalogo_items.
+        $motivosEntrada = DB::table('catalogo_items')->where('tipo', 'motivos_entrada_taller')->pluck('id', 'origen_id')->map(fn ($v) => (int) $v)->all();
+        $clasificaciones = DB::table('catalogo_items')->where('tipo', 'clasificaciones_ordenes_taller')->pluck('id', 'origen_id')->map(fn ($v) => (int) $v)->all();
+        $fkOrigen = function (array $map, $v): ?int {
+            $v = (int) $v;
+
+            return $v && isset($map[$v]) ? $map[$v] : null;
+        };
+
+        // idreportado / idconfeccionado / idoperario referencian
+        // rh_movimientos.idmovimientos (no rh_bolsa.idbolsa). Se resuelve el
+        // idbolsa a través de rh_movimientos y luego se valida contra bolsa.id.
+        $movimientoABolsa = $legacy->table('rh_movimientos')
+            ->pluck('idbolsa', 'idmovimientos')
+            ->map(fn ($v) => (int) $v)
+            ->all();
+        $fkMovimiento = function ($idMov) use ($movimientoABolsa, $ids): ?int {
+            $idMov = (int) $idMov;
+            if (! $idMov) {
+                return null;
+            }
+            $idBolsa = $movimientoABolsa[$idMov] ?? null;
+
+            return $idBolsa && isset($ids['bolsa'][$idBolsa]) ? $idBolsa : null;
+        };
+
         $legacy->table('tec_ordentaller')
             ->orderBy('idordentaller')
-            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $fk) {
+            ->chunk($chunk, function ($filas) use (&$procesados, &$avisos, $fk, $fkMovimiento, $fkOrigen, $motivosEntrada, $clasificaciones) {
                 foreach ($filas as $fila) {
                     $fentrada = $fila->fentrada;
                     if (is_string($fentrada) && str_starts_with($fentrada, '0000-00-00')) {
@@ -4217,12 +4248,12 @@ class EtlService
                             'hora_salida' => $fila->hsalida ?: null,
                             'ottiempo' => $fila->ottiempo ?: 0,
                             'id_user' => $fk('bolsa', $fila->iduser),
-                            'id_motivo_entrada' => $fk('motivos_entrada', $fila->idmotentrada),
-                            'id_clasificacion' => $fk('clasificaciones', $fila->idtipoclasificacion),
+                            'id_motivo_entrada' => $fkOrigen($motivosEntrada, $fila->idmotentrada),
+                            'id_clasificacion' => $fkOrigen($clasificaciones, $fila->idtipoclasificacion),
                             'cant_clasificacion' => $fila->cantclasif ?: null,
-                            'id_reporte' => $fk('bolsa', $fila->idreportado),
-                            'id_confeccionado' => $fk('bolsa', $fila->idconfeccionado),
-                            'id_operario' => $fk('bolsa', $fila->idoperario),
+                            'id_reporte' => $fkMovimiento($fila->idreportado),
+                            'id_confeccionado' => $fkMovimiento($fila->idconfeccionado),
+                            'id_operario' => $fkMovimiento($fila->idoperario),
                             'notas' => trim((string) ($fila->notas ?? '')) ?: null,
                             'cancelada' => (bool) $fila->cancelada,
                             'tipo_mtto' => $fila->tipomtto ?: null,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\EntidadScoping;
+use App\Models\CatalogoItem;
 use App\Models\Caja;
 use App\Models\Diferenciale;
 use App\Models\EstadoComponente;
@@ -13,6 +14,7 @@ use App\Models\TipoArrastre;
 use App\Models\TipoVehiculo;
 use App\Models\TipoTractivo;
 use App\Models\Tractivo;
+use App\Services\OrdenTallerService;
 use App\Support\Catalogos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,43 +60,7 @@ class TractivosController extends Controller
 
         $tiposVehiculo = $this->combosTipoVehiculo();
 
-        $tractivos->getCollection()->transform(function ($tractivo) use ($tiposVehiculo) {
-            $tipo = collect($tiposVehiculo)->firstWhere('value', $tractivo->id_tipo_vehiculo);
-            $tractivo->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$tractivo->id_tipo_vehiculo);
-            $tractivo->tipo_equipo_label = $tipo['tipo_equipo'] ?? null;
-            $tractivo->tipo_mtto_label = $tipo['tipo_mtto'] ?? null;
-
-            // Nombres normalizados. El tipo de equipo se deriva del tipo de
-            // vehículo (id_tipo_equipo ya no existe en la tabla tractivos).
-            $tractivo->tipo_equipo_nombre = $tipo['tipo_equipo'] ?? null;
-            $tractivo->tipo_combustible_nombre = $tractivo->tipoCombustible?->nombre;
-
-            // Ficha heredada del tipo (marca/modelo/año) para el formulario.
-            $tractivo->tipo_ficha = $tipo['ficha'] ?? null;
-
-            // Fichas extraídas a tablas polimórficas (Fase C) para el formulario.
-            $tractivo->amortmn = $tractivo->amortizacion?->amortmn;
-            $tractivo->amortme = $tractivo->amortizacion?->amortme;
-            $tractivo->vchapa = $tractivo->amortizacion?->vchapa;
-            $tractivo->plan_comb = $tractivo->planes?->plan_comb;
-            $tractivo->plan_tn = $tractivo->planes?->plan_tn;
-            $tractivo->plan_viajes = $tractivo->planes?->plan_viajes;
-            $tractivo->plan_gastos = $tractivo->planes?->plan_gastos;
-            $tractivo->plan_cdt = $tractivo->planes?->plan_cdt;
-            $tractivo->plan_diario = $tractivo->planes?->plan_diario;
-            $tractivo->ficav = $tractivo->documentacion?->ficav;
-            $tractivo->femision_ficav = $tractivo->documentacion?->femision_ficav;
-            $tractivo->fvence_ficav = $tractivo->documentacion?->fvence_ficav;
-            $tractivo->lot = $tractivo->documentacion?->lot;
-            $tractivo->femision_lot = $tractivo->documentacion?->femision_lot;
-            $tractivo->fvence_lot = $tractivo->documentacion?->fvence_lot;
-            $tractivo->circulacion = $tractivo->documentacion?->circulacion;
-            $tractivo->femision_circ = $tractivo->documentacion?->femision_circ;
-            $tractivo->fvence_circ = $tractivo->documentacion?->fvence_circ;
-            $tractivo->f_reconstruccion = $tractivo->documentacion?->f_reconstruccion;
-
-            return $tractivo;
-        });
+        $tractivos->getCollection()->transform(fn ($tractivo) => $this->transformarTractivo($tractivo, $tiposVehiculo));
 
         return Inertia::render('Tractivos/Index', [
             'title' => 'Vehículos',
@@ -109,6 +75,75 @@ class TractivosController extends Controller
                 'lubricantes' => $this->combos(Lubricante::class, 'nombre'),
             ],
         ]);
+    }
+
+    public function edit(Tractivo $tractivo)
+    {
+        $this->authorize('update', $tractivo);
+        $this->autorizarEntidad($tractivo->id_entidad);
+
+        $tractivo->load([
+            'motor:id,codigo,descripcion',
+            'caja:id,codigo,descripcion',
+            'diferencial:id,codigo,descripcion',
+            'tipoCombustible:id,nombre',
+            'amortizacion',
+            'planes',
+            'documentacion',
+        ]);
+
+        $tiposVehiculo = $this->combosTipoVehiculo();
+        $editItem = $this->transformarTractivo($tractivo, $tiposVehiculo);
+
+        $items = Tractivo::query()->where('id', $tractivo->id)->paginate(1);
+        $items->getCollection()->transform(fn ($t) => $this->transformarTractivo($t, $tiposVehiculo));
+
+        return Inertia::render('Tractivos/Index', [
+            'title' => 'Vehículos',
+            'tractivos' => $items,
+            'filters' => [],
+            'editItem' => $editItem,
+            'catalogos' => [
+                'tiposVehiculo' => $tiposVehiculo,
+                'grupos' => $this->combosCatalogo('grupos'),
+                'tiposServicio' => $this->combosCatalogo('tipos_servicio'),
+                'colores' => $this->combosCatalogo('colores'),
+                'estados' => $this->combos(EstadoComponente::class, 'nombre'),
+                'lubricantes' => $this->combos(Lubricante::class, 'nombre'),
+            ],
+        ]);
+    }
+
+    private function transformarTractivo($tractivo, $tiposVehiculo)
+    {
+        $tipo = collect($tiposVehiculo)->firstWhere('value', $tractivo->id_tipo_vehiculo);
+        $tractivo->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$tractivo->id_tipo_vehiculo);
+        $tractivo->tipo_equipo_label = $tipo['tipo_equipo'] ?? null;
+        $tractivo->tipo_mtto_label = $tipo['tipo_mtto'] ?? null;
+        $tractivo->tipo_equipo_nombre = $tipo['tipo_equipo'] ?? null;
+        $tractivo->tipo_combustible_nombre = $tractivo->tipoCombustible?->nombre;
+        $tractivo->tipo_ficha = $tipo['ficha'] ?? null;
+        $tractivo->amortmn = $tractivo->amortizacion?->amortmn;
+        $tractivo->amortme = $tractivo->amortizacion?->amortme;
+        $tractivo->vchapa = $tractivo->amortizacion?->vchapa;
+        $tractivo->plan_comb = $tractivo->planes?->plan_comb;
+        $tractivo->plan_tn = $tractivo->planes?->plan_tn;
+        $tractivo->plan_viajes = $tractivo->planes?->plan_viajes;
+        $tractivo->plan_gastos = $tractivo->planes?->plan_gastos;
+        $tractivo->plan_cdt = $tractivo->planes?->plan_cdt;
+        $tractivo->plan_diario = $tractivo->planes?->plan_diario;
+        $tractivo->ficav = $tractivo->documentacion?->ficav;
+        $tractivo->femision_ficav = $tractivo->documentacion?->femision_ficav;
+        $tractivo->fvence_ficav = $tractivo->documentacion?->fvence_ficav;
+        $tractivo->lot = $tractivo->documentacion?->lot;
+        $tractivo->femision_lot = $tractivo->documentacion?->femision_lot;
+        $tractivo->fvence_lot = $tractivo->documentacion?->fvence_lot;
+        $tractivo->circulacion = $tractivo->documentacion?->circulacion;
+        $tractivo->femision_circ = $tractivo->documentacion?->femision_circ;
+        $tractivo->fvence_circ = $tractivo->documentacion?->fvence_circ;
+        $tractivo->f_reconstruccion = $tractivo->documentacion?->f_reconstruccion;
+
+        return $tractivo;
     }
 
     private function combos(string $clase, string $campo): array
@@ -267,5 +302,43 @@ class TractivosController extends Controller
 
         return redirect()->route('tractivos.index')
             ->with('success', 'Tractivo eliminado correctamente.');
+    }
+
+    public function cambiarEstado(Request $request, Tractivo $tractivo)
+    {
+        $this->authorize('update', $tractivo);
+        $this->autorizarEntidad($tractivo->id_entidad);
+
+        $validated = $request->validate([
+            'id_tipo_estado' => 'required|exists:estados_componentes,id',
+        ]);
+
+        $nuevo = (int) $validated['id_tipo_estado'];
+        $tractivo->update($validated);
+
+        // Regla de negocio: declarar el vehículo EN TALLER (26) o PARALIZADO (25)
+        // exige una Orden de Taller abierta a su nombre. Si no existe, se abre
+        // automáticamente con los datos del vehículo (motor, entidad, fecha).
+        if (in_array($nuevo, [25, 26], true)) {
+            // Motivo por defecto para la OT automática (catálogo unificado).
+            $motivoIngreso = CatalogoItem::firstOrCreate(
+                ['tipo' => 'motivos_entrada_taller', 'nombre' => 'INGRESO A TALLER'],
+                ['activo' => true],
+            );
+            try {
+                app(OrdenTallerService::class)->crear([
+                    'id_tractivo' => $tractivo->id,
+                    'id_motor' => $tractivo->id_motor,
+                    'id_motivo_entrada' => $motivoIngreso->id,
+                    'kilometraje' => null,
+                    'fecha_ingreso' => now()->toDateString(),
+                    'ot_largo_plazo' => $nuevo === 25 ? 'SI' : null,
+                ], (int) $tractivo->id_entidad);
+            } catch (\InvalidArgumentException $e) {
+                // Ya existe una OT abierta a su nombre -> estado válido, no duplica.
+            }
+        }
+
+        return back()->with('success', 'Estado del vehículo actualizado.');
     }
 }

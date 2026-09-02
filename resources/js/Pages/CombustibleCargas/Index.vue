@@ -102,6 +102,24 @@ function confirmDelete(item) {
 }
 
 const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+function empleadoLabel(e) {
+    return e ? `${e.nombre} ${e.apellidos}` : ''
+}
+
+const tarjetasFiltradas = ref([])
+watch(() => [form.value.id_monedas, form.value.id_tipo_combustibles], () => {
+    tarjetasFiltradas.value = (props.filtros?.tarjetas || []).filter(t => {
+        if (form.value.id_monedas && t.idmonedas !== form.value.id_monedas) return false
+        if (form.value.id_tipo_combustibles && t.idtipocombustibles !== form.value.id_tipo_combustibles) return false
+        return true
+    })
+    form.value.detalles.forEach(d => {
+        if (d.id_tarjeta && !tarjetasFiltradas.value.find(t => t.id === d.id_tarjeta)) {
+            d.id_tarjeta = null
+        }
+    })
+}, { immediate: true })
 </script>
 
 <template>
@@ -177,7 +195,7 @@ const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximu
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Responsable</label>
-                        <Select v-model="form.id_responsable" :options="filtros.empleados" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
+                        <Select v-model="form.id_responsable" :options="filtros.empleados" :optionLabel="empleadoLabel" optionValue="id" placeholder="Seleccione..." class="w-full" filter />
                     </div>
                     <div>
                         <label class="block mb-1 font-medium">Saldo Cargado</label>
@@ -191,7 +209,7 @@ const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximu
                         <Button label="Añadir tarjeta" icon="pi pi-plus" size="small" severity="info" @click="addDetalle" />
                     </div>
                     <div v-for="(d, idx) in form.detalles" :key="idx" class="flex gap-2 items-center mb-2">
-                        <Select v-model="d.id_tarjeta" :options="filtros.tarjetas" optionLabel="numero" optionValue="id" placeholder="Tarjeta" class="flex-1" />
+                        <Select v-model="d.id_tarjeta" :options="tarjetasFiltradas" optionLabel="numero" optionValue="id" placeholder="Tarjeta" class="flex-1" filter />
                         <InputNumber v-model="d.saldo_mon" :minFractionDigits="2" :maxFractionDigits="2" placeholder="Saldo (MN)" class="w-40" />
                         <Button icon="pi pi-times" rounded text severity="danger" @click="removeDetalle(idx)" />
                     </div>

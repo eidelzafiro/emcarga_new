@@ -203,8 +203,8 @@ class CartaPorteController extends Controller
             'productos' => Producto::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'tiposCargas' => TipoCarga::select('id', 'codigo', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'monedas' => Moneda::select('id', 'codigo', 'nombre', 'simbolo')->where('activo', true)->orderBy('nombre')->get(),
-            'tractivos' => Tractivo::with('grupo:id,nombre')
-                ->select('id', 'codigo', 'id_entidad', 'marca', 'modelo', 'placa', 'id_grupo', 'kms_disp')
+            'tractivos' => Tractivo::with(['grupo:id,nombre', 'tipoVehiculo.marca:id,nombre'])
+                ->select('id', 'codigo', 'id_entidad', 'placa', 'id_grupo', 'kms_disp')
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')
@@ -213,7 +213,7 @@ class CartaPorteController extends Controller
                     'id' => $t->id,
                     'codigo' => $t->codigo,
                     'tipo' => $t->grupo?->nombre,
-                    'marca' => $t->marca,
+                    'marca' => $t->tipoVehiculo?->marca?->nombre,
                     'placa' => $t->placa,
                 ]),
             'arrastres' => Arrastre::select('id', 'codigo', 'placa')

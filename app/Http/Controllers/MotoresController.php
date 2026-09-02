@@ -18,7 +18,7 @@ class MotoresController extends Controller
     {
 
         $this->authorize('viewAny', \App\Models\Motore::class);
-        $motores = Motore::with('tractivo:id,descripcion,placa', 'lubricante:id,nombre', 'pais:id,nombre')
+        $motores = Motore::with('tractivo:id,codigo,placa', 'lubricante:id,nombre', 'pais:id,nombre')
             ->when($request->search, fn ($q, $s) => $q->where('codigo', 'like', "%{$s}%")
                 ->orWhere('numero_serie', 'like', "%{$s}%")
                 ->orWhere('marca', 'like', "%{$s}%"))
@@ -32,7 +32,7 @@ class MotoresController extends Controller
                 return $q;
             })
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate($request->integer('per_page', 20));
 
         return Inertia::render('Motores/Index', [
             'title' => 'Motores',
@@ -40,7 +40,7 @@ class MotoresController extends Controller
             'filtros' => [
                 'lubricantes' => Lubricante::orderBy('nombre')->get(['id', 'nombre']),
                 'paises' => \App\Support\Catalogos::opciones('paises'),
-                'tractivos' => Tractivo::orderBy('descripcion')->get(['id', 'codigo', 'descripcion', 'placa']),
+                'tractivos' => Tractivo::orderBy('codigo')->get(['id', 'codigo', 'placa']),
                 'estados' => ['disponible', 'nuevo', 'trabajando', 'reparado', 'regular', 'baja'],
             ],
             'filters' => $request->only(['search', 'estado']),

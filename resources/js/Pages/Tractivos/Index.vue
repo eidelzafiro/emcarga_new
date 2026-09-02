@@ -271,7 +271,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -282,9 +282,16 @@ const props = defineProps({
   tractivos: Object,
   filters: Object,
   catalogos: Object,
+  editItem: Object,
 });
 
 const confirmDialog = useConfirm();
+
+onMounted(() => {
+  if (props.editItem) {
+    openEdit(props.editItem);
+  }
+});
 
 const clasificaciones = [
   { label: 'Tractivos', value: 1 },

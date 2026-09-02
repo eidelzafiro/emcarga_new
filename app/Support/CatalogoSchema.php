@@ -59,7 +59,7 @@ class CatalogoSchema
         'tipos_gastos' => ['tipo' => ['label' => 'Tipo', 'type' => 'text']],
         'tipos_causas' => ['tipo' => ['label' => 'Tipo', 'type' => 'text']],
         'tipos_estados' => [
-            'imagen' => ['label' => 'Imagen', 'type' => 'text'],
+            'imagen' => ['label' => 'Imagen', 'type' => 'logo'],
             'siglas' => ['label' => 'Siglas', 'type' => 'text'],
         ],
         'tipo_ingresos' => ['siglas' => ['label' => 'Siglas', 'type' => 'text']],

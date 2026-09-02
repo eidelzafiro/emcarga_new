@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\EntidadScoping;
+use App\Models\Bolsa;
 use App\Models\CombustibleDescarga;
 use App\Models\Entidad;
 use App\Models\HojasRuta;
 use App\Models\Servicentro;
 use App\Models\Tarjeta;
+use App\Models\Tractivo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -29,13 +31,15 @@ class CombustibleDescargasController extends Controller
             'tarjeta:id,numero',
             'hojaRuta:id,numero,id_tractivo',
             'hojaRuta.tractivo:id,codigo',
+            'tractivo:id,codigo',
+            'empleado:id,nombre,apellidos',
             'servicentro:id,nombre',
         ])
             ->whereYear('fdescarga', $anio)->whereMonth('fdescarga', $mes)
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%")
                 ->orWhereHas('tarjeta', fn ($q2) => $q2->where('numero', 'like', "%{$s}%"))
                 ->orWhereHas('hojaRuta', fn ($q2) => $q2->where('numero', 'like', "%{$s}%"))
-                ->orWhereHas('hojaRuta.tractivo', fn ($q2) => $q2->where('codigo', 'like', "%{$s}%")))
+                ->orWhereHas('tractivo', fn ($q2) => $q2->where('codigo', 'like', "%{$s}%")))
             ->when($request->id_tarjeta, fn ($q, $v) => $q->where('id_tarjeta', $v))
             ->when($request->id_servicentro, fn ($q, $v) => $q->where('id_servicentro', $v))
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
@@ -52,13 +56,17 @@ class CombustibleDescargasController extends Controller
                 'servicentros' => Servicentro::select('id', 'nombre')
                     ->where('activo', true)
                     ->orderBy('nombre')->get(),
-                'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'id_tractivo')
-                    ->with('tractivo:id,codigo')
+                'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'id_tractivo', 'id_chofer')
+                    ->with(['tractivo:id,codigo', 'chofer:id,nombre,apellidos'])
                     ->whereYear('fecha_emision', $anio)->whereMonth('fecha_emision', $mes)
                     ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                     ->orderByDesc('fecha_emision')
                     ->limit(100)
                     ->get(),
+                'tractivos' => Tractivo::select('id', 'codigo')
+                    ->orderBy('codigo')->get(),
+                'empleados' => Bolsa::select('id', 'nombre', 'apellidos')
+                    ->orderBy('nombre')->get(),
                 'entidades' => Entidad::select('id', 'abreviatura')
                     ->whereIn('id', $this->entidadesPermitidas())->orderBy('abreviatura')->get(),
             ],
@@ -77,6 +85,8 @@ class CombustibleDescargasController extends Controller
             'folio' => 'required|max:10',
             'saldo_mon' => 'required|numeric|min:0',
             'id_hoja_ruta' => 'required|exists:hojas_ruta,id',
+            'id_tractivo' => 'nullable|exists:tractivos,id',
+            'id_empleado' => 'nullable|exists:bolsa,id',
             'hora_descarga' => 'nullable|max:10',
             'id_servicentro' => 'nullable|exists:servicentros,id',
             'f_chip' => 'nullable|date',
@@ -107,6 +117,8 @@ class CombustibleDescargasController extends Controller
             'folio' => 'required|max:10',
             'saldo_mon' => 'required|numeric|min:0',
             'id_hoja_ruta' => 'required|exists:hojas_ruta,id',
+            'id_tractivo' => 'nullable|exists:tractivos,id',
+            'id_empleado' => 'nullable|exists:bolsa,id',
             'hora_descarga' => 'nullable|max:10',
             'id_servicentro' => 'nullable|exists:servicentros,id',
             'f_chip' => 'nullable|date',
@@ -142,12 +154,12 @@ class CombustibleDescargasController extends Controller
 
         $ids = $this->entidadesPermitidas();
 
-        return HojasRuta::with(['tractivo:id,codigo'])
+        return HojasRuta::with(['tractivo:id,codigo', 'chofer:id,nombre,apellidos'])
             ->whereYear('fecha_emision', $anio)->whereMonth('fecha_emision', $mes)
             ->when(! empty($ids), fn ($q) => $q->whereIn('id_entidad', $ids))
             ->orderByDesc('fecha_emision')
             ->limit(50)
-            ->get(['id', 'numero', 'fecha_emision', 'id_tractivo']);
+            ->get(['id', 'numero', 'fecha_emision', 'id_tractivo', 'id_chofer']);
     }
 
     private function calcularLitros(int $idTarjeta, float $saldoMon): float

@@ -11,7 +11,7 @@
         </tr>
         <tr>
             <td style="border:none"><strong>Cliente:</strong> {{ $factura->cliente?->nombre }}</td>
-            <td style="border:none"><strong>Entidad:</strong> {{ $factura->entidad?->abreviatura }}</td>
+            <td style="border:none"><strong>Entidad:</strong> {{ $factura->entidad?->abreviatura }}@if($factura->entidad?->talon_versat) ({{ $factura->entidad->talon_versat }})@endif</td>
             <td style="border:none"><strong>Tipo Ingreso:</strong> {{ $factura->tipoIngreso?->nombre }}</td>
         </tr>
         @if($factura->notas)
@@ -70,6 +70,11 @@
         <tr>
             <td style="border:none"><strong>Flete MN:</strong> ${{ number_format((float) $factura->flete_mt, 2) }}</td>
             <td style="border:none"><strong>Flete MLC:</strong> ${{ number_format((float) $factura->flete_mlc, 2) }}</td>
+            <td style="border:none"></td>
+        </tr>
+        <tr>
+            <td style="border:none"><strong>Demora:</strong> ${{ number_format((float) $factura->flete_demora, 2) }}</td>
+            <td style="border:none"><strong>Otros MT:</strong> ${{ number_format((float) $factura->otros_mt, 2) }}</td>
             <td style="border:none"><strong>Ingreso Total MN:</strong> ${{ number_format((float) $factura->ingreso_mt, 2) }}</td>
         </tr>
         <tr>
@@ -78,4 +83,28 @@
             <td style="border:none"><strong>Conciliación:</strong> {{ optional($factura->fecha_conciliacion)?->format('d/m/Y') }}</td>
         </tr>
     </table>
+
+    @if($factura->pagos && $factura->pagos->count())
+        <h3 style="margin-top:20px;font-size:11pt;color:#1a365d">Pagos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Moneda</th>
+                    <th>Monto</th>
+                    <th>Referencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($factura->pagos as $pago)
+                    <tr>
+                        <td>{{ optional($pago->fecha_pago)?->format('d/m/Y') }}</td>
+                        <td>{{ $pago->moneda?->nombre ?? '' }}</td>
+                        <td style="text-align:right">{{ number_format((float) $pago->monto, 2) }}</td>
+                        <td>{{ $pago->numero_documento ?? '' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 @endsection

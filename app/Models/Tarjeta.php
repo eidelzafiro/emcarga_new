@@ -15,7 +15,6 @@ class Tarjeta extends Model
 
     protected $fillable = [
         'numero',
-        'descripcion',
         'id_cliente',
         'saldo_actual',
         'fcompra',

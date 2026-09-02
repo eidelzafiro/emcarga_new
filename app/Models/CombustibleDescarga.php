@@ -19,6 +19,8 @@ class CombustibleDescarga extends Model
         'saldo_mon',
         'saldo_lts',
         'id_hoja_ruta',
+        'id_tractivo',
+        'id_empleado',
         'id_comprobante',
         'hora_descarga',
         'id_servicentro',
@@ -48,6 +50,16 @@ class CombustibleDescarga extends Model
     public function hojaRuta(): BelongsTo
     {
         return $this->belongsTo(HojasRuta::class, 'id_hoja_ruta');
+    }
+
+    public function tractivo(): BelongsTo
+    {
+        return $this->belongsTo(Tractivo::class, 'id_tractivo');
+    }
+
+    public function empleado(): BelongsTo
+    {
+        return $this->belongsTo(Bolsa::class, 'id_empleado');
     }
 
     public function servicentro(): BelongsTo

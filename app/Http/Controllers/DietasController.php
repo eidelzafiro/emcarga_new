@@ -25,7 +25,7 @@ class DietasController extends Controller
         $mes = (int) Carbon::parse($fechaOperaciones)->month;
 
         $dietas = Dieta::with([
-            'bolsa:id,nombrecompleto',
+            'bolsa:id,nombre,apellidos',
             'hojaRuta:id,numero,id_tractivo',
             'hojaRuta.tractivo:id,codigo',
             'tractivo:id,codigo',
@@ -33,7 +33,7 @@ class DietasController extends Controller
         ])
             ->whereYear('fecha', $anio)->whereMonth('fecha', $mes)
             ->when($request->search, fn ($q, $s) => $q->where('folio', 'like', "%{$s}%")
-                ->orWhereHas('bolsa', fn ($q2) => $q2->where('nombrecompleto', 'like', "%{$s}%"))
+                ->orWhereHas('bolsa', fn ($q2) => $q2->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%"))
                 ->orWhereHas('hojaRuta', fn ($q2) => $q2->where('numero', 'like', "%{$s}%")))
             ->when($request->canceladas === '1', fn ($q) => $q->where('cancelada', true))
             ->when($request->canceladas === '0', fn ($q) => $q->where('cancelada', false))
@@ -45,16 +45,16 @@ class DietasController extends Controller
             'title' => 'Dietas',
             'dietas' => $dietas,
             'filtros' => [
-                'bolsas' => Bolsa::select('id', 'nombrecompleto')
+                'bolsas' => Bolsa::select('id', 'nombre', 'apellidos')
                     ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
-                    ->orderBy('nombrecompleto')->get(),
+                    ->orderBy('nombre')->get(),
                 'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'id_tractivo')
                     ->with('tractivo:id,codigo')
                     ->whereYear('fecha_emision', $anio)->whereMonth('fecha_emision', $mes)
                     ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                     ->orderByDesc('fecha_emision')->limit(100)->get(),
                 'tractivos' => Tractivo::select('id', 'codigo')
-                    ->where('activo', true)->orderBy('codigo')->limit(500)->get(),
+                    ->whereNull('deleted_at')->orderBy('codigo')->limit(500)->get(),
                 'monedas' => Moneda::orderBy('nombre')->get(['id', 'nombre']),
             ],
             'fechaOperaciones' => $fechaOperaciones,

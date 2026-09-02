@@ -10,6 +10,8 @@ use App\Models\HojasRuta;
 use App\Models\NeumaticosMovimiento;
 use App\Models\OrdenesTaller;
 use App\Models\SolicitudesServicio;
+use App\Services\DashboardContabilidadService;
+use App\Services\DashboardTecnicoService;
 use App\Services\KpiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -33,6 +35,29 @@ class DashboardController extends Controller
         $entidadId = (int) $request->session()->get('entidad_activa_id') ?: null;
         $fechaRef = $this->fechaOperaciones($request);
         $rol = $this->detectarRol($request, $user);
+
+        // El módulo Técnica usa la Pizarra Operativa como su dashboard,
+        // mostrándola directamente en /dashboard (sin redirigir a la URL larga).
+        if ($rol === 'TECNICA') {
+            $service = app(DashboardTecnicoService::class);
+
+            return Inertia::render('Tecnico/PizarraOperativa', array_merge(
+                ['title' => 'Dashboard · Técnico'],
+                $service->paraPizarraOperativa($request)
+            ));
+        }
+
+        // El módulo Contabilidad usa su dashboard específico con datos
+        // contables reales (combustible, facturación, costos, amortización).
+        if ($rol === 'CONTABILIDAD') {
+            $service = app(DashboardContabilidadService::class);
+
+            return Inertia::render('Contabilidad/Dashboard', array_merge(
+                ['title' => 'Dashboard · Contabilidad'],
+                $service->datos()
+            ));
+        }
+
         $kpis = $this->kpiService->paraRol($rol, $entidadId, $fechaRef);
         $actividadReciente = $this->actividadPorRol($rol);
         $movimientos = $this->movimientosPorRol($rol, $entidadId, $fechaRef);
@@ -462,9 +487,10 @@ class DashboardController extends Controller
     {
         return match ($rol) {
             'TECNICA' => [
-                ['titulo' => 'Resumen de Flota', 'descripcion' => 'Estado actual de tractivos, arrastres y baterías', 'ruta' => null, 'icono' => 'pi pi-truck', 'color' => 'bg-blue-500'],
-                ['titulo' => 'Mantenimiento', 'descripcion' => 'Órdenes de taller y servicios programados', 'ruta' => null, 'icono' => 'pi pi-wrench', 'color' => 'bg-amber-500'],
-                ['titulo' => 'Inventario Técnico', 'descripcion' => 'Neumáticos, baterías, piezas y lubricantes', 'ruta' => null, 'icono' => 'pi pi-box', 'color' => 'bg-emerald-500'],
+                ['titulo' => 'Flota Técnica', 'descripcion' => 'Composición y KPIs de flota', 'ruta' => 'tecnico.flota', 'icono' => 'pi pi-truck', 'color' => 'bg-blue-500'],
+                ['titulo' => 'Taller en Vivo', 'descripcion' => 'Vehículos en taller y órdenes', 'ruta' => 'tecnico.taller', 'icono' => 'pi pi-wrench', 'color' => 'bg-amber-500'],
+                ['titulo' => 'Salud de Componentes', 'descripcion' => 'Motores, neumáticos, baterías', 'ruta' => 'tecnico.componentes', 'icono' => 'pi pi-cog', 'color' => 'bg-violet-500'],
+                ['titulo' => 'Pizarra Operativa', 'descripcion' => 'Tablero de flota, operaciones y taller en una vista', 'ruta' => 'tecnico.dashboard', 'icono' => 'pi pi-sliders-h', 'color' => 'bg-cyan-500'],
             ],
             'COMERCIAL' => [
                 ['titulo' => 'Operaciones', 'descripcion' => 'Aforos, facturación y prefacturas', 'ruta' => null, 'icono' => 'pi pi-shopping-cart', 'color' => 'bg-blue-500'],

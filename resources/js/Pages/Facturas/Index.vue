@@ -83,6 +83,7 @@ function confirmEliminar(factura) {
                 </template>
                 <template #end>
                     <div class="flex gap-2">
+                        <Button label="Exportar" icon="pi pi-download" severity="info" @click="window.location = route('facturas.exportar')" />
                         <InputText v-model="search" placeholder="Buscar..." />
                         <Select v-model="estado" :options="['', 'emitida', 'firmada', 'cobrada', 'cancelada', 'refacturada']" placeholder="Estado" class="w-40" />
                     </div>

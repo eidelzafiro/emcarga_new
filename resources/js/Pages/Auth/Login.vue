@@ -61,7 +61,7 @@
                 required
                 autofocus
                 autocomplete="username"
-                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors login-input"
                 :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-500': form.errors.username }"
                 placeholder="nombre de usuario"
               />
@@ -81,7 +81,7 @@
                 type="password"
                 required
                 autocomplete="current-password"
-                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors login-input"
                 :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-500': form.errors.password }"
                 placeholder="••••••••"
               />
@@ -170,3 +170,15 @@ const submit = () => {
     });
 };
 </script>
+
+<style scoped>
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus,
+.login-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  caret-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+</style>

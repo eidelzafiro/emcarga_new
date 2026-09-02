@@ -181,7 +181,7 @@ class DocumentosReportService extends BaseReportService
         $ids = $this->entidadIds();
 
         $query = CartaPorte::with([
-            'tractivo' => fn ($q) => $q->select('id', 'placa', 'descripcion', 'id_entidad'),
+            'tractivo' => fn ($q) => $q->select('id', 'placa', 'codigo', 'id_entidad'),
             'cliente'  => fn ($q) => $q->select('id', 'nombre'),
         ])->whereHas('tractivo', fn ($q) => $q->whereIn('tractivos.id_entidad', $ids));
 
@@ -204,7 +204,7 @@ class DocumentosReportService extends BaseReportService
         $ids = $this->entidadIds();
 
         $query = HojasRuta::with([
-            'tractivo' => fn ($q) => $q->select('id', 'placa', 'descripcion', 'id_entidad'),
+            'tractivo' => fn ($q) => $q->select('id', 'placa', 'codigo', 'id_entidad'),
             'cliente'  => fn ($q) => $q->select('id', 'nombre'),
         ])->whereHas('tractivo', fn ($q) => $q->whereIn('tractivos.id_entidad', $ids));
 

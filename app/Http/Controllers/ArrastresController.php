@@ -39,12 +39,8 @@ class ArrastresController extends Controller
 
         $items = $query->orderBy('placa')->paginate(20)->withQueryString();
 
-        $items->getCollection()->transform(function ($arrastre) {
-            $tipo = collect($this->tiposTipoArrastre())->firstWhere('value', $arrastre->id_tipo_vehiculo);
-            $arrastre->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$arrastre->id_tipo_vehiculo);
-
-            return $arrastre;
-        });
+        $tiposArrastre = $this->tiposTipoArrastre();
+        $items->getCollection()->transform(fn ($arrastre) => $this->transformarArrastre($arrastre, $tiposArrastre));
 
         return Inertia::render('Arrastres/Index', [
             'title' => 'Arrastres',
@@ -93,6 +89,38 @@ class ArrastresController extends Controller
             ->with('success', 'Arrastre eliminado correctamente.');
     }
 
+    public function edit(Arrastre $arrastre)
+    {
+        $this->authorize('update', [$arrastre, \App\Policies\ArrastrePolicy::class]);
+        $this->autorizarEntidad($arrastre->id_entidad);
+
+        $tipos = $this->tiposTipoArrastre();
+        $editItem = $this->transformarArrastre($arrastre, $tipos);
+
+        $items = Arrastre::query()->where('id', $arrastre->id)->paginate(1);
+        $items->getCollection()->transform(fn ($a) => $this->transformarArrastre($a, $tipos));
+
+        return Inertia::render('Arrastres/Index', [
+            'title' => 'Arrastres',
+            'items' => $items,
+            'filters' => [],
+            'editItem' => $editItem,
+            'catalogos' => [
+                'tiposArrastre' => $tipos,
+                'colores' => \App\Models\CatalogoItem::where('tipo', 'colores')->orderBy('nombre')->get(['id', 'nombre']),
+                'estados' => \App\Models\EstadoComponente::orderBy('nombre')->get(['id', 'nombre']),
+            ],
+        ]);
+    }
+
+    private function transformarArrastre($arrastre, $tipos)
+    {
+        $tipo = collect($tipos)->firstWhere('value', $arrastre->id_tipo_vehiculo);
+        $arrastre->tipo_vehiculo_label = $tipo['label'] ?? ('Tipo '.$arrastre->id_tipo_vehiculo);
+
+        return $arrastre;
+    }
+
     private function reglas(?int $id = null): array
     {
         return [
@@ -131,5 +159,19 @@ class ArrastresController extends Controller
             })
             ->values()
             ->toArray();
+    }
+
+    public function cambiarEstado(Request $request, Arrastre $arrastre)
+    {
+        $this->authorize('update', [$arrastre, \App\Policies\ArrastrePolicy::class]);
+        $this->autorizarEntidad($arrastre->id_entidad);
+
+        $validated = $request->validate([
+            'id_tipo_estado' => 'required|exists:estados_componentes,id',
+        ]);
+
+        $arrastre->update($validated);
+
+        return back()->with('success', 'Estado del arrastre actualizado.');
     }
 }

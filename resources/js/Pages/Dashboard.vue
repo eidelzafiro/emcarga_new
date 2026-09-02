@@ -95,8 +95,9 @@
         </div>
 
         <div v-if="secciones && secciones.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div v-for="(sec, i) in secciones" :key="i"
-            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+          <Link v-for="(sec, i) in secciones" :key="i" :href="sec.ruta ? route(sec.ruta) : '#'"
+            :class="sec.ruta ? '' : 'pointer-events-none'"
+            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer block">
             <div class="flex items-start gap-3">
               <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" :class="sec.color">
                 <i :class="sec.icono" class="text-white text-lg" />
@@ -106,7 +107,7 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ sec.descripcion }}</p>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -156,7 +157,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, Link } from '@inertiajs/vue3';
+import { route } from 'ziggy-js';
 import { Chart, registerables } from 'chart.js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 

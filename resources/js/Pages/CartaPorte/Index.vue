@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { ref, computed, watch, onMounted } from 'vue'
+import { router, Link } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Button from 'primevue/button'
@@ -322,6 +322,13 @@ function verAforo(carta) {
 const cartaFacturada = (c) => Boolean(c.facturas_exists)
 const cartaAforada = (c) => Boolean(c.aforos_exists)
 
+onMounted(() => {
+  if (route().queryParams.nuevo === '1') {
+    openEmision();
+    window.history.replaceState({}, '', route('carta-porte.index'));
+  }
+});
+
 </script>
 
 <template>
@@ -329,8 +336,11 @@ const cartaAforada = (c) => Boolean(c.aforos_exists)
     <div class="space-y-4">
       <!-- Barra de acciones y filtros -->
       <div class="flex flex-col lg:flex-row lg:items-center gap-3 justify-between rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
-        <div class="flex flex-wrap items-center gap-2">
-          <Button label="Adicionar" icon="pi pi-plus" severity="success" @click="openEmision" />
+         <div class="flex flex-wrap items-center gap-2">
+           <Link v-if="route().queryParams.origen" :href="route('tecnico.dashboard')" class="inline-flex items-center gap-1 px-2 py-1 text-sm text-blue-600 hover:underline dark:text-blue-400">
+             <i class="pi pi-arrow-left"></i> Volver a Pizarra
+           </Link>
+           <Button label="Adicionar" icon="pi pi-plus" severity="success" @click="openEmision" />
           <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/60 text-xs font-semibold text-gray-600 dark:text-gray-300">
             <i class="pi pi-folder text-gray-400" />
             {{ cartas.total }} cartas

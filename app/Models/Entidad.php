@@ -122,7 +122,7 @@ class Entidad extends Model
 
     public function scopeParaEntidad(Builder $q, ?int $entidadId = null): Builder
     {
-        $entidadId ??= auth()->user()?->id_entidad;
+        $entidadId ??= optional(request()->user())->id_entidad;
         if (! $entidadId) {
             return $q;
         }

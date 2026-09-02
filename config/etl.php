@@ -880,6 +880,20 @@ return [
             'pk' => 'idotrosagregados',
             'columnas' => [
                 'idmarca' => 'id_marca',
+                'idtipoagregados' => 'id_modelo',
+                'idtractivos' => 'id_tractivo',
+                'finstalado' => 'fecha_instalado',
+                'kacumulados' => 'km_acumulados',
+                'kretirarse' => 'km_retirarse',
+                'fbaja' => 'fecha_baja',
+                'notas' => 'notas',
+            ],
+            // Regla 2026-08-28: la entidad se deriva del tractivo asignado.
+            'derivar_entidad_desde' => 'id_tractivo',
+            'fk_validar' => [
+                'id_tractivo' => 'tractivos',
+                'id_marca' => 'catalogo_items',
+                'id_modelo' => 'tipos_agregados',
             ],
             'defaults' => [
                 'descripcion' => '',

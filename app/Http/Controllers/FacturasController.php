@@ -136,7 +136,7 @@ class FacturasController extends Controller
         $this->authorize('view', $factura);
         $this->autorizarEntidad($factura->id_entidad);
 
-        $factura->load('cliente', 'tipoIngreso', 'aforos.cartaPorte', 'user');
+        $factura->load('cliente', 'tipoIngreso', 'aforos.cartaPorte', 'user', 'pagos.moneda');
 
         return Inertia::render('Facturas/Show', [
             'title' => "Factura {$factura->numero}",
@@ -258,5 +258,51 @@ class FacturasController extends Controller
         }
 
         return response()->json($query->orderBy('fecha_parte')->get());
+    }
+
+    public function exportar(Request $request): StreamedResponse
+    {
+        $this->authorize('viewAny', Factura::class);
+
+        $facturas = Factura::with('cliente:id,nombre', 'entidad:id,nombre,abreviatura,talon_versat')
+            ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%"))->orWhere('numero', 'like', "%{$s}%"))
+            ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
+            ->orderBy('fecha_emision', 'desc')
+            ->orderBy('numero', 'desc')
+            ->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="facturas_' . date('Y-m-d') . '.csv"',
+        ];
+
+        return response()->stream(function () use ($facturas) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
+
+            fputcsv($handle, ['No. Factura', 'Fecha Emisión', 'Cliente', 'Entidad', 'Talón Versat', 'Flete MT', 'Flete MLC', 'Demora', 'Otros MT', 'Ingreso MT', 'Estado', 'Firma', 'Cobro MN', 'Conciliación']);
+
+            foreach ($facturas as $f) {
+                fputcsv($handle, [
+                    $f->numero,
+                    optional($f->fecha_emision)?->format('d/m/Y'),
+                    optional($f->cliente)->nombre ?? '',
+                    optional($f->entidad)->abreviatura ?? '',
+                    optional($f->entidad)->talon_versat ?? '',
+                    number_format((float) $f->flete_mt, 2, '.', ''),
+                    number_format((float) $f->flete_mlc, 2, '.', ''),
+                    number_format((float) $f->flete_demora, 2, '.', ''),
+                    number_format((float) $f->otros_mt, 2, '.', ''),
+                    number_format((float) $f->ingreso_mt, 2, '.', ''),
+                    $f->estado,
+                    optional($f->fecha_firma)?->format('d/m/Y') ?? '',
+                    optional($f->fecha_cobro_mn)?->format('d/m/Y') ?? '',
+                    optional($f->fecha_conciliacion)?->format('d/m/Y') ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, $headers);
     }
 }

@@ -20,14 +20,19 @@ class TarjetasController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\Tarjeta::class);
-        $tarjetas = Tarjeta::with(['moneda:id,codigo,nombre', 'tipoCombustible:id,nombre', 'empleado:id,nombre,apellidos', 'tractivo:id,codigo'])
+        $tarjetas = Tarjeta::with(['moneda:id,codigo,nombre', 'tipoCombustible:id,nombre', 'empleado:id,nombre,apellidos', 'tractivo:id,codigo', 'entidad:id,abreviatura', 'cierres:id,id_tarjeta,ftrabajo'])
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%")
                 ->orWhereHas('empleado', fn ($q2) => $q2->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%")))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
             ->when($request->id_tipo_combustible, fn ($q, $v) => $q->where('idtipocombustibles', $v))
+            ->when($request->boolean('con_saldos'), fn ($q) => $q->where('saldo_actual', '>', 0))
+            ->when($request->boolean('sin_saldos'), fn ($q) => $q->where(function ($q2) {
+                $q2->where('saldo_actual', '<=', 0)->orWhereNull('saldo_actual');
+            }))
+            ->when($request->boolean('bajas'), fn ($q) => $q->whereIn('estado', ['inactiva', 'cancelada']))
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->orderBy('numero')
-            ->paginate(20);
+            ->get();
 
         return Inertia::render('Tarjetas/Index', [
             'title' => 'Tarjetas',
@@ -35,7 +40,7 @@ class TarjetasController extends Controller
             'tiposCombustibles' => TipoCombustible::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
             'monedas' => Moneda::where('activo', true)->orderBy('codigo')->get(['id', 'codigo', 'nombre']),
             'filtros' => $this->filtros(),
-            'filters' => $request->only(['search', 'estado', 'id_tipo_combustible']),
+            'filters' => $request->only(['search', 'estado', 'id_tipo_combustible', 'con_saldos', 'sin_saldos', 'bajas']),
         ]);
     }
 
@@ -83,7 +88,7 @@ class TarjetasController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        $tractivos = Tractivo::select('id', 'codigo', 'descripcion')
+        $tractivos = Tractivo::select('id', 'codigo')
             ->when(! empty($ids), fn ($q) => $q->whereIn('id_entidad', $ids))
             ->orderBy('codigo')
             ->get();

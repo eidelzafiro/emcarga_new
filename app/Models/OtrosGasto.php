@@ -14,8 +14,10 @@ class OtrosGasto extends Model
     protected $table = 'otros_gastos';
 
     protected $fillable = [
+        'numero',
         'id_bolsa',
         'id_tractivo',
+        'id_arrastre',
         'id_tipo_concepto',
         'fecha',
         'concepto',
@@ -43,6 +45,11 @@ class OtrosGasto extends Model
     public function tractivo(): BelongsTo
     {
         return $this->belongsTo(Tractivo::class, 'id_tractivo');
+    }
+
+    public function arrastre(): BelongsTo
+    {
+        return $this->belongsTo(Arrastre::class, 'id_arrastre');
     }
 
     public function tipoConcepto(): BelongsTo

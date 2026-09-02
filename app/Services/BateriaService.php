@@ -37,6 +37,8 @@ class BateriaService
     ): BateriasMovimiento {
         $fecha = $fechaMovimiento ?? now()->toDateString();
         $idDestino = $idDestino ?? self::idDestinoVehiculo();
+        // 0 = sin tractivo; la FK no acepta 0 → se normaliza a NULL.
+        $idTractivo = $idTractivo > 0 ? $idTractivo : null;
 
         // Cerrar movimiento vigente (fecha_retiro NULL)
         $vigente = $bateria->movimientos()->whereNull('fecha_retiro')->orderByDesc('id')->first();

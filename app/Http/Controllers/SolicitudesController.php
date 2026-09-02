@@ -126,13 +126,13 @@ class SolicitudesController extends Controller
                     'chofer_nombre' => $hr->chofer ? trim($hr->chofer->nombre.' '.$hr->chofer->apellidos) : null,
                     'chofer2_nombre' => $hr->chofer2 ? trim($hr->chofer2->nombre.' '.$hr->chofer2->apellidos) : null,
                 ]),
-            'tractivos' => Tractivo::with('grupo:id,nombre')
-                ->select('id', 'codigo', 'marca', 'modelo', 'placa', 'id_grupo')
+            'tractivos' => Tractivo::with(['grupo:id,nombre', 'tipoVehiculo.marca:id,nombre'])
+                ->select('id', 'codigo', 'placa', 'id_grupo')
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
                 ->orderBy('codigo')
                 ->get()
-                ->map(fn ($t) => ['id' => $t->id, 'codigo' => $t->codigo, 'tipo' => $t->grupo?->nombre, 'marca' => $t->marca, 'placa' => $t->placa]),
+                ->map(fn ($t) => ['id' => $t->id, 'codigo' => $t->codigo, 'tipo' => $t->grupo?->nombre, 'marca' => $t->tipoVehiculo?->marca?->nombre, 'placa' => $t->placa]),
             'arrastres' => Arrastre::select('id', 'codigo', 'placa')
                 ->whereNull('fecha_baja')
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))

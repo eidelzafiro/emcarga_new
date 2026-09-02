@@ -158,4 +158,35 @@ class TallerTest extends TestCase
         $svc->eliminarMovimiento($m);
         $this->assertNull(\App\Models\MovimientosTaller::find($m->id));
     }
+
+    public function test_calcular_plan_mantenimiento_segun_tipo_vehiculo()
+    {
+        $tm = \App\Models\TiposMantenimiento::create([
+            'nombre' => 'CICLO TEST', 'frecuencia' => 5000, 'kms_max' => 100000,
+            'mtto_base' => 5000, 'mttos' => '5000 15000',
+        ]);
+
+        $tv = \App\Models\TipoVehiculo::create([
+            'id_tipo_mantenimiento' => $tm->id, 'clase' => 'tractivo', 'activo' => true,
+        ]);
+
+        $tractivo = Tractivo::factory()->create([
+            'id_tipo_vehiculo' => $tv->id, 'id_entidad' => 23, 'kilometraje_actual' => 26000,
+        ]);
+
+        foreach ([5000 => '5000', 10000 => '5000', 15000 => '15000', 20000 => '5000', 25000 => '5000', 30000 => '30000'] as $km => $tipo) {
+            \App\Models\LineasMantenimiento::create([
+                'id_tipo_mantenimiento' => $tm->id, 'kilometraje' => $km, 'descripcion' => $tipo,
+            ]);
+        }
+
+        $plan = app(OrdenTallerService::class)->calcularPlanTractivo($tractivo, 26000);
+
+        $this->assertEquals($tm->id, $plan['id_tipo_mantenimiento']);
+        $this->assertEquals(25000, (float) $plan['km_mtto']);
+        $this->assertEquals('5000', $plan['tipo_mtto']);
+        $this->assertEquals('MTTO 5000', $plan['tipo_mtto_label']);
+        $this->assertEquals(31000, (float) $plan['planificacion']);
+        $this->assertEquals(30000, (float) $plan['km_mtto_prox']);
+    }
 }

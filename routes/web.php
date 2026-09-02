@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AmortizacionTallerController;
 use App\Http\Controllers\AcuerdosController;
 use App\Http\Controllers\ExportacionController;
 use App\Http\Controllers\AforosController;
@@ -16,20 +17,27 @@ use App\Http\Controllers\CajasController;
 use App\Http\Controllers\CargosController;
 use App\Http\Controllers\CartaPorteController;
 use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\CierreTarjetasController;
+use App\Http\Controllers\FusionCatalogosController;
+use App\Http\Controllers\GastoMaterialController;
 use App\Http\Controllers\CategoriasProductosController;
 use App\Http\Controllers\ChoferesController;
 use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\CombustibleCargasController;
 use App\Http\Controllers\CombustibleDescargasController;
 use App\Http\Controllers\TarjetasController;
-use App\Http\Controllers\CombustiblesLubricantesController;use App\Http\Controllers\ConciliacionesController;
+use App\Http\Controllers\ConciliacionesController;
 use App\Http\Controllers\DietasController;
+use App\Http\Controllers\ReembolsosController;
 use App\Http\Controllers\PlantillaController;
 use App\Http\Controllers\ConfiguracionesModeloController;
 use App\Http\Controllers\ConsecutivosController;
+use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\ContenedoresController;
+use App\Http\Controllers\CuadreContabilidadController;
 use App\Http\Controllers\ContextoTrabajoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardTecnicoController;
 use App\Http\Controllers\DemandasController;
 use App\Http\Controllers\DescuentosEmpleadosController;
 use App\Http\Controllers\DetallesCargaCombustibleController;
@@ -41,7 +49,6 @@ use App\Http\Controllers\EntidadesController;
 use App\Http\Controllers\EstadisticasExplotacionController;
 use App\Http\Controllers\EstadosTarjetasController;
 use App\Http\Controllers\FacturasController;
-use App\Http\Controllers\FirmasAutorizadasController;
 use App\Http\Controllers\FirmasController;
 use App\Http\Controllers\FondosTiempoController;
 use App\Http\Controllers\GruposEscalaController;
@@ -49,14 +56,13 @@ use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
 use App\Http\Controllers\HojasRutaController;
 use App\Http\Controllers\IncidenciasController;
-use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\LubricantesController;
+use App\Http\Controllers\TiposLubricantesController;
 use App\Http\Controllers\ControlLubricanteController;
 use App\Http\Controllers\LugaresController;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\MesesController;
 use App\Http\Controllers\MotoresController;
-use App\Http\Controllers\MovimientosInventarioController;
 use App\Http\Controllers\MunicipiosController;
 use App\Http\Controllers\NavesController;
 use App\Http\Controllers\NeumaticosController;
@@ -83,6 +89,7 @@ use App\Http\Controllers\SalariosController;
 use App\Http\Controllers\ServicentrosController;
 use App\Http\Controllers\SolicitudesController;
 use App\Http\Controllers\TallerController;
+use App\Http\Controllers\TiposMantenimientoController;
 use App\Http\Controllers\TalleresController;
 use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
@@ -94,7 +101,6 @@ use App\Http\Controllers\TipoVehiculoController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VacacionesController;
-use App\Http\Controllers\ValesController;
 use App\Http\Controllers\VallasController;
 use Illuminate\Support\Facades\Route;
 
@@ -104,7 +110,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', fn () => redirect(auth()->check() ? route('dashboard') : route('login')));
+Route::get('/', fn () => redirect(request()->user() ? route('dashboard') : route('login')));
 
 // Invitados
 Route::middleware('guest')->group(function () {
@@ -152,6 +158,21 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:dashboard.ver')
         ->name('api.kpis');
 
+    // Dashboards del módulo técnico (tres propuestas). Comparten el permiso
+    // dashboard.ver para no introducir nuevos permisos; se filtran por la
+    // entidad activa y el mes de operaciones de la sesión.
+    Route::middleware(['password.temporal', 'permission:dashboard.ver'])->group(function () {
+        Route::get('tecnico/flota', [DashboardTecnicoController::class, 'flota'])->name('tecnico.flota');
+        Route::get('tecnico/taller', [DashboardTecnicoController::class, 'taller'])->name('tecnico.taller');
+        Route::get('tecnico/componentes', [DashboardTecnicoController::class, 'componentes'])->name('tecnico.componentes');
+        Route::get('api/tecnico/flota', [DashboardTecnicoController::class, 'datosFlota'])->name('api.tecnico.flota');
+        Route::get('api/tecnico/taller', [DashboardTecnicoController::class, 'datosTaller'])->name('api.tecnico.taller');
+        Route::get('api/tecnico/componentes', [DashboardTecnicoController::class, 'datosComponentes'])->name('api.tecnico.componentes');
+        Route::get('api/tecnico/flota/detalle', [DashboardTecnicoController::class, 'detalleFlota'])->name('api.tecnico.flota.detalle');
+        Route::get('tecnico/pizarra-operativa', [DashboardTecnicoController::class, 'pizarraOperativa'])->name('tecnico.dashboard');
+        Route::get('api/tecnico/pizarra-operativa', [DashboardTecnicoController::class, 'datosPizarraOperativa'])->name('api.tecnico.dashboard');
+    });
+
     // Las notificaciones se sirven incluso con password temporal
     Route::get('notificaciones', [NotificationsController::class, 'index'])->name('notificaciones.index');
     Route::post('notificaciones/{id}/leer', [NotificationsController::class, 'markAsRead'])->name('notificaciones.leer');
@@ -168,7 +189,9 @@ Route::middleware('auth')->group(function () {
 
         // Módulo Técnico - Flota
         Route::resource('tractivos', TractivosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy', 'edit']);
+        Route::post('tractivos/{tractivo}/estado', [TractivosController::class, 'cambiarEstado'])
+            ->name('tractivos.estado');
 
         Route::resource('motores', MotoresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -201,6 +224,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('lubricantes', LubricantesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::resource('tipos-lubricantes', TiposLubricantesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
         Route::resource('control-lubricante', ControlLubricanteController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
@@ -209,7 +235,12 @@ Route::middleware('auth')->group(function () {
 
         // Módulo Taller
         Route::resource('taller', TallerController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['taller' => 'ordene']);
+        Route::resource('tipos-mantenimiento', TiposMantenimientoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::get('taller/plan-mtto', [TallerController::class, 'planMtto'])
+            ->name('taller.plan-mtto');
         Route::post('taller/{ordene}/cerrar', [TallerController::class, 'cerrar'])
             ->name('taller.cerrar');
         Route::post('taller/{ordene}/cancelar', [TallerController::class, 'cancelar'])
@@ -311,6 +342,7 @@ Route::middleware('auth')->group(function () {
         Route::post('facturas/{factura}/refacturar', [FacturasController::class, 'refacturar'])->name('facturas.refacturar');
         Route::post('facturas/{factura}/firmar', [FacturasController::class, 'firmar'])->name('facturas.firmar');
         Route::post('facturas/{factura}/cobrar', [FacturasController::class, 'cobrar'])->name('facturas.cobrar');
+        Route::get('facturas/exportar', [FacturasController::class, 'exportar'])->name('facturas.exportar');
         Route::get('aforos-pendientes', [FacturasController::class, 'aforosPendientes'])->name('aforos.pendientes');
 
         Route::resource('aforos', AforosController::class)
@@ -452,6 +484,20 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('otros-gastos', OtrosGastosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('otros-gastos/tipo-concepto', [OtrosGastosController::class, 'storeTipoConcepto'])
+            ->name('otros-gastos.store-tipo-concepto');
+
+        Route::get('cuadre-contabilidad', [CuadreContabilidadController::class, 'index'])
+            ->name('cuadre-contabilidad.index');
+
+        Route::get('contabilidad/dashboard', [ContabilidadController::class, 'dashboard'])
+            ->name('contabilidad.dashboard');
+
+        Route::resource('gasto-material', GastoMaterialController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::resource('amortizacion-taller', AmortizacionTallerController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('combustible-cargas', CombustibleCargasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -459,20 +505,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('tarjetas', TarjetasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::get('cierre-tarjetas', [CierreTarjetasController::class, 'index'])->name('cierre-tarjetas.index');
+        Route::post('cierre-tarjetas', [CierreTarjetasController::class, 'store'])->name('cierre-tarjetas.store');
+
         Route::resource('combustible-descargas', CombustibleDescargasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('inventario', InventarioController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('vales', ValesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Tablas faltantes Contabilidad (Fase 5.6 parte 3)
         Route::resource('servicentros', ServicentrosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('firmas-autorizadas', FirmasAutorizadasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('reportes-costos', ReportesCostosController::class)
@@ -490,8 +530,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('detalles-carga-combustible', DetallesCargaCombustibleController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-        Route::resource('combustibles-lubricantes', CombustiblesLubricantesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('dietas', DietasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -499,6 +537,13 @@ Route::middleware('auth')->group(function () {
             ->name('dietas.liquidar');
         Route::post('dietas/{dieta}/cancelar', [DietasController::class, 'cancelar'])
             ->name('dietas.cancelar');
+
+        Route::resource('reembolsos', ReembolsosController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('reembolsos/{reembolso}/aprobar', [ReembolsosController::class, 'aprobar'])
+            ->name('reembolsos.aprobar');
+        Route::post('reembolsos/{reembolso}/rechazar', [ReembolsosController::class, 'rechazar'])
+            ->name('reembolsos.rechazar');
 
         Route::resource('plantilla', PlantillaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -509,7 +554,9 @@ Route::middleware('auth')->group(function () {
         // Técnica - Tablas faltantes (Fase 5.8)
         Route::resource('arrastres', ArrastresController::class)
             ->parameters(['arrastres' => 'arrastre'])
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index', 'store', 'update', 'destroy', 'edit']);
+        Route::post('arrastres/{arrastre}/estado', [ArrastresController::class, 'cambiarEstado'])
+            ->name('arrastres.estado');
         Route::resource('tipos-tractivos', TiposTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['tipos-tractivos' => 'id']);
@@ -526,9 +573,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['historial-tractivos' => 'id']);
 
-        // ATM - Inventario (Fase 5.8)
-        Route::resource('movimientos-inventario', MovimientosInventarioController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         // RRHH - Tablas faltantes (Fase 5.8)
         Route::resource('pagos-adicionales-cargo', PagosAdicionalesCargoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -588,6 +632,11 @@ Route::middleware('auth')->group(function () {
         Route::post('catalogo/{tipo}', [CatalogoController::class, 'store'])->name('catalogo.store');
         Route::put('catalogo/{tipo}/{id}', [CatalogoController::class, 'update'])->name('catalogo.update');
         Route::delete('catalogo/{tipo}/{id}', [CatalogoController::class, 'destroy'])->name('catalogo.destroy');
+
+        // Fusión de catálogos (tipos de equipo / marcas / modelos)
+        Route::get('fusionar-catalogos', [FusionCatalogosController::class, 'index'])->name('fusionar-catalogos.index');
+        Route::get('fusionar-catalogos/opciones', [FusionCatalogosController::class, 'opciones'])->name('fusionar-catalogos.opciones');
+        Route::post('fusionar-catalogos', [FusionCatalogosController::class, 'store'])->name('fusionar-catalogos.store');
 
         // Rutas directas para tipos del catálogo unificado (acceso desde menú)
         Route::get('areas', [AreasController::class, 'index'])->name('areas.index');

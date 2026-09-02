@@ -55,6 +55,18 @@ class Tractivo extends Model
     ];
 
     /**
+     * La tabla tractivos no tiene columna "descripcion"; el identificador
+     * legible es "codigo". Se expone como atributo virtual para no romper
+     * las vistas/selects que referencian descripcion.
+     */
+    protected $appends = ['descripcion'];
+
+    public function getDescripcionAttribute(): string
+    {
+        return trim((string) ($this->attributes['descripcion'] ?? $this->codigo ?? ''));
+    }
+
+    /**
      * Fichas extraídas a tablas polimórficas (Fase C). Se exponen como
      * atributos virtuales para no romper el código existente (formularios,
      * CostoCalculoService, etc.).

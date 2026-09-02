@@ -11,11 +11,13 @@ class PagosController extends Controller
 {
     public function index(Request $request)
     {
-        
-        $this->authorize('viewAny', \App\Models\Pago::class);
-        $pagos = Pago::with(['tipoDocumento', 'moneda', 'user'])
-            ->when($request->search, fn ($q, $s) => $q->where('concepto', 'like', "%{$s}%")->orWhere('numero_documento', 'like', "%{$s}%"))
+        $this->authorize('viewAny', Pago::class);
+
+        $pagos = Pago::with(['moneda', 'user', 'factura'])
+            ->when($request->search, fn ($q, $s) => $q->where('concepto', 'like', "%{$s}%")
+                ->orWhere('numero_documento', 'like', "%{$s}%"))
             ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
+            ->when($request->id_factura, fn ($q, $v) => $q->where('id_factura', $v))
             ->orderBy('fecha_pago', 'desc')
             ->paginate(20);
 
@@ -24,7 +26,6 @@ class PagosController extends Controller
         return Inertia::render('Pagos/Index', [
             'title' => 'Pagos',
             'pagos' => $pagos,
-            'tiposDocumento' => $tiposDocumento,
             'monedas' => $monedas,
             'filters' => $request->only(['search', 'estado']),
         ]);
@@ -32,16 +33,18 @@ class PagosController extends Controller
 
     public function store(Request $request)
     {
-        
-        $this->authorize('create', \App\Models\Pago::class);
+        $this->authorize('create', Pago::class);
+
         $validated = $request->validate([
             'id_moneda' => 'nullable|exists:monedas,id',
+            'id_factura' => 'nullable|exists:facturas,id',
             'fecha_pago' => 'required|date',
             'numero_documento' => 'nullable|max:100',
             'monto' => 'required|numeric|min:0',
             'concepto' => 'nullable|max:255',
             'estado' => 'required|in:pendiente,aprobado,rechazado',
         ]);
+
         $validated['id_user'] = auth()->id();
         Pago::create($validated);
 
@@ -50,16 +53,18 @@ class PagosController extends Controller
 
     public function update(Request $request, Pago $pago)
     {
-        
         $this->authorize('update', $pago);
+
         $validated = $request->validate([
             'id_moneda' => 'nullable|exists:monedas,id',
+            'id_factura' => 'nullable|exists:facturas,id',
             'fecha_pago' => 'required|date',
             'numero_documento' => 'nullable|max:100',
             'monto' => 'required|numeric|min:0',
             'concepto' => 'nullable|max:255',
             'estado' => 'required|in:pendiente,aprobado,rechazado',
         ]);
+
         $pago->update($validated);
 
         return redirect()->route('pagos.index')->with('success', 'Pago actualizado correctamente.');
@@ -67,7 +72,6 @@ class PagosController extends Controller
 
     public function destroy(Pago $pago)
     {
-        
         $this->authorize('delete', $pago);
         $pago->delete();
 

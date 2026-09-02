@@ -153,6 +153,13 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'tractivos');
         }
 
+        // Otros agregados: la entidad se deriva del tractivo asignado (regla 2026-08-28).
+        if (! $solo || $solo === 'otros_agregados') {
+            $this->info('Migrando otros agregados...');
+            $etl->migrarTabla('otros_agregados', $chunk);
+            $this->mostrarResultado($etl->getReporte(), 'otros_agregados');
+        }
+
         // Motores: id_tractivo NULL, marca/modelo desde catálogos, estado mapeado
         if (! $solo || $solo === 'motores') {
             $this->info('Migrando motores...');

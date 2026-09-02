@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use App\Support\PermissionResolver;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -34,6 +35,7 @@ class EnsureModulePermission
     private const ALIAS_MODULO = [
         'aforos' => 'facturas',
         'menu-items' => 'menus',
+        'tipos-lubricantes' => 'lubricantes',
     ];
 
     private const MAPA_ACCIONES = [
@@ -64,6 +66,15 @@ class EnsureModulePermission
             return $next($request);
         }
 
+        \Log::warning('EnsureModulePermission BLOCKED', [
+            'user' => $user->id,
+            'route' => $nombreRuta,
+            'modulo' => $modulo,
+            'accion' => $accion,
+            'permiso' => $permiso,
+            'hasSuperadmin' => $user->hasRole('SUPERADMIN'),
+        ]);
+
         abort(403);
     }
 
@@ -79,7 +90,16 @@ class EnsureModulePermission
             // Ruta simple tipo "dashboard" → dashboard.ver
             $candidatos[] = "{$modulo}.ver";
         } elseif (isset(self::MAPA_ACCIONES[$accion])) {
-            $candidatos[] = "{$modulo}.".self::MAPA_ACCIONES[$accion];
+            $accionPermiso = self::MAPA_ACCIONES[$accion];
+
+            // Catálogo unificado: permiso específico por tipo (catalogo.{tipo}.{accion})
+            // antes del genérico catalogo.{accion}. Permite conceder "marcas" sin
+            // exponer el resto del catálogo.
+            if ($modulo === 'catalogo' && ($tipo = $request->route('tipo'))) {
+                $candidatos[] = "catalogo.{$tipo}.{$accionPermiso}";
+            }
+
+            $candidatos[] = "{$modulo}.{$accionPermiso}";
         } else {
             // Acción personalizada: primero el permiso literal; como
             // fallback, el permiso según el verbo HTTP de la petición.

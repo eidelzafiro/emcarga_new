@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -32,6 +32,8 @@ function emptyForm() {
         folio: '',
         saldo_mon: null,
         id_hoja_ruta: null,
+        id_tractivo: null,
+        id_empleado: null,
         hora_descarga: '',
         id_servicentro: null,
         f_chip: null,
@@ -39,9 +41,69 @@ function emptyForm() {
     }
 }
 
+const tarjetaSeleccionada = computed(() => {
+    if (!form.value.id_tarjeta) return null
+    return props.filtros.tarjetas.find(t => t.id === form.value.id_tarjeta) || null
+})
+
+const saldoActualMn = computed(() => {
+    return tarjetaSeleccionada.value?.saldo_actual || 0
+})
+
+const precio = computed(() => {
+    return tarjetaSeleccionada.value?.tipoCombustible?.preciomn || 0
+})
+
+const combustibleNombre = computed(() => {
+    return tarjetaSeleccionada.value?.tipoCombustible?.nombre || ''
+})
+
+const monedaCodigo = computed(() => {
+    return tarjetaSeleccionada.value?.moneda?.codigo || ''
+})
+
+const utilizedLts = computed(() => {
+    if (!form.value.saldo_mon || !precio.value) return 0
+    return Math.round((form.value.saldo_mon / precio.value) * 1000) / 1000
+})
+
+const saldoFinalMn = computed(() => {
+    if (!form.value.saldo_mon) return saldoActualMn.value
+    return Math.round((saldoActualMn.value - form.value.saldo_mon) * 1000) / 1000
+})
+
+const saldoActualLts = computed(() => {
+    return tarjetaSeleccionada.value?.saldoactuallts || 0
+})
+
+const saldoFinalLts = computed(() => {
+    return Math.round((saldoActualLts.value - utilizedLts.value) * 1000) / 1000
+})
+
+const hrSeleccionada = computed(() => {
+    if (!form.value.id_hoja_ruta) return null
+    return props.filtros.hojasRuta.find(h => h.id === form.value.id_hoja_ruta) || null
+})
+
 watch(search, () => {
     router.get(route('combustible-descargas.index'), { search: search.value }, { preserveState: true, replace: true })
 })
+
+function onTarjetaSelect() {
+    // Auto-focus after selecting tarjeta
+}
+
+function onHrSelect() {
+    const hr = hrSeleccionada.value
+    if (hr) {
+        form.value.id_tractivo = hr.id_tractivo || null
+        form.value.id_empleado = hr.id_chofer || null
+    }
+}
+
+function onSaldoMonBlur() {
+    // Calculations happen via computed properties
+}
 
 function openCreate() {
     editing.value = null
@@ -57,6 +119,8 @@ function openEdit(item) {
         folio: item.folio,
         saldo_mon: Number(item.saldo_mon),
         id_hoja_ruta: item.id_hoja_ruta,
+        id_tractivo: item.id_tractivo,
+        id_empleado: item.id_empleado,
         hora_descarga: item.hora_descarga || '',
         id_servicentro: item.id_servicentro,
         f_chip: item.f_chip ? new Date(item.f_chip) : null,
@@ -88,6 +152,10 @@ function confirmDelete(item) {
 }
 
 const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+function empleadoLabel(e) {
+    return e ? `${e.nombre} ${e.apellidos}` : ''
+}
 </script>
 
 <template>
@@ -108,25 +176,23 @@ const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximu
 
             <DataTable :value="descargas.data" striped-rows paginator :rows="20" :total-records="descargas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="fdescarga" header="Fecha" sortable />
-                <Column field="folio" header="Folio" sortable />
                 <Column field="tarjeta.numero" header="Tarjeta" />
-                <Column field="hojaRuta.numero" header="Hoja Ruta" />
-                <Column field="hojaRuta.tractivo.codigo" header="Tractivo" />
-                <Column field="saldo_mon" header="Saldo MN">
+                <Column field="folio" header="Folio" sortable />
+                <Column field="hojaRuta.numero" header="HR" />
+                <Column field="tractivo.codigo" header="Tractivo" />
+                <Column header="Empleado">
+                    <template #body="{ data }">{{ empleadoLabel(data.empleado) }}</template>
+                </Column>
+                <Column field="saldo_mon" header="Importe">
                     <template #body="{ data }">{{ fmt(data.saldo_mon) }}</template>
                 </Column>
-                <Column field="saldo_lts" header="Saldo Lts">
+                <Column field="saldo_lts" header="Litros">
                     <template #body="{ data }">{{ fmt(data.saldo_lts) }}</template>
                 </Column>
                 <Column field="servicentro.nombre" header="Servicentro" />
+                <Column field="hora_descarga" header="Hora" />
                 <Column field="kms" header="Kms">
                     <template #body="{ data }">{{ fmt(data.kms) }}</template>
-                </Column>
-                <Column field="hora_descarga" header="Hora" />
-                <Column field="estado" header="Estado">
-                    <template #body="{ data }">
-                        <Tag :value="data.estado" :severity="data.estado === 'registrada' ? 'success' : 'warn'" />
-                    </template>
                 </Column>
                 <Column header="Acciones" style="width: 120px">
                     <template #body="{ data }">
@@ -139,49 +205,100 @@ const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximu
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="showForm" :header="editing ? 'Editar Descarga' : 'Nueva Descarga'" modal style="width: 680px">
+        <Dialog v-model:visible="showForm" :header="editing ? 'Editar Descarga' : 'Nueva Descarga'" modal style="width: 750px">
             <form @submit.prevent="submit" class="space-y-4">
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block mb-1 font-medium">Tarjeta</label>
-                        <Select v-model="form.id_tarjeta" :options="filtros.tarjetas" optionLabel="numero" optionValue="id" placeholder="Seleccione..." class="w-full" required />
+                <fieldset class="border rounded p-3">
+                    <legend class="text-sm font-bold px-1">DATOS DE LA TARJETA</legend>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block mb-1 font-medium">Tarjeta *</label>
+                            <Select v-model="form.id_tarjeta" :options="filtros.tarjetas" optionLabel="numero" optionValue="id" placeholder="Seleccione..." class="w-full" required @change="onTarjetaSelect" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Fecha *</label>
+                            <DatePicker v-model="form.fdescarga" dateFormat="dd/mm/yy" class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Fecha Chip *</label>
+                            <DatePicker v-model="form.f_chip" dateFormat="dd/mm/yy" class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Servicentro *</label>
+                            <Select v-model="form.id_servicentro" :options="filtros.servicentros" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Hora *</label>
+                            <InputText v-model="form.hora_descarga" placeholder="HH:MM" class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Folio *</label>
+                            <InputText v-model="form.folio" class="w-full" required />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Hoja de Ruta *</label>
+                            <Select v-model="form.id_hoja_ruta" :options="filtros.hojasRuta" optionLabel="numero" optionValue="id" placeholder="Seleccione..." class="w-full" required @change="onHrSelect" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Tractivo</label>
+                            <Select v-model="form.id_tractivo" :options="filtros.tractivos" optionLabel="codigo" optionValue="id" placeholder="Seleccione..." class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Empleado</label>
+                            <Select v-model="form.id_empleado" :options="filtros.empleados" :optionLabel="(e) => `${e.nombre} ${e.apellidos}`" optionValue="id" placeholder="Seleccione..." class="w-full" filter />
+                        </div>
                     </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Fecha Descarga</label>
-                        <DatePicker v-model="form.fdescarga" dateFormat="dd/mm/yy" class="w-full" />
+                    <div class="grid grid-cols-2 gap-4 mt-3">
+                        <div class="flex gap-2 items-center">
+                            <span class="text-sm font-medium">Combustible:</span>
+                            <Tag :value="combustibleNombre" severity="danger" v-if="combustibleNombre" />
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="text-sm font-medium">Moneda:</span>
+                            <Tag :value="monedaCodigo" severity="danger" v-if="monedaCodigo" />
+                        </div>
                     </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Folio</label>
-                        <InputText v-model="form.folio" class="w-full" required />
+                </fieldset>
+
+                <fieldset class="border rounded p-3">
+                    <legend class="text-sm font-bold px-1">DATOS DE LA DESCARGA</legend>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block mb-1 font-medium">Saldo Actual $</label>
+                            <InputNumber :modelValue="saldoActualMn" :disabled="true" class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Utilizado $ *</label>
+                            <InputNumber v-model="form.saldo_mon" :minFractionDigits="2" :maxFractionDigits="2" class="w-full" required @blur="onSaldoMonBlur" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Saldo Final $</label>
+                            <InputNumber :modelValue="saldoFinalMn" :disabled="true" class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Saldo Actual Lts</label>
+                            <InputNumber :modelValue="saldoActualLts" :disabled="true" class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Utilizado Lts</label>
+                            <InputNumber :modelValue="utilizedLts" :disabled="true" class="w-full" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Saldo Final Lts</label>
+                            <InputNumber :modelValue="saldoFinalLts" :disabled="true" class="w-full" />
+                        </div>
                     </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Hoja de Ruta</label>
-                        <Select v-model="form.id_hoja_ruta" :options="filtros.hojasRuta" optionLabel="numero" optionValue="id" placeholder="Seleccione..." class="w-full" required />
+                    <div class="grid grid-cols-1 gap-4 mt-3">
+                        <div>
+                            <label class="block mb-1 font-medium">Kms *</label>
+                            <InputNumber v-model="form.kms" :minFractionDigits="2" :maxFractionDigits="2" class="w-full" required />
+                        </div>
                     </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Saldo MN</label>
-                        <InputNumber v-model="form.saldo_mon" :minFractionDigits="2" :maxFractionDigits="2" class="w-full" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Servicentro</label>
-                        <Select v-model="form.id_servicentro" :options="filtros.servicentros" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Kms</label>
-                        <InputNumber v-model="form.kms" :minFractionDigits="2" :maxFractionDigits="2" class="w-full" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Hora Descarga</label>
-                        <InputText v-model="form.hora_descarga" placeholder="HH:MM" class="w-full" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Fecha Chip</label>
-                        <DatePicker v-model="form.f_chip" dateFormat="dd/mm/yy" class="w-full" />
-                    </div>
-                </div>
+                </fieldset>
+
                 <div class="flex gap-2 justify-end">
                     <Button label="Cancelar" severity="secondary" @click="showForm = false" />
-                    <Button label="Guardar" type="submit" icon="pi pi-save" />
+                    <Button label="Guardar y continuar" icon="pi pi-save" severity="success" @click.prevent="submit" />
+                    <Button label="Guardar" icon="pi pi-save" type="submit" />
                 </div>
             </form>
         </Dialog>

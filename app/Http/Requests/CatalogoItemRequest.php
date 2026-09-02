@@ -27,8 +27,9 @@ class CatalogoItemRequest extends FormRequest
     {
         $rules = CatalogoSchema::validationRules($this->route('tipo'));
 
-        // El logo de la marca se sube como archivo (no como texto).
-        if ($this->route('tipo') === 'marcas') {
+        // El logo de la marca y la imagen de los tipos de estado se suben como
+        // archivo (no como texto plano).
+        if (in_array($this->route('tipo'), ['marcas', 'tipos_estados'], true)) {
             $rules['logo_archivo'] = [
                 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048',
                 'dimensions:max_width=1024,max_height=1024',

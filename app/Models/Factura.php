@@ -71,6 +71,11 @@ class Factura extends Model
         return $this->hasMany(Aforo::class, 'id_factura');
     }
 
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class, 'id_factura');
+    }
+
     public function entidad(): BelongsTo
     {
         return $this->belongsTo(Entidad::class, 'id_entidad');

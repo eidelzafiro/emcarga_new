@@ -11,8 +11,8 @@ class Pago extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'id_tipo_documento',
         'id_moneda',
+        'id_factura',
         'fecha_pago',
         'numero_documento',
         'monto',
@@ -29,14 +29,14 @@ class Pago extends Model
         ];
     }
 
-    public function tipoDocumento(): BelongsTo
-    {
-        return $this->belongsTo(TipoDocumento::class, 'id_tipo_documento');
-    }
-
     public function moneda(): BelongsTo
     {
         return $this->belongsTo(Moneda::class, 'id_moneda');
+    }
+
+    public function factura(): BelongsTo
+    {
+        return $this->belongsTo(Factura::class, 'id_factura');
     }
 
     public function user(): BelongsTo

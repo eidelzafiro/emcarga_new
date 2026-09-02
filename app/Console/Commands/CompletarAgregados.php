@@ -18,7 +18,7 @@ class CompletarAgregados extends Command
 
     public function handle(AgregadosTractivoService $servicio): int
     {
-        $tractivos = Tractivo::orderBy('id')->get(['id', 'codigo', 'marca', 'modelo']);
+        $tractivos = Tractivo::with('tipoVehiculo.marca')->orderBy('id')->get(['id', 'codigo', 'id_entidad', 'id_tipo_vehiculo', 'kilometraje_actual', 'fecha_alta']);
         $bar = $this->output->createProgressBar($tractivos->count());
         $bar->start();
 

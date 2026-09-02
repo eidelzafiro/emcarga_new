@@ -74,6 +74,31 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
                 </template>
             </Card>
 
+            <Card>
+                <template #title>Pagos Vinculados</template>
+                <template #content>
+                    <DataTable :value="factura.pagos || []" striped-rows emptyMessage="No hay pagos registrados">
+                        <Column field="fecha_pago" header="Fecha">
+                            <template #body="{ data }">{{ formatDate(data.fecha_pago) }}</template>
+                        </Column>
+                        <Column field="numero_documento" header="Núm. Documento" />
+                        <Column header="Moneda">
+                            <template #body="{ data }">{{ data.moneda?.codigo }}</template>
+                        </Column>
+                        <Column field="monto" header="Monto">
+                            <template #body="{ data }">${{ Number(data.monto).toLocaleString() }}</template>
+                        </Column>
+                        <Column field="concepto" header="Concepto" />
+                        <Column field="estado" header="Estado">
+                            <template #body="{ data }">
+                                <Tag :severity="data.estado === 'aprobado' ? 'success' : data.estado === 'rechazado' ? 'danger' : 'warn'" :value="data.estado" />
+                            </template>
+                        </Column>
+                    </DataTable>
+                    <div class="text-xs text-gray-400 pt-1">Total pagos: {{ (factura.pagos || []).length }} — Monto total: ${{ Number((factura.pagos || []).reduce((s, p) => s + Number(p.monto), 0)).toLocaleString() }}</div>
+                </template>
+            </Card>
+
             <div class="flex gap-2">
                 <Button label="PDF" icon="pi pi-file-pdf" severity="danger" @click="window.open(route('facturas.imprimir', factura.id), '_blank')" />
                 <Button label="Volver" icon="pi pi-arrow-left" severity="secondary" @click="router.get(route('facturas.index'))" />

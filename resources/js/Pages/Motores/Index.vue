@@ -60,6 +60,7 @@ watch(search, () => {
 const onPage = (event) => {
   router.get(route('motores.index'), {
     page: event.page + 1,
+    per_page: event.rows,
     search: search.value,
   }, { preserveState: true, replace: true })
 }

@@ -119,7 +119,7 @@ class FacturacionReportService
         $ids = $this->entidadIds();
 
         $cartas = CartaPorte::with([
-            'tractivo' => fn ($q) => $q->select('id', 'placa', 'descripcion', 'id_entidad'),
+            'tractivo' => fn ($q) => $q->select('id', 'placa', 'codigo', 'id_entidad'),
             'cliente' => fn ($q) => $q->select('id', 'nombre'),
             'hojaRuta' => fn ($q) => $q->select('id', 'origen', 'destino'),
         ])

@@ -21,7 +21,7 @@ class ReportesCostosController extends Controller
             ->orderBy('fecha_reporte', 'desc')
             ->paginate(20);
 
-        $tractivos = Tractivo::select('id', 'codigo', 'descripcion')->orderBy('codigo')->get();
+        $tractivos = Tractivo::select('id', 'codigo')->orderBy('codigo')->get();
 
         return Inertia::render('ReportesCostos/Index', [
             'title' => 'Reportes Costos',

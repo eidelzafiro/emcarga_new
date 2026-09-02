@@ -43,6 +43,8 @@ class PermissionSeeder extends Seeder
 
             'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
 
+            'tipos-mantenimiento.ver', 'tipos-mantenimiento.crear', 'tipos-mantenimiento.editar', 'tipos-mantenimiento.eliminar',
+
             'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.eliminar',
 
             'lugares.ver', 'lugares.crear', 'lugares.editar', 'lugares.eliminar',
@@ -143,6 +145,7 @@ class PermissionSeeder extends Seeder
             'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
             'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
             'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
+            'tipo-vehiculos.ver', 'tipo-vehiculos.crear', 'tipo-vehiculos.editar', 'tipo-vehiculos.eliminar',
             'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
             'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',
             'locales-electricos.ver', 'locales-electricos.crear', 'locales-electricos.editar', 'locales-electricos.eliminar',
@@ -175,6 +178,11 @@ class PermissionSeeder extends Seeder
             'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
         ];
 
+        // Permisos por tipo del catálogo unificado (catalogo.{tipo}.{accion}).
+        // Cada tipo es visible/editable de forma independiente por rol.
+        $catalogo = $this->catalogoPorRol();
+        $permisos = array_merge($permisos, $catalogo['todos']);
+
         foreach ($permisos as $permiso) {
             Permission::firstOrCreate(['name' => $permiso]);
         }
@@ -203,7 +211,9 @@ class PermissionSeeder extends Seeder
                 'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
 
                 'reportes.ver', 'reportes.generar',
-                'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
+            'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
+
+            'tipos-mantenimiento.ver', 'tipos-mantenimiento.crear', 'tipos-mantenimiento.editar', 'tipos-mantenimiento.eliminar',
                 // Catálogos técnicos
                 'naves.ver', 'naves.crear', 'naves.editar', 'naves.eliminar',
                 'vallas.ver', 'vallas.crear', 'vallas.editar', 'vallas.eliminar',
@@ -214,6 +224,7 @@ class PermissionSeeder extends Seeder
                 'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
                 'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
                 'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
+                'tipo-vehiculos.ver', 'tipo-vehiculos.crear', 'tipo-vehiculos.editar', 'tipo-vehiculos.eliminar',
                 'balances-electricos.ver', 'balances-electricos.crear', 'balances-electricos.editar', 'balances-electricos.eliminar',
 
                 'historial-tractivos.ver', 'historial-tractivos.crear', 'historial-tractivos.editar', 'historial-tractivos.eliminar',
@@ -286,7 +297,8 @@ class PermissionSeeder extends Seeder
                 // Nómina (2026-08-18)
                 'incidencias.ver', 'incidencias.crear', 'incidencias.editar', 'incidencias.eliminar',
                 'penalizaciones.ver', 'penalizaciones.crear', 'penalizaciones.editar', 'penalizaciones.eliminar',
-                'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
+            'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
+            'reembolsos.ver', 'reembolsos.crear', 'reembolsos.editar', 'reembolsos.eliminar',
             ],
             'CONTABILIDAD' => [
                 'dashboard.ver',
@@ -306,6 +318,8 @@ class PermissionSeeder extends Seeder
 
                 'combustibles-lubricantes.ver', 'combustibles-lubricantes.crear', 'combustibles-lubricantes.editar', 'combustibles-lubricantes.eliminar',
                 'pagos.ver', 'pagos.crear', 'pagos.editar', 'pagos.eliminar',
+                'reembolsos.ver', 'reembolsos.crear', 'reembolsos.editar', 'reembolsos.eliminar',
+                'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
             ],
             'OPERATIVOS' => [
                 'dashboard.ver',
@@ -334,7 +348,50 @@ class PermissionSeeder extends Seeder
 
         foreach ($asignacion as $nombreRol => $permisosRol) {
             $rol = Role::firstOrCreate(['name' => $nombreRol]);
-            $rol->syncPermissions($permisosRol);
+            $permisosRol = array_merge($permisosRol, $catalogo['porRol'][$nombreRol] ?? []);
+            $rol->syncPermissions(array_values(array_unique($permisosRol)));
         }
+    }
+
+    /**
+     * Permisos del catálogo unificado por tipo de catálogo.
+     *
+     * - 'todos': TODOS los permisos catalogo.{tipo}.{ver|crear|editar|eliminar}
+     *   (para crear los permisos y asignarlos a SUPERADMIN/CONFIGURACIONES).
+     * - 'porRol': [rol => [catalogo.{tipo}.ver, ...]] según la agrupación del
+     *   tipo (Técnica → TECNICA, Comercial → COMERCIAL, etc.).
+     */
+    private function catalogoPorRol(): array
+    {
+        $agrupacionARol = [
+            'Técnica' => 'TECNICA',
+            'Comercial' => 'COMERCIAL',
+            'Contabilidad' => 'CONTABILIDAD',
+            'RRHH' => 'RECHUM',
+        ];
+
+        $todos = [];
+        $porRol = [];
+
+        foreach (\App\Models\CatalogoTipo::all(['tipo', 'agrupacion']) as $ct) {
+            $tipo = $ct->tipo;
+            $base = "catalogo.{$tipo}";
+            foreach (['ver', 'crear', 'editar', 'eliminar'] as $accion) {
+                $todos[] = "{$base}.{$accion}";
+            }
+
+            $rol = $agrupacionARol[$ct->agrupacion] ?? null;
+            if ($rol) {
+                $porRol[$rol][] = "{$base}.ver";
+            }
+        }
+
+        // CONFIGURACIONES administra todo el catálogo (ver + editar).
+        $porRol['CONFIGURACIONES'] = array_merge($porRol['CONFIGURACIONES'] ?? [], $todos);
+
+        return [
+            'todos' => $todos,
+            'porRol' => $porRol,
+        ];
     }
 }

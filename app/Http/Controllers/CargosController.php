@@ -259,11 +259,8 @@ class CargosController extends Controller
 
     private function comboNivelesEducacion(): array
     {
-        return collect(\App\Support\Catalogos::opciones('tipos_nivel_educacion'))
-            ->orderBy('abreviatura')
-            ->get()
-            ->map(fn ($n) => ['value' => $n->id, 'label' => $n->abreviatura ?? $n->nombre])
-            ->toArray();
+        return array_map(fn ($n) => ['value' => $n['id'], 'label' => $n['abreviatura'] ?? $n['nombre']],
+            \App\Support\Catalogos::opciones('tipos_nivel_educacion'));
     }
 
     private function comboGruposEscala(): array
@@ -277,17 +274,13 @@ class CargosController extends Controller
 
     private function comboCategorias(): array
     {
-        return collect(\App\Support\Catalogos::opciones('categorias_cargo', true))
-            ->map(fn ($c) => ['value' => $c['id'], 'label' => $c['abreviatura'] ?? $c['nombre']])
-            ->toArray();
+        return array_map(fn ($c) => ['value' => $c['id'], 'label' => $c['abreviatura'] ?? $c['nombre']],
+            \App\Support\Catalogos::opciones('categorias_cargo', true));
     }
 
     private function comboGruposHorario(): array
     {
-        return collect(\App\Support\Catalogos::opciones('tipos_grupo_horario'))
-            ->orderBy('nombre')
-            ->get()
-            ->map(fn ($g) => ['value' => $g->id, 'label' => $g->nombre])
-            ->toArray();
+        return array_map(fn ($g) => ['value' => $g['id'], 'label' => $g['nombre']],
+            \App\Support\Catalogos::opciones('tipos_grupo_horario'));
     }
 }

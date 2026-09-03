@@ -11,6 +11,7 @@ use App\Models\NeumaticosMovimiento;
 use App\Models\OrdenesTaller;
 use App\Models\SolicitudesServicio;
 use App\Services\DashboardContabilidadService;
+use App\Services\DashboardRecursosHumanosService;
 use App\Services\DashboardTecnicoService;
 use App\Services\KpiService;
 use Illuminate\Http\Request;
@@ -54,6 +55,17 @@ class DashboardController extends Controller
 
             return Inertia::render('Contabilidad/Dashboard', array_merge(
                 ['title' => 'Dashboard · Contabilidad'],
+                $service->datos()
+            ));
+        }
+
+        // El módulo Recursos Humanos usa su dashboard específico con datos
+        // de plantilla, documentación, incidencias y salarios.
+        if ($rol === 'RECHUM') {
+            $service = app(DashboardRecursosHumanosService::class);
+
+            return Inertia::render('RecursosHumanos/Dashboard', array_merge(
+                ['title' => 'Dashboard · Recursos Humanos'],
                 $service->datos()
             ));
         }

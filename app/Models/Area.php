@@ -31,6 +31,11 @@ class Area extends Model
         return $this->belongsTo(Area::class, 'id_area_padre');
     }
 
+    public function subAreas()
+    {
+        return $this->hasMany(Area::class, 'id_area_padre');
+    }
+
     public function entidad(): BelongsTo
     {
         return $this->belongsTo(Entidad::class, 'id_entidad');

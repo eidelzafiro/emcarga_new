@@ -84,6 +84,9 @@ function submit() {
         <Column header="Fecha" :style="{ width: '120px' }">
           <template #body="{ data }">{{ data.fecha }}</template>
         </Column>
+        <Column header="Empleado">
+          <template #body="{ data }">{{ data.movimiento?.bolsa?.nombrecompleto || '—' }}</template>
+        </Column>
         <Column field="feriados" header="Feriados" />
         <Column field="irregular" header="Irregular" />
         <Column field="cpl" header="CPL" />

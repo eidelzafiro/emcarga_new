@@ -153,6 +153,12 @@ function confirmDelete(item) {
 
 const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
+function fmtFecha(fecha) {
+    if (!fecha) return ''
+    const d = new Date(fecha)
+    return d.toLocaleDateString('es-CU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 function empleadoLabel(e) {
     return e ? `${e.nombre} ${e.apellidos}` : ''
 }
@@ -175,7 +181,9 @@ function empleadoLabel(e) {
             </Toolbar>
 
             <DataTable :value="descargas.data" striped-rows paginator :rows="20" :total-records="descargas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
-                <Column field="fdescarga" header="Fecha" sortable />
+                <Column field="fdescarga" header="Fecha" sortable>
+                    <template #body="{ data }">{{ fmtFecha(data.fdescarga) }}</template>
+                </Column>
                 <Column field="tarjeta.numero" header="Tarjeta" />
                 <Column field="folio" header="Folio" sortable />
                 <Column field="hojaRuta.numero" header="HR" />

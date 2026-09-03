@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bolsa;
+use App\Models\CatalogoItem;
 use App\Models\Penalizacion;
-use App\Models\TipoPenalizacione;
 use App\Http\Controllers\Traits\EntidadScoping;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,12 +16,11 @@ class PenalizacionesController extends Controller
 
     public function index(Request $request)
     {
-        
-        $this->authorize('viewAny', \App\Models\Penalizacion::class);
+        $this->authorize('viewAny', Penalizacion::class);
         $entidades = $this->entidadesPermitidas();
 
         $query = Penalizacion::with(['bolsa', 'tipoPenalizacion'])
-            ->when(! empty($entidades), fn ($q) => $q->whereHas('bolsa', fn ($sq) => $sq->whereIn('id_entidad', $entidades)))
+            ->when(!empty($entidades), fn ($q) => $q->whereHas('bolsa', fn ($sq) => $sq->whereIn('id_entidad', $entidades)))
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->whereHas('bolsa', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%"))
                     ->orWhereHas('tipoPenalizacion', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%"));
@@ -29,10 +29,17 @@ class PenalizacionesController extends Controller
             ->orderBy('id', 'desc');
 
         $items = $query->paginate(20);
-        $empleados = Bolsa::when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
+        $empleados = Bolsa::when(!empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
             ->orderBy('nombre')
             ->get();
-        $tipos = TipoPenalizacione::where('activo', true)->select('id', 'nombre', 'porcentaje')->orderBy('nombre')->get();
+        $tipos = CatalogoItem::where('tipo', 'tipos_penalizaciones')
+            ->where('activo', true)
+            ->select('id', 'nombre')
+            ->orderBy('nombre')
+            ->get();
+
+        $fechaOps = session('fecha_operaciones');
+        $fechaOperaciones = $fechaOps ? Carbon::parse($fechaOps) : Carbon::now();
 
         return Inertia::render('Penalizaciones/Index', [
             'title' => 'Penalizaciones',
@@ -40,16 +47,16 @@ class PenalizacionesController extends Controller
             'empleados' => $empleados,
             'tiposPenalizaciones' => $tipos,
             'filters' => $request->only('search'),
+            'fechaOperaciones' => $fechaOperaciones->format('Y-m-d'),
         ]);
     }
 
     public function store(Request $request)
     {
-        
-        $this->authorize('create', \App\Models\Penalizacion::class);
+        $this->authorize('create', Penalizacion::class);
         $data = $request->validate([
             'id_bolsa' => 'required|exists:bolsa,id',
-            'id_tipo_penalizacion' => 'required|exists:tipos_penalizaciones,id',
+            'id_tipo_penalizacion' => 'required|exists:catalogo_items,id',
             'fecha' => 'required|date',
             'importe' => 'required|numeric|min:0|max:100',
         ]);
@@ -63,13 +70,12 @@ class PenalizacionesController extends Controller
 
     public function update(Request $request, Penalizacion $penalizacion)
     {
-        
         $this->authorize('update', $penalizacion);
         $this->autorizarEntidad($penalizacion->bolsa?->id_entidad);
 
         $data = $request->validate([
             'id_bolsa' => 'required|exists:bolsa,id',
-            'id_tipo_penalizacion' => 'required|exists:tipos_penalizaciones,id',
+            'id_tipo_penalizacion' => 'required|exists:catalogo_items,id',
             'fecha' => 'required|date',
             'importe' => 'required|numeric|min:0|max:100',
         ]);
@@ -81,7 +87,6 @@ class PenalizacionesController extends Controller
 
     public function destroy(Penalizacion $penalizacion)
     {
-        
         $this->authorize('delete', $penalizacion);
         $this->autorizarEntidad($penalizacion->bolsa?->id_entidad);
 

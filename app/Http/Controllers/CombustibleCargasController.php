@@ -50,6 +50,7 @@ class CombustibleCargasController extends Controller
                 'tarjetas' => Tarjeta::select('id', 'numero', 'saldo_actual', 'idmonedas', 'idtipocombustibles')
                     ->with('tipoCombustible:id,preciomn')
                     ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
+                    ->where('saldo_actual', '>', 0)
                     ->orderBy('numero')->get(),
                 'entidades' => Entidad::select('id', 'abreviatura')
                     ->whereIn('id', $this->entidadesPermitidas())->orderBy('abreviatura')->get(),

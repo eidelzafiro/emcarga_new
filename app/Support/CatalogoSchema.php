@@ -56,7 +56,7 @@ class CatalogoSchema
     private const DEFAULT_FIELDS = [
         'tipos_operaciones' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
         'tipos_mantenimiento' => ['descripcion' => ['label' => 'Descripción', 'type' => 'textarea']],
-        'tipos_gastos' => ['tipo' => ['label' => 'Tipo', 'type' => 'text']],
+        'tipos_gastos' => [],
         'tipos_causas' => ['tipo' => ['label' => 'Tipo', 'type' => 'text']],
         'tipos_estados' => [
             'imagen' => ['label' => 'Imagen', 'type' => 'logo'],

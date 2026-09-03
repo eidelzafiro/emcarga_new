@@ -12,7 +12,7 @@ class SalariosAdministrativosController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\SalarioAdministrativo::class);
-        $items = SalarioAdministrativo::with(['movimiento', 'user'])
+        $items = SalarioAdministrativo::with(['movimiento.bolsa', 'user'])
             ->orderBy('fecha', 'desc')
             ->paginate(20);
 

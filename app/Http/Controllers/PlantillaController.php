@@ -15,6 +15,7 @@ class PlantillaController extends Controller
 
     public function index(Request $request)
     {
+        $entidadId = (int) entidadActivaId();
         $items = Plantilla::query()
             ->with(['area:id,nombre,id_entidad', 'cargo:id,nombre'])
             ->when($request->search, fn ($q, $s) => $q->whereHas('cargo', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
@@ -24,13 +25,27 @@ class PlantillaController extends Controller
             ->orderBy('id_area')->orderBy('id_cargo')
             ->paginate(20);
 
+        $cubiertaReal = \App\Models\Bolsa::query()
+            ->selectRaw('id_cargo, id_area, COUNT(*) as total')
+            ->where('activo', true)
+            ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
+            ->groupBy('id_cargo', 'id_area')
+            ->pluck('total', 'id_cargo')
+            ->toArray();
+
+        $items->getCollection()->transform(function ($item) use ($cubiertaReal) {
+            $key = $item->id_cargo;
+            $item->cubierta_real = $cubiertaReal[$key] ?? 0;
+            return $item;
+        });
+
         return Inertia::render('Plantilla/Index', [
             'title' => 'Plantilla de Puestos',
             'items' => $items,
-            'areas' => Area::select('id', 'nombre')
+            'areas' => \App\Models\Area::select('id', 'nombre')
                 ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                 ->orderBy('nombre')->get(),
-            'cargos' => Cargo::select('id', 'nombre')
+            'cargos' => \App\Models\Cargo::select('id', 'nombre')
                 ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                 ->orderBy('nombre')->get(),
             'filters' => $request->only(['search', 'id_area']),
@@ -70,12 +85,13 @@ class PlantillaController extends Controller
         return $request->validate([
             'id_cargo' => 'required|exists:cargos,id',
             'id_area' => 'required|exists:areas,id',
+            'propuesta' => 'nullable|integer|min:0',
             'aprobada' => 'nullable|integer|min:0',
             'cubierta' => 'nullable|integer|min:0',
             'cubierta2' => 'nullable|integer|min:0',
-            'propuesta' => 'nullable|integer|min:0',
             'v_necesidad' => 'nullable|integer|min:0',
             'necesidad' => 'nullable|integer|min:0',
+            'observaciones' => 'nullable|string|max:500',
         ]);
     }
 

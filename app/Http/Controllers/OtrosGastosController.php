@@ -19,8 +19,12 @@ class OtrosGastosController extends Controller
     {
         $this->authorize('viewAny', OtrosGasto::class);
         $entidades = $this->entidadesPermitidas();
+        $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
+        $anio = (int) \Illuminate\Support\Carbon::parse($fechaOperaciones)->year;
+        $mes = (int) \Illuminate\Support\Carbon::parse($fechaOperaciones)->month;
 
         $gastos = OtrosGasto::with(['tractivo', 'arrastre', 'tipoConcepto'])
+            ->whereYear('fecha', $anio)->whereMonth('fecha', $mes)
             ->when($request->search, fn ($q, $s) => $q->where('numero', 'like', "%{$s}%")
                 ->orWhereHas('tipoConcepto', fn ($t) => $t->where('nombre', 'like', "%{$s}%"))
                 ->orWhereHas('tractivo', fn ($t) => $t->where('codigo', 'like', "%{$s}%")))

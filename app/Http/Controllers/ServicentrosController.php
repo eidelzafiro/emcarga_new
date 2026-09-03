@@ -26,13 +26,24 @@ class ServicentrosController extends Controller
 
     protected function getExtraFields(): array
     {
-        return [
-            'ubicacion' => ['label' => 'Ubicación', 'type' => 'text'],
-        ];
+        return [];
     }
 
     protected function getSearchFields(): array
     {
-        return ['codigo', 'nombre', 'ubicacion'];
+        return ['nombre'];
+    }
+
+    protected function usaCodigoManual(): bool
+    {
+        return false;
+    }
+
+    protected function getValidationRules($id = null): array
+    {
+        return [
+            'nombre' => 'required|string|max:255',
+            'activo' => 'boolean',
+        ];
     }
 }

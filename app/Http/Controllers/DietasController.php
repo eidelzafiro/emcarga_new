@@ -48,14 +48,13 @@ class DietasController extends Controller
                 'bolsas' => Bolsa::select('id', 'nombre', 'apellidos')
                     ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                     ->orderBy('nombre')->get(),
-                'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'id_tractivo')
-                    ->with('tractivo:id,codigo')
+                'hojasRuta' => HojasRuta::select('id', 'numero', 'fecha_emision', 'id_tractivo', 'id_chofer')
+                    ->with(['tractivo:id,codigo', 'chofer:id,nombre,apellidos'])
                     ->whereYear('fecha_emision', $anio)->whereMonth('fecha_emision', $mes)
                     ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                     ->orderByDesc('fecha_emision')->limit(100)->get(),
                 'tractivos' => Tractivo::select('id', 'codigo')
                     ->whereNull('deleted_at')->orderBy('codigo')->limit(500)->get(),
-                'monedas' => Moneda::orderBy('nombre')->get(['id', 'nombre']),
             ],
             'fechaOperaciones' => $fechaOperaciones,
             'filters' => $request->only(['search', 'canceladas']),
@@ -70,6 +69,10 @@ class DietasController extends Controller
         $validated['id_entidad'] = $this->entidadActiva();
 
         Dieta::create($validated);
+
+        if ($request->boolean('_continuar')) {
+            return redirect()->back()->with('success', 'Dieta creada correctamente.');
+        }
 
         return redirect()->route('dietas.index')->with('success', 'Dieta creada correctamente.');
     }
@@ -145,7 +148,7 @@ class DietasController extends Controller
         return $request->validate([
             'id_bolsa' => 'required|exists:bolsa,id',
             'id_hoja_ruta' => 'required|exists:hojas_ruta,id',
-            'folio' => 'nullable|string|max:10',
+            'folio' => 'nullable|string|max:10|unique:dietas,folio,' . ($request->id ?? ''),
             'fecha' => 'required|date',
             'monto' => 'required|numeric|min:0',
             'anticipo' => 'nullable|numeric|min:0',
@@ -153,9 +156,7 @@ class DietasController extends Controller
             'alimentos' => 'nullable|numeric|min:0',
             'hospedaje' => 'nullable|numeric|min:0',
             'otros' => 'nullable|numeric|min:0',
-            'id_monedas' => 'nullable|exists:monedas,id',
             'id_tractivo' => 'nullable|exists:tractivos,id',
-            'tipo_dieta' => 'nullable|string|max:50',
             'estado' => 'nullable|string|max:50',
         ]);
     }

@@ -124,7 +124,7 @@ class DashboardContabilidadService
             ->with('tipoIngreso:id,nombre')
             ->get()
             ->map(fn ($row) => [
-                'concepto' => $row->tipoIngreso?->nombre ?? 'Sin concepto',
+                'concepto' => $row->tipoIngreso?->nombre ?? 'FLETE TRANSPORTACION',
                 'total_mt' => round((float) $row->total_mt, 2),
                 'cantidad' => (int) $row->cantidad,
             ])

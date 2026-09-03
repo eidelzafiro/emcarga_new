@@ -52,6 +52,7 @@ class CombustibleDescargasController extends Controller
             'filtros' => [
                 'tarjetas' => Tarjeta::select('id', 'numero')
                     ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
+                    ->where('saldo_actual', '>', 0)
                     ->orderBy('numero')->get(),
                 'servicentros' => Servicentro::select('id', 'nombre')
                     ->where('activo', true)

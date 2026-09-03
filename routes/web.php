@@ -6,6 +6,7 @@ use App\Http\Controllers\ExportacionController;
 use App\Http\Controllers\AforosController;
 use App\Http\Controllers\AlertasController;
 use App\Http\Controllers\AreasController;
+use App\Http\Controllers\AreasOrganigramaController;
 use App\Http\Controllers\ArrastresController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -401,6 +402,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('salarios-administrativos', SalariosAdministrativosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::resource('salarios-choferes', \App\Http\Controllers\SalariosChoferesController::class)
+            ->only(['index']);
+
         // RRHH - Catálogos pequeños (Fase 5.5 parte 3)
 
 
@@ -639,7 +643,7 @@ Route::middleware('auth')->group(function () {
         Route::post('fusionar-catalogos', [FusionCatalogosController::class, 'store'])->name('fusionar-catalogos.store');
 
         // Rutas directas para tipos del catálogo unificado (acceso desde menú)
-        Route::get('areas', [AreasController::class, 'index'])->name('areas.index');
+        Route::resource('areas', AreasController::class);
         Route::get('cargos', [CargosController::class, 'index'])->name('cargos.index');
     });
 });

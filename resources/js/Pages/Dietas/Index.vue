@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -33,20 +33,26 @@ function baseForm() {
     id_bolsa: null,
     id_hoja_ruta: null,
     folio: '',
-    fecha: null,
-    monto: null,
+    fecha: props.fechaOperaciones || new Date().toISOString().split('T')[0],
+    monto: 0,
     anticipo: null,
     f_anticipo: null,
     alimentos: null,
     hospedaje: null,
     otros: null,
-    id_monedas: null,
     id_tractivo: null,
-    tipo_dieta: '',
     estado: 'pendiente',
   }
 }
 const form = ref(baseForm())
+
+const montoTotal = computed(() => {
+  const al = Number(form.value.alimentos) || 0
+  const ho = Number(form.value.hospedaje) || 0
+  const ot = Number(form.value.otros) || 0
+  const an = Number(form.value.anticipo) || 0
+  return al + ho + ot + an
+})
 
 watch(search, () => reload())
 watch(soloCanceladas, () => reload())
@@ -85,19 +91,36 @@ function openEdit(item) {
     alimentos: item.alimentos != null ? Number(item.alimentos) : null,
     hospedaje: item.hospedaje != null ? Number(item.hospedaje) : null,
     otros: item.otros != null ? Number(item.otros) : null,
-    id_monedas: item.id_monedas,
     id_tractivo: item.id_tractivo,
-    tipo_dieta: item.tipo_dieta ?? '',
     estado: item.estado ?? 'pendiente',
   }
   showForm.value = true
 }
 
-function submit() {
+function onHrSelect() {
+  const hr = props.filtros.hojasRuta.find(h => h.id === form.value.id_hoja_ruta)
+  if (hr) {
+    form.value.id_tractivo = hr.id_tractivo || null
+    form.value.id_bolsa = hr.id_chofer || null
+  }
+}
+
+function submit(continuar = false) {
+  const payload = { ...form.value, monto: montoTotal.value, _continuar: continuar ? 1 : 0 }
   const url = editing.value ? route('dietas.update', editing.value.id) : route('dietas.store')
   const method = editing.value ? 'put' : 'post'
-  router[method](url, form.value, {
-    onSuccess: () => { showForm.value = false; toast.add({ severity: 'success', summary: editing.value ? 'Actualizada' : 'Creada', life: 3000 }) },
+  router[method](url, payload, {
+    onSuccess: () => {
+      if (continuar && !editing.value) {
+        form.value = baseForm()
+        form.value.id_bolsa = null
+        form.value.id_hoja_ruta = null
+        toast.add({ severity: 'success', summary: 'Guardada', life: 2000 })
+      } else {
+        showForm.value = false
+        toast.add({ severity: 'success', summary: editing.value ? 'Actualizada' : 'Creada', life: 3000 })
+      }
+    },
     onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
   })
 }
@@ -144,6 +167,14 @@ function confirmEliminar(item) {
     },
   })
 }
+
+function fmtMonto(item) {
+  const al = Number(item.alimentos) || 0
+  const ho = Number(item.hospedaje) || 0
+  const ot = Number(item.otros) || 0
+  const an = Number(item.anticipo) || 0
+  return (al + ho + ot + an).toLocaleString('es-CU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
 </script>
 
 <template>
@@ -169,23 +200,32 @@ function confirmEliminar(item) {
           <template #body="{ data }">{{ data.fecha }}</template>
         </Column>
         <Column field="folio" header="Folio" />
-        <Column header="Empleado">
-          <template #body="{ data }">{{ data.bolsa?.nombrecompleto }}</template>
-        </Column>
         <Column header="HR">
           <template #body="{ data }">{{ data.hoja_ruta?.numero }}</template>
         </Column>
         <Column header="Tractivo">
           <template #body="{ data }">{{ data.tractivo?.codigo || data.hoja_ruta?.tractivo?.codigo }}</template>
         </Column>
-        <Column field="monto" header="Monto">
-          <template #body="{ data }">{{ data.monto }}</template>
+        <Column header="Empleado">
+          <template #body="{ data }">{{ data.bolsa?.nombrecompleto }}</template>
         </Column>
-        <Column header="Moneda">
-          <template #body="{ data }">{{ data.moneda?.nombre }}</template>
+        <Column header="F. Anticipo">
+          <template #body="{ data }">{{ data.f_anticipo }}</template>
         </Column>
         <Column header="Anticipo">
           <template #body="{ data }">{{ data.anticipo }}</template>
+        </Column>
+        <Column header="Alimentos">
+          <template #body="{ data }">{{ data.alimentos }}</template>
+        </Column>
+        <Column header="Hospedaje">
+          <template #body="{ data }">{{ data.hospedaje }}</template>
+        </Column>
+        <Column header="Otros">
+          <template #body="{ data }">{{ data.otros }}</template>
+        </Column>
+        <Column header="Monto Total">
+          <template #body="{ data }">{{ fmtMonto(data) }}</template>
         </Column>
         <Column header="Liq.">
           <template #body="{ data }">
@@ -214,22 +254,22 @@ function confirmEliminar(item) {
     </div>
 
     <Dialog v-model:visible="showForm" :header="editing ? 'Editar Dieta' : 'Nueva Dieta'" modal style="width: 720px">
-      <form @submit.prevent="submit" class="space-y-4">
+      <form @submit.prevent="submit(false)" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block mb-1 font-medium">Empleado</label>
-            <Select v-model="form.id_bolsa" :options="filtros.bolsas" optionLabel="nombrecompleto" optionValue="id" filter class="w-full" required />
+            <label class="block mb-1 font-medium">Hoja de Ruta *</label>
+            <Select v-model="form.id_hoja_ruta" :options="filtros.hojasRuta" optionLabel="numero" optionValue="id" filter class="w-full" required @change="onHrSelect" />
           </div>
           <div>
-            <label class="block mb-1 font-medium">Hoja de Ruta</label>
-            <Select v-model="form.id_hoja_ruta" :options="filtros.hojasRuta" optionLabel="numero" optionValue="id" filter class="w-full" required />
+            <label class="block mb-1 font-medium">Empleado *</label>
+            <Select v-model="form.id_bolsa" :options="filtros.bolsas" optionLabel="nombrecompleto" optionValue="id" filter class="w-full" required />
           </div>
           <div>
             <label class="block mb-1 font-medium">Tractivo</label>
             <Select v-model="form.id_tractivo" :options="filtros.tractivos" optionLabel="codigo" optionValue="id" filter class="w-full" :showClear="true" />
           </div>
           <div>
-            <label class="block mb-1 font-medium">Fecha</label>
+            <label class="block mb-1 font-medium">Fecha *</label>
             <InputText v-model="form.fecha" type="date" class="w-full" required />
           </div>
           <div>
@@ -237,24 +277,12 @@ function confirmEliminar(item) {
             <InputText v-model="form.folio" class="w-full" />
           </div>
           <div>
-            <label class="block mb-1 font-medium">Moneda</label>
-            <Select v-model="form.id_monedas" :options="filtros.monedas" optionLabel="nombre" optionValue="id" class="w-full" :showClear="true" />
-          </div>
-          <div>
-            <label class="block mb-1 font-medium">Monto</label>
-            <InputNumber v-model="form.monto" :min="0" :max-fraction-digits="2" class="w-full" required />
-          </div>
-          <div>
-            <label class="block mb-1 font-medium">Anticipo</label>
-            <InputNumber v-model="form.anticipo" :min="0" :max-fraction-digits="2" class="w-full" />
-          </div>
-          <div>
             <label class="block mb-1 font-medium">Fecha anticipo</label>
             <InputText v-model="form.f_anticipo" type="date" class="w-full" />
           </div>
           <div>
-            <label class="block mb-1 font-medium">Tipo dieta</label>
-            <InputText v-model="form.tipo_dieta" class="w-full" />
+            <label class="block mb-1 font-medium">Anticipo</label>
+            <InputNumber v-model="form.anticipo" :min="0" :max-fraction-digits="2" class="w-full" />
           </div>
           <div>
             <label class="block mb-1 font-medium">Alimentos</label>
@@ -268,9 +296,14 @@ function confirmEliminar(item) {
             <label class="block mb-1 font-medium">Otros</label>
             <InputNumber v-model="form.otros" :min="0" :max-fraction-digits="2" class="w-full" />
           </div>
+          <div class="col-span-2">
+            <label class="block mb-1 font-medium">Monto Total</label>
+            <InputNumber :modelValue="montoTotal" :disabled="true" class="w-full" :max-fraction-digits="2" />
+          </div>
         </div>
         <div class="flex gap-2 justify-end">
           <Button label="Cancelar" severity="secondary" @click="showForm = false" />
+          <Button label="Guardar y continuar" severity="warn" icon="pi pi-arrow-right" @click.prevent="submit(true)" />
           <Button label="Guardar" type="submit" icon="pi pi-save" />
         </div>
       </form>

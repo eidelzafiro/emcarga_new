@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -42,6 +42,12 @@ function emptyForm() {
 
 function nuevoDetalle() {
     return { id: null, id_tarjeta: null, saldo_mon: null }
+}
+
+function fmtFecha(fecha) {
+    if (!fecha) return ''
+    const d = new Date(fecha)
+    return d.toLocaleDateString('es-CU', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 watch(search, () => {
@@ -120,6 +126,15 @@ watch(() => [form.value.id_monedas, form.value.id_tipo_combustibles], () => {
         }
     })
 }, { immediate: true })
+
+const totalCargado = computed(() => {
+    return form.value.detalles.reduce((sum, d) => sum + (Number(d.saldo_mon) || 0), 0)
+})
+
+const diferencia = computed(() => {
+    const cargado = Number(form.value.saldocargado) || 0
+    return Math.round((cargado - totalCargado.value) * 100) / 100
+})
 </script>
 
 <template>
@@ -138,7 +153,9 @@ watch(() => [form.value.id_monedas, form.value.id_tipo_combustibles], () => {
             </Toolbar>
 
             <DataTable :value="cargas.data" striped-rows paginator :rows="20" :total-records="cargas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
-                <Column field="fcarga" header="Fecha" sortable />
+                <Column field="fcarga" header="Fecha" sortable>
+                    <template #body="{ data }">{{ fmtFecha(data.fcarga) }}</template>
+                </Column>
                 <Column field="folio" header="Folio" sortable />
                 <Column field="tipoCombustible.nombre" header="Combustible" />
                 <Column field="moneda.codigo" header="Moneda" />
@@ -212,6 +229,13 @@ watch(() => [form.value.id_monedas, form.value.id_tipo_combustibles], () => {
                         <Select v-model="d.id_tarjeta" :options="tarjetasFiltradas" optionLabel="numero" optionValue="id" placeholder="Tarjeta" class="flex-1" filter />
                         <InputNumber v-model="d.saldo_mon" :minFractionDigits="2" :maxFractionDigits="2" placeholder="Saldo (MN)" class="w-40" />
                         <Button icon="pi pi-times" rounded text severity="danger" @click="removeDetalle(idx)" />
+                    </div>
+                    <div class="flex gap-4 mt-3 pt-3 border-t text-sm">
+                        <div><span class="font-medium">Total Cargado:</span> {{ fmt(totalCargado) }}</div>
+                        <div><span class="font-medium">Saldo Cargado:</span> {{ fmt(form.saldocargado) }}</div>
+                        <div :class="diferencia === 0 ? 'text-green-600' : 'text-red-600'">
+                            <span class="font-medium">Diferencia:</span> {{ fmt(diferencia) }}
+                        </div>
                     </div>
                 </div>
 

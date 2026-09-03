@@ -14,14 +14,29 @@ import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, empleados: Array, tiposPenalizaciones: Array, filters: Object })
+const props = defineProps({ items: Object, empleados: Array, tiposPenalizaciones: Array, filters: Object, fechaOperaciones: String })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
 
+const fechaOps = computed(() => props.fechaOperaciones ? new Date(props.fechaOperaciones + 'T00:00:00') : new Date())
+const primerDiaMes = computed(() => {
+  const f = new Date(fechaOps.value)
+  f.setDate(1)
+  f.setHours(0, 0, 0, 0)
+  return f
+})
+const ultimoDiaMes = computed(() => {
+  const f = new Date(fechaOps.value)
+  f.setMonth(f.getMonth() + 1, 0)
+  f.setHours(23, 59, 59, 999)
+  return f
+})
+
 const baseForm = () => ({
-  id_bolsa: null, id_tipo_penalizacion: null, fecha: null, importe: 0,
+  id_bolsa: null, id_tipo_penalizacion: null,
+  fecha: new Date(fechaOps.value), importe: 0,
 })
 
 const form = ref(baseForm())
@@ -31,6 +46,13 @@ const tipoOptions = computed(() => props.tiposPenalizaciones?.map(t => {
   const label = t.porcentaje ? `${t.nombre} (${t.porcentaje}%)` : t.nombre
   return { value: t.id, label, porcentaje: t.porcentaje }
 }) || [])
+
+function formatDate(d) {
+  if (!d) return '—'
+  const date = new Date(d)
+  if (isNaN(date)) return '—'
+  return date.toLocaleDateString('es-CU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
 watch(search, () => {
   router.get(route('penalizaciones.index'), { search: search.value }, { preserveState: true, replace: true })
@@ -103,8 +125,10 @@ const activosCount = computed(() => {
         :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" class="text-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
         <Column field="bolsa.nombrecompleto" header="Empleado" sortable />
         <Column field="tipo_penalizacion.nombre" header="Causa Penalización" />
-        <Column field="fecha" header="Fecha" />
-        <Column field="importe" header="%">
+        <Column header="Fecha">
+          <template #body="{ data }">{{ formatDate(data.fecha) }}</template>
+        </Column>
+        <Column header="%">
           <template #body="{ data }">{{ data.importe }}%</template>
         </Column>
         <Column header="Acciones" style="width:100px">
@@ -123,7 +147,7 @@ const activosCount = computed(() => {
       <form @submit.prevent="submit" class="space-y-4">
         <div>
           <label class="block mb-1 font-medium">Fecha</label>
-          <DatePicker v-model="form.fecha" dateFormat="yy/mm/dd" class="w-full" required />
+          <DatePicker v-model="form.fecha" dateFormat="dd/mm/yy" class="w-full" :minDate="primerDiaMes" :maxDate="ultimoDiaMes" :month-navigator="false" :year-navigator="false" required />
         </div>
         <div>
           <label class="block mb-1 font-medium">Empleado</label>

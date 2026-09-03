@@ -32,6 +32,6 @@ class Penalizacion extends Model
 
     public function tipoPenalizacion(): BelongsTo
     {
-        return $this->belongsTo(TipoPenalizacione::class, 'id_tipo_penalizacion');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_penalizacion');
     }
 }

@@ -35,6 +35,6 @@ class Incidencia extends Model
 
     public function tipoIncidencia(): BelongsTo
     {
-        return $this->belongsTo(TipoIncidencia::class, 'id_tipo_incidencia');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_incidencia');
     }
 }

@@ -26,7 +26,6 @@ class AmortizacionTallerController extends Controller
             'title' => 'Amortización Taller',
             'amortizaciones' => $amortizaciones,
             'tractivos' => Tractivo::select('id', 'codigo')
-                ->where('activo', true)
                 ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                 ->orderBy('codigo')->limit(500)->get(),
             'filters' => $request->only(['search']),

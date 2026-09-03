@@ -199,10 +199,6 @@ function submit() {
               <label class="block mb-1 font-medium">Área</label>
               <Select v-model="form.id_area" :options="areas" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
             </div>
-            <div v-if="esSuperadmin">
-              <label class="block mb-1 font-medium">Entidad</label>
-              <Select v-model="form.id_entidad" :options="entidades" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
-            </div>
           </div>
           <div v-if="!editing" class="mt-4 p-3 bg-blue-50 rounded-lg space-y-3">
             <div class="flex items-center gap-2">

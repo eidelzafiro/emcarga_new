@@ -93,10 +93,14 @@ class MenuSeeder extends Seeder
             // RRHH
             ['parent' => 'RRHH', 'label' => 'Bolsa', 'route' => 'bolsa.index', 'permission' => 'bolsa.ver', 'orden' => 1],
             ['parent' => 'RRHH', 'label' => 'Historial', 'route' => 'historial-movimientos.index', 'permission' => 'historial-movimientos.ver', 'orden' => 3],
-            ['parent' => 'RRHH', 'label' => 'Salarios', 'route' => 'salarios.index', 'permission' => 'salarios.ver', 'orden' => 10],
-            ['parent' => 'RRHH', 'label' => 'Vacaciones', 'route' => 'vacaciones.index', 'permission' => 'vacaciones.ver', 'orden' => 49],
-            ['parent' => 'RRHH', 'label' => 'Empleados', 'route' => 'empleados.index', 'permission' => 'empleados.ver', 'orden' => 47],
-            ['parent' => 'RRHH', 'label' => 'Desc. Empleados', 'route' => 'descuentos-empleados.index', 'permission' => 'descuentos-empleados.ver', 'orden' => 48],
+            ['parent' => 'RRHH', 'label' => 'Empleados', 'route' => 'empleados.index', 'permission' => 'empleados.ver', 'orden' => 5],
+            ['parent' => 'RRHH', 'label' => 'Plantilla', 'route' => 'plantilla.index', 'permission' => 'plantilla.ver', 'orden' => 6],
+            // --- Salarios ---
+            ['parent' => 'RRHH', 'label' => 'Salario Choferes', 'route' => 'salarios-choferes.index', 'permission' => 'salarios.ver', 'orden' => 10],
+            ['parent' => 'RRHH', 'label' => 'Salario Administrativo', 'route' => 'salarios-administrativos.index', 'permission' => 'salarios-administrativos.ver', 'orden' => 11],
+            ['parent' => 'RRHH', 'label' => 'Incidencias', 'route' => 'incidencias.index', 'permission' => 'incidencias.ver', 'orden' => 12],
+            ['parent' => 'RRHH', 'label' => 'Penalizaciones', 'route' => 'penalizaciones.index', 'permission' => 'penalizaciones.ver', 'orden' => 13],
+            ['parent' => 'RRHH', 'label' => 'Tasas Salariales', 'route' => 'catalogo.index?tipo=tipos_tasas', 'permission' => 'tipos-tasas.ver', 'orden' => 14],
 
             // Contabilidad
             ['parent' => 'Contabilidad', 'label' => 'Conciliaciones', 'route' => 'conciliaciones.index', 'permission' => 'conciliaciones.ver', 'orden' => 1],
@@ -155,7 +159,6 @@ class MenuSeeder extends Seeder
             // === Catálogos Comercial / Contabilidad ===
             ['parent' => 'Catálogos', 'label' => 'Tipos Servicio',           'route' => 'catalogo.index?tipo=tipos_servicios',           'permission' => 'catalogo.ver',       'orden' => 41],
             ['parent' => 'Catálogos', 'label' => 'Tipos Estado',             'route' => 'catalogo.index?tipo=tipos_estados',             'permission' => 'catalogo.ver',         'orden' => 42],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Tasa',               'route' => 'catalogo.index?tipo=tipos_tasas',               'permission' => 'tipos-tasas.ver',           'orden' => 44],
             ['parent' => 'Catálogos', 'label' => 'Tipos Gasto',              'route' => 'catalogo.index?tipo=tipos_gastos',              'permission' => 'catalogo.ver',          'orden' => 45],
             ['parent' => 'Catálogos', 'label' => 'Tipo Ingresos',            'route' => 'catalogo.index?tipo=tipo_ingresos',             'permission' => 'catalogo.ver',         'orden' => 46],
             ['parent' => 'Catálogos', 'label' => 'Tipos Concepto',           'route' => 'catalogo.index?tipo=tipos_conceptos',           'permission' => 'tipos-conceptos.ver',       'orden' => 47],
@@ -177,7 +180,6 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Tipos Contrato',           'route' => 'catalogo.index?tipo=tipos_contratos',           'permission' => 'tipos-contratos.ver',       'orden' => 62],
             ['parent' => 'Catálogos', 'label' => 'Tipos Deducción',          'route' => 'catalogo.index?tipo=tipos_deducciones',         'permission' => 'catalogo.ver',     'orden' => 63],
             ['parent' => 'Catálogos', 'label' => 'Tipos Sistema Pago',       'route' => 'catalogo.index?tipo=tipos_sistemas_pago',       'permission' => 'catalogo.ver',   'orden' => 64],
-            ['parent' => 'Catálogos', 'label' => 'Tipos Pago Adicional',     'route' => 'catalogo.index?tipo=tipos_pagos_adicionales',   'permission' => 'catalogo.ver', 'orden' => 68],
             ['parent' => 'Catálogos', 'label' => 'Tipos Ubicación Defensa',  'route' => 'catalogo.index?tipo=tipos_ubicacion_defensa',   'permission' => 'catalogo.ver', 'orden' => 71],
             ['parent' => 'Catálogos', 'label' => 'Tipos Integración Polít.', 'route' => 'catalogo.index?tipo=tipos_integracion_politica', 'permission' => 'catalogo.ver', 'orden' => 72],
 

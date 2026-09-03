@@ -18,6 +18,7 @@ class Plantilla extends Model
         'propuesta',
         'v_necesidad',
         'necesidad',
+        'observaciones',
         'id_entidad',
     ];
 

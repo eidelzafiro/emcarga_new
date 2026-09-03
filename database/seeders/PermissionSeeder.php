@@ -65,6 +65,8 @@ class PermissionSeeder extends Seeder
 
             'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
 
+            'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
+
             'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
 
 
@@ -125,8 +127,9 @@ class PermissionSeeder extends Seeder
             'osdes.ver', 'osdes.crear', 'osdes.editar', 'osdes.eliminar',
             'firmas.ver', 'firmas.crear', 'firmas.editar', 'firmas.eliminar',
             'fondos-tiempo.ver', 'fondos-tiempo.crear', 'fondos-tiempo.editar', 'fondos-tiempo.eliminar',
-            'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
-            'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
+                'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
+                'salarios-choferes.ver',
+                'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
             'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
 
             // Comercial - Tablas faltantes
@@ -273,6 +276,7 @@ class PermissionSeeder extends Seeder
                 'dashboard.ver',
                 'catalogo.ver',
                 'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
+                'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
                 'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
                 'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
                 'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
@@ -284,7 +288,9 @@ class PermissionSeeder extends Seeder
                 'osdes.ver', 'osdes.crear', 'osdes.editar', 'osdes.eliminar',
                 'firmas.ver', 'firmas.crear', 'firmas.editar', 'firmas.eliminar',
                 'fondos-tiempo.ver', 'fondos-tiempo.crear', 'fondos-tiempo.editar', 'fondos-tiempo.eliminar',
-                'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
+            'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
+
+            'salarios-choferes.ver',
                 'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
                 'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
                 'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',

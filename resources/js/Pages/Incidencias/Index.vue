@@ -14,14 +14,29 @@ import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, empleados: Array, tiposIncidencias: Array, filters: Object })
+const props = defineProps({ items: Object, empleados: Array, tiposIncidencias: Array, filters: Object, fechaOperaciones: String })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
 
+const fechaOps = computed(() => props.fechaOperaciones ? new Date(props.fechaOperaciones + 'T00:00:00') : new Date())
+const primerDiaMes = computed(() => {
+  const f = new Date(fechaOps.value)
+  f.setDate(1)
+  f.setHours(0, 0, 0, 0)
+  return f
+})
+const ultimoDiaMes = computed(() => {
+  const f = new Date(fechaOps.value)
+  f.setMonth(f.getMonth() + 1, 0)
+  f.setHours(23, 59, 59, 999)
+  return f
+})
+
 const baseForm = () => ({
-  id_bolsa: null, id_tipo_incidencia: null, fecha_inicio: null,
+  id_bolsa: null, id_tipo_incidencia: null,
+  fecha_inicio: new Date(fechaOps.value),
   fecha_fin: null, periodo_actual: null, importe: 0,
 })
 
@@ -29,6 +44,13 @@ const form = ref(baseForm())
 
 const empleadoOptions = computed(() => props.empleados?.map(e => ({ value: e.id, label: e.nombrecompleto })) || [])
 const tipoOptions = computed(() => props.tiposIncidencias?.map(t => ({ value: t.id, label: t.nombre })) || [])
+
+function formatDate(d) {
+  if (!d) return '—'
+  const date = new Date(d)
+  if (isNaN(date)) return '—'
+  return date.toLocaleDateString('es-CU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
 watch(search, () => {
   router.get(route('incidencias.index'), { search: search.value }, { preserveState: true, replace: true })
@@ -103,11 +125,15 @@ const activosCount = computed(() => {
         :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" class="text-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
         <Column field="bolsa.nombrecompleto" header="Empleado" sortable />
         <Column field="tipo_incidencia.nombre" header="Incidencia" />
-        <Column field="fecha_inicio" header="Inicio" />
-        <Column field="fecha_fin" header="Final" />
+        <Column header="Inicio">
+          <template #body="{ data }">{{ formatDate(data.fecha_inicio) }}</template>
+        </Column>
+        <Column header="Final">
+          <template #body="{ data }">{{ formatDate(data.fecha_fin) }}</template>
+        </Column>
         <Column field="periodo_actual" header="Período" />
-        <Column field="importe" header="Importe">
-          <template #body="{ data }">${{ parseFloat(data.importe).toFixed(2) }}</template>
+        <Column header="Importe">
+          <template #body="{ data }">{{ parseFloat(data.importe).toFixed(2) }}</template>
         </Column>
         <Column header="Acciones" style="width:100px">
           <template #body="{ data }">
@@ -134,11 +160,11 @@ const activosCount = computed(() => {
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block mb-1 font-medium">Fecha Inicial</label>
-            <DatePicker v-model="form.fecha_inicio" dateFormat="yy/mm/dd" class="w-full" required />
+            <DatePicker v-model="form.fecha_inicio" dateFormat="dd/mm/yy" class="w-full" :minDate="primerDiaMes" :maxDate="ultimoDiaMes" :month-navigator="false" :year-navigator="false" required />
           </div>
           <div>
             <label class="block mb-1 font-medium">Fecha Final</label>
-            <DatePicker v-model="form.fecha_fin" dateFormat="yy/mm/dd" class="w-full" />
+            <DatePicker v-model="form.fecha_fin" dateFormat="dd/mm/yy" class="w-full" :minDate="primerDiaMes" :maxDate="ultimoDiaMes" :month-navigator="false" :year-navigator="false" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">

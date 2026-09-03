@@ -28,6 +28,9 @@ class PlantillaController extends Controller
         $cubiertaReal = \App\Models\Bolsa::query()
             ->selectRaw('id_cargo, id_area, COUNT(*) as total')
             ->where('activo', true)
+            ->whereHas('movimientosRrhh', function ($q) {
+                $q->whereNull('fbaja');
+            })
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->groupBy('id_cargo', 'id_area')
             ->pluck('total', 'id_cargo')
@@ -42,9 +45,15 @@ class PlantillaController extends Controller
         return Inertia::render('Plantilla/Index', [
             'title' => 'Plantilla de Puestos',
             'items' => $items,
-            'areas' => \App\Models\Area::select('id', 'nombre')
+            'areas' => \App\Models\Area::select('id', 'nombre', 'imagen', 'orden')
                 ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
-                ->orderBy('nombre')->get(),
+                ->orderBy('orden')->orderBy('nombre')->get(),
+            'areasJerarquia' => \App\Models\Area::select('id', 'nombre', 'imagen', 'orden', 'id_area_padre')
+                ->where('activo', true)
+                ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
+                ->orderBy('orden')->orderBy('nombre')
+                ->get()
+                ->groupBy(fn ($area) => $area->id_area_padre ?? ''),
             'cargos' => \App\Models\Cargo::select('id', 'nombre')
                 ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                 ->orderBy('nombre')->get(),

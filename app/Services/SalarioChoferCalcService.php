@@ -65,7 +65,7 @@ class SalarioChoferCalcService
         if (!$chofer) return null;
 
         $cargo = $chofer->cargo;
-        $tarifa = $cargo->tarifa ?? 0;
+        $tarifa = $cargo?->tarifa ?? 0;
 
         $feriados = $this->obtenerFeriadosMes($mes, $ano);
         $incidencias = $this->obtenerIncidencias($idBolsa, $mes, $ano);
@@ -116,7 +116,7 @@ class SalarioChoferCalcService
                 } else {
                     $ingreso = round($ingresoMt / 2, 2);
                 }
-                $tasa2 = (float) ($aforo->tasa->tasa2 ?? 0);
+                $tasa2 = (float) ($aforo->tasa?->tasa2 ?? 0);
                 $salario = $tasa2 > 0
                     ? round($ingreso * $tasa2 + $salalm, 2)
                     : round($ingreso * $tasa + $salalm, 2);
@@ -126,6 +126,12 @@ class SalarioChoferCalcService
                     $salalm = round($almFlete * 0.005, 2);
                 }
                 $salario = round($ingreso * $tasa + $salalm, 2);
+            }
+
+            $salarioAlmacenaje = $salalm;
+            $salarioStored = (float) ($aforo->salario ?? 0);
+            if ($salarioStored > 0 && abs($salarioStored - $salario) > 0.01) {
+                $salario = $salarioStored;
             }
 
             $impCla = $kmCarga <= 90
@@ -165,16 +171,19 @@ class SalarioChoferCalcService
 
             $detalle[] = [
                 'id_carta_porte' => $cp->id,
+                'id_aforo' => $aforo->id,
                 'numero_cp' => $cp->numero,
                 'fecha_parte' => $aforo->fecha_parte?->format('d/m/Y'),
-                'tractivo' => $hr->tractivo?->cod_tractivo ?? '—',
+                'tractivo' => $hr->tractivo?->codigo ?? $hr->tractivo?->placa ?? '—',
                 'origen' => $cp->solicitud?->lugarOrigen?->nombre ?? '—',
                 'destino' => $cp->solicitud?->lugarDestino?->nombre ?? '—',
                 'km_total' => round($kmTotal, 2),
                 'tiempo_total' => round($tTotal, 2),
                 'tn_real' => round($tnReal, 2),
                 'ingreso' => round($ingreso, 2),
+                'id_tasa' => $aforo->id_tasa,
                 'tasa' => $tasa,
+                'tasa_nombre' => $aforo->tasa?->nombre ?? '',
                 'salario' => round($salario, 2),
                 'imp_cla' => round($impCla, 2),
                 'noct1' => round($noct1, 2),
@@ -228,7 +237,7 @@ class SalarioChoferCalcService
             'id_bolsa' => $idBolsa,
             'nombre_completo' => $chofer->nombrecompleto,
             'carnet' => $chofer->ci ?? '',
-            'cargo' => $cargo->nombre ?? '',
+            'cargo' => $cargo?->nombre ?? '',
             'tarifa' => $tarifa,
             'mes' => $mes,
             'ano' => $ano,
@@ -260,7 +269,8 @@ class SalarioChoferCalcService
                 $q->whereNull('fbaja');
             })
             ->with(['cargo:id,nombre,tarifa'])
-            ->orderBy('nombrecompleto')
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
             ->get();
     }
 
@@ -279,8 +289,8 @@ class SalarioChoferCalcService
         ->whereYear('fecha_parte', $ano)
         ->whereMonth('fecha_parte', $mes)
         ->with([
-            'tasa:id,tasa2',
-            'cartaPorte.hojaRuta.tractivo:id,cod_tractivo',
+            'tasa:id,nombre,tasa2',
+            'cartaPorte.hojaRuta.tractivo:id,codigo,placa',
             'cartaPorte.solicitud.lugarOrigen:id,nombre',
             'cartaPorte.solicitud.lugarDestino:id,nombre',
         ])
@@ -290,7 +300,7 @@ class SalarioChoferCalcService
 
     private function obtenerFeriadosMes(int $mes, int $ano): array
     {
-        $mesRecord = DB::table('rh_meses')->where('idmes', $mes)->first();
+        $mesRecord = DB::connection('legacy')->table('rh_meses')->where('idmes', $mes)->first();
         if (!$mesRecord || empty($mesRecord->dias)) return [];
         return explode(';', $mesRecord->dias);
     }

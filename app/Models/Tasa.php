@@ -9,6 +9,10 @@ class Tasa extends Model
 {
     protected $fillable = [
         'nombre',
+        'version',
+        'fecha_inicio',
+        'fecha_fin',
+        'activo',
         'tasa',
         'tasa2',
         'id_tipo_carga',
@@ -22,6 +26,10 @@ class Tasa extends Model
     protected function casts(): array
     {
         return [
+            'version' => 'integer',
+            'fecha_inicio' => 'date',
+            'fecha_fin' => 'date',
+            'activo' => 'boolean',
             'tasa' => 'decimal:6',
             'tasa2' => 'decimal:6',
             'distancia_1' => 'integer',

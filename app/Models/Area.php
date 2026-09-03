@@ -15,6 +15,8 @@ class Area extends Model
     protected $fillable = [
         'id_entidad', 'codigo',
         'nombre',
+        'orden',
+        'imagen',
         'id_area_padre',
         'activo',
     ];

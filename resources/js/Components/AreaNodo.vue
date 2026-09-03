@@ -1,13 +1,13 @@
 <template>
-  <div :style="{ marginLeft: level > 0 ? '1.5rem' : '0' }" class="mb-1">
-    <!-- Nodo -->
+  <div class="mb-2">
+    <!-- Nodo vertical -->
     <div
-      class="group rounded-lg border transition-all duration-200"
+      class="group rounded-xl border-2 transition-all duration-200 cursor-pointer"
       :class="[
         hasChildren
-          ? 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20'
-          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800',
-        isDragOver ? 'ring-2 ring-blue-400 dark:ring-blue-500 bg-blue-100 dark:bg-blue-800/40' : '',
+          ? 'border-blue-300 dark:border-blue-700 bg-gradient-to-b from-blue-50 to-white dark:from-blue-900/30 dark:to-gray-800 shadow-md'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm',
+        isDragOver ? 'ring-2 ring-blue-400 dark:ring-blue-500 scale-[1.02]' : '',
         isDragging ? 'opacity-50 border-dashed' : '',
       ]"
       draggable="true"
@@ -17,68 +17,97 @@
       @drop="onDrop"
       @dragend="onDragEnd"
     >
-      <div class="px-3 py-2.5 flex items-center gap-2.5">
-        <!-- Toggle expand/collapse -->
-        <button
-          v-if="hasChildren"
-          @click="isExpanded = !isExpanded"
-          class="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition shrink-0"
-        >
-          <i :class="isExpanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="text-xs text-gray-500 dark:text-gray-400"></i>
-        </button>
-        <div v-else class="w-5 shrink-0"></div>
-
-        <!-- Icono de arrastre -->
-        <div class="w-4 h-4 flex items-center justify-center shrink-0 cursor-grab active:cursor-grabbing" title="Arrastrar para reorganizar">
-          <i class="pi pi-bars text-xs text-gray-300 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400 transition"></i>
+      <!-- Contenido principal -->
+      <div class="p-4 flex flex-col items-center text-center">
+        <!-- Imagen / Icono -->
+        <div class="relative mb-3">
+          <div
+            class="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden border-3"
+            :class="imagenClasses"
+          >
+            <img v-if="area.imagen" :src="area.imagen" :alt="area.nombre" class="w-full h-full object-cover" />
+            <i v-else :class="iconoClasses" class="text-2xl"></i>
+          </div>
+          <!-- Badge de orden -->
+          <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-600 text-[10px] font-bold text-gray-600 dark:text-gray-300 flex items-center justify-center">
+            {{ area.orden || 0 }}
+          </span>
         </div>
 
-        <!-- Icono -->
-        <div
-          class="w-7 h-7 rounded flex items-center justify-center shrink-0"
-          :class="level === 0 ? 'bg-blue-500' : level === 1 ? 'bg-emerald-500' : 'bg-amber-500'"
-        >
-          <i :class="[level === 0 ? 'pi pi-building' : level === 1 ? 'pi pi-sitemap' : 'pi pi-folder']" class="text-white text-xs"></i>
+        <!-- Nombre del área -->
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight mb-1">{{ area.nombre }}</h3>
+
+        <!-- Conteo de trabajadores — grande y destacado -->
+        <div v-if="trabajadoresCount > 0" class="mt-1 mb-2">
+          <span class="text-3xl font-black font-mono leading-none"
+                :class="trabajadoresColor">
+            {{ trabajadoresCount }}
+          </span>
+          <p class="text-[10px] uppercase tracking-wider font-semibold mt-0.5"
+             :class="trabajadoresTextColor">
+            {{ trabajadoresCount === 1 ? 'trabajador' : 'trabajadores' }}
+          </p>
+        </div>
+        <div v-else class="mt-1 mb-2">
+          <span class="text-lg font-bold text-gray-300 dark:text-gray-600">0</span>
+          <p class="text-[10px] uppercase tracking-wider text-gray-300 dark:text-gray-600">sin personal</p>
         </div>
 
-        <!-- Nombre -->
-        <div class="flex-1 min-w-0">
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate block">{{ area.nombre }}</span>
-        </div>
-
-        <!-- Acciones (siempre visibles en hover) -->
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          <button @click="$emit('agregar-hijo', area.id, area.nombre)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition" title="Agregar sub-área">
+        <!-- Acciones -->
+        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button @click.stop="$emit('agregar-hijo', area.id, area.nombre)"
+                  class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"
+                  title="Agregar sub-área">
             <i class="pi pi-plus text-xs text-blue-600 dark:text-blue-400"></i>
           </button>
-          <button @click="$emit('editar', area)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-amber-100 dark:hover:bg-amber-900/50 transition" title="Editar">
+          <button @click.stop="$emit('editar', area)"
+                  class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/50 transition"
+                  title="Editar">
             <i class="pi pi-pencil text-xs text-amber-600 dark:text-amber-400"></i>
           </button>
-          <button @click="$emit('eliminar', area)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-red-100 dark:hover:bg-red-900/50 transition" title="Eliminar">
+          <button v-if="trabajadoresCount <= 1 && !hasChildren"
+                  @click.stop="$emit('eliminar', area)"
+                  class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+                  title="Eliminar">
             <i class="pi pi-trash text-xs text-red-600 dark:text-red-400"></i>
           </button>
         </div>
-
-        <!-- Badge -->
-        <span v-if="hasChildren" class="text-xs text-gray-400 dark:text-gray-500 shrink-0">
-          {{ area.sub_areas.length }}
-        </span>
       </div>
+
+      <!-- Toggle expand/collapse para áreas con hijos -->
+      <button v-if="hasChildren"
+              @click="isExpanded = !isExpanded"
+              class="w-full py-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center justify-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+        <i :class="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+        <span>{{ area.sub_areas.length }} sub-áreas</span>
+      </button>
     </div>
 
-    <!-- Hijos -->
-    <div v-if="hasChildren && isExpanded" class="hijos">
-      <AreaNodo
-        v-for="hijo in area.sub_areas"
-        :key="hijo.id"
-        :area="hijo"
-        :level="level + 1"
-        :expanded="expanded"
-        @editar="$emit('editar', $event)"
-        @agregar-hijo="$emit('agregar-hijo', $event)"
-        @eliminar="$emit('eliminar', $event)"
-        @mover="$emit('mover', $event)"
-      />
+    <!-- Línea conectora vertical hacia hijos -->
+    <div v-if="hasChildren && isExpanded" class="flex justify-center my-1">
+      <div class="w-0.5 h-4 bg-blue-300 dark:bg-blue-600"></div>
+    </div>
+
+    <!-- Hijos en fila horizontal con línea conectora horizontal -->
+    <div v-if="hasChildren && isExpanded" class="hijos-contenedor">
+      <!-- Línea horizontal que conecta todos los hermanos -->
+      <div v-if="area.sub_areas.length > 1" class="linea-horizontal-hermanos"></div>
+      <div class="hijos-horizontales">
+        <div v-for="(hijo, idx) in area.sub_areas" :key="hijo.id" class="hijo-wrapper">
+          <!-- Línea vertical corta desde la horizontal hasta el nodo -->
+          <div class="linea-vertical-hijo"></div>
+          <AreaNodo
+            :area="hijo"
+            :level="level + 1"
+            :expanded="expanded"
+            :trabajadores-por-area="trabajadoresPorArea"
+            @editar="$emit('editar', $event)"
+            @agregar-hijo="$emit('agregar-hijo', $event)"
+            @eliminar="$emit('eliminar', $event)"
+            @mover="$emit('mover', $event)"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -90,6 +119,7 @@ const props = defineProps({
   area: { type: Object, required: true },
   level: { type: Number, default: 0 },
   expanded: { type: Boolean, default: true },
+  trabajadoresPorArea: { type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits(['editar', 'agregar-hijo', 'eliminar', 'mover']);
@@ -104,6 +134,41 @@ const hasChildren = computed(() => {
   return props.area.sub_areas && props.area.sub_areas.length > 0;
 });
 
+const trabajadoresCount = computed(() => {
+  return props.trabajadoresPorArea[props.area.id] || 0;
+});
+
+// Color del conteo según cantidad
+const trabajadoresColor = computed(() => {
+  const n = trabajadoresCount.value;
+  if (n >= 20) return 'text-emerald-600 dark:text-emerald-400';
+  if (n >= 10) return 'text-blue-600 dark:text-blue-400';
+  if (n >= 5) return 'text-amber-600 dark:text-amber-400';
+  return 'text-gray-600 dark:text-gray-400';
+});
+
+const trabajadoresTextColor = computed(() => {
+  const n = trabajadoresCount.value;
+  if (n >= 20) return 'text-emerald-500 dark:text-emerald-500';
+  if (n >= 10) return 'text-blue-500 dark:text-blue-500';
+  if (n >= 5) return 'text-amber-500 dark:text-amber-500';
+  return 'text-gray-400 dark:text-gray-500';
+});
+
+// Clases para imagen/icono según nivel
+const imagenClasses = computed(() => {
+  if (props.area.imagen) return 'border-blue-400 dark:border-blue-600';
+  if (props.level === 0) return 'bg-blue-500 border-blue-400 dark:bg-blue-700 dark:border-blue-600';
+  if (props.level === 1) return 'bg-emerald-500 border-emerald-400 dark:bg-emerald-700 dark:border-emerald-600';
+  return 'bg-amber-500 border-amber-400 dark:bg-amber-700 dark:border-amber-600';
+});
+
+const iconoClasses = computed(() => {
+  if (props.level === 0) return 'pi pi-building text-white';
+  if (props.level === 1) return 'pi pi-sitemap text-white';
+  return 'pi pi-folder text-white';
+});
+
 function onDragStart(e) {
   isDragging.value = true;
   e.dataTransfer.effectAllowed = 'move';
@@ -116,11 +181,8 @@ function onDragStart(e) {
 
 function onDragOver(e) {
   e.preventDefault();
-  const data = e.dataTransfer.types.includes('text/plain');
-  if (data) {
-    isDragOver.value = true;
-    e.dataTransfer.dropEffect = 'move';
-  }
+  isDragOver.value = true;
+  e.dataTransfer.dropEffect = 'move';
 }
 
 function onDragLeave() {
@@ -154,15 +216,83 @@ function onDragEnd() {
 </script>
 
 <style scoped>
-.hijos {
-  border-left: 2px dashed #d1d5db;
-  margin-left: 0.75rem;
-  padding-left: 0.25rem;
-  margin-top: 0.25rem;
+.hijos-contenedor {
+  position: relative;
+  margin-top: 0;
+}
+
+/* Línea horizontal que conecta todos los hermanos */
+.linea-horizontal-hermanos {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  right: 50%;
+  height: 2px;
+  background: #93c5fd;
+  z-index: 1;
 }
 @media (prefers-color-scheme: dark) {
-  .hijos {
-    border-left-color: #374151;
+  .linea-horizontal-hermanos {
+    background: #1d4ed8;
+  }
+}
+
+.hijos-horizontales {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.25rem;
+  position: relative;
+  padding-top: 0.25rem;
+}
+
+.hijo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 180px;
+}
+
+/* Escalar nodos hijos cuando hay muchos */
+.hijo-wrapper :deep(.group) {
+  transform: scale(0.85);
+  transform-origin: top center;
+}
+
+/* Si hay más de 5 hijos, escalar más */
+.hijos-horizontales:has(.hijo-wrapper:nth-child(6)) .hijo-wrapper,
+.hijos-horizontales:has(.hijo-wrapper:nth-child(7)) .hijo-wrapper,
+.hijos-horizontales:has(.hijo-wrapper:nth-child(8)) .hijo-wrapper {
+  max-width: 150px;
+}
+
+.hijos-horizontales:has(.hijo-wrapper:nth-child(6)) .hijo-wrapper :deep(.group),
+.hijos-horizontales:has(.hijo-wrapper:nth-child(7)) .hijo-wrapper :deep(.group),
+.hijos-horizontales:has(.hijo-wrapper:nth-child(8)) .hijo-wrapper :deep(.group) {
+  transform: scale(0.72);
+}
+
+/* Si hay más de 8 hijos, escalar aún más */
+.hijos-horizontales:has(.hijo-wrapper:nth-child(n+9)) .hijo-wrapper {
+  max-width: 130px;
+}
+
+.hijos-horizontales:has(.hijo-wrapper:nth-child(n+9)) .hijo-wrapper :deep(.group) {
+  transform: scale(0.62);
+}
+
+/* Línea vertical corta desde la horizontal hasta cada hijo */
+.linea-vertical-hijo {
+  width: 2px;
+  height: 12px;
+  background: #93c5fd;
+}
+@media (prefers-color-scheme: dark) {
+  .linea-vertical-hijo {
+    background: #1d4ed8;
   }
 }
 </style>

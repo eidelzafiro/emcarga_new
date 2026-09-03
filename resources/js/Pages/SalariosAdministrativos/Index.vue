@@ -250,7 +250,11 @@ function rowClass(data) {
                     <a :href="route('reportes.prenomina-administrativo', { mes: selectedMes, ano: selectedAno })"
                         target="_blank"
                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition">
-                        <i class="pi pi-file-pdf"></i> Prenomina PDF
+                        <i class="pi pi-file-pdf"></i> Prenómina PDF
+                    </a>
+                    <a :href="route('reportes.prenomina-administrativo-excel', { mes: selectedMes, ano: selectedAno })"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-700 text-white text-sm rounded-lg hover:bg-green-800 transition">
+                        <i class="pi pi-file-excel"></i> Prenómina Excel
                     </a>
                 </div>
             </div>

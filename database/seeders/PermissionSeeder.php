@@ -158,9 +158,6 @@ class PermissionSeeder extends Seeder
 
             'movimientos-inventario.ver', 'movimientos-inventario.crear', 'movimientos-inventario.editar', 'movimientos-inventario.eliminar',
 
-            // RRHH - Tablas faltantes
-            'pagos-adicionales-cargo.ver', 'pagos-adicionales-cargo.crear', 'pagos-adicionales-cargo.editar', 'pagos-adicionales-cargo.eliminar',
-
             // Comercial - Tablas faltantes
             'contenedores.ver', 'contenedores.crear', 'contenedores.editar', 'contenedores.eliminar',
             'categorias-productos.ver', 'categorias-productos.crear', 'categorias-productos.editar', 'categorias-productos.eliminar',
@@ -169,9 +166,7 @@ class PermissionSeeder extends Seeder
             'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
             'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
             'devoluciones.ver', 'devoluciones.crear', 'devoluciones.editar', 'devoluciones.eliminar',
-            'descuentos-empleados.ver', 'descuentos-empleados.crear', 'descuentos-empleados.editar', 'descuentos-empleados.eliminar',
 
-            'vacaciones.ver', 'vacaciones.crear', 'vacaciones.editar', 'vacaciones.eliminar',
             'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',
             'registro-ordenes-taller.ver', 'registro-ordenes-taller.crear', 'registro-ordenes-taller.editar', 'registro-ordenes-taller.eliminar',
 
@@ -295,11 +290,8 @@ class PermissionSeeder extends Seeder
                 'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
                 'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
 
-                // RRHH - Tablas faltantes parte 2
-                'pagos-adicionales-cargo.ver', 'pagos-adicionales-cargo.crear', 'pagos-adicionales-cargo.editar', 'pagos-adicionales-cargo.eliminar',
+                // RRHH - Empleados
                 'empleados.ver', 'empleados.crear', 'empleados.editar', 'empleados.eliminar',
-                'descuentos-empleados.ver', 'descuentos-empleados.crear', 'descuentos-empleados.editar', 'descuentos-empleados.eliminar',
-                'vacaciones.ver', 'vacaciones.crear', 'vacaciones.editar', 'vacaciones.eliminar',
                 // Nómina (2026-08-18)
                 'incidencias.ver', 'incidencias.crear', 'incidencias.editar', 'incidencias.eliminar',
                 'penalizaciones.ver', 'penalizaciones.crear', 'penalizaciones.editar', 'penalizaciones.eliminar',
@@ -331,7 +323,6 @@ class PermissionSeeder extends Seeder
                 'dashboard.ver',
                 'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
 
-                'vacaciones.ver', 'vacaciones.crear', 'vacaciones.editar', 'vacaciones.eliminar',
                 'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',
             ],
 

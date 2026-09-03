@@ -28,7 +28,7 @@ class SalarioAdministrativo extends Model
 
     public function movimiento(): BelongsTo
     {
-        return $this->belongsTo(Movimiento::class, 'id_movimiento');
+        return $this->belongsTo(MovimientoRrhh::class, 'id_movimiento');
     }
 
     public function user(): BelongsTo

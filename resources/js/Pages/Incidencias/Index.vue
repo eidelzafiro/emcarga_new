@@ -3,8 +3,6 @@ import { ref, computed, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -12,9 +10,13 @@ import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
 import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
+import Accordion from 'primevue/accordion'
+import AccordionPanel from 'primevue/accordionpanel'
+import AccordionHeader from 'primevue/accordionheader'
+import AccordionContent from 'primevue/accordioncontent'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, empleados: Array, tiposIncidencias: Array, filters: Object, fechaOperaciones: String })
+const props = defineProps({ items: Array, agrupadas: Array, empleados: Array, tiposIncidencias: Array, filters: Object, fechaOperaciones: String })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
@@ -32,6 +34,9 @@ const ultimoDiaMes = computed(() => {
   f.setMonth(f.getMonth() + 1, 0)
   f.setHours(23, 59, 59, 999)
   return f
+})
+const mesAnio = computed(() => {
+  return fechaOps.value.toLocaleDateString('es-CU', { month: 'long', year: 'numeric' })
 })
 
 const baseForm = () => ({
@@ -55,16 +60,6 @@ function formatDate(d) {
 watch(search, () => {
   router.get(route('incidencias.index'), { search: search.value }, { preserveState: true, replace: true })
 })
-
-const onPage = (event) => {
-  router.get(route('incidencias.index'), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true })
-}
-
-function calcularImporte() {
-  const pactual = parseFloat(form.value.periodo_actual) || 0
-  const tarifa = parseFloat(form.value.tarifa) || 0
-  form.value.importe = Math.round((tarifa * pactual) * 100) / 100
-}
 
 function openCreate() {
   editing.value = null
@@ -100,10 +95,7 @@ function submit() {
   })
 }
 
-const activosCount = computed(() => {
-  if (!props.items?.data) return null
-  return props.items.data.filter(i => i.bolsa?.activo !== false).length
-})
+const totalIncidencias = computed(() => props.agrupadas?.reduce((s, g) => s + g.total, 0) || 0)
 </script>
 
 <template>
@@ -111,40 +103,67 @@ const activosCount = computed(() => {
     <div class="card">
       <Toolbar class="mb-4">
         <template #start>
-          <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
-          <span v-if="items.total !== undefined" class="ml-3 text-xs text-gray-500">
-            {{ items.total }} registros · {{ activosCount }} activos
+          <Button label="Nueva" icon="pi pi-plus" severity="success" @click="openCreate" />
+          <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-semibold">
+            {{ mesAnio }} · {{ totalIncidencias }} incidencias
           </span>
         </template>
         <template #end>
-          <InputText v-model="search" placeholder="Buscar..." />
+          <InputText v-model="search" placeholder="Buscar empleado o tipo..." />
         </template>
       </Toolbar>
 
-      <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total"
-        :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" class="text-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
-        <Column field="bolsa.nombrecompleto" header="Empleado" sortable />
-        <Column field="tipo_incidencia.nombre" header="Incidencia" />
-        <Column header="Inicio">
-          <template #body="{ data }">{{ formatDate(data.fecha_inicio) }}</template>
-        </Column>
-        <Column header="Final">
-          <template #body="{ data }">{{ formatDate(data.fecha_fin) }}</template>
-        </Column>
-        <Column field="periodo_actual" header="Período" />
-        <Column header="Importe">
-          <template #body="{ data }">{{ parseFloat(data.importe).toFixed(2) }}</template>
-        </Column>
-        <Column header="Acciones" style="width:100px">
-          <template #body="{ data }">
-            <div class="flex gap-1">
-              <Button icon="pi pi-pencil" rounded text severity="info" @click="openEdit(data)" />
-              <Button icon="pi pi-trash" rounded text severity="danger"
-                @click="router.delete(route('incidencias.destroy', { incidencia: data.id }))" />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+      <div v-if="agrupadas && agrupadas.length">
+        <Accordion :multiple="true" :activeIndex="[0]">
+          <AccordionPanel v-for="grupo in agrupadas" :key="grupo.tipo" :value="grupo.tipo">
+            <AccordionHeader>
+              <div class="flex items-center gap-3 w-full">
+                <i class="pi pi-tag text-blue-500"></i>
+                <span class="font-bold text-blue-800 dark:text-blue-300">{{ grupo.tipo }}</span>
+                <span class="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-mono">
+                  {{ grupo.total }}
+                </span>
+              </div>
+            </AccordionHeader>
+            <AccordionContent>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                      <th class="text-left py-2 px-3 font-semibold text-gray-600 dark:text-gray-400">Empleado</th>
+                      <th class="text-left py-2 px-3 font-semibold text-gray-600 dark:text-gray-400">Inicio</th>
+                      <th class="text-left py-2 px-3 font-semibold text-gray-600 dark:text-gray-400">Fin</th>
+                      <th class="text-right py-2 px-3 font-semibold text-gray-600 dark:text-gray-400">Periodo</th>
+                      <th class="text-right py-2 px-3 font-semibold text-gray-600 dark:text-gray-400">Importe</th>
+                      <th class="text-right py-2 px-3 font-semibold text-gray-600 dark:text-gray-400">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in grupo.items" :key="item.id" class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td class="py-2 px-3">{{ item.bolsa?.nombrecompleto }}</td>
+                      <td class="py-2 px-3">{{ formatDate(item.fecha_inicio) }}</td>
+                      <td class="py-2 px-3">{{ formatDate(item.fecha_fin) }}</td>
+                      <td class="py-2 px-3 text-right font-mono">{{ item.periodo_actual }}</td>
+                      <td class="py-2 px-3 text-right font-mono">{{ parseFloat(item.importe).toFixed(2) }}</td>
+                      <td class="py-2 px-3 text-right">
+                        <div class="flex gap-1 justify-end">
+                          <Button icon="pi pi-pencil" rounded text size="small" severity="info" @click="openEdit(item)" />
+                          <Button icon="pi pi-trash" rounded text size="small" severity="danger"
+                            @click="router.delete(route('incidencias.destroy', { incidencia: item.id }))" />
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </AccordionContent>
+          </AccordionPanel>
+        </Accordion>
+      </div>
+      <div v-else class="text-center py-12">
+        <i class="pi pi-inbox text-4xl text-gray-300 dark:text-gray-600 block mb-3" />
+        <p class="text-gray-500 dark:text-gray-400">No hay incidencias para este mes</p>
+      </div>
     </div>
 
     <Dialog v-model:visible="showForm" :header="editing ? 'Editar Incidencia' : 'Nueva Incidencia'" modal style="width:550px">
@@ -154,7 +173,7 @@ const activosCount = computed(() => {
           <Select v-model="form.id_bolsa" :options="empleadoOptions" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" required filter :filterFields="['label']" />
         </div>
         <div>
-          <label class="block mb-1 font-medium">Clave / Tipo Incidencia</label>
+          <label class="block mb-1 font-medium">Tipo de Incidencia</label>
           <Select v-model="form.id_tipo_incidencia" :options="tipoOptions" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" required filter />
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -169,8 +188,8 @@ const activosCount = computed(() => {
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block mb-1 font-medium">Período Actual</label>
-            <InputNumber v-model="form.periodo_actual" class="w-full" :minFractionDigits="2" :maxFractionDigits="2" required @keyup.enter="calcularImporte" />
+            <label class="block mb-1 font-medium">Periodo Actual</label>
+            <InputNumber v-model="form.periodo_actual" class="w-full" :minFractionDigits="2" :maxFractionDigits="2" required />
           </div>
           <div>
             <label class="block mb-1 font-medium">Importe</label>

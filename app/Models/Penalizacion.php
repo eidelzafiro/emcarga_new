@@ -14,6 +14,8 @@ class Penalizacion extends Model
     protected $fillable = [
         'id_bolsa',
         'id_tipo_penalizacion',
+        'id_area_penalizada',
+        'id_pago_adicional',
         'fecha',
         'importe',
     ];
@@ -33,5 +35,15 @@ class Penalizacion extends Model
     public function tipoPenalizacion(): BelongsTo
     {
         return $this->belongsTo(CatalogoItem::class, 'id_tipo_penalizacion');
+    }
+
+    public function areaPenalizada(): BelongsTo
+    {
+        return $this->belongsTo(Area::class, 'id_area_penalizada');
+    }
+
+    public function pagoAdicional(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'id_pago_adicional');
     }
 }

@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\ManagesCatalog;
 use App\Models\GrupoEscala;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 class GruposEscalaController extends Controller
 {
     use ManagesCatalog;
+
+    const MULTIPLICADOR_SALARIO = 190.6;
 
     protected function getModelClass(): string
     {
@@ -39,56 +42,28 @@ class GruposEscalaController extends Controller
         ];
     }
 
-    public function index(Request $request)
+    protected function getValidationRules($id = null): array
     {
-        $entidades = $this->entidadesPermitidas();
+        $rules = [
+            'nombre' => 'required|string|max:255',
+            'activo' => 'boolean',
+            'tarifa' => 'required|numeric|min:0',
+            'salario' => 'required|numeric|min:0',
+        ];
 
-        $query = GrupoEscala::query();
-        $query->where(function ($q) use ($entidades) {
-            if (! empty($entidades)) {
-                $q->whereIn('id_entidad', $entidades)->orWhereNull('id_entidad');
-            } else {
-                $q->whereNull('id_entidad');
-            }
-        });
-        $search = $request->get('search');
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                foreach ($this->getSearchFields() as $field) {
-                    $q->orWhere($field, 'like', "%{$search}%");
-                }
-            });
-        }
-
-        return Inertia::render('Catalogo/Index', [
-            'title' => $this->getTitle(),
-            'items' => $query->orderBy($this->getSortField())->paginate(20),
-            'filters' => $request->only('search'),
-            'catalogConfig' => [
-                'route' => $this->getRouteName(),
-                'title' => $this->getTitle(),
-                'codigoManual' => $this->usaCodigoManual(),
-                'fields' => array_merge(
-                    ['nombre' => ['label' => 'Nombre', 'type' => 'text', 'required' => true]],
-                    $this->getExtraFields()
-                ),
-                'extra' => $this->getExtraFields(),
-            ],
-        ]);
+        return $rules;
     }
 
     public function store(Request $request)
     {
-        $model = $this->getModelClass();
         $data = $request->validate($this->getValidationRules());
 
-        if (! $this->usaCodigoManual() && Schema::hasColumn((new $model)->getTable(), 'codigo')) {
-            $data['codigo'] = $this->generarCodigo();
-        }
+        // Calcular salario desde tarifa o tarifa desde salario
+        $data = $this->calcularSalarioTarifa($data);
 
         $data['id_entidad'] = (int) entidadActivaId();
 
+        $model = $this->getModelClass();
         $model::create($data);
 
         if ($request->boolean('_continuar')) {
@@ -107,8 +82,34 @@ class GruposEscalaController extends Controller
 
         $data = $request->validate($this->getValidationRules($id));
 
+        // Calcular salario desde tarifa o tarifa desde salario
+        $data = $this->calcularSalarioTarifa($data);
+
         $item->update($data);
 
         return redirect()->back()->with('success', 'Actualizado correctamente');
+    }
+
+    /**
+     * Calcula salario desde tarifa (tarifa × 190.6) o tarifa desde salario.
+     * Si ambos vienen, prevalece tarifa → salario.
+     */
+    private function calcularSalarioTarifa(array $data): array
+    {
+        $tarifa = isset($data['tarifa']) ? (float) $data['tarifa'] : null;
+        $salario = isset($data['salario']) ? (float) $data['salario'] : null;
+
+        if ($tarifa !== null && ($salario === null || $salario == 0)) {
+            // Tarifa → salario
+            $data['salario'] = round($tarifa * self::MULTIPLICADOR_SALARIO, 2);
+        } elseif ($salario !== null && ($tarifa === null || $tarifa == 0)) {
+            // Salario → tarifa
+            $data['tarifa'] = round($salario / self::MULTIPLICADOR_SALARIO, 4);
+        } elseif ($tarifa !== null && $salario !== null) {
+            // Ambos presentes: recalcular salario desde tarifa
+            $data['salario'] = round($tarifa * self::MULTIPLICADOR_SALARIO, 2);
+        }
+
+        return $data;
     }
 }

@@ -19,6 +19,7 @@ class MenuSeeder extends Seeder
             ['Comercial', 'pi pi-briefcase', null, null, 5],
             ['Facturación', 'pi pi-file-invoice', null, null, 6],
             ['RRHH', 'pi pi-users', null, null, 7],
+            ['Salario', 'pi pi-money-bill', null, null, 1],  // subcategoría bajo RRHH
             ['Contabilidad', 'pi pi-calculator', null, null, 8],
             ['Administración', 'pi pi-shield', null, null, 9],
             ['Catálogos', 'pi pi-book', null, null, 10],
@@ -32,6 +33,11 @@ class MenuSeeder extends Seeder
                 ['icon' => $icon, 'route' => $route, 'permission' => $perm, 'orden' => $orden, 'activo' => true]
             );
             $parentIds[$label] = $item->id;
+        }
+
+        // "Salario" es subcategoría de RRHH — repadrear después de crear ambos
+        if (isset($parentIds['Salario']) && isset($parentIds['RRHH'])) {
+            MenuItem::where('id', $parentIds['Salario'])->update(['parent_id' => $parentIds['RRHH']]);
         }
 
         $hijos = [
@@ -95,12 +101,12 @@ class MenuSeeder extends Seeder
             ['parent' => 'RRHH', 'label' => 'Historial', 'route' => 'historial-movimientos.index', 'permission' => 'historial-movimientos.ver', 'orden' => 3],
             ['parent' => 'RRHH', 'label' => 'Empleados', 'route' => 'empleados.index', 'permission' => 'empleados.ver', 'orden' => 5],
             ['parent' => 'RRHH', 'label' => 'Plantilla', 'route' => 'plantilla.index', 'permission' => 'plantilla.ver', 'orden' => 6],
-            // --- Salarios ---
-            ['parent' => 'RRHH', 'label' => 'Salario Choferes', 'route' => 'salarios-choferes.index', 'permission' => 'salarios.ver', 'orden' => 10],
-            ['parent' => 'RRHH', 'label' => 'Salario Administrativo', 'route' => 'salarios-administrativos.index', 'permission' => 'salarios-administrativos.ver', 'orden' => 11],
-            ['parent' => 'RRHH', 'label' => 'Incidencias', 'route' => 'incidencias.index', 'permission' => 'incidencias.ver', 'orden' => 12],
-            ['parent' => 'RRHH', 'label' => 'Penalizaciones', 'route' => 'penalizaciones.index', 'permission' => 'penalizaciones.ver', 'orden' => 13],
-            ['parent' => 'RRHH', 'label' => 'Tasas Salariales', 'route' => 'catalogo.index?tipo=tipos_tasas', 'permission' => 'tipos-tasas.ver', 'orden' => 14],
+            // --- Salarios (subcategoría ya creada como padre) ---
+            ['parent' => 'Salario', 'label' => 'Salario Choferes', 'route' => 'salarios-choferes.index', 'permission' => 'salarios.ver', 'orden' => 1],
+            ['parent' => 'Salario', 'label' => 'Salario Administrativo', 'route' => 'salarios-administrativos.index', 'permission' => 'salarios-administrativos.ver', 'orden' => 2],
+            ['parent' => 'Salario', 'label' => 'Incidencias', 'route' => 'incidencias.index', 'permission' => 'incidencias.ver', 'orden' => 3],
+            ['parent' => 'Salario', 'label' => 'Penalizaciones', 'route' => 'penalizaciones.index', 'permission' => 'penalizaciones.ver', 'orden' => 4],
+            ['parent' => 'RRHH', 'label' => 'Tasas Salariales', 'route' => 'tasas.index', 'permission' => 'tipos-tasas.ver', 'orden' => 14],
 
             // Contabilidad
             ['parent' => 'Contabilidad', 'label' => 'Conciliaciones', 'route' => 'conciliaciones.index', 'permission' => 'conciliaciones.ver', 'orden' => 1],
@@ -128,8 +134,12 @@ class MenuSeeder extends Seeder
         ];
 
         foreach ($hijos as $h) {
+            $match = isset($h['route']) && $h['route'] !== null
+                ? ['route' => $h['route']]
+                : ['label' => $h['label'], 'parent_id' => $parentIds[$h['parent']]];
+
             MenuItem::updateOrCreate(
-                ['route' => $h['route']],
+                $match,
                 [
                     'label' => $h['label'],
                     'parent_id' => $parentIds[$h['parent']],
@@ -205,6 +215,36 @@ class MenuSeeder extends Seeder
                     'activo' => true,
                 ]
             );
+        }
+
+        // Repadrear ítems de salario bajo la subcategoría "Salario"
+        if (isset($parentIds['Salario'])) {
+            $rutasSalario = [
+                'salarios-choferes.index',
+                'salarios-administrativos.index',
+                'incidencias.index',
+                'penalizaciones.index',
+            ];
+            MenuItem::whereIn('route', $rutasSalario)
+                ->where('parent_id', $parentIds['RRHH'])
+                ->update(['parent_id' => $parentIds['Salario']]);
+        }
+
+        // Eliminar ítems obsoletos que ya no existen en el sistema
+        $rutasEliminadas = [
+            'vacaciones.index',
+            'pagos-adicionales-cargo.index',
+            'descuentos-empleados.index',
+            'catalogo.index?tipo=tipos_tasas',
+        ];
+        MenuItem::whereIn('route', $rutasEliminadas)->delete();
+
+        // Eliminar duplicados de "Salario" huérfanos (sin hijos)
+        if (isset($parentIds['Salario'])) {
+            MenuItem::where('label', 'Salario')
+                ->where('id', '!=', $parentIds['Salario'])
+                ->where('parent_id', $parentIds['RRHH'] ?? null)
+                ->delete();
         }
     }
 }

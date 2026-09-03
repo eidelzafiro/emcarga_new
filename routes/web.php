@@ -40,12 +40,10 @@ use App\Http\Controllers\ContextoTrabajoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardTecnicoController;
 use App\Http\Controllers\DemandasController;
-use App\Http\Controllers\DescuentosEmpleadosController;
 use App\Http\Controllers\DetallesCargaCombustibleController;
 use App\Http\Controllers\DevolucionesController;
 use App\Http\Controllers\DiferencialesController;
 use App\Http\Controllers\DistanciasController;
-use App\Http\Controllers\EmpleadosController;
 use App\Http\Controllers\EntidadesController;
 use App\Http\Controllers\EstadisticasExplotacionController;
 use App\Http\Controllers\EstadosTarjetasController;
@@ -402,8 +400,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('salarios-administrativos', SalariosAdministrativosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::post('salarios-administrativos/guardar-turno', [SalariosAdministrativosController::class, 'guardarTurno'])
+            ->name('salarios-administrativos.guardar-turno');
+
         Route::resource('salarios-choferes', \App\Http\Controllers\SalariosChoferesController::class)
             ->only(['index']);
+
+        Route::post('salarios-choferes/actualizar-tasa', [\App\Http\Controllers\SalariosChoferesController::class, 'actualizarTasa'])
+            ->name('salarios-choferes.actualizar-tasa');
+
+        Route::post('salarios-choferes/guardar-tiempo', [\App\Http\Controllers\SalariosChoferesController::class, 'guardarTiempo'])
+            ->name('salarios-choferes.guardar-tiempo');
 
         // RRHH - Catálogos pequeños (Fase 5.5 parte 3)
 
@@ -456,6 +463,12 @@ Route::middleware('auth')->group(function () {
             Route::get('paises', [ReportController::class, 'pdfPaises'])->name('paises');
             Route::get('salario-prenomina', [ReportController::class, 'pdfSalarioPrenomina'])->name('salario-prenomina');
             Route::get('salario-choferes', [ReportController::class, 'pdfSalarioChoferes'])->name('salario-choferes');
+            Route::get('prenomina-choferes', [ReportController::class, 'pdfPrenominaChoferes'])->name('prenomina-choferes');
+            Route::get('prenomina-administrativo', [ReportController::class, 'pdfPrenominaAdministrativo'])->name('prenomina-administrativo');
+            Route::get('modelo1', [ReportController::class, 'pdfModelo1'])->name('modelo1');
+            Route::get('prenomina-choferes-excel', [ReportController::class, 'excelPrenominaChoferes'])->name('prenomina-choferes-excel');
+            Route::get('prenomina-administrativo-excel', [ReportController::class, 'excelPrenominaAdministrativo'])->name('prenomina-administrativo-excel');
+            Route::get('modelo1-excel', [ReportController::class, 'excelModelo1'])->name('modelo1-excel');
             // Fase A: catálogo de reportes usados (índice con filtros reutilizables)
             Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
             // GET: descarga/binario vía navegación real (sin XHR Inertia). POST: flujo
@@ -577,8 +590,8 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['historial-tractivos' => 'id']);
 
-        // RRHH - Tablas faltantes (Fase 5.8)
-        Route::resource('pagos-adicionales-cargo', PagosAdicionalesCargoController::class)
+        // RRHH - Tasas
+        Route::resource('tasas', \App\Http\Controllers\TasasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         // Comercial - Tablas faltantes (Fase 5.8)
         Route::resource('contenedores', ContenedoresController::class)
@@ -588,19 +601,14 @@ Route::middleware('auth')->group(function () {
         // Misc - Tablas varias (Fase 5.8)
         Route::resource('choferes', ChoferesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('empleados', EmpleadosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('devoluciones', DevolucionesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('descuentos-empleados', DescuentosEmpleadosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('incidencias', IncidenciasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::get('penalizaciones/obtener-empleado', [PenalizacionesController::class, 'obtenerEmpleado'])
+            ->name('penalizaciones.obtener-empleado');
         Route::resource('penalizaciones', PenalizacionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('vacaciones', VacacionesController::class)
-            ->only(['index', 'store', 'update', 'destroy'])
-            ->parameters(['vacaciones' => 'id']);
         Route::resource('estadisticas-explotacion', EstadisticasExplotacionController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('registro-ordenes-taller', RegistroOrdenesTallerController::class)

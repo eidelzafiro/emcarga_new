@@ -19,16 +19,23 @@ class IncidenciasController extends Controller
         $this->authorize('viewAny', Incidencia::class);
         $entidades = $this->entidadesPermitidas();
 
+        $fechaOps = session('fecha_operaciones');
+        $fechaOperaciones = $fechaOps ? Carbon::parse($fechaOps) : Carbon::now();
+
         $query = Incidencia::with(['bolsa', 'tipoIncidencia'])
             ->when(!empty($entidades), fn ($q) => $q->whereHas('bolsa', fn ($sq) => $sq->whereIn('id_entidad', $entidades)))
+            ->when($fechaOperaciones, function ($q) use ($fechaOperaciones) {
+                $q->whereMonth('fecha_inicio', $fechaOperaciones->month)
+                  ->whereYear('fecha_inicio', $fechaOperaciones->year);
+            })
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->whereHas('bolsa', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%")->orWhere('apellidos', 'like', "%{$s}%"))
                     ->orWhereHas('tipoIncidencia', fn ($sq) => $sq->where('nombre', 'like', "%{$s}%"));
             }))
-            ->orderBy('fecha_inicio', 'desc')
-            ->orderBy('id', 'desc');
+            ->orderBy('id_tipo_incidencia')
+            ->orderBy('fecha_inicio', 'desc');
 
-        $items = $query->paginate(20);
+        $items = $query->get();
         $empleados = Bolsa::when(!empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
             ->orderBy('nombre')
             ->get();
@@ -38,12 +45,20 @@ class IncidenciasController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        $fechaOps = session('fecha_operaciones');
-        $fechaOperaciones = $fechaOps ? Carbon::parse($fechaOps) : Carbon::now();
+        // Agrupar por tipo de incidencia
+        $agrupadas = $items->groupBy('id_tipo_incidencia')->map(function ($grupo, $tipoId) use ($tipos) {
+            $tipo = $tipos->firstWhere('id', $tipoId);
+            return [
+                'tipo' => $tipo?->nombre ?? 'Sin tipo',
+                'items' => $grupo,
+                'total' => $grupo->count(),
+            ];
+        })->values();
 
         return Inertia::render('Incidencias/Index', [
             'title' => 'Incidencias',
             'items' => $items,
+            'agrupadas' => $agrupadas,
             'empleados' => $empleados,
             'tiposIncidencias' => $tipos,
             'filters' => $request->only('search'),

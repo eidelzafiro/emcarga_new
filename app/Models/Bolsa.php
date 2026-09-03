@@ -80,6 +80,11 @@ class Bolsa extends Model
         return $this->hasMany(MovimientoRrhh::class, 'id_bolsa');
     }
 
+    public function hojasRuta(): HasMany
+    {
+        return $this->hasMany(HojasRuta::class, 'id_chofer');
+    }
+
     protected $appends = ['nombrecompleto'];
 
     public function getNombrecompletoAttribute(): string

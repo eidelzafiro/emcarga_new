@@ -1,0 +1,145 @@
+id	parent_id	label	icon	route	permission	orden	activo	created_at	updated_at
+1	NULL	Dashboard	pi pi-home	dashboard	dashboard.ver	0	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+2	NULL	Flota	pi pi-truck	NULL	NULL	7	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+3	2	Vehículos	pi pi-circle-fill	tractivos.index	tractivos.ver	1	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+4	2	Motores	pi pi-circle-fill	motores.index	motores.ver	2	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+5	2	Cajas	pi pi-circle-fill	cajas.index	cajas.ver	3	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+6	2	Diferenciales	pi pi-circle-fill	diferenciales.index	diferenciales.ver	4	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+7	2	Baterías	pi pi-circle-fill	baterias.index	baterias.ver	5	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+8	2	Neumáticos	pi pi-circle-fill	neumaticos.index	neumaticos.ver	6	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+10	2	Otros Agregados	pi pi-circle-fill	otros-agregados.index	otros-agregados.ver	8	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+12	2	Motivos Entrada Taller	pi pi-circle-fill	catalogo.index?tipo=motivos_entrada_taller	catalogo.ver	11	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+13	2	Clasif. OT	pi pi-circle-fill	catalogo.index?tipo=clasificaciones_ordenes_taller	catalogo.ver	13	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+14	2	Motivos Baja Batería	pi pi-circle-fill	catalogo.index?tipo=motivos_baja_bateria	catalogo.ver	16	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+15	2	Historial Tractivos	pi pi-circle-fill	historial-tractivos.index	historial-tractivos.ver	21	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+17	2	Estad. Explotación	pi pi-circle-fill	estadisticas-explotacion.index	estadisticas-explotacion.ver	33	1	2026-08-17 19:53:30	2026-09-03 13:46:20
+18	NULL	Taller	pi pi-cog	taller.index	taller.ver	8	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+19	NULL	Comercial	pi pi-briefcase	NULL	NULL	9	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+20	19	Clientes	pi pi-circle-fill	clientes.index	clientes.ver	1	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+21	19	Lugares	pi pi-circle-fill	lugares.index	lugares.ver	2	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+22	19	Distancias	pi pi-circle-fill	distancias.index	distancias.ver	3	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+23	19	Acuerdos	pi pi-circle-fill	acuerdos.index	acuerdos.ver	4	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+24	19	Solicitudes	pi pi-circle-fill	solicitudes.index	solicitudes.ver	5	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+25	19	Cartas Porte	pi pi-circle-fill	carta-porte.index	carta-porte.ver	6	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+27	19	Tarifas	pi pi-circle-fill	tarifas.index	tarifas.ver	8	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+28	19	Demandas	pi pi-circle-fill	demandas.index	demandas.ver	9	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+30	19	Pizarra Tractivos	pi pi-th-large	pizarra-tractivos.index	pizarra-tractivos.ver	8	1	2026-08-17 19:53:30	2026-08-17 19:53:30
+33	93	Configurar Impresión Documentos	pi pi-sliders-h	configuraciones-modelo.index	configuraciones-modelo.ver	9	1	2026-08-17 19:53:31	2026-08-30 22:53:06
+35	67	Categorías Productos	pi pi-circle-fill	categorias-productos.index	categorias-productos.ver	75	1	2026-08-17 19:53:31	2026-09-03 13:49:08
+37	NULL	Facturación	pi pi-file-invoice	NULL	NULL	10	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+38	37	Facturas	pi pi-circle-fill	facturas.index	facturas.ver	1	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+39	37	Prefacturas	pi pi-circle-fill	prefacturas.index	prefacturas.ver	2	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+40	NULL	RRHH	pi pi-users	NULL	NULL	4	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+41	40	Bolsa	pi pi-circle-fill	bolsa.index	bolsa.ver	1	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+42	40	Historial	pi pi-circle-fill	historial-movimientos.index	historial-movimientos.ver	3	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+45	67	OSDES	pi pi-building	osdes.index	osdes.ver	4	1	2026-08-17 19:53:30	2026-09-03 00:23:45
+46	67	Firmas	pi pi-file-edit	firmas.index	firmas.ver	3	1	2026-08-17 19:53:30	2026-09-03 00:23:45
+53	NULL	Contabilidad	pi pi-calculator	NULL	NULL	12	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+54	53	Conciliaciones	pi pi-circle-fill	conciliaciones.index	conciliaciones.ver	1	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+55	53	Otros Gastos	pi pi-circle-fill	otros-gastos.index	otros-gastos.ver	3	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+56	53	Carga Combustible	pi pi-circle-fill	combustible-cargas.index	combustible-cargas.ver	4	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+57	53	Descarga Combustible	pi pi-circle-fill	combustible-descargas.index	combustible-descargas.ver	5	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+60	53	Servicentros	pi pi-circle-fill	servicentros.index	servicentros.ver	8	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+62	53	Reportes Costos	pi pi-circle-fill	reportes-costos.index	reportes-costos.ver	11	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+63	53	Estados Tarjetas	pi pi-circle-fill	estados-tarjetas.index	estados-tarjetas.ver	12	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+65	53	Pagos	pi pi-circle-fill	pagos.index	pagos.ver	15	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+67	NULL	Catálogos	pi pi-book	NULL	NULL	2	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+68	67	Catálogos	pi pi-book	catalogo.gestionar	catalogo.editar	19	1	2026-08-17 19:53:31	2026-09-03 00:23:45
+69	67	Marcas	pi pi-circle-fill	catalogo.index?tipo=marcas	catalogo.ver	1	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+70	67	Modelos	pi pi-circle-fill	catalogo.index?tipo=modelos	catalogo.ver	2	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+71	67	Grupos	pi pi-circle-fill	catalogo.index?tipo=grupos	catalogo.ver	3	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+72	67	Talleres	pi pi-circle-fill	talleres.index	talleres.ver	6	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+73	67	Naves	pi pi-circle-fill	naves.index	naves.ver	7	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+74	67	Vallas	pi pi-circle-fill	vallas.index	vallas.ver	8	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+75	67	Destinos Agregados	pi pi-circle-fill	catalogo.index?tipo=destinos_agregados	catalogo.ver	9	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+76	67	Medidas Neumáticos	pi pi-circle-fill	catalogo.index?tipo=medidas_neumaticos	catalogo.ver	10	1	2026-08-17 19:53:31	2026-09-03 13:46:20
+77	67	Posiciones Neumáticos	pi pi-circle-fill	catalogo.index?tipo=posiciones_neumaticos	catalogo.ver	15	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+78	93	Folios	pi pi-list	consecutivos.index	consecutivos.ver	6	1	2026-08-17 19:53:31	2026-08-30 22:53:06
+79	67	Embalajes	pi pi-circle-fill	catalogo.index?tipo=embalajes	catalogo.ver	19	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+80	67	Tipo Incidencias	pi pi-exclamation-circle	catalogo.index?tipo=tipos_incidencias	catalogo.tipos_incidencias.ver	28	1	2026-08-17 19:53:31	2026-09-03 00:23:45
+81	67	Tipo Penalizaciones	pi pi-ban	catalogo.index?tipo=tipos_penalizaciones	catalogo.tipos_penalizaciones.ver	29	1	2026-08-17 19:53:31	2026-09-03 00:23:45
+83	67	Organismos	pi pi-circle-fill	catalogo.index?tipo=organismos	catalogo.ver	22	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+84	67	Categorías Cargo	pi pi-circle-fill	catalogo.index?tipo=categorias_cargo	catalogo.ver	23	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+85	67	Grupos Escala	pi pi-circle-fill	grupos-escala.index	grupos-escala.ver	24	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+86	67	Áreas	pi pi-building	areas.index	areas.ver	34	1	2026-08-17 19:53:31	2026-09-03 00:23:45
+87	67	Cargos	pi pi-circle-fill	cargos.index	cargos.ver	25	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+88	67	Meses	pi pi-calendar	meses.index	meses.ver	36	1	2026-08-17 19:53:31	2026-09-03 00:23:45
+93	NULL	Administración	pi pi-shield	NULL	NULL	13	1	2026-08-17 19:53:30	2026-09-03 14:05:42
+94	93	Usuarios	pi pi-circle-fill	usuarios.index	usuarios.ver	1	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+95	93	Perfiles	pi pi-circle-fill	perfiles.index	perfiles.ver	2	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+96	93	Menús	pi pi-circle-fill	menu-items.index	menus.admin	3	1	2026-08-17 19:53:31	2026-09-03 13:49:07
+97	67	Entidades	pi pi-circle-fill	entidades.index	entidades.ver	26	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+98	67	Tipos de Modelo	pi pi-circle-fill	catalogo.index?tipo=tipos_modelo	catalogo.ver	27	1	2026-08-17 19:53:31	2026-09-03 13:46:21
+101	67	Tipos Equipo	pi pi-circle-fill	tipos-equipos.index	tipos-equipos.ver	33	1	2026-08-17 19:53:30	2026-09-03 13:49:07
+102	67	Tipos de Mantenimiento	pi pi-wrench	tipos-mantenimiento.index	tipos-mantenimiento.ver	7	1	2026-08-17 19:53:30	2026-09-03 00:23:45
+103	19	Hojas de Ruta	pi pi-circle-fill	hojas-ruta.index	hojas-ruta.ver	13	1	2026-08-17 19:53:30	2026-09-03 13:46:21
+104	37	Aforos	pi pi-file-check	aforos.index	facturas.ver	3	1	2026-08-17 19:53:30	2026-08-17 19:53:30
+105	116	Tarjetas	pi pi-wallet	tarjetas.index	tarjetas.ver	2	1	2026-08-17 19:53:31	2026-08-31 23:57:41
+106	18	CT7-Control Lubricantes	pi pi-eye-dropper	control-lubricante.index	control-lubricante.ver	10	1	2026-08-17 19:53:30	2026-08-30 21:25:49
+107	NULL	Reportes	pi pi-chart-bar	NULL	NULL	15	1	2026-08-21 19:34:14	2026-09-03 14:05:42
+109	67	Tipos de Vehículo	pi pi-car	tipo-vehiculos.index	tipo-vehiculos.ver	9	1	2026-08-25 20:13:32	2026-09-03 00:23:45
+110	2	Arrastres	pi pi-circle-fill	arrastres.index	arrastres.ver	10	1	2026-08-25 22:55:47	2026-09-03 13:46:20
+112	18	CT4-Orden de Taller	pi pi-wrench	taller.index	taller.ver	11	1	2026-08-28 23:31:28	2026-08-30 21:25:49
+113	67	Tipo de Lubricantes	pi pi-eye-dropper	tipos-lubricantes.index	lubricantes.ver	8	1	2026-08-30 17:34:31	2026-09-03 00:23:45
+114	93	Fusionar Catálogos	pi pi-objects-column	fusionar-catalogos.index	catalogo.editar	2	1	2026-08-30 22:42:39	2026-08-30 22:53:07
+115	NULL	Costos	pi pi-book	NULL	NULL	14	1	2026-08-31 16:11:26	2026-09-03 14:05:42
+116	NULL	Combustibles	pi pi-gauge	NULL	NULL	15	1	2026-08-31 16:13:25	2026-09-03 14:05:42
+117	67	Tipos Gasto	pi pi-circle-fill	catalogo.index?tipo=tipos_gastos	catalogo.ver	45	1	2026-08-31 18:10:34	2026-09-03 13:49:07
+118	67	Tipo Ingresos	pi pi-circle-fill	catalogo.index?tipo=tipo_ingresos	catalogo.ver	46	1	2026-08-31 18:10:34	2026-09-03 13:49:07
+119	67	Tipos Concepto	pi pi-circle-fill	catalogo.index?tipo=tipos_conceptos	tipos-conceptos.ver	47	1	2026-08-31 18:10:34	2026-09-03 13:49:07
+120	53	Dietas	pi pi-book	dietas.index	dietas.ver	15	1	2026-08-31 20:11:16	2026-08-31 20:16:34
+121	53	Reembolsos	pi pi-book	reembolsos.index	reembolsos.ver	16	1	2026-08-31 20:11:16	2026-08-31 20:17:49
+122	53	Gasto Material	pi-box	gasto-material.index	gastos_otros.ver	17	1	2026-08-31 21:14:43	2026-08-31 21:14:43
+123	53	Amortización  Taller	pi-wrench	amortizacion-taller.index	amortizacion-taller.ver	18	1	2026-08-31 21:14:43	2026-09-02 00:47:42
+124	53	Cuadre Contabilidad	pi-chart-bar	cuadre-contabilidad.index	reportes_costos.ver	19	1	2026-08-31 21:23:00	2026-08-31 21:23:00
+125	116	Cierre de Mes Tarjetas	pi pi-calendar	cierre-tarjetas.index	tarjetas.ver	11	1	2026-08-31 23:12:04	2026-09-01 00:31:39
+127	145	Incidencias	pi pi-circle-fill	incidencias.index	incidencias.ver	3	1	2026-09-02 19:57:59	2026-09-03 13:49:06
+128	145	Penalizaciones	pi pi-circle-fill	penalizaciones.index	penalizaciones.ver	4	1	2026-09-02 19:57:59	2026-09-03 13:49:06
+129	40	Plantilla	pi pi-circle-fill	plantilla.index	plantilla.ver	6	1	2026-09-02 20:27:55	2026-09-03 13:46:21
+135	145	Salario Administrativo	pi pi-circle-fill	salarios-administrativos.index	salarios-administrativos.ver	2	1	2026-09-02 21:28:00	2026-09-03 13:49:06
+136	NULL	Técnica	pi pi-wrench	NULL	NULL	5	1	2026-09-03 13:46:19	2026-09-03 14:05:42
+137	2	Lubricantes	pi pi-circle-fill	lubricantes.index	lubricantes.ver	7	1	2026-09-03 13:46:20	2026-09-03 13:46:20
+138	2	Choferes	pi pi-circle-fill	choferes.index	choferes.ver	32	1	2026-09-03 13:46:20	2026-09-03 13:46:20
+139	19	Alertas	pi pi-circle-fill	alertas.index	alertas.ver	7	1	2026-09-03 13:46:21	2026-09-03 13:46:21
+140	19	Indicadores	pi pi-circle-fill	indicadores.index	indicadores.ver	10	1	2026-09-03 13:46:21	2026-09-03 13:46:21
+141	19	Devoluciones	pi pi-circle-fill	devoluciones.index	devoluciones.ver	26	1	2026-09-03 13:46:21	2026-09-03 13:46:21
+142	37	Aforos Pendientes	pi pi-circle-fill	aforos.pendientes	facturas.ver	3	1	2026-09-03 13:46:21	2026-09-03 13:46:21
+145	NULL	Salario	pi pi-money-bill	NULL	NULL	6	1	2026-09-03 13:49:06	2026-09-03 14:05:42
+146	145	Salario Choferes	pi pi-circle-fill	salarios-choferes.index	salarios.ver	1	1	2026-09-03 13:49:06	2026-09-03 13:49:06
+147	40	Tasas Salariales	pi pi-circle-fill	tasas.index	tipos-tasas.ver	14	1	2026-09-03 13:49:06	2026-09-03 13:49:06
+148	53	Inventario	pi pi-circle-fill	inventario.index	inventario.ver	6	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+149	53	Vales	pi pi-circle-fill	vales.index	vales.ver	7	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+150	53	Comb. Lubricantes	pi pi-circle-fill	combustibles-lubricantes.index	combustibles-lubricantes.ver	14	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+151	107	Listado de Marcas	pi pi-circle-fill	reportes.marcas	reportes.generar	1	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+152	107	Listado de Modelos	pi pi-circle-fill	reportes.modelos	reportes.generar	2	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+153	107	Salario Prenómina	pi pi-circle-fill	reportes.salario-prenomina	reportes.generar	3	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+154	107	Salario Choferes	pi pi-circle-fill	reportes.salario-choferes	reportes.generar	4	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+155	67	Tipos Combustible	pi pi-circle-fill	catalogo.index?tipo=tipos_combustibles	catalogo.ver	31	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+156	67	Tipos Neumático	pi pi-circle-fill	catalogo.index?tipo=tipos_neumaticos	catalogo.ver	32	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+157	67	Tipos Tractivos	pi pi-circle-fill	tipos-tractivos.index	tipos-tractivos.ver	331	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+158	67	Tipos Arrastres	pi pi-circle-fill	tipos-arrastres.index	tipos-arrastres.ver	332	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+159	67	Tipos Agregado	pi pi-circle-fill	catalogo.index?tipo=tipos_agregados	catalogo.ver	34	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+160	67	Tipos Aceite	pi pi-circle-fill	catalogo.index?tipo=tipos_aceites	catalogo.ver	35	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+161	67	Tipos Rotura	pi pi-circle-fill	catalogo.index?tipo=tipos_roturas	catalogo.ver	36	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+162	67	Tipos Sistema	pi pi-circle-fill	catalogo.index?tipo=tipos_sistemas	catalogo.ver	37	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+163	67	Tipos Suspensión	pi pi-circle-fill	catalogo.index?tipo=tipos_suspension	catalogo.ver	38	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+164	67	Tipos Carga Reporte	pi pi-circle-fill	tipos-cargas-reporte.index	tipos-cargas-reporte.ver	40	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+165	67	Tipos Servicio	pi pi-circle-fill	catalogo.index?tipo=tipos_servicios	catalogo.ver	41	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+166	67	Tipos Estado	pi pi-circle-fill	catalogo.index?tipo=tipos_estados	catalogo.ver	42	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+167	67	Colores	pi pi-circle-fill	catalogo.index?tipo=colores	catalogo.ver	51	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+168	67	Países	pi pi-circle-fill	catalogo.index?tipo=paises	catalogo.ver	52	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+169	67	Provincias	pi pi-circle-fill	provincias.index	provincias.ver	53	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+170	67	Municipios	pi pi-circle-fill	municipios.index	municipios.ver	54	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+171	67	Tipos Sexo	pi pi-circle-fill	catalogo.index?tipo=tipos_sexo	catalogo.ver	55	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+172	67	Tipos Estado Civil	pi pi-circle-fill	catalogo.index?tipo=tipos_estado_civil	catalogo.ver	56	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+173	67	Tipos Color Piel	pi pi-circle-fill	catalogo.index?tipo=tipos_color_piel	catalogo.ver	57	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+174	67	Tipos Nivel Educación	pi pi-circle-fill	catalogo.index?tipo=tipos_nivel_educacion	catalogo.ver	58	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+175	67	Tipos Grupo Horario	pi pi-circle-fill	catalogo.index?tipo=tipos_grupo_horario	catalogo.ver	61	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+176	67	Tipos Contrato	pi pi-circle-fill	catalogo.index?tipo=tipos_contratos	tipos-contratos.ver	62	1	2026-09-03 13:49:07	2026-09-03 13:49:07
+177	67	Tipos Deducción	pi pi-circle-fill	catalogo.index?tipo=tipos_deducciones	catalogo.ver	63	1	2026-09-03 13:49:08	2026-09-03 13:49:08
+178	67	Tipos Sistema Pago	pi pi-circle-fill	catalogo.index?tipo=tipos_sistemas_pago	catalogo.ver	64	1	2026-09-03 13:49:08	2026-09-03 13:49:08
+179	67	Tipos Ubicación Defensa	pi pi-circle-fill	catalogo.index?tipo=tipos_ubicacion_defensa	catalogo.ver	71	1	2026-09-03 13:49:08	2026-09-03 13:49:08
+180	67	Tipos Integración Polít.	pi pi-circle-fill	catalogo.index?tipo=tipos_integracion_politica	catalogo.ver	72	1	2026-09-03 13:49:08	2026-09-03 13:49:08
+181	53	Mov. Inventario	pi pi-circle-fill	movimientos-inventario.index	movimientos-inventario.ver	9	1	2026-09-03 13:49:08	2026-09-03 13:49:08
+182	53	Detalle Carga Comb.	pi pi-circle-fill	detalles-carga-combustible.index	detalles-carga-combustible.ver	13	1	2026-09-03 13:49:08	2026-09-03 13:49:08
+183	18	Registro OT	pi pi-circle-fill	registro-ordenes-taller.index	registro-ordenes-taller.ver	17	1	2026-09-03 13:49:08	2026-09-03 13:49:08

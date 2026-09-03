@@ -44,6 +44,21 @@ class ReportController extends Controller
         return app(NominaReportService::class)->pdfSalarioChoferes($request);
     }
 
+    public function pdfPrenominaChoferes(Request $request)
+    {
+        return app(NominaReportService::class)->pdfPrenomina($request->merge(['tipo' => 'choferes']));
+    }
+
+    public function pdfPrenominaAdministrativo(Request $request)
+    {
+        return app(NominaReportService::class)->pdfPrenomina($request->merge(['tipo' => 'administrativo']));
+    }
+
+    public function pdfModelo1(Request $request)
+    {
+        return app(NominaReportService::class)->pdfModelo1($request);
+    }
+
     // === Facturación ===
 
     public function pdfFactura(int $id)

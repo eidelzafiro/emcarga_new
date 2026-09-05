@@ -327,8 +327,6 @@ async function guardarTiempo(d) {
                                     <Column field="numero_cp" header="CP" style="width: 80px" />
                                     <Column field="fecha_parte" header="Fecha" style="width: 90px" />
                                     <Column field="tractivo" header="Equipo" style="width: 90px" />
-                                    <Column field="origen" header="Origen" style="min-width: 110px" />
-                                    <Column field="destino" header="Destino" style="min-width: 110px" />
                                     <Column header="KM" class="text-right" style="width: 70px">
                                         <template #body="{ data: d }">
                                             <div v-if="editingTiempo[d.id_aforo] !== undefined">

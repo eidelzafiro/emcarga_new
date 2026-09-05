@@ -105,7 +105,7 @@ class PermissionSeeder extends Seeder
             'areas.ver', 'areas.crear', 'areas.editar', 'areas.eliminar',
             'entidades.ver', 'entidades.crear', 'entidades.editar', 'entidades.eliminar',
 
-            'reportes.ver', 'reportes.generar',
+            'reportes.ver', 'reportes.generar', 'reportes-nomina.ver', 'reportes-ingresos.ver', 'reportes-tecnico.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
             'usuarios.desbloquear', 'usuarios.restablecer',
@@ -194,7 +194,6 @@ class PermissionSeeder extends Seeder
             ],
             'TECNICA' => [
                 'dashboard.ver',
-                'catalogo.ver',
                 'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
                 'motores.ver', 'motores.crear', 'motores.editar', 'motores.eliminar',
                 'cajas.ver', 'cajas.crear', 'cajas.editar', 'cajas.eliminar',
@@ -208,7 +207,7 @@ class PermissionSeeder extends Seeder
                 'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
                 'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
 
-                'reportes.ver', 'reportes.generar',
+            'reportes-tecnico.ver',
             'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
 
             'tipos-mantenimiento.ver', 'tipos-mantenimiento.crear', 'tipos-mantenimiento.editar', 'tipos-mantenimiento.eliminar',
@@ -238,7 +237,6 @@ class PermissionSeeder extends Seeder
             ],
             'COMERCIAL' => [
                 'dashboard.ver',
-                'catalogo.ver',
                 'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.eliminar',
                 'lugares.ver', 'lugares.crear', 'lugares.editar', 'lugares.eliminar',
                 'distancias.ver', 'distancias.crear', 'distancias.editar', 'distancias.eliminar',
@@ -269,7 +267,7 @@ class PermissionSeeder extends Seeder
             ],
             'RECHUM' => [
                 'dashboard.ver',
-                'catalogo.ver',
+                'reportes.ver', 'reportes.generar', 'reportes-nomina.ver',
                 'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
                 'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
                 'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
@@ -300,7 +298,7 @@ class PermissionSeeder extends Seeder
             ],
             'CONTABILIDAD' => [
                 'dashboard.ver',
-                'catalogo.ver',
+                'reportes-ingresos.ver',
                 'conciliaciones.ver', 'conciliaciones.crear', 'conciliaciones.editar', 'conciliaciones.eliminar',
                 'tipos-conceptos.ver', 'tipos-conceptos.crear', 'tipos-conceptos.editar', 'tipos-conceptos.eliminar',
                 'otros-gastos.ver', 'otros-gastos.crear', 'otros-gastos.editar', 'otros-gastos.eliminar',

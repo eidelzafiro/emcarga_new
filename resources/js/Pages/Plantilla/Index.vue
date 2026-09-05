@@ -15,7 +15,7 @@ import Dialog from 'primevue/dialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, areas: Array, areasJerarquia: Object, cargos: Array, filters: Object })
+const props = defineProps({ items: Object, allItems: Array, areas: Array, areasJerarquia: Object, cargos: Array, filters: Object })
 const toast = useToast()
 const confirm = useConfirm()
 const search = ref(props.filters?.search || '')
@@ -103,7 +103,7 @@ function estadoColor(item) {
 }
 
 const sortedItems = computed(() => {
-  return [...props.items.data].sort((a, b) => (a.area?.nombre || '').localeCompare(b.area?.nombre || ''))
+  return [...(props.allItems || [])].sort((a, b) => (a.area?.nombre || '').localeCompare(b.area?.nombre || ''))
 })
 
 const groupedByArea = computed(() => {

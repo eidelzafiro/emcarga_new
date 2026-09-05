@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import ViewToggle from '@/Components/ViewToggle.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -20,6 +21,7 @@ const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
+const vista = ref('tabla')
 
 const estados = [
   { label: 'disponible', value: 'disponible' },
@@ -139,14 +141,16 @@ const estadoSeverity = (e) => e === 'disponible' ? 'success' : e === 'baja' ? 'd
         <h2 class="text-xl font-bold m-0">{{ title ?? 'Cajas' }}</h2>
       </template>
       <template #end>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
           <InputText v-model="search" placeholder="Buscar por código o descripción..." class="w-64" />
+          <ViewToggle v-model="vista" />
           <Button icon="pi pi-plus" label="Nueva caja" @click="openCreate" />
         </div>
       </template>
     </Toolbar>
 
-    <DataTable :value="cajas.data" paginator :rows="cajas.per_page" :totalRecords="cajas.total"
+    <!-- Vista tabla -->
+    <DataTable v-if="vista === 'tabla'" :value="cajas.data" paginator :rows="cajas.per_page" :totalRecords="cajas.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(cajas.current_page - 1) * cajas.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
@@ -175,6 +179,35 @@ const estadoSeverity = (e) => e === 'disponible' ? 'success' : e === 'baja' ? 'd
         </template>
       </Column>
     </DataTable>
+
+    <!-- Vista tarjetas -->
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div v-for="c in cajas.data" :key="c.id"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-lg font-bold text-gray-900 dark:text-gray-100">{{ c.codigo }}</span>
+          <Tag :value="c.estado || 'disponible'" :severity="estadoSeverity(c.estado)" />
+        </div>
+        <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{{ c.descripcion }}</p>
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+          <span v-if="c.marca">Marca: <b class="text-gray-700 dark:text-gray-200">{{ c.marca }}</b></span>
+          <span v-if="c.modelo">Modelo: <b class="text-gray-700 dark:text-gray-200">{{ c.modelo }}</b></span>
+          <span v-if="c.numero_serie">Serie: <b class="text-gray-700 dark:text-gray-200">{{ c.numero_serie }}</b></span>
+          <span v-if="c.velocidades">Velocidades: <b class="text-gray-700 dark:text-gray-200">{{ c.velocidades }}</b></span>
+          <span v-if="c.kms_acumulados">Kms: <b class="text-gray-700 dark:text-gray-200">{{ Number(c.kms_acumulados).toLocaleString() }}</b></span>
+          <span v-if="c.tractivo?.descripcion">Tract: <b class="text-gray-700 dark:text-gray-200 truncate">{{ c.tractivo.descripcion }}</b></span>
+        </div>
+        <div class="flex items-center justify-end gap-1 mt-auto pt-2 border-t border-gray-100 dark:border-gray-700">
+          <Button icon="pi pi-pencil" text rounded severity="info" size="small" @click="openEdit(c)" v-tooltip.top="'Editar'" />
+          <Button icon="pi pi-minus-circle" text rounded severity="warning" size="small"
+            :disabled="c.estado === 'baja'" @click="darBaja(c)" v-tooltip.top="'Dar de baja'" />
+          <Button icon="pi pi-trash" text rounded severity="danger" size="small" @click="destroy(c)" v-tooltip.top="'Eliminar'" />
+        </div>
+      </div>
+      <div v-if="!cajas.data?.length" class="col-span-full text-center py-8 text-gray-400 dark:text-gray-500">
+        Sin cajas registradas
+      </div>
+    </div>
 
     <Dialog v-model:visible="showForm" :header="editing ? 'Editar caja' : 'Nueva caja'"
       :style="{ width: '760px' }" modal>

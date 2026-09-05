@@ -32,12 +32,16 @@ class SalariosChoferesController extends Controller
         $search = $request->input('search', '');
         $choferFilter = $request->input('chofer_filter', '');
 
-        // Obtener choferes del mes (que tienen aforos vía hoja_ruta → carta_porte)
+        // Obtener choferes del mes (que tienen aforos vía carta_porte)
         $choferesDelMes = Bolsa::where('activo', true)
             ->where('tiene_licencia', true)
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja'))
             ->where(function ($q) use ($mes, $ano) {
-                $q->whereHas('hojasRuta.cartasPorte.aforos', function ($aq) use ($mes, $ano) {
+                $q->whereHas('cartasPorte.aforos', function ($aq) use ($mes, $ano) {
+                    $aq->whereYear('fecha_parte', $ano)
+                       ->whereMonth('fecha_parte', $mes);
+                })
+                ->orWhereHas('cartasPorteChofer2.aforos', function ($aq) use ($mes, $ano) {
                     $aq->whereYear('fecha_parte', $ano)
                        ->whereMonth('fecha_parte', $mes);
                 });
@@ -118,7 +122,31 @@ class SalariosChoferesController extends Controller
         $tasa = Tasa::findOrFail($validated['id_tasa']);
 
         $ingreso = (float) $aforo->ingreso_mt;
-        $nuevoSalario = round($ingreso * (float) $tasa->tasa, 2);
+        $almFlete = (float) ($aforo->almacenaje_flete ?? 0);
+        $salalm = 0;
+
+        $hr = $aforo->cartaPorte?->hojaRuta;
+        $cp = $aforo->cartaPorte;
+        $esDobleChofer = $cp && $cp->id_chofer2 && $cp->id_chofer2 != ($cp->id_chofer ?? 0);
+
+        if ($esDobleChofer) {
+            $ingreso = $almFlete > 0
+                ? round($ingreso - $almFlete, 2)
+                : round($ingreso / 2, 2);
+            $salalm = $almFlete > 0 ? round(($almFlete / 2) * 0.005, 2) : 0;
+        } else {
+            if ($almFlete > 0) {
+                $ingreso = round($ingreso - $almFlete, 2);
+                $salalm = round($almFlete * 0.005, 2);
+            }
+        }
+
+        $tasa2Val = (float) $tasa->tasa2;
+        if ($esDobleChofer && $tasa2Val > 0) {
+            $nuevoSalario = round($ingreso * $tasa2Val + $salalm, 2);
+        } else {
+            $nuevoSalario = round($ingreso * (float) $tasa->tasa + $salalm, 2);
+        }
 
         $aforo->update([
             'id_tasa' => $tasa->id,

@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import ViewToggle from '@/Components/ViewToggle.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -20,6 +21,7 @@ const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const showForm = ref(false)
 const editing = ref(null)
+const vista = ref('tabla')
 
 const estados = [
   { label: 'disponible', value: 'disponible' },
@@ -141,14 +143,16 @@ const estadoSeverity = (e) => e === 'disponible' ? 'success' : e === 'baja' ? 'd
         <h2 class="text-xl font-bold m-0">{{ title ?? 'Diferenciales' }}</h2>
       </template>
       <template #end>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
           <InputText v-model="search" placeholder="Buscar por código o descripción..." class="w-64" />
+          <ViewToggle v-model="vista" />
           <Button icon="pi pi-plus" label="Nuevo diferencial" @click="openCreate" />
         </div>
       </template>
     </Toolbar>
 
-    <DataTable :value="diferenciales.data" paginator :rows="diferenciales.per_page" :totalRecords="diferenciales.total"
+    <!-- Vista tabla -->
+    <DataTable v-if="vista === 'tabla'" :value="diferenciales.data" paginator :rows="diferenciales.per_page" :totalRecords="diferenciales.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(diferenciales.current_page - 1) * diferenciales.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
@@ -179,6 +183,35 @@ const estadoSeverity = (e) => e === 'disponible' ? 'success' : e === 'baja' ? 'd
         </template>
       </Column>
     </DataTable>
+
+    <!-- Vista tarjetas -->
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div v-for="d in diferenciales.data" :key="d.id"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-lg font-bold text-gray-900 dark:text-gray-100">{{ d.codigo }}</span>
+          <Tag :value="d.estado || 'disponible'" :severity="estadoSeverity(d.estado)" />
+        </div>
+        <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{{ d.descripcion }}</p>
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+          <span v-if="d.marca">Marca: <b class="text-gray-700 dark:text-gray-200">{{ d.marca }}</b></span>
+          <span v-if="d.modelo">Modelo: <b class="text-gray-700 dark:text-gray-200">{{ d.modelo }}</b></span>
+          <span v-if="d.relacion">Relación: <b class="text-gray-700 dark:text-gray-200">{{ d.relacion }}</b></span>
+          <span v-if="d.durabilidad">Durab.: <b class="text-gray-700 dark:text-gray-200">{{ Number(d.durabilidad).toLocaleString() }} km</b></span>
+          <span v-if="d.kms_acumulados">Kms: <b class="text-gray-700 dark:text-gray-200">{{ Number(d.kms_acumulados).toLocaleString() }}</b></span>
+          <span v-if="d.tractivo?.descripcion">Tract: <b class="text-gray-700 dark:text-gray-200 truncate">{{ d.tractivo.descripcion }}</b></span>
+        </div>
+        <div class="flex items-center justify-end gap-1 mt-auto pt-2 border-t border-gray-100 dark:border-gray-700">
+          <Button icon="pi pi-pencil" text rounded severity="info" size="small" @click="openEdit(d)" v-tooltip.top="'Editar'" />
+          <Button icon="pi pi-minus-circle" text rounded severity="warning" size="small"
+            :disabled="d.estado === 'baja'" @click="darBaja(d)" v-tooltip.top="'Dar de baja'" />
+          <Button icon="pi pi-trash" text rounded severity="danger" size="small" @click="destroy(d)" v-tooltip.top="'Eliminar'" />
+        </div>
+      </div>
+      <div v-if="!diferenciales.data?.length" class="col-span-full text-center py-8 text-gray-400 dark:text-gray-500">
+        Sin diferenciales registrados
+      </div>
+    </div>
 
     <Dialog v-model:visible="showForm" :header="editing ? 'Editar diferencial' : 'Nuevo diferencial'"
       :style="{ width: '760px' }" modal>

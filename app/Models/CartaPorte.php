@@ -19,6 +19,8 @@ class CartaPorte extends Model
         'numero',
         'id_hoja_ruta',
         'id_solicitud',
+        'id_chofer',
+        'id_chofer2',
         'fecha_emision',
         'fecha_parte',
         'fecha_recepcion',
@@ -81,7 +83,7 @@ class CartaPorte extends Model
     }
 
     /**
-     * Equipo y choferes se derivan de la hoja de ruta (Fase 4d).
+     * Equipo se deriva de la hoja de ruta (Fase 4d).
      * Carta → HR → Tractivo/Bolsa.
      */
     public function tractivo(): HasOneThrough
@@ -94,14 +96,18 @@ class CartaPorte extends Model
         return $this->hasOneThrough(Tractivo::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_arrastre');
     }
 
-    public function chofer(): HasOneThrough
+    /**
+     * Choferes se almacenan directamente en la carta de porte.
+     * Una misma HR puede generar múltiples CP con diferentes choferes.
+     */
+    public function chofer(): BelongsTo
     {
-        return $this->hasOneThrough(Bolsa::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_chofer');
+        return $this->belongsTo(Bolsa::class, 'id_chofer');
     }
 
-    public function chofer2(): HasOneThrough
+    public function chofer2(): BelongsTo
     {
-        return $this->hasOneThrough(Bolsa::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_chofer2');
+        return $this->belongsTo(Bolsa::class, 'id_chofer2');
     }
 
     /**

@@ -11,6 +11,9 @@ import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import Textarea from 'primevue/textarea'
 import Paginator from 'primevue/paginator'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import ViewToggle from '@/Components/ViewToggle.vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { formatDate } from '@/Utils/date'
@@ -29,6 +32,7 @@ const search = ref(props.filters?.search || '')
 const equipo = ref(props.filters?.equipo || null)
 const chofer = ref(props.filters?.chofer || null)
 const cliente = ref(props.filters?.cliente || null)
+const vista = ref('tarjetas')
 
 const tractivosCat = computed(() => props.catalogos?.tractivos || [])
 const arrastresCat = computed(() => props.catalogos?.arrastres || [])
@@ -347,6 +351,7 @@ onMounted(() => {
           </span>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+          <ViewToggle v-model="vista" />
           <Select v-model="cliente" :options="opcionesClientes" optionLabel="nombre" optionValue="id" filter placeholder="Cliente" class="w-48" :showClear="true" />
           <Select v-model="chofer" :options="opcionesChoferes" optionLabel="label" optionValue="id" filter placeholder="Chofer" class="w-44" :showClear="true" />
           <Select v-model="equipo" :options="opcionesTractivos" optionLabel="codigo" optionValue="id" filter placeholder="Tractivo" class="w-40" :showClear="true" />
@@ -357,7 +362,41 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Grid de tarjetas -->
+      <!-- VISTA TABLA -->
+      <div v-if="vista === 'tabla'">
+        <DataTable :value="cartas.data || []" stripedRows size="small" responsiveLayout="scroll"
+          :globalFilterFields="['numero', 'cliente.nombre', 'chofer.nombre', 'tractivo.codigo']">
+          <template #empty>No hay cartas de porte para los filtros seleccionados.</template>
+          <Column field="numero" header="Folio" sortable style="font-weight:700" />
+          <Column field="fecha_emision" header="Fecha" sortable>
+            <template #body="{ data }">{{ formatDate(data.fecha_emision) }}</template>
+          </Column>
+          <Column header="Cliente" sortable sortField="cliente.nombre">
+            <template #body="{ data }">{{ data.cliente?.nombre || '—' }}</template>
+          </Column>
+          <Column header="Tractivo" sortable sortField="tractivo.codigo">
+            <template #body="{ data }">{{ data.tractivo?.codigo || '—' }}</template>
+          </Column>
+          <Column header="Chofer" sortable sortField="chofer.nombre">
+            <template #body="{ data }">{{ choferNombre(data.chofer) }}</template>
+          </Column>
+          <Column header="Estado">
+            <template #body="{ data }">
+              <div class="flex items-center gap-1">
+                <i v-if="data.fecha_recepcion" class="pi pi-star-fill text-amber-400" title="Recepcionada" />
+                <i v-else class="pi pi-star text-gray-300" title="Sin recepción" />
+                <i v-if="data.aforos_exists" class="pi pi-star-fill text-amber-400" title="Aforada" />
+                <i v-else class="pi pi-star text-gray-300" title="Sin aforo" />
+                <i v-if="data.facturas_exists" class="pi pi-star-fill text-amber-400" title="Facturada" />
+                <i v-else class="pi pi-star text-gray-300" title="Sin factura" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </div>
+
+      <!-- VISTA TARJETAS -->
+      <div v-if="vista === 'tarjetas'">
       <div v-if="cartas.data.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article
           v-for="(data, i) in cartas.data"
@@ -498,6 +537,7 @@ onMounted(() => {
           @page="onPage"
         />
       </div>
+      </div> <!-- /vista tarjetas -->
     </div>
 
     <!-- Cancelación -->

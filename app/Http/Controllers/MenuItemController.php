@@ -225,6 +225,60 @@ class MenuItemController extends Controller
         }
     }
 
+    /**
+     * Actualiza visibilidad de múltiples ítems/roles en una sola petición.
+     *
+     * Recibe un array de cambios: [{item_id, role_id, visible}]
+     * - visible=true → givePermissionTo
+     * - visible=false → revokePermissionTo
+     */
+    public function batchToggleVisibility(Request $request)
+    {
+        $this->authorize('update', new MenuItem());
+
+        $data = $request->validate([
+            'changes' => ['required', 'array', 'min:1'],
+            'changes.*.item_id' => ['required', 'integer', 'exists:menu_items,id'],
+            'changes.*.role_id' => ['required', 'integer', 'exists:roles,id'],
+            'changes.*.visible' => ['required', 'boolean'],
+        ]);
+
+        $items = MenuItem::whereIn('id', collect($data['changes'])->pluck('item_id')->unique()->toArray())
+            ->get()
+            ->keyBy('id');
+
+        $roles = Role::whereIn('id', collect($data['changes'])->pluck('role_id')->unique()->toArray())
+            ->get()
+            ->keyBy('id');
+
+        $aplicados = 0;
+
+        DB::transaction(function () use ($data, $items, $roles, &$aplicados) {
+            foreach ($data['changes'] as $cambio) {
+                $item = $items->get($cambio['item_id']);
+                $rol = $roles->get($cambio['role_id']);
+
+                if (! $item || ! $rol || ! $item->permission) {
+                    continue;
+                }
+
+                $permiso = $item->permission;
+
+                if ($cambio['visible'] && ! $rol->hasPermissionTo($permiso)) {
+                    $rol->givePermissionTo($permiso);
+                    $aplicados++;
+                } elseif (! $cambio['visible'] && $rol->hasPermissionTo($permiso)) {
+                    $rol->revokePermissionTo($permiso);
+                    $aplicados++;
+                }
+            }
+        });
+
+        Bitacora::registrar('batch_toggle_menu', "Visibilidad de menú actualizada en lote: {$aplicados} cambios.");
+
+        return $this->respuestaIndex("Visibilidad actualizada ({$aplicados} cambios).");
+    }
+
     private function mapNode(MenuItem $item, array $permisoRoles = []): array
     {
         $hijos = $item->children

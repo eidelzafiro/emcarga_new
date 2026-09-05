@@ -6,25 +6,32 @@ use App\Models\MenuItem;
 use App\Models\Nave;
 use App\Models\Taller;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Spatie\Permission\Models\Role;
 
 class MenuBuilder
 {
+    private static ?bool $tallerExiste = null;
+    private static ?bool $navesExisten = null;
+    private static ?array $tablasVacias = null;
+
     public static function para(?User $user, ?string $perfil = null, ?int $entidadActivaId = null): array
     {
         if (! $user) {
             return [];
         }
 
-        $tallerExiste = Taller::where('activo', true)
+        self::$tallerExiste = self::$tallerExiste ?? Taller::where('activo', true)
             ->when($entidadActivaId, fn ($q) => $q->where('id_entidad', $entidadActivaId))
             ->exists();
 
-        $navesExisten = Nave::where('activo', true)
+        self::$navesExisten = self::$navesExisten ?? Nave::where('activo', true)
             ->when($entidadActivaId, fn ($q) => $q->where('id_entidad', $entidadActivaId))
             ->exists();
+
+        self::$tablasVacias = self::$tablasVacias ?? self::detectarTablasVacias();
 
         $perfilRole = $perfil ? Role::findByName($perfil) : null;
 
@@ -33,13 +40,13 @@ class MenuBuilder
             ->where('activo', true)
             ->orderBy('orden')
             ->get()
-            ->map(fn (MenuItem $item) => self::filtrar($item, $user, $perfilRole, $tallerExiste, $navesExisten))
+            ->map(fn (MenuItem $item) => self::filtrar($item, $user, $perfilRole))
             ->filter()
             ->values()
             ->all();
     }
 
-    private static function filtrar(MenuItem $item, User $user, ?Role $perfilRole, bool $tallerExiste, bool $navesExisten): ?array
+    private static function filtrar(MenuItem $item, User $user, ?Role $perfilRole): ?array
     {
         if (! self::visibleParaPerfil($item, $user, $perfilRole)) {
             return null;
@@ -47,7 +54,7 @@ class MenuBuilder
 
         $hijos = $item->children
             ->where('activo', true)
-            ->map(fn (MenuItem $hijo) => self::filtrar($hijo, $user, $perfilRole, $tallerExiste, $navesExisten))
+            ->map(fn (MenuItem $hijo) => self::filtrar($hijo, $user, $perfilRole))
             ->filter()
             ->values()
             ->all();
@@ -61,9 +68,15 @@ class MenuBuilder
         [$routeName, $query] = array_pad(explode('?', (string) $item->route, 2), 2, null);
         parse_str($query ?? '', $params);
 
-        if ($routeName === 'naves.index' && ! $tallerExiste) {
+        if ($routeName === 'naves.index' && ! self::$tallerExiste) {
             $disabled = true;
-        } elseif ($routeName === 'vallas.index' && (! $tallerExiste || ! $navesExisten)) {
+        } elseif ($routeName === 'vallas.index' && (! self::$tallerExiste || ! self::$navesExisten)) {
+            $disabled = true;
+        }
+
+        // Deshabilitar módulos cuya tabla está vacía (sin datos que mostrar).
+        $tablaVacia = self::$tablasVacias[$routeName] ?? false;
+        if ($tablaVacia) {
             $disabled = true;
         }
 
@@ -83,6 +96,33 @@ class MenuBuilder
             'disabled' => $disabled || ! $rutaExiste,
             'children' => $hijos,
         ];
+    }
+
+    /**
+     * Detecta tablas vacías para módulos que no deben mostrarse sin datos.
+     */
+    private static function detectarTablasVacias(): array
+    {
+        $tablas = [
+            'talleres.index' => 'talleres',
+            'pagos.index' => 'pagos',
+            'reembolsos.index' => 'reembolsos',
+            'conciliaciones.index' => 'conciliaciones',
+            'amortizacion-taller.index' => 'amortizacion_taller',
+            'estadisticas-explotacion.index' => 'estadisticas_explotacion',
+        ];
+
+        $vacias = [];
+        foreach ($tablas as $ruta => $tabla) {
+            try {
+                $vacias[$ruta] = DB::table($tabla)->count() === 0;
+            } catch (\Exception) {
+                // Tabla no existe → tratar como vacía.
+                $vacias[$ruta] = true;
+            }
+        }
+
+        return $vacias;
     }
 
     private static function visibleParaPerfil(MenuItem $item, User $user, ?Role $perfilRole): bool

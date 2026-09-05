@@ -53,6 +53,7 @@ class DashboardContabilidadService
             ->values()
             ->all();
 
+        // Saldo actual (snapshot de la tabla tarjetas)
         $combustibleActual = Tarjeta::query()
             ->select(
                 'idtipocombustibles',
@@ -73,6 +74,52 @@ class DashboardContabilidadService
             ])
             ->all();
 
+        // Saldo inicio: último cierre del mes anterior o saldos iniciales de tarjetas
+        $inicioMesAnterior = $fecha->copy()->subMonth()->startOfMonth()->toDateString();
+        $finMesAnterior = $fecha->copy()->subMonth()->endOfMonth()->toDateString();
+        $cierresMesAnterior = DB::table('cierre_tarjetas as ct')
+            ->select(
+                't.idtipocombustibles',
+                't.idmonedas',
+                DB::raw('SUM(ct.saldoactualmon) as total_mon'),
+                DB::raw('SUM(ct.saldoactuallts) as total_lts')
+            )
+            ->join('tarjetas as t', 't.id', '=', 'ct.id_tarjeta')
+            ->whereBetween('ct.ftrabajo', [$inicioMesAnterior, $finMesAnterior])
+            ->when(! empty($idsEntidades), function ($q) use ($idsEntidades) {
+                $q->whereIn('ct.id_entidad', $idsEntidades);
+            })
+            ->groupBy('t.idtipocombustibles', 't.idmonedas')
+            ->get()
+            ->all();
+
+        // Si no hay cierre del mes anterior, usar saldos iniciales de las tarjetas
+        $saldoInicio = collect($cierresMesAnterior);
+        if ($saldoInicio->isEmpty()) {
+            $saldoInicio = Tarjeta::query()
+                ->select(
+                    'idtipocombustibles',
+                    'idmonedas',
+                    DB::raw('SUM(saldoinicialmon) as total_mon'),
+                    DB::raw('SUM(saldoiniciallts) as total_lts')
+                )
+                ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
+                ->groupBy('idtipocombustibles', 'idmonedas')
+                ->with('tipoCombustible:id,nombre')
+                ->with('moneda:id,codigo')
+                ->get()
+                ->map(fn ($row) => (object) [
+                    'idtipocombustibles' => $row->idtipocombustibles,
+                    'idmonedas' => $row->idmonedas,
+                    'total_mon' => $row->total_mon,
+                    'total_lts' => $row->total_lts,
+                    'nombre' => $row->tipoCombustible?->nombre ?? 'Sin tipo',
+                    'moneda_codigo' => $row->moneda?->codigo ?? '—',
+                ])
+                ->all();
+        }
+
+        // Cargado en el mes (detalles_carga_combustible → combustible_cargas)
         $combustibleCargado = DB::table('detalles_carga_combustible as dcc')
             ->select(
                 DB::raw('COALESCE(tc.nombre, "Sin tipo") as tipo_combustible'),
@@ -91,6 +138,7 @@ class DashboardContabilidadService
             ->get()
             ->all();
 
+        // Descargado en el mes
         $combustibleDescargado = DB::table('combustible_descargas as cd')
             ->select(
                 DB::raw('COALESCE(tc.nombre, "Sin tipo") as tipo_combustible'),
@@ -150,6 +198,57 @@ class DashboardContabilidadService
                 'cantidad_facturas' => (int) $row->cantidad_facturas,
             ])
             ->all();
+
+        // ═══ COMBUSTIBLE: Saldo por tipo (inicio + cargado - descargado) ═══
+        $saldoInicioMap = [];
+        foreach ($saldoInicio as $c) {
+            $tipoNombre = is_object($c) && isset($c->nombre) ? $c->nombre : ($c->tipoCombustible->nombre ?? 'Sin tipo');
+            $monedaCodigo = is_object($c) && isset($c->moneda_codigo) ? $c->moneda_codigo : ($c->moneda->codigo ?? '—');
+            $key = $tipoNombre . '|' . $monedaCodigo;
+            $saldoInicioMap[$key] = [
+                'tipo' => $tipoNombre,
+                'moneda' => $monedaCodigo,
+                'inicio_mon' => (float) $c->total_mon,
+                'inicio_lts' => (float) $c->total_lts,
+            ];
+        }
+        $cargadoMap = [];
+        foreach ($combustibleCargado as $c) {
+            $key = $c->tipo_combustible . '|' . $c->moneda;
+            $cargadoMap[$key] = ['tipo' => $c->tipo_combustible, 'moneda' => $c->moneda, 'cargado_mon' => (float) $c->total_mon, 'cargado_lts' => (float) $c->total_lts];
+        }
+        $descargadoMap = [];
+        foreach ($combustibleDescargado as $c) {
+            $key = $c->tipo_combustible . '|' . $c->moneda;
+            $descargadoMap[$key] = ['tipo' => $c->tipo_combustible, 'moneda' => $c->moneda, 'descargado_mon' => (float) $c->total_mon, 'descargado_lts' => (float) $c->total_lts];
+        }
+        $todasClaves = array_unique(array_merge(array_keys($saldoInicioMap), array_keys($cargadoMap), array_keys($descargadoMap)));
+        $saldoPorTipo = [];
+        foreach ($todasClaves as $key) {
+            $ini = $saldoInicioMap[$key] ?? null;
+            $car = $cargadoMap[$key] ?? null;
+            $des = $descargadoMap[$key] ?? null;
+            $tipo = $ini['tipo'] ?? ($car['tipo'] ?? ($des['tipo'] ?? 'Sin tipo'));
+            $moneda = $ini['moneda'] ?? ($car['moneda'] ?? ($des['moneda'] ?? '—'));
+            $inicioMon = $ini['inicio_mon'] ?? 0;
+            $inicioLts = $ini['inicio_lts'] ?? 0;
+            $cargadoMon = $car['cargado_mon'] ?? 0;
+            $cargadoLts = $car['cargado_lts'] ?? 0;
+            $descargadoMon = $des['descargado_mon'] ?? 0;
+            $descargadoLts = $des['descargado_lts'] ?? 0;
+            $saldoPorTipo[] = [
+                'tipo' => $tipo,
+                'moneda' => $moneda,
+                'inicio_mon' => round($inicioMon, 2),
+                'inicio_lts' => round($inicioLts, 2),
+                'cargado_mon' => round($cargadoMon, 2),
+                'cargado_lts' => round($cargadoLts, 2),
+                'descargado_mon' => round($descargadoMon, 2),
+                'descargado_lts' => round($descargadoLts, 2),
+                'final_mon' => round($inicioMon + $cargadoMon - $descargadoMon, 2),
+                'final_lts' => round($inicioLts + $cargadoLts - $descargadoLts, 2),
+            ];
+        }
 
         // ═══ COSTOS ═══
 
@@ -228,6 +327,7 @@ class DashboardContabilidadService
             'fechaOperaciones' => $fechaOperaciones,
             'tarjetasPorTipo' => $tarjetasPorTipo,
             'combustibleActual' => $combustibleActual,
+            'saldoPorTipo' => $saldoPorTipo,
             'combustibleCargado' => $combustibleCargado,
             'combustibleDescargado' => $combustibleDescargado,
             'ingresosPorConcepto' => $ingresosPorConcepto,

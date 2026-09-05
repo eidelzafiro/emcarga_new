@@ -63,9 +63,9 @@ class CartaPorteController extends Controller
                 ->orWhereHas('chofer', fn ($c) => $c->where('nombre', 'like', "%{$s}%"))
                 ->orWhereHas('chofer', fn ($c) => $c->where('apellidos', 'like', "%{$s}%"))
                 ->orWhereHas('tractivo', fn ($c) => $c->where('codigo', 'like', "%{$s}%"))))
-            // Equipo/choferes se derivan de la HR; cliente de la solicitud (Fase 4d)
+            // Equipo desde HR; choferes desde la carta de porte; cliente desde solicitud
             ->when($request->equipo, fn ($q, $v) => $q->whereHas('hojaRuta', fn ($h) => $h->where('id_tractivo', $v)))
-            ->when($request->chofer, fn ($q, $v) => $q->whereHas('hojaRuta', fn ($h) => $h->where(fn ($h2) => $h2->where('id_chofer', $v)->orWhere('id_chofer2', $v))))
+            ->when($request->chofer, fn ($q, $v) => $q->where(fn ($q2) => $q2->where('id_chofer', $v)->orWhere('id_chofer2', $v)))
             ->when($request->cliente, fn ($q, $v) => $q->whereHas('solicitud', fn ($s) => $s->where('id_cliente', $v)))
             ->orderByDesc('fecha_emision')
             ->paginate(20);
@@ -120,26 +120,26 @@ class CartaPorteController extends Controller
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('hojaRuta', fn ($h) => $h->whereIn('id_entidad', $this->entidadesPermitidas())))
             ->whereBetween('fecha_emision', [$inicioMes, $finMes]);
 
-        // Cliente desde la solicitud; equipo/choferes desde la hoja de ruta (Fase 4d)
+        // Cliente desde la solicitud; equipo desde hoja de ruta; choferes desde la carta de porte
         $clienteIds = (clone $base)->whereHas('solicitud')->with('solicitud:id,id_cliente')->get()
             ->map(fn ($c) => $c->solicitud?->id_cliente)->filter()->unique();
         $tractivoIds = (clone $base)->whereHas('hojaRuta')->with('hojaRuta:id,id_tractivo')->get()
             ->map(fn ($c) => $c->hojaRuta?->id_tractivo)->filter()->unique();
-        $choferIds = (clone $base)->whereHas('hojaRuta')->with('hojaRuta:id,id_chofer,id_chofer2')->get()
-            ->flatMap(fn ($c) => [$c->hojaRuta?->id_chofer, $c->hojaRuta?->id_chofer2])->filter()->unique();
+        $choferIds = (clone $base)->with('id_chofer,id_chofer2')->get()
+            ->flatMap(fn ($c) => [$c->id_chofer, $c->id_chofer2])->filter()->unique();
 
         return [
             'clientes' => Cliente::select('id', 'nombre')->whereIn('id', $clienteIds)->orderBy('nombre')->get(),
             'tractivos' => Tractivo::select('id', 'codigo')->whereIn('id', $tractivoIds)->orderBy('codigo')->get(),
             'choferes' => Bolsa::select('id', 'nombre', 'apellidos')->whereIn('id', $choferIds)->orderBy('nombre')->get(),
-            // Combinaciones reales del mes para filtros encadenados (Fase 4d)
+            // Combinaciones reales del mes para filtros encadenados
             'combinaciones' => (clone $base)
-                ->with(['hojaRuta:id,id_tractivo,id_arrastre,id_chofer,id_chofer2', 'solicitud:id,id_cliente'])
+                ->with(['hojaRuta:id,id_tractivo,id_arrastre', 'solicitud:id,id_cliente'])
                 ->get()
                 ->map(fn ($c) => [
                     'cliente' => $c->solicitud?->id_cliente,
-                    'chofer' => $c->hojaRuta?->id_chofer,
-                    'chofer2' => $c->hojaRuta?->id_chofer2,
+                    'chofer' => $c->id_chofer,
+                    'chofer2' => $c->id_chofer2,
                     'tractivo' => $c->hojaRuta?->id_tractivo,
                 ]),
         ];

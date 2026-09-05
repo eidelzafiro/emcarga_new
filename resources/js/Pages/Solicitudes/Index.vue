@@ -11,6 +11,9 @@ import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import Paginator from 'primevue/paginator'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import ViewToggle from '@/Components/ViewToggle.vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 
@@ -29,6 +32,7 @@ const toast = useToast()
 const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const estado = ref(props.filters?.estado || 'activas')
+const vista = ref('tarjetas')
 const showForm = ref(false)
 const editing = ref(null)
 const form = ref({})
@@ -260,6 +264,7 @@ const estadoBadge = (s) => ({
           </span>
         </div>
         <div class="flex items-center gap-2">
+          <ViewToggle v-model="vista" />
           <Select v-model="estado" :options="[
             { value: 'activas', label: 'Pendientes / En proceso' },
             { value: 'ejecutada', label: 'Ejecutadas' },
@@ -275,7 +280,43 @@ const estadoBadge = (s) => ({
         </div>
       </div>
 
-      <!-- Grid de tarjetas -->
+      <!-- VISTA TABLA -->
+      <div v-if="vista === 'tabla'">
+        <DataTable :value="solicitudes.data || []" stripedRows size="small" responsiveLayout="scroll"
+          :globalFilterFields="['numero', 'cliente.nombre', 'producto.nombre', 'lugar_origen.nombre', 'lugar_destino.nombre']">
+          <template #empty>No hay solicitudes para los filtros seleccionados.</template>
+          <Column field="numero" header="N°" sortable style="font-weight:700" />
+          <Column header="Cliente" sortable sortField="cliente.nombre">
+            <template #body="{ data }">{{ data.cliente?.nombre || '—' }}</template>
+          </Column>
+          <Column header="Origen" sortable sortField="lugar_origen.nombre">
+            <template #body="{ data }">{{ data.lugar_origen?.nombre || '—' }}</template>
+          </Column>
+          <Column header="Destino" sortable sortField="lugar_destino.nombre">
+            <template #body="{ data }">{{ data.lugar_destino?.nombre || '—' }}</template>
+          </Column>
+          <Column header="Producto" sortable sortField="producto.nombre">
+            <template #body="{ data }">{{ data.producto?.nombre || '—' }}</template>
+          </Column>
+          <Column header="Tipo" sortable sortField="tipo_carga.nombre">
+            <template #body="{ data }">{{ data.tipo_carga?.nombre || '—' }}</template>
+          </Column>
+          <Column header="Tons" sortable sortField="peso1">
+            <template #body="{ data }">{{ fmtNum(data.peso1) }}</template>
+          </Column>
+          <Column header="Estado" sortable sortField="estado_cumplimiento">
+            <template #body="{ data }">
+              <span class="inline-block rounded px-2 py-0.5 text-[11px] font-bold" :class="estadoBadge(cumplimiento(data)).cls">{{ estadoBadge(cumplimiento(data)).label }}</span>
+            </template>
+          </Column>
+          <Column field="fecha_planificada" header="Plan" sortable>
+            <template #body="{ data }">{{ soloFecha(data.fecha_planificada) || soloFecha(data.fecha_solicitud) }}</template>
+          </Column>
+        </DataTable>
+      </div>
+
+      <!-- VISTA TARJETAS -->
+      <div v-if="vista === 'tarjetas'">
       <div v-if="solicitudes.data.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         <article
           v-for="(s, i) in solicitudes.data"
@@ -388,6 +429,7 @@ const estadoBadge = (s) => ({
           @page="onPage"
         />
       </div>
+      </div> <!-- /vista tarjetas -->
     </div>
 
     <Dialog v-model:visible="showForm" :header="editing ? 'Editar Solicitud' : 'Nueva Solicitud'" modal style="width: 760px">

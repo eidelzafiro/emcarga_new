@@ -463,8 +463,8 @@ class DashboardTecnicoService
         $cps = CartaPorte::whereBetween('fecha_emision', [$c['inicio'], $c['fin']])
             ->whereNotNull('id_hoja_ruta')
             ->with([
-                'hojaRuta:id,id_tractivo,id_arrastre,id_chofer',
-                'hojaRuta.chofer:id,nombre',
+                'hojaRuta:id,id_tractivo,id_arrastre',
+                'chofer:id,nombre',
                 'solicitud.cliente:id,nombre',
                 'solicitud.lugarDestino:id,nombre',
                 'aforos:id,id_carta_porte,id_factura',

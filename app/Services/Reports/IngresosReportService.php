@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Models\Aforo;
+use App\Models\Entidad;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -161,6 +162,184 @@ class IngresosReportService extends BaseReportService
         return $this->reporteTablaPdf('Resumen Ingresos por Clientes Seleccionados',
             [['key'=>'mes','label'=>'Mes'],['key'=>'ingreso_mt','label'=>'Ingreso MT','num'=>true]],
             $rows->toArray(), ['periodo'=> $mes ? "Mes: $mes" : 'Todos']);
+    }
+
+    /**
+     * PARTE INGRESOS MENSUALES TRACTIVO — agrupado por tractivo.
+     * Columnas: TRACTIVO | CP | TONS (POS/REAL) | KMS (CARGA/VACIOS/TOTAL) | INGRESOS (FLETE/DEMORA/OTROS/IMPORTE)
+     */
+    public function ingresosPorTractivos(array $filtros): \Illuminate\Http\Response
+    {
+        [$d, $h] = $this->rangoFiltros($filtros);
+        $entidadId = (int) entidadActivaId();
+        $ids = $entidadId ? Entidad::subEntidadesIds($entidadId) : $this->entidadIds();
+
+        $rows = Aforo::query()
+            ->join('cartas_porte', 'aforos.id_carta_porte', '=', 'cartas_porte.id')
+            ->join('hojas_ruta', 'cartas_porte.id_hoja_ruta', '=', 'hojas_ruta.id')
+            ->join('tractivos', 'hojas_ruta.id_tractivo', '=', 'tractivos.id')
+            ->when($d, fn ($q) => $q->whereBetween('aforos.fecha_parte', [$d, $h]))
+            ->whereIn('tractivos.id_entidad', $ids)
+            ->whereNull('tractivos.deleted_at')
+            ->whereNull('tractivos.fecha_baja')
+            ->selectRaw("
+                tractivos.codigo as tractivo,
+                COUNT(*) as cp,
+                SUM(aforos.tn_pos_total) as tons_pos,
+                SUM(aforos.tn_real_total) as tons_real,
+                SUM(aforos.km_carga_total) as kms_carga,
+                SUM(aforos.km_vacio_total) as kms_vacios,
+                SUM(aforos.km_total_total) as kms_total,
+                SUM(aforos.flete_mt) as flete,
+                SUM(aforos.flete_demora) as demora,
+                SUM(aforos.otros_mt) as otros,
+                SUM(aforos.ingreso_mt) as importe
+            ")
+            ->groupBy('tractivos.codigo')
+            ->orderBy('tractivos.codigo')
+            ->get();
+
+        $columnas = [
+            ['key' => 'tractivo', 'label' => 'TRACTIVO'],
+            ['key' => 'cp', 'label' => 'CP', 'num' => true],
+            ['key' => 'tons_pos', 'label' => 'TONS POS', 'num' => true],
+            ['key' => 'tons_real', 'label' => 'TONS REAL', 'num' => true],
+            ['key' => 'kms_carga', 'label' => 'KMS CARGA', 'num' => true],
+            ['key' => 'kms_vacios', 'label' => 'KMS VACIOS', 'num' => true],
+            ['key' => 'kms_total', 'label' => 'KMS TOTAL', 'num' => true],
+            ['key' => 'flete', 'label' => 'FLETE', 'num' => true],
+            ['key' => 'demora', 'label' => 'DEMORA', 'num' => true],
+            ['key' => 'otros', 'label' => 'OTROS', 'num' => true],
+            ['key' => 'importe', 'label' => 'IMPORTE', 'num' => true],
+        ];
+
+        $filas = $rows->map(fn ($r) => [
+            'tractivo' => $r->tractivo,
+            'cp' => (int) $r->cp,
+            'tons_pos' => round((float) $r->tons_pos, 2),
+            'tons_real' => round((float) $r->tons_real, 2),
+            'kms_carga' => round((float) $r->kms_carga, 2),
+            'kms_vacios' => round((float) $r->kms_vacios, 2),
+            'kms_total' => round((float) $r->kms_total, 2),
+            'flete' => round((float) $r->flete, 2),
+            'demora' => round((float) $r->demora, 2),
+            'otros' => round((float) $r->otros, 2),
+            'importe' => round((float) $r->importe, 2),
+        ])->toArray();
+
+        $totales = [
+            'cp' => $rows->sum('cp'),
+            'tons_pos' => round($rows->sum('tons_pos'), 2),
+            'tons_real' => round($rows->sum('tons_real'), 2),
+            'kms_carga' => round($rows->sum('kms_carga'), 2),
+            'kms_vacios' => round($rows->sum('kms_vacios'), 2),
+            'kms_total' => round($rows->sum('kms_total'), 2),
+            'flete' => round($rows->sum('flete'), 2),
+            'demora' => round($rows->sum('demora'), 2),
+            'otros' => round($rows->sum('otros'), 2),
+            'importe' => round($rows->sum('importe'), 2),
+        ];
+
+        $periodo = $d ? Carbon::parse($d)->format('M Y') : 'Todos';
+        $entidadNombre = $entidadId ? (Entidad::find($entidadId)?->nombre ?? '') : '';
+
+        return $this->reporteTablaPdf('PARTE INGRESOS MENSUALES TRACTIVO',
+            $columnas, $filas, [
+                'landscape' => true,
+                'periodo' => $periodo . ($entidadNombre ? " — {$entidadNombre}" : ''),
+                'totales' => $totales,
+            ]);
+    }
+
+    /**
+     * PARTE INGRESOS MENSUALES CHOFERES — agrupado por chofer.
+     * Columnas: CHOFER | CP | TONS | HORAS | MN (FLETE/DEMORA) | PRODUCCION AFORADA | % | ESTIMADO (CP/FLETE) | PRODUCCION ESTIMADA
+     */
+    public function ingresosPorChoferes(array $filtros): \Illuminate\Http\Response
+    {
+        [$d, $h] = $this->rangoFiltros($filtros);
+        $entidadId = (int) entidadActivaId();
+        $ids = $entidadId ? Entidad::subEntidadesIds($entidadId) : $this->entidadIds();
+
+        $rows = Aforo::query()
+            ->join('cartas_porte', 'aforos.id_carta_porte', '=', 'cartas_porte.id')
+            ->join('hojas_ruta', 'cartas_porte.id_hoja_ruta', '=', 'hojas_ruta.id')
+            ->join('tractivos', 'hojas_ruta.id_tractivo', '=', 'tractivos.id')
+            ->leftJoin('bolsa', 'cartas_porte.id_chofer', '=', 'bolsa.id')
+            ->when($d, fn ($q) => $q->whereBetween('aforos.fecha_parte', [$d, $h]))
+            ->whereIn('tractivos.id_entidad', $ids)
+            ->whereNull('tractivos.deleted_at')
+            ->whereNull('tractivos.fecha_baja')
+            ->selectRaw("
+                CONCAT(COALESCE(bolsa.nombre, ''), ' ', COALESCE(bolsa.apellidos, '')) as chofer,
+                COUNT(*) as cp,
+                SUM(aforos.tn_real_total) as tons,
+                SUM(aforos.tiempo_total) as horas,
+                SUM(aforos.flete_mt) as flete,
+                SUM(aforos.flete_demora) as demora,
+                SUM(aforos.ingreso_mt) as produccion_aforada,
+                SUM(aforos.ingreso_mt) as produccion_estimada
+            ")
+            ->groupBy(DB::raw("CONCAT(COALESCE(bolsa.nombre, ''), ' ', COALESCE(bolsa.apellidos, ''))"))
+            ->orderBy(DB::raw("CONCAT(COALESCE(bolsa.nombre, ''), ' ', COALESCE(bolsa.apellidos, ''))"))
+            ->get();
+
+        $totalEstimado = $rows->sum('produccion_aforada');
+
+        $columnas = [
+            ['key' => 'chofer', 'label' => 'CHOFER'],
+            ['key' => 'cp', 'label' => 'CP', 'num' => true],
+            ['key' => 'tons', 'label' => 'TONS', 'num' => true],
+            ['key' => 'horas', 'label' => 'HORAS', 'num' => true],
+            ['key' => 'flete', 'label' => 'FLETE', 'num' => true],
+            ['key' => 'demora', 'label' => 'DEMORA', 'num' => true],
+            ['key' => 'produccion_aforada', 'label' => 'PRODUCCION AFORADA', 'num' => true],
+            ['key' => 'porcentaje', 'label' => '%', 'num' => true],
+            ['key' => 'produccion_estimada', 'label' => 'PRODUCCION ESTIMADA', 'num' => true],
+        ];
+
+        $filas = $rows->map(fn ($r) => [
+            'chofer' => trim($r->chofer) ?: 'SIN CHOFER',
+            'cp' => (int) $r->cp,
+            'tons' => round((float) $r->tons, 2),
+            'horas' => round((float) $r->horas, 2),
+            'flete' => round((float) $r->flete, 2),
+            'demora' => round((float) $r->demora, 2),
+            'produccion_aforada' => round((float) $r->produccion_aforada, 2),
+            'porcentaje' => $totalEstimado > 0 ? round(((float) $r->produccion_aforada / $totalEstimado) * 100, 0) : 0,
+            'produccion_estimada' => round((float) $r->produccion_estimada, 2),
+        ])->toArray();
+
+        $totales = [
+            'cp' => $rows->sum('cp'),
+            'tons' => round($rows->sum('tons'), 2),
+            'horas' => round($rows->sum('horas'), 2),
+            'flete' => round($rows->sum('flete'), 2),
+            'demora' => round($rows->sum('demora'), 2),
+            'produccion_aforada' => round($rows->sum('produccion_aforada'), 2),
+            'porcentaje' => 100,
+            'produccion_estimada' => round($rows->sum('produccion_estimada'), 2),
+        ];
+
+        $periodo = $d ? Carbon::parse($d)->format('M Y') : 'Todos';
+        $entidadNombre = $entidadId ? (Entidad::find($entidadId)?->nombre ?? '') : '';
+
+        return $this->reporteTablaPdf('PARTE INGRESOS MENSUALES CHOFERES',
+            $columnas, $filas, [
+                'landscape' => true,
+                'periodo' => $periodo . ($entidadNombre ? " — {$entidadNombre}" : ''),
+                'totales' => $totales,
+            ]);
+    }
+
+    private function entidadIds(): array
+    {
+        $activa = (int) entidadActivaId();
+        if (! $activa) {
+            return [23];
+        }
+
+        return Entidad::subEntidadesIds($activa);
     }
 
     protected function rangoFiltros(array $filtros): array

@@ -10,6 +10,9 @@ import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import Paginator from 'primevue/paginator'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import ViewToggle from '@/Components/ViewToggle.vue'
 
 import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
@@ -17,6 +20,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ hojas: Object, catalogos: Object, filters: Object, filtros: Object, fechaOperaciones: String })
+const vista = ref('tarjetas')
 const toast = useToast()
 const confirmDialog = useConfirm()
 const title = 'Hoja de Ruta'
@@ -432,6 +436,7 @@ onMounted(() => {
           </span>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+          <ViewToggle v-model="vista" />
           <Select v-model="equipo" :options="opcionesTractivosHr" optionLabel="codigo" optionValue="id" filter placeholder="Equipo" class="w-40" :showClear="true" />
           <Select v-model="grupo" :options="opcionesGruposHr" optionLabel="nombre" optionValue="id" filter placeholder="Grupo" class="w-36" :showClear="true" />
           <Select v-model="chofer" :options="opcionesChoferesHr" optionLabel="label" optionValue="id" filter placeholder="Chofer" class="w-44" :showClear="true" />
@@ -443,7 +448,34 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Grid de tarjetas -->
+      <!-- VISTA TABLA -->
+      <div v-if="vista === 'tabla'">
+        <DataTable :value="hojas.data || []" stripedRows size="small" responsiveLayout="scroll"
+          :globalFilterFields="['numero', 'chofer.nombre', 'tractivo.codigo']">
+          <template #empty>No hay hojas de ruta para los filtros seleccionados.</template>
+          <Column field="numero" header="Folio" sortable style="font-weight:700" />
+          <Column field="fecha_emision" header="Fecha" sortable>
+            <template #body="{ data }">{{ formatDate(data.fecha_emision) }}</template>
+          </Column>
+          <Column header="Tractivo" sortable sortField="tractivo.codigo">
+            <template #body="{ data }">{{ tractivoCodigo(data.tractivo) }}</template>
+          </Column>
+          <Column header="Chofer" sortable sortField="chofer.nombre">
+            <template #body="{ data }">{{ choferNombre(data.chofer) }}</template>
+          </Column>
+          <Column header="Estado">
+            <template #body="{ data }">
+              <span class="inline-block rounded px-2 py-0.5 text-[11px] font-bold" :class="estadoHR(data).cls">{{ estadoHR(data).label }}</span>
+            </template>
+          </Column>
+          <Column header="CP" sortable sortField="cartas_porte_count">
+            <template #body="{ data }">{{ data.cartas_porte_count || 0 }}</template>
+          </Column>
+        </DataTable>
+      </div>
+
+      <!-- VISTA TARJETAS -->
+      <div v-if="vista === 'tarjetas'">
       <div v-if="hojas.data.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article
           v-for="(h, i) in hojas.data"
@@ -562,6 +594,7 @@ onMounted(() => {
           @page="onPage"
         />
       </div>
+      </div> <!-- /vista tarjetas -->
     </div>
 
     <!-- Apertura -->

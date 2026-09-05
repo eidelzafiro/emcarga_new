@@ -469,6 +469,8 @@ Route::middleware('auth')->group(function () {
             Route::get('prenomina-choferes-excel', [ReportController::class, 'excelPrenominaChoferes'])->name('prenomina-choferes-excel');
             Route::get('prenomina-administrativo-excel', [ReportController::class, 'excelPrenominaAdministrativo'])->name('prenomina-administrativo-excel');
             Route::get('modelo1-excel', [ReportController::class, 'excelModelo1'])->name('modelo1-excel');
+            Route::get('ingresos-tractivo', [ReportController::class, 'pdfIngresosTractivos'])->name('ingresos-tractivo');
+            Route::get('ingresos-choferes', [ReportController::class, 'pdfIngresosChoferes'])->name('ingresos-choferes');
             // Fase A: catálogo de reportes usados (índice con filtros reutilizables)
             Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
             // GET: descarga/binario vía navegación real (sin XHR Inertia). POST: flujo
@@ -635,6 +637,8 @@ Route::middleware('auth')->group(function () {
             ->name('menu-items.toggle-visibility');
         Route::post('menu-items/reordenar', [MenuItemController::class, 'reordenar'])
             ->name('menu-items.reordenar');
+        Route::post('menu-items/batch-toggle', [MenuItemController::class, 'batchToggleVisibility'])
+            ->name('menu-items.batch-toggle');
 
         // Catálogo unificado (Fase 6.1)
         Route::get('catalogo', [CatalogoController::class, 'tipos'])->name('catalogo.tipos');

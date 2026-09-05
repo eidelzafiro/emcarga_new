@@ -8,6 +8,9 @@ import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Toolbar from 'primevue/toolbar'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import ViewToggle from '@/Components/ViewToggle.vue'
 import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ aforos: Object, filters: Object, filtros: Object, fechaOperaciones: String, mesSeleccionado: Number, anioSeleccionado: Number })
@@ -16,6 +19,7 @@ const search = ref(props.filters?.search || '')
 const cliente = ref(props.filters?.cliente || '')
 const chofer = ref(props.filters?.chofer || '')
 const equipo = ref(props.filters?.equipo || '')
+const vista = ref('tarjetas')
 
 const monet = (v) => '$' + Number(v || 0).toLocaleString()
 
@@ -76,7 +80,8 @@ watch([search, cliente, chofer, equipo], navegar)
                     <span class="text-sm text-gray-500 dark:text-gray-400 ml-3">{{ totalRegistros }} registros</span>
                 </template>
                 <template #end>
-                    <div class="flex gap-2 flex-wrap">
+                    <div class="flex gap-2 flex-wrap items-center">
+                        <ViewToggle v-model="vista" />
                         <Button label="Nuevo Aforo" icon="pi pi-plus" @click="router.get(route('aforos.create'))" />
                         <InputText v-model="search" placeholder="Buscar CP o HR..." />
                         <Select v-model="cliente" :options="filtros?.clientes || []" option-value="id" option-label="nombre" placeholder="Cliente" show-clear filter class="w-44" />
@@ -86,14 +91,51 @@ watch([search, cliente, chofer, equipo], navegar)
                 </template>
             </Toolbar>
 
-            <div v-if="grupos.length === 0" class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-16 text-center">
+            <div v-if="grupos.length === 0 && vista === 'tarjetas'" class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-16 text-center">
                 <i class="pi pi-inbox text-4xl text-gray-300 dark:text-gray-600" />
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">No hay aforos para el período.</p>
                 <Button label="Nuevo Aforo" icon="pi pi-plus" severity="success" @click="router.get(route('aforos.create'))" />
             </div>
 
-            <!-- Agrupación por fecha de parte -->
-            <div v-for="grupo in grupos" :key="grupo.fecha" class="mb-6">
+            <!-- VISTA TABLA -->
+            <div v-if="vista === 'tabla'">
+                <DataTable :value="aforos.data || []" stripedRows size="small" responsiveLayout="scroll"
+                    :paginator="(aforos.data || []).length > 25" :rows="25"
+                    :globalFilterFields="['carta_porte.numero', 'carta_porte.cliente.nombre']">
+                    <template #empty>No hay aforos para el período.</template>
+                    <Column field="carta_porte.numero" header="CP" sortable class="font-bold" />
+                    <Column field="carta_porte.hoja_ruta.numero" header="HR" sortable />
+                    <Column field="fecha_parte" header="Fecha" sortable>
+                        <template #body="{ data }">{{ formatDate(data.fecha_parte) }}</template>
+                    </Column>
+                    <Column field="carta_porte.cliente.nombre" header="Cliente" sortable />
+                    <Column field="carta_porte.tractivo.codigo" header="Equipo" sortable />
+                    <Column header="Ingreso" sortable sortField="ingreso_mt">
+                        <template #body="{ data }">{{ monet(data.ingreso_mt) }}</template>
+                    </Column>
+                    <Column header="Salario" sortable sortField="salario">
+                        <template #body="{ data }">{{ monet(data.salario) }}</template>
+                    </Column>
+                    <Column header="Estado">
+                        <template #body="{ data }">
+                            <Tag :severity="estadoDe(data).severity" :value="estadoDe(data).label" class="text-[10px]" />
+                        </template>
+                    </Column>
+                    <Column header="Acciones" style="width:100px">
+                        <template #body="{ data }">
+                            <div class="flex gap-1">
+                                <Button v-if="data.id_factura" icon="pi pi-eye" rounded text severity="info" size="small" @click="router.get(route('aforos.show', data.id))" />
+                                <Button v-else icon="pi pi-pencil" rounded text severity="warn" size="small" @click="router.get(route('aforos.edit', data.id))" />
+                                <Button icon="pi pi-print" rounded text severity="success" size="small" @click="imprimir(data)" />
+                            </div>
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
+
+            <!-- VISTA TARJETAS -->
+            <div v-if="vista === 'tarjetas'">
+                <div v-for="grupo in grupos" :key="grupo.fecha" class="mb-6">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg">
                         <i class="pi pi-calendar text-sm"></i>
@@ -170,7 +212,8 @@ watch([search, cliente, chofer, equipo], navegar)
                         </div>
                     </article>
                 </div>
-            </div>
+                </div> <!-- /v-for grupo -->
+            </div> <!-- /vista tarjetas -->
 
             <!-- Paginación -->
             <div v-if="aforos.last_page > 1" class="flex justify-center gap-2 mt-6">

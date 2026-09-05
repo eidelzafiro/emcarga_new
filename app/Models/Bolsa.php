@@ -85,6 +85,16 @@ class Bolsa extends Model
         return $this->hasMany(HojasRuta::class, 'id_chofer');
     }
 
+    public function cartasPorte(): HasMany
+    {
+        return $this->hasMany(CartaPorte::class, 'id_chofer');
+    }
+
+    public function cartasPorteChofer2(): HasMany
+    {
+        return $this->hasMany(CartaPorte::class, 'id_chofer2');
+    }
+
     protected $appends = ['nombrecompleto'];
 
     public function getNombrecompletoAttribute(): string

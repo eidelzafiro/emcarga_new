@@ -117,84 +117,55 @@
             </div>
           </div>
 
-          <!-- Saldo actual -->
-          <div v-if="combustibleActual.length">
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Saldo actual</h4>
+          <!-- Saldo por tipo de combustible (inicio + cargado - descargado = final) -->
+          <div v-if="saldoPorTipo.length">
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Saldo por tipo de combustible</h4>
             <div class="overflow-x-auto">
               <table class="w-full">
                 <thead>
                   <tr>
                     <th class="table-header dark:bg-gray-700 dark:text-gray-300">Tipo</th>
                     <th class="table-header dark:bg-gray-700 dark:text-gray-300">Moneda</th>
-                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Monto</th>
-                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Litros</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Saldo Inicio</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Cargado</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Descargado</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right font-bold">Saldo Final</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in combustibleActual" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
-                    <td class="table-cell font-medium dark:text-gray-200">{{ fila.tipo_combustible }}</td>
+                  <tr v-for="(fila, i) in saldoPorTipo" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="table-cell font-medium dark:text-gray-200">{{ fila.tipo }}</td>
                     <td class="table-cell dark:text-gray-400">
                       <Tag :value="fila.moneda" :severity="fila.moneda === 'MN' ? 'success' : 'info'" />
                     </td>
-                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.total_mon) }}</td>
-                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.total_lts) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.inicio_mon) }}</td>
+                    <td class="table-cell text-right font-mono text-green-600 dark:text-green-400">+{{ formatNumber(fila.cargado_mon) }}</td>
+                    <td class="table-cell text-right font-mono text-red-600 dark:text-red-400">-{{ formatNumber(fila.descargado_mon) }}</td>
+                    <td class="table-cell text-right font-mono font-bold dark:text-gray-200">{{ formatNumber(fila.final_mon) }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Cargas y descargas del mes -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div v-if="combustibleCargado.length">
-              <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Cargado en el mes</h4>
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead>
-                    <tr>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300">Tipo</th>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300">Moneda</th>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Monto</th>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Litros</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    <tr v-for="(fila, i) in combustibleCargado" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
-                      <td class="table-cell font-medium dark:text-gray-200">{{ fila.tipo_combustible }}</td>
-                      <td class="table-cell dark:text-gray-400">{{ fila.moneda }}</td>
-                      <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.total_mon) }}</td>
-                      <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.total_lts) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div v-if="combustibleDescargado.length">
-              <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Descargado en el mes</h4>
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead>
-                    <tr>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300">Tipo</th>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300">Moneda</th>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Monto</th>
-                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Litros</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    <tr v-for="(fila, i) in combustibleDescargado" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
-                      <td class="table-cell font-medium dark:text-gray-200">{{ fila.tipo_combustible }}</td>
-                      <td class="table-cell dark:text-gray-400">{{ fila.moneda }}</td>
-                      <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.total_mon) }}</td>
-                      <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.total_lts) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+          <!-- Saldos actuales en tarjetas -->
+          <div v-if="combustibleActual.length">
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Saldos actuales en tarjetas</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div v-for="(saldo, i) in combustibleActual" :key="i" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-700">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0">
+                  <i class="pi pi-wallet text-white text-xs" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ saldo.tipo_combustible }} · {{ saldo.moneda }}</p>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ formatNumber(saldo.total_lts) }} LTS</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500">{{ formatNumber(saldo.total_mon) }} {{ saldo.moneda }}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div v-if="!tarjetasPorTipo.length && !combustibleActual.length && !combustibleCargado.length && !combustibleDescargado.length" class="text-center py-8">
+          <div v-if="!tarjetasPorTipo.length && !saldoPorTipo.length && !combustibleActual.length" class="text-center py-8">
             <i class="pi pi-inbox text-3xl text-gray-300 dark:text-gray-600 block mb-2" />
             <p class="text-sm text-gray-400 dark:text-gray-500">No hay datos de combustible para este período</p>
           </div>
@@ -382,6 +353,7 @@ const props = defineProps({
   fechaOperaciones: { type: String, default: '' },
   tarjetasPorTipo: { type: Array, default: () => [] },
   combustibleActual: { type: Array, default: () => [] },
+  saldoPorTipo: { type: Array, default: () => [] },
   combustibleCargado: { type: Array, default: () => [] },
   combustibleDescargado: { type: Array, default: () => [] },
   ingresosPorConcepto: { type: Array, default: () => [] },

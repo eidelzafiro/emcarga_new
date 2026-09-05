@@ -446,17 +446,20 @@ class ReportePrenominaService
      */
     public function modelo1(int $mes, int $ano, ?int $idBolsa = null): array
     {
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+        $ids = $entidadId ? \App\Models\Entidad::subEntidadesIds($entidadId) : [];
+
         $query = Aforo::whereYear('fecha_parte', $ano)
             ->whereMonth('fecha_parte', $mes)
             ->whereHas('cartaPorte', fn ($cp) => $cp->where('cancelada', false))
             ->with([
-                'cartaPorte:id,cancelada,numero,id_hoja_ruta,id_solicitud,fecha_emision,distancia',
+                'cartaPorte:id,cancelada,numero,id_hoja_ruta,id_solicitud,id_chofer,id_chofer2,fecha_emision,distancia',
                 'cartaPorte.cliente:nombre',
-                'cartaPorte.hojaRuta:id,numero,id_tractivo,id_arrastre,id_chofer,id_chofer2',
-                'cartaPorte.hojaRuta.tractivo:id,codigo,placa',
+                'cartaPorte.hojaRuta:id,numero,id_tractivo,id_arrastre',
+                'cartaPorte.hojaRuta.tractivo:id,codigo,placa,id_entidad',
                 'cartaPorte.hojaRuta.arrastre:id,codigo,placa',
-                'cartaPorte.hojaRuta.chofer:id,nombre,apellidos',
-                'cartaPorte.hojaRuta.chofer2:id,nombre,apellidos',
+                'cartaPorte.chofer:id,nombre,apellidos',
+                'cartaPorte.chofer2:id,nombre,apellidos',
                 'cartaPorte.solicitud:id,id_lugar_origen,id_lugar_destino',
                 'cartaPorte.solicitud.lugarOrigen:id,nombre',
                 'cartaPorte.solicitud.lugarDestino:id,nombre',
@@ -465,10 +468,14 @@ class ReportePrenominaService
                 'tasa:id,nombre,tasa,tasa2',
             ]);
 
+        if ($ids) {
+            $query->whereHas('cartaPorte.hojaRuta.tractivo', fn ($t) => $t->whereIn('tractivos.id_entidad', $ids));
+        }
+
         if ($idBolsa) {
             $query->where(function ($q) use ($idBolsa) {
-                $q->whereHas('cartaPorte.hojaRuta', fn ($hr) => $hr->where('id_chofer', $idBolsa))
-                  ->orWhereHas('cartaPorte.hojaRuta', fn ($hr) => $hr->where('id_chofer2', $idBolsa));
+                $q->whereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer', $idBolsa))
+                  ->orWhereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer2', $idBolsa));
             });
         }
 

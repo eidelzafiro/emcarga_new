@@ -67,45 +67,65 @@
         </div>
       </div>
 
-      <!-- Tablero de Flota (toda la flota, color por estado) -->
+      <!-- Tablero de Flota por Tipo de Equipo -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Tablero de Flota</h2>
-        <div>
-          <template v-if="gruposFlota.length">
-            <section v-for="g in gruposFlota" :key="g.nombre" class="mb-5">
-              <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 mb-2">
-                {{ g.nombre }} <span class="text-gray-400 font-normal">({{ g.vehiculos.length }})</span>
-              </h3>
-              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                <div
-                  v-for="v in g.vehiculos"
-                  :key="v.id"
-                  class="rounded-xl border-2 overflow-hidden bg-white dark:bg-gray-800 shadow-sm flex flex-col min-h-[170px]"
-                  :class="bordeColor(v)"
-                  :title="v.ot ? `OT ${v.ot.numero} · ${v.ot.taller ?? '—'} · ${v.ot.motivo ?? '—'} · ${v.ot.dias} días en taller` : null"
-                >
-                  <img v-if="v.imagen" :src="v.imagen" alt="" class="h-24 w-full object-cover bg-gray-100 dark:bg-gray-700" />
-                  <div v-else class="h-24 w-full bg-gray-100 dark:bg-gray-700" />
-                  <div class="p-3 flex-1 flex flex-col">
-                    <div class="flex items-center justify-between gap-2">
-                      <span class="font-mono text-2xl font-extrabold text-gray-900 dark:text-gray-100 leading-none">{{ v.codigo }}</span>
-                      <span v-if="v.baja" class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">Baja</span>
-                      <span v-else-if="v.enTaller" class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">En taller</span>
-                    </div>
-
-                    <div v-if="v.ot" class="mt-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 px-2 py-1.5 text-xs space-y-0.5">
-                      <p class="text-amber-700 dark:text-amber-300 font-semibold">OT {{ v.ot.numero }}</p>
-                      <p class="text-gray-600 dark:text-gray-300 truncate">{{ v.ot.taller ?? '—' }}{{ (v.ot.taller && v.ot.motivo) ? ' · ' : '' }}{{ v.ot.motivo ?? '' }}</p>
-                      <p class="text-gray-400 dark:text-gray-500">{{ v.ot.dias }} días en taller</p>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </section>
-          </template>
-          <p v-else class="text-xs text-gray-400 dark:text-gray-500 py-6 text-center">Sin vehículos en la flota</p>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tablero de Flota</h2>
+          <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500" /> Activo</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500" /> En taller (OT abierta)</span>
+          </div>
         </div>
+        <div v-if="flotaPorTipo.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+          <div v-for="tipo in flotaPorTipo" :key="tipo.nombre" class="rounded-xl border-2 overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
+            <!-- Header tipo de equipo -->
+            <div class="p-4 flex items-center gap-3 border-b border-gray-100 dark:border-gray-700"
+                 :class="tipo.tallerCount > 0 ? 'bg-gradient-to-r from-amber-50 to-white dark:from-amber-900/20 dark:to-gray-800' : 'bg-gradient-to-r from-emerald-50 to-white dark:from-emerald-900/20 dark:to-gray-800'">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                   :class="tipo.tallerCount > 0 ? 'bg-amber-100 dark:bg-amber-900/40' : 'bg-emerald-100 dark:bg-emerald-900/40'">
+                <i :class="tipo.esArrastre ? 'pi pi-box' : 'pi pi-truck'" class="text-lg"
+                   :style="{ color: tipo.tallerCount > 0 ? '#d97706' : '#059669' }" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-gray-900 dark:text-gray-100 truncate">{{ tipo.nombre }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ tipo.activosCount }} activo{{ tipo.activosCount !== 1 ? 's' : '' }}
+                  <span v-if="tipo.tallerCount > 0" class="text-amber-600 dark:text-amber-400"> · {{ tipo.tallerCount }} en taller</span>
+                </p>
+              </div>
+              <span class="text-2xl font-extrabold" :class="tipo.tallerCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'">
+                {{ tipo.total }}
+              </span>
+            </div>
+            <!-- Lista de vehículos -->
+            <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-[400px] overflow-y-auto">
+              <template v-if="tipo.activos.length">
+                <div v-for="v in tipo.activos" :key="v.id" class="px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{{ v.codigo }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ v.marca }}</p>
+                  </div>
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ml-2" />
+                </div>
+              </template>
+              <template v-if="tipo.taller.length">
+                <div v-for="v in tipo.taller" :key="v.id" class="px-4 py-2.5 flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{{ v.codigo }}</p>
+                    <p class="text-xs text-amber-600 dark:text-amber-400 truncate">
+                      <i class="pi pi-wrench mr-1" />OT {{ v.ot?.numero ?? '—' }} · {{ v.ot?.dias ?? '' }} días
+                    </p>
+                  </div>
+                  <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0 ml-2" />
+                </div>
+              </template>
+              <div v-if="!tipo.activos.length && !tipo.taller.length" class="px-4 py-3 text-center text-xs text-gray-400 dark:text-gray-500">
+                Sin vehículos
+              </div>
+            </div>
+          </div>
+        </div>
+        <p v-else class="text-xs text-gray-400 dark:text-gray-500 py-6 text-center">Sin vehículos en la flota</p>
       </div>
 
       <!-- Taller: Órdenes del mes + Vehículos en Taller -->
@@ -126,7 +146,7 @@
                 <td class="py-1.5 pr-2 text-gray-700 dark:text-gray-300">{{ ot.taller }}</td>
                 <td class="py-1.5 pr-2 text-gray-700 dark:text-gray-300">{{ ot.motivo }}</td>
                 <td class="py-1.5 pr-2">
-                  <span :class="estadoOtClase(ot.estado)" class="text-xs px-2 py-0.5 rounded-full">{{ ot.estado }}</span>
+                  <span :class="estadoOtClase(ot.estado)" class="text-xs px-2 py-0.5 rounded-full capitalize">{{ ot.estado }}</span>
                 </td>
                 <td class="py-1.5 text-gray-700 dark:text-gray-300">{{ ot.fecha }}</td>
               </tr>
@@ -150,7 +170,9 @@
                 <td class="py-1.5 pr-2 text-gray-700 dark:text-gray-300">{{ v.clase }}</td>
                 <td class="py-1.5 pr-2 font-mono text-gray-700 dark:text-gray-300">{{ v.ot }}</td>
                 <td class="py-1.5 pr-2 text-gray-700 dark:text-gray-300">{{ v.motivo }}</td>
-                <td class="py-1.5 pr-2 text-right text-gray-700 dark:text-gray-300">{{ v.dias }}</td>
+                <td class="py-1.5 pr-2 text-right">
+                  <span :class="diasClase(v.dias)" class="font-mono text-xs px-1.5 py-0.5 rounded">{{ v.dias ?? '—' }}</span>
+                </td>
                 <td class="py-1.5">
                   <span :class="v.estado === 'Paralizado' ? 'status-badge-cancelado' : 'status-badge-proceso'" class="text-xs px-2 py-0.5 rounded-full">{{ v.estado }}</span>
                 </td>
@@ -330,24 +352,34 @@ const bloquesDesglose = computed(() => {
   ];
 });
 
-const gruposFlota = computed(() => {
+const flotaPorTipo = computed(() => {
   const cols = d.columnas || [];
   const todos = (Array.isArray(cols) ? cols : Object.values(cols)).flatMap((c) => c.vehiculos || []);
-  const out = [];
-  for (const esArr of [false, true]) {
-    const lista = todos.filter((v) => !!v.esArrastre === esArr);
-    if (!lista.length) continue;
-    lista.sort((a, b) => String(a.codigo).localeCompare(String(b.codigo)));
-    out.push({ nombre: esArr ? 'Arrastres' : 'Tractivos', vehiculos: lista });
+  const sinBaja = todos.filter((v) => !v.baja);
+  const map = new Map();
+  for (const v of sinBaja) {
+    const nombre = v.tipoVehiculo || v.tipo || 'Sin tipo';
+    if (!map.has(nombre)) map.set(nombre, { nombre, esArrastre: !!v.esArrastre, activos: [], taller: [] });
+    const grupo = map.get(nombre);
+    if (v.enTaller) grupo.taller.push(v);
+    else grupo.activos.push(v);
   }
-  return out;
+  const arr = [...map.values()];
+  arr.sort((a, b) => b.activos.length + b.taller.length - (a.activos.length + a.taller.length));
+  return arr.map((g) => ({
+    ...g,
+    activosCount: g.activos.length,
+    tallerCount: g.taller.length,
+    total: g.activos.length + g.taller.length,
+  }));
 });
 
-const bordeColor = (v) => {
-  if (v.baja) return 'border-red-400 dark:border-red-600';
-  if (v.enTaller) return 'border-amber-400 dark:border-amber-600';
-  if (v.estado === 14) return 'border-emerald-400 dark:border-emerald-600';
-  return 'border-gray-300 dark:border-gray-600';
+const diasClase = (dias) => {
+  if (dias == null) return '';
+  if (dias >= 14) return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 font-bold';
+  if (dias >= 7) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 font-semibold';
+  if (dias >= 3) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300';
+  return 'text-gray-700 dark:text-gray-300';
 };
 
 const estadoOtClase = (s) => s === 'abierta'

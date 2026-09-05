@@ -435,7 +435,10 @@ function onSelectTasa() {
     const t = props.tasas?.find((x) => x.id === form.id_tasa)
     if (t) {
         form.tasa = Number(t.tasa)
-        form.salario = round2(Number(t.tasa) * form.ingreso_mt)
+        const tieneChofer2 = !!form.id_chofer2
+        const tasa2Val = Number(t.tasa2 || 0)
+        const base = tieneChofer2 && tasa2Val > 0 ? tasa2Val : Number(t.tasa)
+        form.salario = round2(base * form.ingreso_mt)
     }
 }
 

@@ -67,10 +67,10 @@ class AforosController extends Controller
             });
         });
 
-        // Cliente desde la solicitud; equipo/choferes desde la hoja de ruta (Fase 4d)
+        // Cliente desde la solicitud; equipo desde HR; choferes desde la carta de porte
         $query->when($request->cliente, fn ($q, $v) => $q->whereHas('cartaPorte.solicitud', fn ($c) => $c->where('id_cliente', $v)));
         $query->when($request->equipo, fn ($q, $v) => $q->whereHas('cartaPorte.hojaRuta', fn ($c) => $c->where('id_tractivo', $v)));
-        $query->when($request->chofer, fn ($q, $v) => $q->whereHas('cartaPorte.hojaRuta', fn ($c) => $c->where(fn ($c2) => $c2->where('id_chofer', $v)->orWhere('id_chofer2', $v))));
+        $query->when($request->chofer, fn ($q, $v) => $q->whereHas('cartaPorte', fn ($c) => $c->where(fn ($c2) => $c2->where('id_chofer', $v)->orWhere('id_chofer2', $v))));
 
         if ($entidadId) {
             $this->scopeEntidad($query);
@@ -78,8 +78,8 @@ class AforosController extends Controller
 
         // Opciones para los filtros: solo de la entidad actual en el mes/año seleccionado
         $base = Aforo::query()->with([
-            'cartaPorte:id,id_hoja_ruta,id_solicitud',
-            'cartaPorte.hojaRuta:id,id_tractivo,id_chofer,id_chofer2',
+            'cartaPorte:id,id_hoja_ruta,id_solicitud,id_chofer,id_chofer2',
+            'cartaPorte.hojaRuta:id,id_tractivo',
             'cartaPorte.solicitud:id,id_cliente',
         ])
             ->whereYear('fecha_parte', $anio)->whereMonth('fecha_parte', $mes);
@@ -91,7 +91,7 @@ class AforosController extends Controller
 
         $clientesIds = $cartasDelMes->map(fn ($c) => $c->solicitud?->id_cliente)->filter()->unique();
         $tractivosIds = $cartasDelMes->map(fn ($c) => $c->hojaRuta?->id_tractivo)->filter()->unique();
-        $choferesIds = $cartasDelMes->flatMap(fn ($c) => [$c->hojaRuta?->id_chofer, $c->hojaRuta?->id_chofer2])->filter()->unique();
+        $choferesIds = $cartasDelMes->flatMap(fn ($c) => [$c->id_chofer, $c->id_chofer2])->filter()->unique();
 
         $filtros = [
             'clientes' => Cliente::select('id', 'nombre')->whereIn('id', $clientesIds)->orderBy('nombre')->get(),
@@ -226,7 +226,7 @@ class AforosController extends Controller
         // Cargar la CP completa del aforo para poder editar sus datos generales
         $carta = $aforo->cartaPorte;
         $carta->load([
-            'hojaRuta:id,numero,fecha_cierre,id_entidad,id_tractivo,id_arrastre,id_chofer,id_chofer2',
+            'hojaRuta:id,numero,fecha_cierre,id_entidad,id_tractivo,id_arrastre',
             'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
             'cliente',
             'tractivo',
@@ -727,6 +727,8 @@ class AforosController extends Controller
             'conduce' => $v['conduce'] ?? $carta->conduce,
             'fecha_emision' => $v['fecha_emision'] ?? $carta->fecha_emision,
             'fecha_recepcion' => $v['fecha_recepcion'] ?? $carta->fecha_recepcion,
+            'id_chofer' => $v['id_chofer'] ?? $carta->id_chofer,
+            'id_chofer2' => $v['id_chofer2'] ?? $carta->id_chofer2,
         ];
 
         $carta->update($datosCarta);
@@ -745,11 +747,11 @@ class AforosController extends Controller
             }
         }
 
-        // Equipo/choferes → hoja de ruta (fuente de derivación)
+        // Equipo → hoja de ruta (fuente de derivación)
         $hoja = $carta->hojaRuta;
         if ($hoja) {
             $datosHoja = [];
-            foreach (['id_tractivo', 'id_arrastre', 'id_chofer', 'id_chofer2'] as $campo) {
+            foreach (['id_tractivo', 'id_arrastre'] as $campo) {
                 if (array_key_exists($campo, $v)) {
                     $datosHoja[$campo] = $v[$campo];
                 }
@@ -975,7 +977,7 @@ class AforosController extends Controller
     private function withCartaCompleta(): array
     {
         return [
-            'hojaRuta:id,numero,fecha_cierre,id_entidad,id_tractivo,id_arrastre,id_chofer,id_chofer2',
+            'hojaRuta:id,numero,fecha_cierre,id_entidad,id_tractivo,id_arrastre',
             'solicitud:id,numero,id_lugar_origen,id_lugar_destino,id_moneda,id_cliente,id_producto,id_tipo_carga',
             'cliente',
             'tractivo',

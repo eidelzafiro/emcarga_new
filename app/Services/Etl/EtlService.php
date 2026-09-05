@@ -2467,8 +2467,9 @@ class EtlService
      * - id preservado (FCKs entre tablas migradas resuelven directo).
      * - id_solicitud se vincula en `migrarSolicitudes()` (que corre después) vía
      *   com_solicitudes.idcartaporte = cartas_porte.id.
-     * - Fase 4d: la carta NO persiste equipo/choferes/cliente/tipos/productos;
-     *   esos valores se derivan de la hoja de ruta y la solicitud.
+     * - Fase 4d: la carta persiste choferes (id_chofer/id_chofer2) directamente,
+     *   ya que una misma HR puede generar múltiples CP con diferentes choferes.
+     *   Equipo se deriva de la HR; cliente/tipos de la solicitud.
      * - estado: 'cancelada' (cancelada=1) / 'recepcionada' (frecepcion) / 'emitida'.
      * - toneladas = peso1 + peso2; ingreso_mt se rellena igual (seguimiento).
      */
@@ -2482,6 +2483,7 @@ class EtlService
 
         $idsHojas = DB::table('hojas_ruta')->pluck('id')->flip();
         $idsUsers = DB::table('users')->pluck('id')->flip();
+        $idsChoferes = DB::table('bolsa')->pluck('id')->flip();
 
         // nrocp duplicados en el año → sufijo -2, -3 (unique nueva).
         $dupNrocp = $legacy->table('com_girado')
@@ -2504,7 +2506,7 @@ class EtlService
             ->orderBy('idcartaporte')
             ->chunk($chunk, function ($filas) use (
                 &$procesados, &$canceladas, &$avisos, &$usosNrocp,
-                $idsHojas, $idsUsers,
+                $idsHojas, $idsUsers, $idsChoferes,
                 $dupNrocp, $fechaValida
             ) {
                 foreach ($filas as $fila) {
@@ -2530,6 +2532,8 @@ class EtlService
                                 'numero' => $nrocp,
                                 'id_hoja_ruta' => (int) $fila->idhojaruta && isset($idsHojas[$fila->idhojaruta]) ? $fila->idhojaruta : null,
                                 'id_solicitud' => null,
+                                'id_chofer' => isset($idsChoferes[$fila->idchofer]) ? $fila->idchofer : null,
+                                'id_chofer2' => isset($idsChoferes[$fila->idchofer2]) ? $fila->idchofer2 : null,
                                 'fecha_emision' => $laFechaEmision,
                                 'fecha_parte' => $laFechaEmision,
                                 'fecha_recepcion' => $fechaValida($fila->frecepcion),

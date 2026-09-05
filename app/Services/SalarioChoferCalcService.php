@@ -100,7 +100,7 @@ class SalarioChoferCalcService
             $noct2 = (float) $aforo->recargo_2;
             $tFeriado = (float) $aforo->tiempo_feriado;
 
-            $chofer2Id = $hr->id_chofer2;
+            $chofer2Id = $cp->id_chofer2;
             $esDobleChofer = $chofer2Id && $chofer2Id != $idBolsa;
 
             $ingreso = $ingresoMt;
@@ -129,9 +129,14 @@ class SalarioChoferCalcService
             }
 
             $salarioAlmacenaje = $salalm;
-            $salarioStored = (float) ($aforo->salario ?? 0);
-            if ($salarioStored > 0 && abs($salarioStored - $salario) > 0.01) {
-                $salario = $salarioStored;
+            // Solo usar salario guardado si NO es doble chofer; en doble chofer
+            // el aforo guarda el total (ingreso completo * tasa2) pero aquí se
+            // calcula por chofer (ingreso/2 * tasa2), así que ignoramos el stored.
+            if (!$esDobleChofer) {
+                $salarioStored = (float) ($aforo->salario ?? 0);
+                if ($salarioStored > 0 && abs($salarioStored - $salario) > 0.01) {
+                    $salario = $salarioStored;
+                }
             }
 
             $impCla = $kmCarga <= 90
@@ -175,8 +180,6 @@ class SalarioChoferCalcService
                 'numero_cp' => $cp->numero,
                 'fecha_parte' => $aforo->fecha_parte?->format('d/m/Y'),
                 'tractivo' => $hr->tractivo?->codigo ?? $hr->tractivo?->placa ?? '—',
-                'origen' => $cp->solicitud?->lugarOrigen?->nombre ?? '—',
-                'destino' => $cp->solicitud?->lugarDestino?->nombre ?? '—',
                 'km_total' => round($kmTotal, 2),
                 'tiempo_total' => round($tTotal, 2),
                 'tn_real' => round($tnReal, 2),
@@ -276,7 +279,7 @@ class SalarioChoferCalcService
 
     private function obtenerAforosChofer(int $idBolsa, int $mes, int $ano)
     {
-        return Aforo::whereHas('cartaPorte.hojaRuta', function ($q) use ($idBolsa) {
+        return Aforo::whereHas('cartaPorte', function ($q) use ($idBolsa) {
             $q->where('id_chofer', $idBolsa)
               ->orWhere('id_chofer2', $idBolsa);
         })
@@ -291,8 +294,6 @@ class SalarioChoferCalcService
         ->with([
             'tasa:id,nombre,tasa2',
             'cartaPorte.hojaRuta.tractivo:id,codigo,placa',
-            'cartaPorte.solicitud.lugarOrigen:id,nombre',
-            'cartaPorte.solicitud.lugarDestino:id,nombre',
         ])
         ->orderBy('fecha_parte')
         ->get();

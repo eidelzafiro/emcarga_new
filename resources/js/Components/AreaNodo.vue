@@ -240,9 +240,9 @@ function onDragEnd() {
 .hijos-horizontales {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
   position: relative;
   padding-top: 0.25rem;
 }
@@ -251,37 +251,25 @@ function onDragEnd() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 1 auto;
+  min-width: 140px;
   max-width: 180px;
 }
 
-/* Escalar nodos hijos cuando hay muchos */
+/* Escalar nodos hijos moderadamente */
 .hijo-wrapper :deep(.group) {
   transform: scale(0.85);
   transform-origin: top center;
 }
 
-/* Si hay más de 5 hijos, escalar más */
-.hijos-horizontales:has(.hijo-wrapper:nth-child(6)) .hijo-wrapper,
-.hijos-horizontales:has(.hijo-wrapper:nth-child(7)) .hijo-wrapper,
-.hijos-horizontales:has(.hijo-wrapper:nth-child(8)) .hijo-wrapper {
-  max-width: 150px;
-}
-
-.hijos-horizontales:has(.hijo-wrapper:nth-child(6)) .hijo-wrapper :deep(.group),
-.hijos-horizontales:has(.hijo-wrapper:nth-child(7)) .hijo-wrapper :deep(.group),
-.hijos-horizontales:has(.hijo-wrapper:nth-child(8)) .hijo-wrapper :deep(.group) {
-  transform: scale(0.72);
+/* Si hay más de 5 hijos, escalar un poco más */
+.hijos-horizontales:has(.hijo-wrapper:nth-child(n+6)) .hijo-wrapper :deep(.group) {
+  transform: scale(0.75);
 }
 
 /* Si hay más de 8 hijos, escalar aún más */
-.hijos-horizontales:has(.hijo-wrapper:nth-child(n+9)) .hijo-wrapper {
-  max-width: 130px;
-}
-
 .hijos-horizontales:has(.hijo-wrapper:nth-child(n+9)) .hijo-wrapper :deep(.group) {
-  transform: scale(0.62);
+  transform: scale(0.65);
 }
 
 /* Línea vertical corta desde la horizontal hasta cada hijo */

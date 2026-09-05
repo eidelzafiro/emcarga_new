@@ -406,6 +406,9 @@ const modalEliminar = ref(false);
 const editando = ref(false);
 const seleccionado = ref(null);
 
+// Cola de cambios de visibilidad pendientes (batch)
+const cambiosPendientes = ref([]);
+
 const form = useForm({
   label: '',
   icon: '',
@@ -485,17 +488,51 @@ function eliminar() {
 function cerrarModales() {
   modalForm.value = false;
   modalEliminar.value = false;
+
+  // Enviar cambios pendientes de visibilidad
+  if (cambiosPendientes.value.length) {
+    enviarCambiosVisibilidad();
+  }
+
   seleccionado.value = null;
 }
 
 function toggleRolEnForm(rol) {
   if (!seleccionado.value?.permission || !can('menus.editar')) return;
-  router.visit(route('menu-items.toggle-visibility', [seleccionado.value.id, rol.id]), {
-    method: 'post',
+
+  const itemId = seleccionado.value.id;
+  const roleId = rol.id;
+  const tienePermiso = seleccionado.value.roles?.includes(rol.name);
+
+  // Actualizar estado local optimistamente
+  if (seleccionado.value.roles) {
+    if (tienePermiso) {
+      seleccionado.value.roles = seleccionado.value.roles.filter((r) => r !== rol.name);
+    } else {
+      seleccionado.value.roles = [...seleccionado.value.roles, rol.name];
+    }
+  }
+
+  // Registrar cambio pendiente
+  const existente = cambiosPendientes.value.find(
+    (c) => c.item_id === itemId && c.role_id === roleId
+  );
+  if (existente) {
+    existente.visible = !tienePermiso;
+  } else {
+    cambiosPendientes.value.push({ item_id: itemId, role_id: roleId, visible: !tienePermiso });
+  }
+}
+
+function enviarCambiosVisibilidad() {
+  if (!cambiosPendientes.value.length) return;
+
+  const changes = [...cambiosPendientes.value];
+  cambiosPendientes.value = [];
+
+  router.post(route('menu-items.batch-toggle'), { changes }, {
     preserveScroll: true,
-    preserveState: false,
     only: ['items', 'flash'],
-    onSuccess: () => cerrarModales(),
   });
 }
 </script>

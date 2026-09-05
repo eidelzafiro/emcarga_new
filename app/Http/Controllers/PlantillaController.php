@@ -45,6 +45,15 @@ class PlantillaController extends Controller
         return Inertia::render('Plantilla/Index', [
             'title' => 'Plantilla de Puestos',
             'items' => $items,
+            'allItems' => Plantilla::query()
+                ->with(['area:id,nombre,id_entidad', 'cargo:id,nombre'])
+                ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
+                ->orderBy('id_area')->orderBy('id_cargo')
+                ->get()
+                ->map(function ($item) use ($cubiertaReal) {
+                    $item->cubierta_real = $cubiertaReal[$item->id_cargo] ?? 0;
+                    return $item;
+                }),
             'areas' => \App\Models\Area::select('id', 'nombre', 'imagen', 'orden')
                 ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
                 ->orderBy('orden')->orderBy('nombre')->get(),

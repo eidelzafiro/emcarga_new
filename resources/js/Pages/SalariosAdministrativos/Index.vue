@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -243,8 +244,9 @@ function rowClass(data) {
     <AppLayout :title="title">
         <Head :title="title" />
 
-        <template #header>
-            <div class="flex items-center justify-between">
+        <div class="py-4">
+            <!-- Botones de reporte -->
+            <div class="flex items-center justify-between mb-4 max-w-full mx-auto sm:px-6 lg:px-8">
                 <h2 class="font-semibold text-xl leading-tight">{{ title }}</h2>
                 <div class="flex gap-2">
                     <a :href="route('reportes.prenomina-administrativo', { mes: selectedMes, ano: selectedAno })"
@@ -258,9 +260,6 @@ function rowClass(data) {
                     </a>
                 </div>
             </div>
-        </template>
-
-        <div class="py-4">
             <div class="max-w-full mx-auto sm:px-6 lg:px-8">
                 <!-- Filtros -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">

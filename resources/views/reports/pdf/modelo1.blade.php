@@ -21,6 +21,7 @@
                         <th style="padding:2px; text-align:left;">Nro CP</th>
                         <th style="padding:2px; text-align:left;">Nro HR</th>
                         <th style="padding:2px; text-align:left;">Equipo</th>
+                        <th style="padding:2px; text-align:left;">Cliente</th>
                         <th style="padding:2px; text-align:left;">Origen</th>
                         <th style="padding:2px; text-align:left;">Destino</th>
                         <th style="padding:2px; text-align:left;">Producto</th>
@@ -41,6 +42,7 @@
                             <td style="padding:2px;">{{ $reg['nro_cp'] }}</td>
                             <td style="padding:2px;">{{ $reg['nro_hr'] }}</td>
                             <td style="padding:2px;">{{ $reg['equipo'] }}</td>
+                            <td style="padding:2px;">{{ $reg['cliente'] ?? '' }}</td>
                             <td style="padding:2px;">{{ $reg['origen'] }}</td>
                             <td style="padding:2px;">{{ $reg['destino'] }}</td>
                             <td style="padding:2px;">{{ $reg['producto'] }}</td>
@@ -57,7 +59,7 @@
                 </tbody>
                 <tfoot>
                     <tr style="background:#dbeafe; font-weight:bold; border-top:2px solid #1e40af;">
-                        <td style="padding:3px;" colspan="7">TOTAL {{ $chofer['nombre'] }}</td>
+                        <td style="padding:3px;" colspan="8">TOTAL {{ $chofer['nombre'] }}</td>
                         <td style="padding:3px; text-align:right;">{{ number_format($chofer['totales']['km_total'], 1) }}</td>
                         <td style="padding:3px; text-align:right;">{{ number_format($chofer['totales']['toneladas'], 1) }}</td>
                         <td style="padding:3px; text-align:right;">{{ number_format($chofer['totales']['tiempo_total'], 2) }}</td>

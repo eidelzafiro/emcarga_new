@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
+import { route } from 'ziggy-js';
 import { useToast } from 'primevue/usetoast';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -181,8 +182,9 @@ async function guardarTiempo(d) {
     <AppLayout :title="title">
         <Head :title="title" />
 
-        <template #header>
-            <div class="flex items-center justify-between">
+        <div class="py-4">
+            <!-- Botones de reporte -->
+            <div class="flex items-center justify-between mb-4 max-w-full mx-auto sm:px-6 lg:px-8">
                 <h2 class="font-semibold text-xl leading-tight">{{ title }}</h2>
                 <div class="flex gap-2">
                     <a :href="route('reportes.prenomina-choferes', { mes: selectedMes, ano: selectedAno })"
@@ -194,20 +196,17 @@ async function guardarTiempo(d) {
                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
                         <i class="pi pi-file-excel"></i> Prenómina Excel
                     </a>
-                    <a :href="route('reportes.modelo1', { mes: selectedMes, ano: selectedAno })"
+                    <a :href="route('reportes.modelo1', { mes: selectedMes, ano: selectedAno, ...(selectedChofer ? { id_bolsa: selectedChofer } : {}) })"
                         target="_blank"
                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition">
                         <i class="pi pi-file-pdf"></i> Modelo 1 PDF
                     </a>
-                    <a :href="route('reportes.modelo1-excel', { mes: selectedMes, ano: selectedAno })"
+                    <a :href="route('reportes.modelo1-excel', { mes: selectedMes, ano: selectedAno, ...(selectedChofer ? { id_bolsa: selectedChofer } : {}) })"
                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 text-white text-sm rounded-lg hover:bg-emerald-800 transition">
                         <i class="pi pi-file-excel"></i> Modelo 1 Excel
                     </a>
                 </div>
             </div>
-        </template>
-
-        <div class="py-4">
             <div class="max-w-full mx-auto sm:px-6 lg:px-8">
                 <!-- Filtros -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">

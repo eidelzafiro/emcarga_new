@@ -2714,61 +2714,90 @@ class EtlService
             });
 
         // ----- Paso 2: solicitudes agrupadas para cartas sin solicitud -----
-        $cartasSinSolicitud = DB::table('cartas_porte')
+        // Las cartas_porte nuevas NO tienen id_cliente/id_producto/etc. Se hace
+        // JOIN con com_girado (legacy) para obtener esos campos de agrupación.
+        $idsCartasSinSol = DB::table('cartas_porte')
             ->whereNull('id_solicitud')
-            ->orderBy('fecha_emision')
-            ->orderBy('id')
-            ->get();
+            ->pluck('id');
 
-        $grupos = $cartasSinSolicitud->groupBy(fn ($c) => implode('|', [
-            $c->id_cliente,
-            $c->id_lugar_origen,
-            $c->id_lugar_destino,
-            $c->id_producto,
-            $c->id_producto2,
-            $c->id_tipo_carga,
-            $c->id_tipo_carga2,
-            $c->id_moneda,
-            $entidadPorCarta[$c->id] ?? '',
-        ]));
+        if ($idsCartasSinSol->isEmpty()) {
+            // Todas las cartas ya tienen solicitud vinculada
+        } else {
+            $cartasConGirado = DB::connection('legacy')
+                ->table('com_girado')
+                ->whereIn('idcartaporte', $idsCartasSinSol)
+                ->get()
+                ->keyBy('idcartaporte');
 
-        foreach ($grupos as $cartasGrupo) {
-            $primera = $cartasGrupo->first();
+            // Construir colección enriquecida con campos del girado
+            $cartasSinSolicitud = DB::table('cartas_porte')
+                ->whereIn('id', $idsCartasSinSol)
+                ->orderBy('fecha_emision')
+                ->orderBy('id')
+                ->get()
+                ->map(function ($cp) use ($cartasConGirado, $entidadPorCarta) {
+                    $g = $cartasConGirado[$cp->id] ?? null;
+                    $cp->id_cliente = $g->idcliente ?? null;
+                    $cp->id_lugar_origen = $g->idorigen ?? null;
+                    $cp->id_lugar_destino = $g->iddestino ?? null;
+                    $cp->id_producto = $g->idproducto1 ?? null;
+                    $cp->id_producto2 = $g->idproducto2 ?? null;
+                    $cp->id_tipo_carga = $g->idtipocarga1 ?? null;
+                    $cp->id_tipo_carga2 = $g->idtipocarga2 ?? null;
+                    $cp->id_moneda = null;
+                    return $cp;
+                });
 
-            try {
-                $idSolicitud = DB::table('solicitudes_servicio')->insertGetId([
-                    'numero' => $numero(),
-                    'id_entidad' => $entidadPorCarta[$primera->id] ?? null,
-                    'id_cliente' => $primera->id_cliente,
-                    'id_lugar_origen' => $primera->id_lugar_origen,
-                    'id_lugar_destino' => $primera->id_lugar_destino,
-                    'id_producto' => $primera->id_producto,
-                    'id_producto2' => $primera->id_producto2,
-                    'id_tipo_carga' => $primera->id_tipo_carga,
-                    'id_tipo_carga2' => $primera->id_tipo_carga2,
-                    'id_moneda' => $primera->id_moneda,
-                    'id_user' => null,
-                    'fecha_solicitud' => $primera->fecha_emision ?? $anio.'-01-01',
-                    'fecha_planificada' => null,
-                    'fecha_ejecutada' => null,
-                    'valor_mt' => null,
-                    'valor_total' => null,
-                    'peso1' => round($cartasGrupo->sum('peso1'), 2),
-                    'peso2' => round($cartasGrupo->sum('peso2'), 2),
-                    'distancia' => $primera->distancia,
-                    'notas' => null,
-                    'estado' => 'pendiente',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            $grupos = $cartasSinSolicitud->groupBy(fn ($c) => implode('|', [
+                $c->id_cliente,
+                $c->id_lugar_origen,
+                $c->id_lugar_destino,
+                $c->id_producto,
+                $c->id_producto2,
+                $c->id_tipo_carga,
+                $c->id_tipo_carga2,
+                $c->id_moneda,
+                $entidadPorCarta[$c->id] ?? '',
+            ]));
 
-                foreach ($cartasGrupo as $carta) {
-                    DB::table('cartas_porte')->where('id', $carta->id)->update(['id_solicitud' => $idSolicitud]);
-                    $vinculadasGrupo++;
+            foreach ($grupos as $cartasGrupo) {
+                $primera = $cartasGrupo->first();
+
+                try {
+                    $idSolicitud = DB::table('solicitudes_servicio')->insertGetId([
+                        'numero' => $numero(),
+                        'id_entidad' => $entidadPorCarta[$primera->id] ?? null,
+                        'id_cliente' => $primera->id_cliente,
+                        'id_lugar_origen' => $primera->id_lugar_origen,
+                        'id_lugar_destino' => $primera->id_lugar_destino,
+                        'id_producto' => $primera->id_producto,
+                        'id_producto2' => $primera->id_producto2,
+                        'id_tipo_carga' => $primera->id_tipo_carga,
+                        'id_tipo_carga2' => $primera->id_tipo_carga2,
+                        'id_moneda' => $primera->id_moneda,
+                        'id_user' => null,
+                        'fecha_solicitud' => $primera->fecha_emision ?? $anio.'-01-01',
+                        'fecha_planificada' => null,
+                        'fecha_ejecutada' => null,
+                        'valor_mt' => null,
+                        'valor_total' => null,
+                        'peso1' => round($cartasGrupo->sum('peso1'), 2),
+                        'peso2' => round($cartasGrupo->sum('peso2'), 2),
+                        'distancia' => $primera->distancia,
+                        'notas' => null,
+                        'estado' => 'pendiente',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    foreach ($cartasGrupo as $carta) {
+                        DB::table('cartas_porte')->where('id', $carta->id)->update(['id_solicitud' => $idSolicitud]);
+                        $vinculadasGrupo++;
+                    }
+                    $creadasGrupo++;
+                } catch (\Throwable $e) {
+                    $avisos[] = "solicitud agrupada (cliente {$primera->id_cliente}): {$e->getMessage()}";
                 }
-                $creadasGrupo++;
-            } catch (\Throwable $e) {
-                $avisos[] = "solicitud agrupada (cliente {$primera->id_cliente}): {$e->getMessage()}";
             }
         }
 

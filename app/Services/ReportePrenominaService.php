@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Bolsa;
 use App\Models\Aforo;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ReportePrenominaService
 {
@@ -14,47 +15,229 @@ class ReportePrenominaService
     ) {}
 
     /**
-     * Prenomina de choferes transportación.
+     * Prenomina de choferes transportación (sistema=2).
+     * Lee de la tabla salarios y calcula campos derivados como el legacy.
      */
     public function prenominaChoferes(int $mes, int $ano, ?int $entidadId = null): array
     {
         $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
 
-        $choferes = Bolsa::where('activo', true)
-            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja'))
-            ->when(!empty($entidadesPermitidas), fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas))
-            ->where(function ($q) use ($mes, $ano) {
-                $q->whereHas('hojasRuta.cartasPorte.aforos', function ($aq) use ($mes, $ano) {
-                    $aq->whereYear('fecha_parte', $ano)
-                       ->whereMonth('fecha_parte', $mes)
-                       ->whereHas('cartaPorte', fn ($cp) => $cp->where('cancelada', false));
-                });
-            })
-            ->orderBy('nombre')
-            ->orderBy('apellidos')
-            ->with(['cargo:id,nombre,tarifa,cla', 'area:id,nombre'])
+        // Buscar tipo sistema pago = 2 (transportación/choferes) en catalogo_items
+        $tipoSistemaPagoId = DB::table('catalogo_items')
+            ->where('tipo', 'tipos_sistemas_pago')
+            ->where('origen_id', 2)
+            ->value('id') ?? 2;
+
+        $salarios = DB::table('salarios')
+            ->where('salarios.mes', $mes)
+            ->where('salarios.ano', $ano)
+            ->where('salarios.id_tipo_sistema_pago', $tipoSistemaPagoId)
+            ->when(!empty($entidadesPermitidas), fn ($q) => $q->whereIn('salarios.id_entidad', $entidadesPermitidas))
+            ->join('bolsa', 'salarios.id_bolsa', '=', 'bolsa.id')
+            ->join('movimientos_rrhh', 'salarios.id_movimiento', '=', 'movimientos_rrhh.id')
+            ->leftJoin('areas', 'salarios.id_area', '=', 'areas.id')
+            ->leftJoin('cargos', 'salarios.id_cargo', '=', 'cargos.id')
+            ->leftJoin('catalogo_items as csp', 'salarios.id_tipo_sistema_pago', '=', 'csp.id')
+            ->select(
+                'salarios.*',
+                DB::raw("CONCAT(bolsa.nombre, ' ', bolsa.apellidos) as nombrecompleto"),
+                'bolsa.ci as cidentidad',
+                'movimientos_rrhh.nronomina',
+                'areas.nombre as nombarea',
+                'cargos.nombre as nombcargo',
+                'csp.nombre as nombsistemapago',
+                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(csp.extra, '$.resultados')) as resultados"),
+                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(csp.extra, '$.penaliza')) as penalizasistema"),
+                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(csp.extra, '$.cda')) as cda")
+            )
+            ->orderBy('bolsa.nombre')
+            ->orderBy('bolsa.apellidos')
             ->get();
 
         $registros = [];
         $totales = [
-            'regular' => 0, 'irregular' => 0, 'ingresos' => 0, 'salario_cp' => 0,
-            'imp_cla' => 0, 'imp_nocturnidad_1' => 0, 'imp_nocturnidad_2' => 0,
-            'imp_feriados' => 0, 'salario_final' => 0, 'toneladas' => 0, 'km_total' => 0,
+            'ttotal' => 0, 'impbase' => 0, 'impregular' => 0, 'impirregular' => 0,
+            'impplus' => 0, 'impcla' => 0, 'impbase2' => 0,
+            'impiresultado' => 0, 'penresultado' => '', 'penimporte' => 0,
+            'impresultado' => 0, 'impgps' => 0, 'impferiados' => 0,
+            'impreporte' => 0,
         ];
 
-        foreach ($choferes as $chofer) {
-            $calculado = $this->choferCalc->calcularSalarioChofer($chofer->id, $mes, $ano);
-            if (!$calculado) continue;
+        foreach ($salarios as $arr) {
+            $ttotal = (float) $arr->t_total;
+            if ($ttotal <= 0) continue;
 
-            $registros[] = $calculado;
+            $impregular = (float) $arr->imp_regular;
+            $impirregular = (float) $arr->imp_irregular;
+            $impplus = (float) $arr->imp_plus;
+            $impcla = (float) $arr->imp_cla;
+            $impnocturnidad = round((float) $arr->imp_nocturna_1 + (float) $arr->imp_nocturna_2, 2);
+            $impferiados = (float) $arr->imp_feriados;
+            $impdoblaje = (float) $arr->imp_doblaje;
+            $impmaestrias = (float) $arr->imp_maestrias;
+            $impadicional = (float) $arr->imp_adicional;
+            $impgps = (float) $arr->imp_gps;
 
-            foreach ($totales as $key => &$val) {
-                $val += $calculado[$key] ?? 0;
+            // Imp base = regular + irregular
+            $impbase = round($impregular + $impirregular, 2);
+
+            // Imp base2 = regular + irregular + plus + cla
+            $impbase2 = round($impregular + $impirregular + $impplus + $impcla, 2);
+
+            // Salario tiempo (strt) = regular + irregular + plus + cla + nocturnidad + feriados + doblaje
+            $strt = round($impregular + $impirregular + $impplus + $impcla + $impnocturnidad + $impferiados + $impdoblaje, 2);
+
+            // Coeficiente (ac = ri + cpl)
+            $ri = (float) $arr->ri;
+            $cpl = (float) $arr->cpl;
+            if ($ri > 1) $ri = round($ri / 100, 2);
+            if ($cpl > 1) $cpl = round($cpl / 100, 2);
+            $ac = round($ri + $cpl, 2);
+
+            // Salario con coeficiente
+            $sc = round($strt * $ac, 2);
+
+            // Resultados
+            $resultados = (float) $arr->resultados;
+            $sr = $resultados > 0 ? round($sc * $resultados, 2) : 0;
+
+            // Penalizaciones
+            $penresultado = '';
+            $penimporte = 0;
+
+            // Penalización del sistema
+            $penalizasistema = (float) ($arr->penalizasistema ?? 0);
+            if ($penalizasistema > 0) {
+                $penresultado = $penalizasistema;
+                $penimporte = round(($penalizasistema / 100) * $sr, 2);
             }
+
+            // Penalización del área (sobreescribe la del sistema)
+            $penalizaarea = (float) ($arr->penalizaarea ?? 0);
+            if ($penalizaarea > 0) {
+                $penresultado = $penalizaarea;
+                $penimporte = round(($penalizaarea / 100) * $sr, 2);
+            }
+
+            // Penalización individual del chofer (sobreescribe todo)
+            $penreschofer = DB::table('penalizaciones')
+                ->join('tipos_penalizaciones', 'penalizaciones.id_tipo_penalizacion', '=', 'tipos_penalizaciones.id')
+                ->whereYear('penalizaciones.fecha', $ano)
+                ->whereMonth('penalizaciones.fecha', $mes)
+                ->where('penalizaciones.id_bolsa', $arr->id_bolsa)
+                ->where('tipos_penalizaciones.tipo_pago_adicional_id', 7)
+                ->select(DB::raw('SUM(penalizaciones.importe) as importe'))
+                ->value('importe');
+
+            if ($penreschofer !== null && $penreschofer > 0) {
+                $penreschofer = min($penreschofer, 100);
+                $penresultado = $penreschofer;
+                $penimporte = round(($penreschofer * $sr) / 100, 2);
+            }
+
+            // Padicionales = gps + maestrias + adicional
+            $padicionales = round($impgps + $impmaestrias + $impadicional, 2);
+
+            // Resultados finales
+            $srr = round($sr - $penimporte, 2);
+            $sd = round($srr + $strt, 2);
+            $st = round($sd + $padicionales, 2);
+            $cda = (float) ($arr->cda ?? 0);
+            $sta = round($st - ($st * $cda), 2);
+
+            // Impsalfinal = imp regular + irregular + plus + padicionales (sistema != 2)
+            $impsalfinal = round($impregular + $impirregular + $impplus + $padicionales, 2);
+
+            // Imp resultado (si hay resultados)
+            $impiresultado = 0;
+            $impresultado = 0;
+            if ($resultados > 0) {
+                $impres = round($impsalfinal - ($impgps + $impmaestrias), 2);
+                $impiresultado = round($resultados * $impres, 2);
+
+                // Penalizaciones sobre resultado
+                if ($penalizasistema > 0) {
+                    $penresultado = $penalizasistema;
+                    $penimporte = round(($penalizasistema / 100) * $impiresultado, 2);
+                }
+                if ($penalizaarea > 0) {
+                    $penresultado = $penalizaarea;
+                    $penimporte = round(($penalizaarea / 100) * $impiresultado, 2);
+                }
+                if ($penreschofer !== null && $penreschofer > 0) {
+                    $penimporte = round(($penreschofer * $impiresultado) / 100, 2);
+                }
+
+                $impresultado = $impiresultado - $penimporte;
+            }
+
+            // Imp reporte = impsalfinal + impresultado
+            $impreporte = round($impsalfinal + $impresultado, 2);
+
+            $registros[] = [
+                'id_bolsa' => $arr->id_bolsa,
+                'nronomina' => $arr->nronomina ?? '',
+                'nombrecompleto' => $arr->nombrecompleto ?? '',
+                'cidentidad' => $arr->cidentidad ?? '',
+                'nombarea' => $arr->nombarea ?? '',
+                'nombcargo' => $arr->nombcargo ?? '',
+                'nombsistemapago' => $arr->nombsistemapago ?? '',
+                'ttotal' => $ttotal,
+                'impregular' => $impregular,
+                'impirregular' => $impirregular,
+                'impplus' => $impplus,
+                'impcla' => $impcla,
+                'impnocturnidad' => $impnocturnidad,
+                'impferiados' => $impferiados,
+                'impdoblaje' => $impdoblaje,
+                'impmaestrias' => $impmaestrias,
+                'impadicional' => $impadicional,
+                'impgps' => $impgps,
+                'impbase' => $impbase,
+                'impbase2' => $impbase2,
+                'strt' => $strt,
+                'ri' => $ri,
+                'cpl' => $cpl,
+                'ac' => $ac,
+                'sc' => $sc,
+                'resultados' => $resultados,
+                'sr' => $sr,
+                'penresultado' => $penresultado,
+                'penimporte' => $penimporte,
+                'padicionales' => $padicionales,
+                'srr' => $srr,
+                'sd' => $sd,
+                'st' => $st,
+                'sta' => $sta,
+                'impsalfinal' => $impsalfinal,
+                'impiresultado' => $impiresultado,
+                'impresultado' => $impresultado,
+                'impreporte' => $impreporte,
+                'cda' => $cda,
+            ];
+
+            $totales['ttotal'] += $ttotal;
+            $totales['impbase'] += $impbase;
+            $totales['impregular'] += $impregular;
+            $totales['impirregular'] += $impirregular;
+            $totales['impplus'] += $impplus;
+            $totales['impcla'] += $impcla;
+            $totales['impbase2'] += $impbase2;
+            $totales['impiresultado'] += $impiresultado;
+            $totales['penimporte'] += $penimporte;
+            $totales['impresultado'] += $impresultado;
+            $totales['impgps'] += $impgps;
+            $totales['impferiados'] += $impferiados;
+            $totales['impreporte'] += $impreporte;
+        }
+
+        $titulo = 'DATOS P/NOMINAS SALARIO TRANSPORTACION';
+        if ($registros) {
+            $titulo = 'DATOS P/NOMINAS CALCULADAS  ' . ($registros[0]['nombsistemapago'] ?? '');
         }
 
         return [
-            'titulo' => 'PRENOMINA CHOFERES TRANSPORTE',
+            'titulo' => $titulo,
             'periodo' => Carbon::createFromDate($ano, $mes, 1)->format('F Y'),
             'registros' => $registros,
             'totales' => $totales,
@@ -63,51 +246,193 @@ class ReportePrenominaService
 
     /**
      * Prenomina personal administrativo.
+     * Lee de la tabla salarios y calcula campos derivados como el legacy.
      */
     public function prenominaAdministrativo(int $mes, int $ano, ?int $entidadId = null): array
     {
         $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
 
-        // Buscar área de transporte para excluir
-        $areaTransporteId = \App\Models\Area::whereRaw("UPPER(nombre) LIKE '%TRANSPOR%'")->value('id');
+        // Excluir sistemas de pago = 2 (transportación/choferes)
+        // y sistemas = 1 (CUC)
+        $sistemasExcluir = DB::table('catalogo_items')
+            ->where('tipo', 'tipos_sistemas_pago')
+            ->whereIn('origen_id', [1, 2])
+            ->pluck('id')
+            ->toArray();
+        if (empty($sistemasExcluir)) {
+            $sistemasExcluir = [1, 2];
+        }
 
-        $empleados = Bolsa::where('activo', true)
-            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja'))
-            ->when(!empty($entidadesPermitidas), fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas))
-            ->when($areaTransporteId, fn ($q) => $q->where('id_area', '!=', $areaTransporteId))
-            ->orderByRaw('id_area ASC, nombre ASC, apellidos ASC')
-            ->with(['cargo:id,nombre,tarifa,cla,id_grupo_horario', 'area:id,nombre'])
+        $salarios = DB::table('salarios')
+            ->where('salarios.mes', $mes)
+            ->where('salarios.ano', $ano)
+            ->whereNotIn('salarios.id_tipo_sistema_pago', $sistemasExcluir)
+            ->when(!empty($entidadesPermitidas), fn ($q) => $q->whereIn('salarios.id_entidad', $entidadesPermitidas))
+            ->join('bolsa', 'salarios.id_bolsa', '=', 'bolsa.id')
+            ->join('movimientos_rrhh', 'salarios.id_movimiento', '=', 'movimientos_rrhh.id')
+            ->leftJoin('areas', 'salarios.id_area', '=', 'areas.id')
+            ->leftJoin('cargos', 'salarios.id_cargo', '=', 'cargos.id')
+            ->leftJoin('catalogo_items as csp', 'salarios.id_tipo_sistema_pago', '=', 'csp.id')
+            ->select(
+                'salarios.*',
+                DB::raw("CONCAT(bolsa.nombre, ' ', bolsa.apellidos) as nombrecompleto"),
+                'bolsa.ci as cidentidad',
+                'movimientos_rrhh.nronomina',
+                'areas.nombre as nombarea',
+                'cargos.nombre as nombcargo',
+                'csp.nombre as nombsistemapago',
+                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(csp.extra, '$.resultados')) as resultados"),
+                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(csp.extra, '$.penaliza')) as penalizasistema"),
+                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(csp.extra, '$.cda')) as cda")
+            )
+            ->orderBy('areas.nombre')
+            ->orderBy('bolsa.nombre')
+            ->orderBy('bolsa.apellidos')
             ->get();
 
         $registros = [];
+        $porArea = [];
         $totales = [
-            'regular' => 0, 'irregular' => 0, 'h_extra' => 0, 'imp_h_extra' => 0,
-            'dias_taller' => 0, 'feriados_editados' => 0,
-            'tarifa' => 0, 'tarifa_mes' => 0, 'tiempo_mes' => 0, 'fondo_tiempo' => 0,
-            'salario_base' => 0, 'bono_alimentacion' => 0,
-            'salario_final' => 0,
+            'ttotal' => 0, 'impbase' => 0, 'impregular' => 0, 'impirregular' => 0,
+            'impplus' => 0, 'impcla' => 0, 'impbase2' => 0,
+            'impiresultado' => 0, 'penresultado' => '', 'penimporte' => 0,
+            'impresultado' => 0, 'impgps' => 0, 'impferiados' => 0,
+            'impreporte' => 0, 'padicionales' => 0,
         ];
 
-        foreach ($empleados as $empleado) {
-            $calculado = $this->adminCalc->calcularSalarioEmpleado($empleado, $mes, $ano);
-            if (!$calculado) continue;
+        foreach ($salarios as $arr) {
+            $ttotal = (float) $arr->t_total;
 
-            $registros[] = $calculado;
+            $impregular = (float) $arr->imp_regular;
+            $impirregular = (float) $arr->imp_irregular;
+            $impplus = (float) $arr->imp_plus;
+            $impcla = (float) $arr->imp_cla;
+            $impnocturnidad = round((float) $arr->imp_nocturna_1 + (float) $arr->imp_nocturna_2, 2);
+            $impferiados = (float) $arr->imp_feriados;
+            $impdoblaje = (float) $arr->imp_doblaje;
+            $impmaestrias = (float) $arr->imp_maestrias;
+            $impadicional = (float) $arr->imp_adicional;
+            $impgps = (float) $arr->imp_gps;
+            $impgelectro = (float) $arr->imp_g_electro;
+            $impGarantia = (float) $arr->imp_garantia;
+            $impHExtra = (float) $arr->imp_h_extra;
 
-            foreach ($totales as $key => &$val) {
-                $val += $calculado[$key] ?? 0;
+            // Imp base = regular + irregular
+            $impbase = round($impregular + $impirregular, 2);
+
+            // Imp base2 = regular + irregular + plus + cla
+            $impbase2 = round($impregular + $impirregular + $impplus + $impcla, 2);
+
+            // Padicionales = adicional + gps + cla + nocturnidad + gelectro + maestrias + feriados + doblaje
+            $padicionales = round($impadicional + $impgps + $impcla + $impnocturnidad + $impgelectro + $impmaestrias + $impferiados + $impdoblaje, 2);
+
+            // Impsalfinal = imp regular + irregular + plus + padicionales
+            $impsalfinal = round($impregular + $impirregular + $impplus + $padicionales, 2);
+
+            // Imp resultado
+            $resultados = (float) $arr->resultados;
+            $impiresultado = 0;
+            $impresultado = 0;
+            $penresultado = '';
+            $penimporte = 0;
+
+            if ($resultados > 0) {
+                $impres = round($impsalfinal - ($impgps + $impmaestrias), 2);
+                $impiresultado = round($resultados * $impres, 2);
+
+                // Penalizaciones
+                $penalizasistema = (float) ($arr->penalizasistema ?? 0);
+                if ($penalizasistema > 0) {
+                    $penresultado = $penalizasistema;
+                    $penimporte = round(($penalizasistema / 100) * $impiresultado, 2);
+                }
+
+                $penalizaarea = (float) ($arr->penalizaarea ?? 0);
+                if ($penalizaarea > 0) {
+                    $penresultado = $penalizaarea;
+                    $penimporte = round(($penalizaarea / 100) * $impiresultado, 2);
+                }
+
+                $penresadmin = DB::table('penalizaciones')
+                    ->join('tipos_penalizaciones', 'penalizaciones.id_tipo_penalizacion', '=', 'tipos_penalizaciones.id')
+                    ->whereYear('penalizaciones.fecha', $ano)
+                    ->whereMonth('penalizaciones.fecha', $mes)
+                    ->where('penalizaciones.id_bolsa', $arr->id_bolsa)
+                    ->where('tipos_penalizaciones.tipo_pago_adicional_id', 7)
+                    ->select(DB::raw('SUM(penalizaciones.importe) as importe'))
+                    ->value('importe');
+
+                if ($penresadmin !== null && $penresadmin > 0) {
+                    $penresadmin = min($penresadmin, 100);
+                    $penimporte = round(($penresadmin * $impiresultado) / 100, 2);
+                }
+
+                $impresultado = $impiresultado - $penimporte;
             }
+
+            // Imp reporte = impsalfinal + impresultado
+            $impreporte = round($impsalfinal + $impresultado, 2);
+
+            $registro = [
+                'id_bolsa' => $arr->id_bolsa,
+                'nronomina' => $arr->nronomina ?? '',
+                'nombrecompleto' => $arr->nombrecompleto ?? '',
+                'cidentidad' => $arr->cidentidad ?? '',
+                'nombarea' => $arr->nombarea ?? '',
+                'nombcargo' => $arr->nombcargo ?? '',
+                'nombsistemapago' => $arr->nombsistemapago ?? '',
+                'ttotal' => $ttotal,
+                'impregular' => $impregular,
+                'impirregular' => $impirregular,
+                'impplus' => $impplus,
+                'impcla' => $impcla,
+                'impnocturnidad' => $impnocturnidad,
+                'impferiados' => $impferiados,
+                'impdoblaje' => $impdoblaje,
+                'impmaestrias' => $impmaestrias,
+                'impadicional' => $impadicional,
+                'impgps' => $impgps,
+                'impgelectro' => $impgelectro,
+                'impbase' => $impbase,
+                'impbase2' => $impbase2,
+                'padicionales' => $padicionales,
+                'impsalfinal' => $impsalfinal,
+                'resultados' => $resultados,
+                'impiresultado' => $impiresultado,
+                'penresultado' => $penresultado,
+                'penimporte' => $penimporte,
+                'impresultado' => $impresultado,
+                'impreporte' => $impreporte,
+            ];
+
+            $registros[] = $registro;
+
+            $area = $arr->nombarea ?? 'Sin área';
+            $porArea[$area][] = $registro;
+
+            $totales['ttotal'] += $ttotal;
+            $totales['impbase'] += $impbase;
+            $totales['impregular'] += $impregular;
+            $totales['impirregular'] += $impirregular;
+            $totales['impplus'] += $impplus;
+            $totales['impcla'] += $impcla;
+            $totales['impbase2'] += $impbase2;
+            $totales['padicionales'] += $padicionales;
+            $totales['impiresultado'] += $impiresultado;
+            $totales['penimporte'] += $penimporte;
+            $totales['impresultado'] += $impresultado;
+            $totales['impgps'] += $impgps;
+            $totales['impferiados'] += $impferiados;
+            $totales['impreporte'] += $impreporte;
         }
 
-        // Agrupar por área
-        $porArea = [];
-        foreach ($registros as $reg) {
-            $area = $reg['area'] ?? 'Sin área';
-            $porArea[$area][] = $reg;
+        $titulo = 'DATOS P/NOMINAS CALCULADAS  ';
+        if ($registros) {
+            $titulo = 'DATOS P/NOMINAS CALCULADAS  ' . ($registros[0]['nombsistemapago'] ?? '');
         }
 
         return [
-            'titulo' => 'PRENOMINA PERSONAL ADMINISTRATIVO',
+            'titulo' => $titulo,
             'periodo' => Carbon::createFromDate($ano, $mes, 1)->format('F Y'),
             'registros' => $registros,
             'por_area' => $porArea,
@@ -126,17 +451,17 @@ class ReportePrenominaService
             ->whereHas('cartaPorte', fn ($cp) => $cp->where('cancelada', false))
             ->with([
                 'cartaPorte:id,cancelada,numero,id_hoja_ruta,id_solicitud,fecha_emision,distancia',
+                'cartaPorte.cliente:nombre',
                 'cartaPorte.hojaRuta:id,numero,id_tractivo,id_arrastre,id_chofer,id_chofer2',
                 'cartaPorte.hojaRuta.tractivo:id,codigo,placa',
                 'cartaPorte.hojaRuta.arrastre:id,codigo,placa',
                 'cartaPorte.hojaRuta.chofer:id,nombre,apellidos',
                 'cartaPorte.hojaRuta.chofer2:id,nombre,apellidos',
-                'cartaPorte.solicitudServicio:id,fk_destino,fk_origen',
-                'cartaPorte.solicitudServicio.lugarOrigen:id,nombre',
-                'cartaPorte.solicitudServicio.lugarDestino:id,nombre',
-                'cartaPorte.tipoCarga:id,nombre',
-                'cartaPorte.producto:id,nombre',
-                'hojaRuta:id,numero,fecha_emision',
+                'cartaPorte.solicitud:id,id_lugar_origen,id_lugar_destino',
+                'cartaPorte.solicitud.lugarOrigen:id,nombre',
+                'cartaPorte.solicitud.lugarDestino:id,nombre',
+                'cartaPorte.tipoCarga:nombre',
+                'cartaPorte.producto:nombre',
                 'tasa:id,nombre,tasa,tasa2',
             ]);
 
@@ -148,7 +473,7 @@ class ReportePrenominaService
         }
 
         $aforos = $query->orderBy('fecha_parte')
-            ->orderBy('hoja_ruta_id')
+            ->orderBy('id_carta_porte')
             ->get();
 
         // Agrupar por chofer
@@ -183,8 +508,9 @@ class ReportePrenominaService
                 'tractivo' => $hr?->tractivo?->codigo ?? '',
                 'arrastre' => $hr?->arrastre?->codigo ?? '',
                 'equipo' => trim(($hr?->tractivo?->codigo ?? '') . ' / ' . ($hr?->arrastre?->codigo ?? ''), ' /'),
-                'origen' => $cp->solicitudServicio?->lugarOrigen?->nombre ?? '',
-                'destino' => $cp->solicitudServicio?->lugarDestino?->nombre ?? '',
+                'cliente' => $cp->cliente?->nombre ?? '',
+                'origen' => $cp->solicitud?->lugarOrigen?->nombre ?? '',
+                'destino' => $cp->solicitud?->lugarDestino?->nombre ?? '',
                 'producto' => $cp->producto?->nombre ?? '',
                 'tipo_carga' => $cp->tipoCarga?->nombre ?? '',
                 'distancia' => $cp->distancia ?? 0,

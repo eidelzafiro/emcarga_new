@@ -80,9 +80,13 @@ class SalarioAdminCalcService
         $tarifa = (float) ($cargo?->tarifa ?? 0);
         $cla = (float) ($cargo?->cla ?? 0);
 
-        $salarioAdmin = SalarioAdministrativo::where('id_movimiento', $movimiento->id)
+        // El ETL guarda el id NUEVO de movimientos_rrhh en `id_movimiento_rrhh`
+        // (`id_movimiento` conserva el id legacy y colisiona con ids nuevos de
+        // otros movimientos). El lookup correcto es por id_movimiento_rrhh.
+        $salarioAdmin = SalarioAdministrativo::where('id_movimiento_rrhh', $movimiento->id)
             ->whereMonth('fecha', $mes)
             ->whereYear('fecha', $ano)
+            ->orderByDesc('id')
             ->first();
 
         $irregular = (float) ($salarioAdmin?->irregular ?? 0);
@@ -235,7 +239,9 @@ class SalarioAdminCalcService
 
         $impBase = $impRegular + $impIrregular + $impCla;
 
-        $tarExtra = $tarifa + ($tarifa * 0.25);
+        // Paridad legacy (modSalarioAdmin:954): tarhextras redondeada a 2 decimales
+        // ANTES de multiplicar (Santa Iraida: 47.61685×1.25=59.52×18=1071.36).
+        $tarExtra = round($tarifa + ($tarifa * 0.25), 2);
         $tiempoExtra = $hExtra + $tdoblaje;
         $impExtra = round($tarExtra * $tiempoExtra, 2);
 
@@ -250,7 +256,7 @@ class SalarioAdminCalcService
         // Columnas del reporte "DATOS P/NOMINAS SALARIO ADMINISTRATIVO"
         // (réplica modSalarioAdmin:951-958).
         $impescala = round($ttotal * $tarifa, 2);
-        $tarhextras = round($tarifa * 1.25, 4);
+        $tarhextras = round($tarifa * 1.25, 2);
         $impsalario2 = round($impescala + $impCla + $impNocturnidad + $impExtra + $impMaestrias, 2);
 
         return [

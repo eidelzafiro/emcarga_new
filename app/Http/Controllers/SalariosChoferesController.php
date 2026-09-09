@@ -189,8 +189,6 @@ class SalariosChoferesController extends Controller
             'tiempo_carga' => 'nullable|numeric|min:0',
             'tiempo_descarga' => 'nullable|numeric|min:0',
             'tiempo_total' => 'nullable|numeric|min:0',
-            'km_total' => 'nullable|numeric|min:0',
-            'tn_real' => 'nullable|numeric|min:0',
         ]);
 
         $aforo = Aforo::with('cartaPorte')->findOrFail($validated['id_aforo']);
@@ -205,15 +203,14 @@ class SalariosChoferesController extends Controller
             'id_chofer2' => $validated['id_chofer2'] ?: null,
         ]);
 
-        // Tiempos y tasas del aforo.
+        // Tiempos y tasas del aforo. KMS/TN/Ingreso son de SOLO LECTURA en la
+        // UI (datos del aforo original) y no se editan desde aquí.
         $campos = [];
         foreach (['tiempo_otros', 'tiempo_movimiento', 'tiempo_carga', 'tiempo_descarga', 'tiempo_total'] as $campo) {
             if (array_key_exists($campo, $validated)) {
                 $campos[$campo] = $validated[$campo];
             }
         }
-        if (array_key_exists('km_total', $validated)) $campos['km_total_total'] = $validated['km_total'];
-        if (array_key_exists('tn_real', $validated)) $campos['tn_real_total'] = $validated['tn_real'];
 
         $tasa = null;
         if (!empty($validated['id_tasa'])) {

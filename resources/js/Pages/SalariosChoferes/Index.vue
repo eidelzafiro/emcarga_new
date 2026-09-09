@@ -100,18 +100,39 @@ const tiempoTotalCalc = computed(() => {
         + (Number(f.tiempo_descarga) || 0);
 });
 
+// Tasa seleccionada (modelo completo del combo).
+const tasaSeleccionada = computed(() =>
+    props.tasas.find(t => t.id === editForm.value?.id_tasa) || null);
+
+// Importe de la tasa: tasa2 si hay doble chofer, si no tasa (paridad legacy).
+const tasaImporte = computed(() => {
+    const t = tasaSeleccionada.value;
+    if (!t) return null;
+    const esDoble = editForm.value?.id_chofer2 && editForm.value.id_chofer2 !== editForm.value?.id_chofer;
+    return esDoble && Number(t.tasa2) > 0 ? Number(t.tasa2) : Number(t.tasa);
+});
+
+// Salario de la carta de porte en vivo: ingreso × tasa (+ almacenaje se
+// recalcula en el backend; aquí la estimación principal para feedback).
+const salarioTotalCalc = computed(() => {
+    const f = editForm.value;
+    if (!f || tasaImporte.value === null) return null;
+    return (Number(f.ingreso) || 0) * tasaImporte.value;
+});
+
 function abrirEditar(d) {
     editForm.value = {
         id_aforo: d.id_aforo,
         id_chofer: d.id_chofer,
         id_chofer2: d.id_chofer2 || null,
         id_tasa: d.id_tasa || null,
+        ingreso: d.ingreso || 0,
+        km_total: d.km_total || 0,
+        tn_real: d.tn_real || 0,
         tiempo_otros: d.tiempo_otros || 0,
         tiempo_movimiento: d.tiempo_movimiento || 0,
         tiempo_carga: d.tiempo_carga || 0,
         tiempo_descarga: d.tiempo_descarga || 0,
-        km_total: d.km_total || 0,
-        tn_real: d.tn_real || 0,
     };
     showEditDialog.value = true;
 }
@@ -369,9 +390,9 @@ async function guardarDetalle() {
 
         <!-- Modal de edición de carta de porte -->
         <Dialog v-model:visible="showEditDialog" header="Editar carta de porte" modal
-            :style="{ width: '90vw', maxWidth: '640px' }" :closable="!savingDetalle">
+            :style="{ width: '90vw', maxWidth: '720px' }" :closable="!savingDetalle">
             <form v-if="editForm" @submit.prevent="guardarDetalle" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block mb-1 font-medium">Chofer 1</label>
                         <Select v-model="editForm.id_chofer" :options="choferes" optionLabel="nombre" optionValue="id"
@@ -383,14 +404,45 @@ async function guardarDetalle() {
                             placeholder="Sin chofer 2" class="w-full" filter showClear />
                     </div>
                 </div>
+
+                <!-- Datos de la carta (solo lectura) -->
+                <fieldset class="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                    <legend class="text-sm font-semibold px-1">Datos de la carta de porte</legend>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block mb-1 text-xs text-gray-500">Ingreso total</label>
+                            <InputText :modelValue="formatCurrency(editForm.ingreso)" readonly class="w-full font-mono bg-transparent opacity-100" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs text-gray-500">KMS</label>
+                            <InputText :modelValue="formatNum(editForm.km_total)" readonly class="w-full font-mono bg-transparent opacity-100" />
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs text-gray-500">TN Real</label>
+                            <InputText :modelValue="formatNum(editForm.tn_real)" readonly class="w-full font-mono bg-transparent opacity-100" />
+                        </div>
+                    </div>
+                </fieldset>
+
                 <div>
                     <label class="block mb-1 font-medium">Tasa aplicada</label>
                     <Select v-model="editForm.id_tasa" :options="tasas" optionLabel="nombre" optionValue="id"
                         placeholder="Seleccionar tasa" class="w-full" filter showClear />
+                    <div v-if="tasaImporte !== null" class="mt-2 grid grid-cols-2 gap-4">
+                        <div class="p-2 rounded bg-blue-50 dark:bg-gray-800 border dark:border-gray-700">
+                            <div class="text-xs text-gray-500">Importe de la tasa</div>
+                            <div class="font-mono font-semibold">{{ formatNum(tasaImporte) }}</div>
+                        </div>
+                        <div class="p-2 rounded bg-emerald-50 dark:bg-gray-800 border dark:border-gray-700">
+                            <div class="text-xs text-gray-500">Salario total (ingreso × tasa)</div>
+                            <div class="font-mono font-semibold">{{ salarioTotalCalc !== null ? formatCurrency(salarioTotalCalc) : '—' }}</div>
+                        </div>
+                    </div>
                 </div>
+
                 <div>
                     <label class="block mb-1 font-medium">Tiempos (horas)</label>
-                    <div class="grid grid-cols-4 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Otros</label>
                             <InputNumber v-model="editForm.tiempo_otros" class="w-full" :minFractionDigits="2" :maxFractionDigits="2" :min="0" mode="decimal" />
@@ -412,16 +464,7 @@ async function guardarDetalle() {
                         Tiempo total: <span class="font-semibold font-mono">{{ formatNum(tiempoTotalCalc) }}</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block mb-1 font-medium">KM Total</label>
-                        <InputNumber v-model="editForm.km_total" class="w-full" :minFractionDigits="1" :maxFractionDigits="1" :min="0" mode="decimal" />
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">TN Real</label>
-                        <InputNumber v-model="editForm.tn_real" class="w-full" :minFractionDigits="1" :maxFractionDigits="1" :min="0" mode="decimal" />
-                    </div>
-                </div>
+
                 <div class="flex gap-2 justify-end">
                     <Button label="Cancelar" severity="secondary" type="button" @click="showEditDialog = false" :disabled="savingDetalle" />
                     <Button label="Guardar y recalcular" type="submit" icon="pi pi-save" :loading="savingDetalle" />

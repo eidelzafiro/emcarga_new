@@ -4079,6 +4079,37 @@ class EtlService
      *
      * Idempotente: se puede ejecutar todas las veces que se quiera.
      */
+    /**
+     * Desactiva los cargos sin uso (ningún empleado en bolsa ni plantilla).
+     * Decisión del usuario 2026-09-09: los cargos del legacy que no usa ningún
+     * empleado no se mantienen. Idempotente: se re-aplica al final de cada ETL
+     * porque el upsert genérico de `cargos` los re-activa con activo=true.
+     */
+    public function desactivarCargosSinUso(): void
+    {
+        $sinUso = DB::table('cargos as c')
+            ->leftJoin('bolsa as b', 'b.id_cargo', '=', 'c.id')
+            ->leftJoin('plantilla as p', 'p.id_cargo', '=', 'c.id')
+            ->whereNull('b.id')
+            ->whereNull('p.id')
+            ->where('c.id', '!=', 1000000)
+            ->whereNull('c.deleted_at')
+            ->pluck('c.id');
+
+        $desactivados = 0;
+        if ($sinUso->isNotEmpty()) {
+            $desactivados = DB::table('cargos')->whereIn('id', $sinUso->all())
+                ->whereNull('deleted_at')
+                ->update(['deleted_at' => now(), 'activo' => false, 'updated_at' => now()]);
+        }
+
+        $this->reporte['cargos_sin_uso'] = [
+            'legacy' => 0,
+            'nueva' => (int) $desactivados,
+            'avisos' => $desactivados > 0 ? ['cargos sin empleado ni plantilla desactivados'] : [],
+        ];
+    }
+
     public function migrarJerarquiaEntidades(): void
     {
         $avisos = [];

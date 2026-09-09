@@ -439,6 +439,14 @@ class EtlRun extends Command
             $this->mostrarResultado($etl->getReporte(), 'jerarquia_entidades');
         }
 
+        // Cargos sin uso (ningún empleado ni plantilla): desactivar
+        // (decisión 2026-09-09; idempotente porque el ETL genérico los re-activa).
+        if (! $solo) {
+            $this->info('Desactivando cargos sin uso...');
+            $etl->desactivarCargosSinUso();
+            $this->mostrarResultado($etl->getReporte(), 'cargos_sin_uso');
+        }
+
         $this->newLine();
         $this->info('ETL finalizado. Ejecute php artisan emcarga:etl --validar para verificar conteos.');
 

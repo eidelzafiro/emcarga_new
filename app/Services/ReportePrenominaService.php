@@ -1114,6 +1114,7 @@ class ReportePrenominaService
 
             $registro = [
                 'id_bolsa' => $chofer->id,
+                'versat' => $chofer->versat ?? '',
                 'nombrecompleto' => $chofer->nombrecompleto,
                 'ingresos' => $ingresos,
                 'ttotal' => $ttotal,

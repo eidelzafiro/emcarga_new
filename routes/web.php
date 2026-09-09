@@ -480,6 +480,7 @@ Route::middleware('auth')->group(function () {
             Route::get('analisis-salario-transportacion', [ReportController::class, 'pdfAnalisisSalarioTransportacion'])->name('analisis-salario-transportacion');
             Route::get('control-diario-administrativo', [ReportController::class, 'pdfControlDiarioAdministrativo'])->name('control-diario-administrativo');
             Route::get('control-diario-choferes', [ReportController::class, 'pdfControlDiarioChoferes'])->name('control-diario-choferes');
+            Route::get('exportar-versat', [ReportController::class, 'exportarVersat'])->name('exportar-versat');
             Route::get('incidencias', [ReportController::class, 'pdfIncidencias'])->name('incidencias');
             Route::get('modelo1', [ReportController::class, 'pdfModelo1'])->name('modelo1');
             Route::get('prenomina-choferes-excel', [ReportController::class, 'excelPrenominaChoferes'])->name('prenomina-choferes-excel');

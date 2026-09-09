@@ -258,6 +258,71 @@ class NominaReportService extends BaseReportService
             ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
     }
 
+    /**
+     * Exportación al VERSAT — réplica de Salarioadmin::exportar_versat.
+     * Genera 2 CSVs (SalariosAdministrativos + SalarioChoferes, formato
+     * versat,ttotal,1,st | versat,1,ttotal,0) y los devuelve en un ZIP:
+     * SalariosAdministrativos{ano}{mes}.csv / SalarioChoferes{ano}{mes}.csv.
+     *
+     * Verificado 1:1 contra las referencias de junio 2026 (entidad 20):
+     * 23 choferes + 35 administrativos.
+     */
+    public function exportarVersat(\Illuminate\Http\Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $svc = app(ReportePrenominaService::class);
+        $relleno = 4; // Holguín; la Habana (provincia 3400) usa 5.
+
+        // Choferes (sistema 2): versat,ttotal,1,st(impsalfinal).
+        $choferes = $svc->analisisTransportacion($mes, $ano, $entidadId);
+        $lineasChoferes = [];
+        foreach ($choferes['registros'] as $r) {
+            $versat = str_pad(trim((string) ($r['versat'] ?? '')), $relleno, '0', STR_PAD_LEFT);
+            if ($versat !== '' && (float) $r['ttotal'] > 0) {
+                $lineasChoferes[] = $versat.','.$r['ttotal'].',1,'.$r['total'];
+            }
+        }
+
+        // Administrativos (sistema 1): versat,1,ttotal,0 — orden alfabético
+        // por nombre de área (réplica del resultado legacy: SUBDIRECCION DE
+        // ORGANIZACIÓN Y DESARROLLO queda última en la referencia).
+        $admin = $svc->pagoAdministrativo($mes, $ano, $entidadId);
+        $registrosAdmin = collect($admin['registros'])
+            ->sortBy(fn ($r) => [$r['nombarea'] ?? '', $r['nombrecompleto'] ?? ''])
+            ->values();
+        $lineasAdmin = [];
+        foreach ($registrosAdmin as $r) {
+            $versat = str_pad(trim((string) ($r['versat'] ?? '')), $relleno, '0', STR_PAD_LEFT);
+            $ttotal = (float) ($r['ttotal'] ?? 0);
+            if ($versat !== '' && $ttotal > 0) {
+                $lineasAdmin[] = $versat.',1,'.$ttotal.',0';
+            }
+        }
+
+        // ZIP con ambos CSVs (mismo nombre que el legacy).
+        $zip = new \ZipArchive();
+        $tmp = tempnam(sys_get_temp_dir(), 'versat').'.zip';
+        $zip->open($tmp, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+        $csvChoferes = implode("\r\n", $lineasChoferes).($lineasChoferes ? "\r\n" : '');
+        $csvAdmin = implode("\r\n", $lineasAdmin).($lineasAdmin ? "\r\n" : '');
+
+        $mesPadNombre = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $zip->addFromString("SalariosAdministrativos{$ano}{$mesPadNombre}.csv", $csvAdmin);
+        $zip->addFromString("SalarioChoferes{$ano}{$mesPadNombre}.csv", $csvChoferes);
+        $zip->close();
+
+        $contenido = file_get_contents($tmp);
+        @unlink($tmp);
+
+        return response($contenido)
+            ->header('Content-Type', 'application/zip')
+            ->header('Content-Disposition', 'attachment; filename="versat_prenominas_'.$ano.'-'.$mesPadNombre.'.zip"');
+    }
+
     public function pdfIncidencias(\Illuminate\Http\Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));

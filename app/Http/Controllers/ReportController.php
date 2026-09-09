@@ -132,6 +132,13 @@ class ReportController extends Controller
         return app(NominaReportService::class)->pdfControlDiarioChoferes($request);
     }
 
+    public function exportarVersat(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->exportarVersat($request);
+    }
+
     public function pdfIncidencias(Request $request)
     {
         abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);

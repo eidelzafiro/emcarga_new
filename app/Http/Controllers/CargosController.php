@@ -60,21 +60,21 @@ class CargosController extends Controller
                 'label' => 'Grupo Escala',
                 'type' => 'select',
                 'required' => true,
-                'grid' => true,
+                'grid' => false, // la vista lo resuelve via relación grupo_escala
                 'options' => $this->comboGruposEscala(),
             ],
             'id_categoria_cargo' => [
                 'label' => 'Categoría',
                 'type' => 'select',
                 'required' => true,
-                'grid' => true,
+                'grid' => false, // la vista lo resuelve via relación categoria_cargo
                 'options' => $this->comboCategorias(),
             ],
             'id_grupo_horario' => [
                 'label' => 'Grupo Horario',
                 'type' => 'select',
                 'required' => true,
-                'grid' => true,
+                'grid' => false, // la vista lo resuelve via relación grupo_horario
                 'options' => $this->comboGruposHorario(),
             ],
             'tipo_salario' => [
@@ -136,10 +136,10 @@ class CargosController extends Controller
             'nombre' => 'required|string|max:255',
             'activo' => 'boolean',
             'id_fondo_tiempo' => 'required|exists:fondos_tiempo,id',
-            'id_nivel_educacion' => 'required|exists:tipos_nivel_educacion,id',
+            'id_nivel_educacion' => 'required|exists:catalogo_items,id',
             'id_grupo_escala' => 'required|exists:grupos_escala,id',
             'id_categoria_cargo' => 'required|exists:catalogo_items,id',
-            'id_grupo_horario' => 'required|exists:tipos_grupo_horario,id',
+            'id_grupo_horario' => 'required|exists:catalogo_items,id',
             'tipo_salario' => 'required|in:0,1',
             'en_salario' => 'required|in:0,1',
             'tarifa' => 'nullable|numeric',
@@ -169,6 +169,13 @@ class CargosController extends Controller
             });
         }
 
+        if ($request->filled('id_grupo_escala')) {
+            $query->where('id_grupo_escala', $request->integer('id_grupo_escala'));
+        }
+        if ($request->filled('id_grupo_horario')) {
+            $query->where('id_grupo_horario', $request->integer('id_grupo_horario'));
+        }
+
         $items = $query->orderBy($this->getSortField())->paginate(20);
 
         $fields = array_merge(
@@ -186,7 +193,9 @@ class CargosController extends Controller
         return Inertia::render('Cargos/Index', [
             'title' => $this->getTitle(),
             'items' => $items,
-            'filters' => $request->only('search'),
+            'filters' => $request->only(['search', 'id_grupo_escala', 'id_grupo_horario']),
+            'gruposEscala' => $this->comboGruposEscala(),
+            'gruposHorario' => $this->comboGruposHorario(),
             'catalogConfig' => [
                 'route' => $this->getRouteName(),
                 'title' => $this->getTitle(),

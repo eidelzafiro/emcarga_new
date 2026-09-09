@@ -14,9 +14,11 @@ import Dialog from 'primevue/dialog'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, filters: Object, catalogConfig: Object })
+const props = defineProps({ items: Object, filters: Object, catalogConfig: Object, gruposEscala: Array, gruposHorario: Array })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
+const filtroEscala = ref(props.filters?.id_grupo_escala || null)
+const filtroHorario = ref(props.filters?.id_grupo_horario || null)
 const showForm = ref(false)
 const editing = ref(null)
 const continuar = ref(false)
@@ -25,17 +27,28 @@ const baseForm = () => ({ nombre: '', activo: true })
 
 const form = ref(baseForm())
 
-watch(search, () => {
-  router.get(route(`${props.catalogConfig.route}.index`), { search: search.value }, { preserveState: true, replace: true })
-})
-
-const onPage = (event) => {
-  router.get(route(`${props.catalogConfig.route}.index`), { page: event.page + 1, search: search.value }, { preserveState: true, replace: true })
+function aplicarFiltros(page = 1) {
+  router.get(route('cargos.index'), {
+    search: search.value,
+    id_grupo_escala: filtroEscala.value,
+    id_grupo_horario: filtroHorario.value,
+    page,
+  }, { preserveState: true, replace: true })
 }
 
-const allFields = computed(() => props.catalogConfig?.fields || {})
+watch(search, () => aplicarFiltros(1))
+watch([filtroEscala, filtroHorario], () => aplicarFiltros(1))
 
-const gridFields = computed(() => props.catalogConfig?.gridFields || {})
+const onPage = (event) => aplicarFiltros(event.page + 1)
+
+const allFields = computed(() => props.catalogConfig?.fields || {})
+const gridFields = computed(() => {
+  const out = {}
+  for (const [k, v] of Object.entries(props.catalogConfig?.gridFields || {})) {
+    if (k !== 'nombre') out[k] = v
+  }
+  return out
+})
 
 const activosCount = computed(() => {
   if (!props.items?.data) return null
@@ -46,6 +59,11 @@ function getSelectLabel(options, value) {
   if (!options || value === null || value === undefined) return ''
   const opt = options.find(o => o.value === value)
   return opt ? opt.label : value
+}
+
+function formatTarifa(val) {
+  if (val === null || val === undefined || val === '') return '—'
+  return Number(val).toFixed(6)
 }
 
 function getFormFields() {
@@ -123,17 +141,36 @@ function submit(continuarActivo = false) {
           </span>
         </template>
         <template #end>
-          <InputText v-model="search" placeholder="Buscar..." />
+          <div class="flex gap-2 flex-wrap">
+            <Select v-model="filtroEscala" :options="gruposEscala" optionLabel="label" optionValue="value"
+              placeholder="Grupo Escala" showClear class="w-44" />
+            <Select v-model="filtroHorario" :options="gruposHorario" optionLabel="label" optionValue="value"
+              placeholder="Grupo Horario" showClear class="w-44" />
+            <InputText v-model="search" placeholder="Buscar..." />
+          </div>
         </template>
       </Toolbar>
 
       <DataTable :value="items.data" striped-rows paginator :rows="20" :total-records="items.total"
         :lazy="true" :first="(items.current_page - 1) * items.per_page" @page="onPage" class="text-sm" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
         <Column field="nombre" header="Nombre" sortable />
+        <!-- Columnas de relación resueltas (no ids). -->
+        <Column header="Grupo Escala">
+          <template #body="{ data }">{{ data.grupo_escala?.nombre ?? '—' }}</template>
+        </Column>
+        <Column header="Categoría">
+          <template #body="{ data }">{{ data.categoria_cargo?.nombre ?? '—' }}</template>
+        </Column>
+        <Column header="Grupo Horario">
+          <template #body="{ data }">{{ data.grupo_horario?.nombre ?? '—' }}</template>
+        </Column>
         <template v-for="(cfg, key) in gridFields" :key="key">
-          <Column :field="key" :header="cfg.label">
+          <Column v-if="!key.startsWith('id_')" :field="key" :header="cfg.label">
             <template #body="{ data }">
-              <span v-if="cfg.type === 'select' && cfg.options">{{ getSelectLabel(cfg.options, data[key]) }}</span>
+              <span v-if="key === 'tarifa' || key === 'cla' || key === 'salario_escala'" class="font-mono">
+                {{ formatTarifa(data[key]) }}
+              </span>
+              <span v-else-if="cfg.type === 'select' && cfg.options">{{ getSelectLabel(cfg.options, data[key]) }}</span>
               <span v-else-if="cfg.type === 'boolean'">
                 <i :class="data[key] ? 'pi pi-check text-green-600' : 'pi pi-times text-red-500'" />
               </span>
@@ -166,15 +203,20 @@ function submit(continuarActivo = false) {
             <InputText v-model="form.nombre" class="w-full" required />
           </div>
           <template v-for="(cfg, key) in allFields" :key="key">
-            <div v-if="key !== 'nombre' && key !== 'activo'" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
+            <div v-if="key !== 'nombre' && key !== 'activo' && !key.startsWith('id_')" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
-              <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
+              <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" :minFractionDigits="6" :maxFractionDigits="6" />
               <Select v-else-if="cfg.type === 'select' && cfg.options" v-model="form[key]" :options="cfg.options" optionLabel="label" optionValue="value" placeholder="Seleccionar..." class="w-full" :showClear="!cfg.required" />
               <div v-else-if="cfg.type === 'boolean'" class="flex items-center gap-2 pt-2">
                 <ToggleSwitch v-model="form[key]" :inputId="'fld-' + key" />
                 <label :for="'fld-' + key" class="text-sm">{{ cfg.label }}</label>
               </div>
               <InputText v-else v-model="form[key]" class="w-full" />
+            </div>
+            <!-- Campos de relación (id_*): selects ocupando su celda. -->
+            <div v-else-if="key.startsWith('id_')">
+              <label class="block mb-1 font-medium">{{ cfg.label }}</label>
+              <Select v-model="form[key]" :options="cfg.options" optionLabel="label" optionValue="value" placeholder="Seleccionar..." class="w-full" :showClear="!cfg.required" />
             </div>
           </template>
         </div>

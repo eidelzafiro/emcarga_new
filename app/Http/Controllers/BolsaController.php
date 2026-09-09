@@ -22,7 +22,11 @@ class BolsaController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\Bolsa::class);
-        $items = Bolsa::with(['cargo', 'area', 'entidad', 'sexoCatalogo', 'colorPiel', 'nivelEducacional', 'estadoCivil', 'ubicacionDefensa'])
+        $items = Bolsa::with([
+            'cargo', 'area', 'entidad', 'sexoCatalogo', 'colorPiel', 'nivelEducacional', 'estadoCivil', 'ubicacionDefensa',
+            'documentos' => fn ($q) => $q->orderByDesc('vencimiento'),
+            'licenciaCategorias',
+        ])
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('nombre', 'like', "%{$s}%")
                     ->orWhere('apellidos', 'like', "%{$s}%")
@@ -62,7 +66,7 @@ class BolsaController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $this->authorize('create', \App\Models\Bolsa::class);if (! $request->user()->hasRole('SUPERADMIN')) {
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
@@ -72,6 +76,7 @@ class BolsaController extends Controller
         $validated['id_entidad'] ??= entidadActivaId();
 
         $bolsa = Bolsa::create($validated);
+        $this->syncDocumentos($bolsa, $request);
 
         if ($request->boolean('crear_usuario')) {
             $this->crearUsuario($bolsa, $request);
@@ -84,7 +89,7 @@ class BolsaController extends Controller
 
     public function update(Request $request, Bolsa $bolsa)
     {
-        
+
         $this->authorize('update', $bolsa);if (! $request->user()->hasRole('SUPERADMIN')) {
             abort(403, 'Solo el SUPERADMIN puede modificar la bolsa.');
         }
@@ -96,6 +101,7 @@ class BolsaController extends Controller
         $validated['id_entidad'] ??= entidadActivaId();
 
         $bolsa->update($validated);
+        $this->syncDocumentos($bolsa, $request);
 
         $this->notificarDocumentos($bolsa);
 
@@ -129,17 +135,6 @@ class BolsaController extends Controller
             'nivel_educacional' => ['nullable', 'exists:catalogo_items,id'],
             'estado_civil' => ['nullable', 'exists:catalogo_items,id'],
             'ubicacion_defensa' => ['nullable', 'exists:catalogo_items,id'],
-            'tiene_licencia' => ['boolean'],
-            'categorias_licencia' => ['nullable', 'max:100'],
-            'licencia_emision' => ['nullable', 'date'],
-            'licencia_vencimiento' => ['nullable', 'date'],
-            'limitaciones' => ['nullable', 'string'],
-            'chequeo_medico_emision' => ['nullable', 'date'],
-            'chequeo_medico_vencimiento' => ['nullable', 'date'],
-            'reubicacion_emision' => ['nullable', 'date'],
-            'reubicacion_vencimiento' => ['nullable', 'date'],
-            'psicometrico_emision' => ['nullable', 'date'],
-            'psicometrico_vencimiento' => ['nullable', 'date'],
             'fecha_nacimiento' => ['nullable', 'date'],
             'direccion' => ['nullable', 'max:500'],
             'telefono' => ['nullable', 'max:100'],
@@ -147,7 +142,57 @@ class BolsaController extends Controller
             'id_cargo' => ['nullable', 'exists:cargos,id'],
             'id_area' => ['nullable', 'exists:areas,id'],
             'id_entidad' => ['nullable', 'exists:entidades,id'],
+            // Documentos del chofer (tabla documentos_chofer).
+            'documentos' => ['nullable', 'array'],
+            'documentos.*.tipo' => ['required_with:documentos', 'in:LICENCIA,CHEQUEO_MEDICO,RECALIFICACION,PSICOMETRICO'],
+            'documentos.*.numero' => ['nullable', 'max:50'],
+            'documentos.*.emision' => ['nullable', 'date'],
+            'documentos.*.vencimiento' => ['nullable', 'date'],
+            'documentos.*.notas' => ['nullable', 'max:255'],
+            'categorias_licencia' => ['nullable', 'array'],
+            'categorias_licencia.*' => ['nullable', 'max:3'],
         ];
+    }
+
+    /**
+     * Sincroniza los documentos del chofer (upsert por tipo) y las
+     * categorías de licencia (pivote).
+     */
+    private function syncDocumentos(Bolsa $bolsa, Request $request): void
+    {
+        $documentos = $request->input('documentos', []);
+        if (is_array($documentos)) {
+            foreach ($documentos as $doc) {
+                $tipo = $doc['tipo'] ?? null;
+                if (! $tipo || ! in_array($tipo, \App\Models\DocumentoChofer::TIPOS, true)) {
+                    continue;
+                }
+
+                $datos = [
+                    'numero' => $doc['numero'] ?? null,
+                    'emision' => $doc['emision'] ?: null,
+                    'vencimiento' => $doc['vencimiento'] ?: null,
+                    'notas' => $doc['notas'] ?? null,
+                    'vigente' => true,
+                    'id_entidad' => $bolsa->id_entidad,
+                ];
+
+                \App\Models\DocumentoChofer::updateOrCreate(
+                    ['id_bolsa' => $bolsa->id, 'tipo' => $tipo],
+                    $datos
+                );
+            }
+        }
+
+        $categorias = array_values(array_filter(array_map('trim', (array) $request->input('categorias_licencia', []))));
+        if ($request->has('categorias_licencia')) {
+            \App\Models\LicenciaCategoria::where('id_bolsa', $bolsa->id)->delete();
+            foreach (array_unique($categorias) as $cat) {
+                if ($cat !== '') {
+                    \App\Models\LicenciaCategoria::create(['id_bolsa' => $bolsa->id, 'categoria' => mb_strtoupper($cat)]);
+                }
+            }
+        }
     }
 
     /**

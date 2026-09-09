@@ -1705,7 +1705,6 @@ class EtlService
                     $direccion = trim((string) $fila->direccion) ?: null;
                     $telefono = trim((string) $fila->telefono) ?: null;
 
-                    $categoriasLicencia = trim((string) $fila->licencia) ?: null;
                     $fechaNula = static fn ($f) => $f && $f !== '0000-00-00' ? $f : null;
                     DB::table('bolsa')->updateOrInsert(
                         ['id' => $fila->idbolsa],
@@ -1723,17 +1722,6 @@ class EtlService
                             'direccion' => $direccion,
                             'telefono' => $telefono,
                             'email' => null,
-                            'tiene_licencia' => $categoriasLicencia !== null ? 1 : 0,
-                            'categorias_licencia' => $categoriasLicencia,
-                            'licencia' => $categoriasLicencia,
-                            'licencia_emision' => $fechaNula($fila->femisionlic),
-                            'licencia_vencimiento' => $fechaNula($fila->fvencelic),
-                            'chequeo_medico_emision' => $fechaNula($fila->femisioncm),
-                            'chequeo_medico_vencimiento' => $fechaNula($fila->fvencecm),
-                            'reubicacion_emision' => $fechaNula($fila->femisionrec),
-                            'reubicacion_vencimiento' => $fechaNula($fila->fvencerec),
-                            'psicometrico_emision' => $fechaNula($fila->femisionpsi),
-                            'psicometrico_vencimiento' => $fechaNula($fila->fvencepsi),
                             'id_cargo' => $cargoPorBolsa[$fila->idbolsa] ?? $cargoDefaultId,
                             'id_area' => ($areaPorBolsa[$fila->idbolsa] ?? null) ?: null,
                             'id_entidad' => $fila->idunidad ?: 1,
@@ -1742,6 +1730,54 @@ class EtlService
                             'updated_at' => now(),
                         ]
                     );
+
+                    // Documentos del chofer (tabla documentos_chofer, uno por tipo).
+                    $documentos = [
+                        'LICENCIA' => [$fila->femisionlic, $fila->fvencelic, trim((string) $fila->limitado) === '1' ? 'Limitado' : null, $ci],
+                        'CHEQUEO_MEDICO' => [$fila->femisioncm, $fila->fvencecm, null, null],
+                        'RECALIFICACION' => [$fila->femisionrec, $fila->fvencerec, null, null],
+                        'PSICOMETRICO' => [$fila->femisionpsi, $fila->fvencepsi, null, null],
+                    ];
+                    foreach ($documentos as $tipo => [$docEmision, $docVencimiento, $docNotas, $docNumero]) {
+                        $em = $fechaNula($docEmision);
+                        $vc = $fechaNula($docVencimiento);
+                        if ($em === null && $vc === null) {
+                            continue;
+                        }
+                        DB::table('documentos_chofer')->updateOrInsert(
+                            ['id_bolsa' => $fila->idbolsa, 'tipo' => $tipo],
+                            [
+                                'numero' => $docNumero,
+                                'emision' => $em,
+                                'vencimiento' => $vc,
+                                'notas' => $docNotas,
+                                'vigente' => true,
+                                'id_entidad' => $fila->idunidad ?: 1,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                    }
+
+                    // Categorías de licencia (pivote): texto "B,C" + columnas cat_*.
+                    $cats = [];
+                    foreach (['A', 'B', 'C', 'D', 'E'] as $cat) {
+                        if ((int) ($fila->{'cat_'.strtolower($cat)} ?? 0) === 1) {
+                            $cats[] = $cat;
+                        }
+                    }
+                    foreach (preg_split('/[,\s]+/', mb_strtoupper((string) $fila->licencia)) ?: [] as $cat) {
+                        $cat = trim($cat);
+                        if ($cat !== '' && strlen($cat) <= 3 && ! in_array($cat, $cats, true)) {
+                            $cats[] = $cat;
+                        }
+                    }
+                    foreach ($cats as $cat) {
+                        DB::table('licencia_categorias')->updateOrInsert(
+                            ['id_bolsa' => $fila->idbolsa, 'categoria' => $cat],
+                            ['created_at' => now(), 'updated_at' => now()]
+                        );
+                    }
 
                     $procesados++;
                 }

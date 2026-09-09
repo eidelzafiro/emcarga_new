@@ -119,39 +119,29 @@ class LicenciaConduccionFpdfReport extends ReportesnewFpdfBase
         $rows = Bolsa::query()
             ->where('id_entidad', $this->entidadId)
             ->where('activo', true)
-            ->where('licencia', '!=', '')
+            ->whereHas('documentos', fn ($q) => $q->where('tipo', 'LICENCIA'))
             ->whereNull('deleted_at')
+            ->with(['documentos' => fn ($q) => $q->where('tipo', 'LICENCIA'), 'licenciaCategorias'])
             ->orderBy('nombre')
             ->orderBy('apellidos')
             ->get();
 
         $arr = [];
         foreach ($rows as $b) {
-            $cats = $this->parsearCategorias((string) $b->categorias_licencia);
+            $doc = $b->documentos->first();
+            $cats = $b->licenciaCategorias->pluck('categoria')->all();
             $arr[] = [
                 'nombrecompleto' => $b->nombre.' '.$b->apellidos,
                 'ci' => (string) $b->ci,
-                'licencia' => (string) $b->licencia,
+                'licencia' => (string) ($doc->numero ?? $b->ci),
                 'categorias' => $cats,
-                'falta' => $this->formatoFecha($b->licencia_emision),
-                'fvence' => $this->formatoFecha($b->licencia_vencimiento),
-                'limitacion' => trim((string) $b->limitaciones) !== '' ? 'C/ESPEJUELOS' : '',
+                'falta' => $this->formatoFecha($doc?->emision?->format('Y-m-d')),
+                'fvence' => $this->formatoFecha($doc?->vencimiento?->format('Y-m-d')),
+                'limitacion' => trim((string) ($doc->notas ?? '')) !== '' ? 'C/ESPEJUELOS' : '',
             ];
         }
 
         return $arr;
-    }
-
-    private function parsearCategorias(string $raw): array
-    {
-        $flags = [];
-        foreach (explode(',', $raw) as $token) {
-            $token = trim($token);
-            if (in_array($token, self::CATEGORIAS, true)) {
-                $flags[$token] = 'X';
-            }
-        }
-        return $flags;
     }
 
     private function formatoFecha($fecha): string

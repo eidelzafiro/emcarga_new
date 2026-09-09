@@ -293,7 +293,7 @@ class SalarioChoferCalcService
     private function obtenerChoferesActivos()
     {
         return Bolsa::where('activo', true)
-            ->where('tiene_licencia', true)
+            ->whereHas('documentos', fn ($q) => $q->where('tipo', 'LICENCIA'))
             ->whereHas('movimientosRrhh', function ($q) {
                 $q->whereNull('fbaja')->where('origen', 'mov');
             })

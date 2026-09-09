@@ -24,14 +24,20 @@ const showForm = ref(false)
 const editing = ref(null)
 const isChofer = ref(false)
 
+const docTipos = [
+  { label: 'Licencia de Conducción', value: 'LICENCIA' },
+  { label: 'Chequeo Médico', value: 'CHEQUEO_MEDICO' },
+  { label: 'Recalificación', value: 'RECALIFICACION' },
+  { label: 'Psicométrico', value: 'PSICOMETRICO' },
+]
+const docEtiqueta = (t) => docTipos.find(d => d.value === t)?.label || t
+const catOpciones = ['A', 'A1', 'B', 'C', 'C1', 'D', 'D1', 'E', 'F', 'FE']
+
 const emptyForm = () => ({
   ci: '', nombre: '', apellidos: '', sexo: null, color_piel: null, nivel_educacional: null,
   estado_civil: null, ubicacion_defensa: null, fecha_nacimiento: null,
-  tiene_licencia: false, categorias_licencia: '', licencia_emision: null, licencia_vencimiento: null,
-  limitaciones: '',
-  chequeo_medico_emision: null, chequeo_medico_vencimiento: null,
-  reubicacion_emision: null, reubicacion_vencimiento: null,
-  psicometrico_emision: null, psicometrico_vencimiento: null,
+  documentos: [],
+  categorias_licencia: [],
   direccion: '', telefono: '', email: '', id_cargo: null, id_area: null, id_entidad: null,
   crear_usuario: false, rol: 'RECHUM',
 })
@@ -66,27 +72,28 @@ watch(() => form.value.id_cargo, (val) => {
 function openCreate() {
   editing.value = null
   form.value = emptyForm()
+  form.value.documentos = docTipos.map(t => ({ tipo: t.value, numero: '', emision: null, vencimiento: null, notas: '' }))
   isChofer.value = false
   showForm.value = true
 }
 
 function openEdit(item) {
   editing.value = item
+  const docs = {}
+  for (const d of (item.documentos || [])) docs[d.tipo] = d
   form.value = {
     ci: item.ci, nombre: item.nombre, apellidos: item.apellidos,
     sexo: item.sexo, color_piel: item.color_piel, nivel_educacional: item.nivel_educacional,
     estado_civil: item.estado_civil, ubicacion_defensa: item.ubicacion_defensa,
     fecha_nacimiento: item.fecha_nacimiento ? new Date(item.fecha_nacimiento) : null,
-    tiene_licencia: Boolean(item.tiene_licencia), categorias_licencia: item.categorias_licencia || '',
-    licencia_emision: item.licencia_emision ? new Date(item.licencia_emision) : null,
-    licencia_vencimiento: item.licencia_vencimiento ? new Date(item.licencia_vencimiento) : null,
-    limitaciones: item.limitaciones || '',
-    chequeo_medico_emision: item.chequeo_medico_emision ? new Date(item.chequeo_medico_emision) : null,
-    chequeo_medico_vencimiento: item.chequeo_medico_vencimiento ? new Date(item.chequeo_medico_vencimiento) : null,
-    reubicacion_emision: item.reubicacion_emision ? new Date(item.reubicacion_emision) : null,
-    reubicacion_vencimiento: item.reubicacion_vencimiento ? new Date(item.reubicacion_vencimiento) : null,
-    psicometrico_emision: item.psicometrico_emision ? new Date(item.psicometrico_emision) : null,
-    psicometrico_vencimiento: item.psicometrico_vencimiento ? new Date(item.psicometrico_vencimiento) : null,
+    documentos: docTipos.map(t => ({
+      tipo: t.value,
+      numero: docs[t.value]?.numero || '',
+      emision: docs[t.value]?.emision ? new Date(docs[t.value].emision) : null,
+      vencimiento: docs[t.value]?.vencimiento ? new Date(docs[t.value].vencimiento) : null,
+      notas: docs[t.value]?.notas || '',
+    })),
+    categorias_licencia: (item.licencia_categorias || []).map(c => c.categoria),
     direccion: item.direccion || '', telefono: item.telefono || '', email: item.email || '',
     id_cargo: item.id_cargo, id_area: item.id_area, id_entidad: item.id_entidad,
   }
@@ -127,8 +134,13 @@ function submit() {
         <Column field="sexo_catalogo.nombre" header="Sexo" />
         <Column header="Licencia">
           <template #body="{ data }">
-            <Tag v-if="data.tiene_licencia" value="Sí" severity="success" />
+            <Tag v-if="(data.documentos || []).some(d => d.tipo === 'LICENCIA')" value="Sí" severity="success" />
             <Tag v-else value="No" severity="secondary" />
+          </template>
+        </Column>
+        <Column header="Categ.">
+          <template #body="{ data }">
+            <span class="text-sm">{{ (data.licencia_categorias || []).map(c => c.categoria).join(', ') }}</span>
           </template>
         </Column>
         <Column field="cargo.nombre" header="Cargo" />
@@ -217,60 +229,39 @@ function submit() {
           </div>
         </fieldset>
 
-        <!-- Licencia de Conducción -->
+        <!-- Documentos del Chofer -->
         <fieldset class="border rounded-lg p-4">
-          <legend class="font-bold text-lg px-2">Licencia de Conducción</legend>
-          <div class="flex items-center gap-4 mb-3">
-            <label class="font-medium">¿Tiene Licencia de Conducción?</label>
-            <ToggleSwitch v-model="form.tiene_licencia" />
-          </div>
-          <div v-if="form.tiene_licencia" class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block mb-1 font-medium">Categorías</label>
-              <InputText v-model="form.categorias_licencia" class="w-full" placeholder="Ej: A, B, C, D" />
+          <legend class="font-bold text-lg px-2">Documentos</legend>
+          <div class="space-y-4">
+            <div v-for="(doc, idx) in form.documentos" :key="doc.tipo" class="border rounded-lg p-3">
+              <div class="font-semibold mb-2 text-orange-600">{{ docEtiqueta(doc.tipo) }}</div>
+              <div class="grid grid-cols-2 gap-4">
+                <div v-if="doc.tipo === 'LICENCIA'">
+                  <label class="block mb-1 font-medium">Número</label>
+                  <InputText v-model="doc.numero" class="w-full" />
+                </div>
+                <div>
+                  <label class="block mb-1 font-medium">Emisión</label>
+                  <DatePicker v-model="doc.emision" dateFormat="dd/mm/yy" class="w-full" />
+                </div>
+                <div>
+                  <label class="block mb-1 font-medium">Vencimiento</label>
+                  <DatePicker v-model="doc.vencimiento" dateFormat="dd/mm/yy" class="w-full" />
+                </div>
+                <div v-if="doc.tipo === 'LICENCIA'" class="col-span-2">
+                  <label class="block mb-1 font-medium">Limitaciones</label>
+                  <InputText v-model="doc.notas" class="w-full" placeholder="Restricciones (ej: C/ESPEJUELOS)" />
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="block mb-1 font-medium">Fecha de Emisión</label>
-              <DatePicker v-model="form.licencia_emision" dateFormat="dd/mm/yy" class="w-full" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Vencimiento</label>
-              <DatePicker v-model="form.licencia_vencimiento" dateFormat="dd/mm/yy" class="w-full" />
-            </div>
-            <div class="col-span-2">
-              <label class="block mb-1 font-medium">Limitaciones</label>
-              <InputText v-model="form.limitaciones" class="w-full" placeholder="Restricciones o limitaciones físicas" />
-            </div>
-          </div>
-        </fieldset>
-
-        <!-- Chequeos Médicos (solo choferes) -->
-        <fieldset v-if="isChofer" class="border rounded-lg p-4">
-          <legend class="font-bold text-lg px-2 text-orange-600">Chequeos Médicos (Chofer de Transportación)</legend>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block mb-1 font-medium">Chequeo Médico - Emisión</label>
-              <DatePicker v-model="form.chequeo_medico_emision" dateFormat="dd/mm/yy" class="w-full" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Chequeo Médico - Vencimiento</label>
-              <DatePicker v-model="form.chequeo_medico_vencimiento" dateFormat="dd/mm/yy" class="w-full" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Recalificación - Emisión</label>
-              <DatePicker v-model="form.reubicacion_emision" dateFormat="dd/mm/yy" class="w-full" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Recalificación - Vencimiento</label>
-              <DatePicker v-model="form.reubicacion_vencimiento" dateFormat="dd/mm/yy" class="w-full" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Psicométrico - Emisión</label>
-              <DatePicker v-model="form.psicometrico_emision" dateFormat="dd/mm/yy" class="w-full" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Psicométrico - Vencimiento</label>
-              <DatePicker v-model="form.psicometrico_vencimiento" dateFormat="dd/mm/yy" class="w-full" />
+            <div class="p-3 bg-orange-50 rounded-lg">
+              <label class="block mb-2 font-medium">Categorías de Licencia</label>
+              <div class="flex gap-2 flex-wrap">
+                <div v-for="cat in catOpciones" :key="cat" class="flex items-center gap-1">
+                  <Checkbox v-model="form.categorias_licencia" :value="cat" :inputId="`cat-${cat}`" />
+                  <label :for="`cat-${cat}`" class="text-sm">{{ cat }}</label>
+                </div>
+              </div>
             </div>
           </div>
         </fieldset>

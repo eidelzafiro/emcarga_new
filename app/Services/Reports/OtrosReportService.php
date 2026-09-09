@@ -115,7 +115,7 @@ class OtrosReportService
     {
         $ids = $this->entidadFiltro($filtros);
 
-        $personas = Bolsa::with('cargo:id,nombre', 'entidad:id,nombre')
+        $personas = Bolsa::with('cargo:id,nombre', 'entidad:id,nombre', 'documentos', 'licenciaCategorias')
             ->whereIn('id_entidad', $ids)
             ->where('activo', 1)
             ->orderBy('nombre')
@@ -131,15 +131,19 @@ class OtrosReportService
             ['key' => 'reubicacion', 'label' => 'Reubic. vence', 'num' => false],
         ];
 
-        $filas = $personas->map(fn ($p) => [
-            'nombre' => $p->nombrecompleto,
-            'ci' => $p->ci,
-            'cargo' => optional($p->cargo)->nombre,
-            'licencia' => optional($p->licencia_vencimiento)?->format('d/m/Y'),
-            'chequeo' => optional($p->chequeo_medico_vencimiento)?->format('d/m/Y'),
-            'psicometrico' => optional($p->psicometrico_vencimiento)?->format('d/m/Y'),
-            'reubicacion' => optional($p->reubicacion_vencimiento)?->format('d/m/Y'),
-        ])->all();
+        $filas = $personas->map(function ($p) {
+            $docs = $p->documentos->keyBy('tipo');
+
+            return [
+                'nombre' => $p->nombrecompleto,
+                'ci' => $p->ci,
+                'cargo' => optional($p->cargo)->nombre,
+                'licencia' => optional($docs->get('LICENCIA')?->vencimiento)?->format('d/m/Y'),
+                'chequeo' => optional($docs->get('CHEQUEO_MEDICO')?->vencimiento)?->format('d/m/Y'),
+                'psicometrico' => optional($docs->get('PSICOMETRICO')?->vencimiento)?->format('d/m/Y'),
+                'reubicacion' => optional($docs->get('RECALIFICACION')?->vencimiento)?->format('d/m/Y'),
+            ];
+        })->all();
 
         return $this->reporteTablaPdf($titulo, $columnas, $filas, ['periodo' => $periodo]);
     }
@@ -152,7 +156,7 @@ class OtrosReportService
             ? Carbon::parse($filtros['mes'].'-01')->month
             : now()->month;
 
-        $personas = Bolsa::with('cargo:id,nombre', 'entidad:id,nombre')
+        $personas = Bolsa::with('cargo:id,nombre', 'entidad:id,nombre', 'documentos', 'licenciaCategorias')
             ->whereIn('id_entidad', $ids)
             ->where('activo', 1)
             ->whereRaw('MONTH(fecha_nacimiento) = ?', [$mes])
@@ -184,10 +188,10 @@ class OtrosReportService
     {
         $ids = $this->entidadFiltro($filtros);
 
-        $personas = Bolsa::with('cargo:id,nombre', 'entidad:id,nombre')
+        $personas = Bolsa::with('cargo:id,nombre', 'entidad:id,nombre', 'documentos', 'licenciaCategorias')
             ->whereIn('id_entidad', $ids)
             ->where('activo', 1)
-            ->where('tiene_licencia', 1)
+            ->whereHas('documentos', fn ($q) => $q->where('tipo', 'LICENCIA'))
             ->orderBy('nombre')
             ->get();
 
@@ -199,13 +203,17 @@ class OtrosReportService
             ['key' => 'licencia', 'label' => 'Licencia vence', 'num' => false],
         ];
 
-        $filas = $personas->map(fn ($p) => [
-            'nombre' => $p->nombrecompleto,
-            'ci' => $p->ci,
-            'cargo' => optional($p->cargo)->nombre,
-            'categorias' => $p->categorias_licencia,
-            'licencia' => optional($p->licencia_vencimiento)?->format('d/m/Y'),
-        ])->all();
+        $filas = $personas->map(function ($p) {
+            $doc = $p->documentos->firstWhere('tipo', 'LICENCIA');
+
+            return [
+                'nombre' => $p->nombrecompleto,
+                'ci' => $p->ci,
+                'cargo' => optional($p->cargo)->nombre,
+                'categorias' => $p->licenciaCategorias->pluck('categoria')->implode(', '),
+                'licencia' => optional($doc?->vencimiento)?->format('d/m/Y'),
+            ];
+        })->all();
 
         return $this->reporteTablaPdf('Personal con Licencia', $columnas, $filas,
             ['periodo' => 'Unidad: '.(optional(Entidad::find($ids[0]))->nombre ?? '—')]);

@@ -35,7 +35,7 @@ class SalariosChoferesController extends Controller
 
         // Obtener choferes del mes (que tienen aforos vía carta_porte)
         $choferesDelMes = Bolsa::where('activo', true)
-            ->where('tiene_licencia', true)
+            ->whereHas('documentos', fn ($q) => $q->where('tipo', 'LICENCIA'))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->where(function ($q) use ($mes, $ano) {
                 $q->whereHas('cartasPorte.aforos', function ($aq) use ($mes, $ano) {
@@ -93,7 +93,7 @@ class SalariosChoferesController extends Controller
 
         // Choferes activos con licencia (para los combos del modal de edición).
         $choferes = Bolsa::where('activo', true)
-            ->where('tiene_licencia', true)
+            ->whereHas('documentos', fn ($q) => $q->where('tipo', 'LICENCIA'))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(!empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
             ->orderBy('nombre')

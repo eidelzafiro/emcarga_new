@@ -361,17 +361,6 @@ CREATE TABLE `bolsa` (
   `nivel_educacional` int unsigned DEFAULT NULL,
   `estado_civil` int unsigned DEFAULT NULL,
   `ubicacion_defensa` int unsigned DEFAULT NULL,
-  `tiene_licencia` tinyint(1) NOT NULL DEFAULT '0',
-  `categorias_licencia` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `licencia_emision` date DEFAULT NULL,
-  `licencia_vencimiento` date DEFAULT NULL,
-  `limitaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `chequeo_medico_emision` date DEFAULT NULL,
-  `chequeo_medico_vencimiento` date DEFAULT NULL,
-  `reubicacion_emision` date DEFAULT NULL,
-  `reubicacion_vencimiento` date DEFAULT NULL,
-  `psicometrico_emision` date DEFAULT NULL,
-  `psicometrico_vencimiento` date DEFAULT NULL,
   `fecha_nacimiento` date DEFAULT NULL,
   `direccion` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `telefono` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -398,6 +387,45 @@ CREATE TABLE `bolsa` (
   CONSTRAINT `fk_bolsa_nivel_educacional_catalogo` FOREIGN KEY (`nivel_educacional`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_bolsa_estado_civil_catalogo` FOREIGN KEY (`estado_civil`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_bolsa_ubicacion_defensa_catalogo` FOREIGN KEY (`ubicacion_defensa`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table structure for table `documentos_chofer`
+--
+
+DROP TABLE IF EXISTS `documentos_chofer`;
+CREATE TABLE `documentos_chofer` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `id_bolsa` bigint unsigned NOT NULL,
+  `tipo` varchar(30) NOT NULL,
+  `numero` varchar(50) DEFAULT NULL,
+  `emision` date DEFAULT NULL,
+  `vencimiento` date DEFAULT NULL,
+  `notas` varchar(255) DEFAULT NULL,
+  `vigente` tinyint(1) NOT NULL DEFAULT 1,
+  `id_entidad` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `documentos_chofer_tipo_vencimiento_index` (`tipo`,`vencimiento`),
+  KEY `documentos_chofer_id_bolsa_index` (`id_bolsa`),
+  CONSTRAINT `documentos_chofer_id_bolsa_foreign` FOREIGN KEY (`id_bolsa`) REFERENCES `bolsa` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `licencia_categorias`
+--
+
+DROP TABLE IF EXISTS `licencia_categorias`;
+CREATE TABLE `licencia_categorias` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `id_bolsa` bigint unsigned NOT NULL,
+  `categoria` varchar(3) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `licencia_categorias_id_bolsa_categoria_unique` (`id_bolsa`,`categoria`),
+  KEY `licencia_categorias_categoria_index` (`categoria`),
+  CONSTRAINT `licencia_categorias_id_bolsa_foreign` FOREIGN KEY (`id_bolsa`) REFERENCES `bolsa` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `cache`;
@@ -1553,7 +1581,6 @@ CREATE TABLE `entidades` (
   `id_municipio` bigint unsigned DEFAULT NULL,
   `email` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `nit` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `licencia` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `licencia_vencimiento` date DEFAULT NULL,
   `licencia_activa` tinyint(1) NOT NULL DEFAULT '1',
   `cta_unica` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,

@@ -227,11 +227,12 @@ class CartaPorteController extends Controller
                     'marca' => null,
                     'placa' => $t->placa,
                 ]),
-            'choferes' => Bolsa::select('id', 'nombre', 'apellidos', 'ci', 'categorias_licencia')
+            'choferes' => Bolsa::select('id', 'nombre', 'apellidos', 'ci')
                 ->where('activo', true)
-                ->where('tiene_licencia', true)
+                ->whereHas('documentos', fn ($q) => $q->where('tipo', 'LICENCIA')
+                    ->where(fn ($dq) => $dq->whereNull('vencimiento')->orWhere('vencimiento', '>=', $hoy)))
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
-                ->where(fn ($q) => $q->whereNull('licencia_vencimiento')->orWhere('licencia_vencimiento', '>=', $hoy))
+                ->with('licenciaCategorias:categoria,id_bolsa')
                 ->orderBy('nombre')
                 ->get()
                 ->map(fn ($b) => [

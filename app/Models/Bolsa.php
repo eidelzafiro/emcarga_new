@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bolsa extends Model
-{    use SoftDeletes;
+{
+    use SoftDeletes;
 
     protected $table = 'bolsa';
 
@@ -21,18 +22,6 @@ class Bolsa extends Model
         'nivel_educacional',
         'estado_civil',
         'ubicacion_defensa',
-        'tiene_licencia',
-        'categorias_licencia',
-        'licencia',
-        'licencia_emision',
-        'licencia_vencimiento',
-        'limitaciones',
-        'chequeo_medico_emision',
-        'chequeo_medico_vencimiento',
-        'reubicacion_emision',
-        'reubicacion_vencimiento',
-        'psicometrico_emision',
-        'psicometrico_vencimiento',
         'fecha_nacimiento',
         'direccion',
         'telefono',
@@ -50,15 +39,6 @@ class Bolsa extends Model
     {
         return [
             'fecha_nacimiento' => 'date',
-            'tiene_licencia' => 'boolean',
-            'licencia_emision' => 'date',
-            'licencia_vencimiento' => 'date',
-            'chequeo_medico_emision' => 'date',
-            'chequeo_medico_vencimiento' => 'date',
-            'reubicacion_emision' => 'date',
-            'reubicacion_vencimiento' => 'date',
-            'psicometrico_emision' => 'date',
-            'psicometrico_vencimiento' => 'date',
             'activo' => 'boolean',
         ];
     }
@@ -66,6 +46,30 @@ class Bolsa extends Model
     public function cargo(): BelongsTo
     {
         return $this->belongsTo(Cargo::class, 'id_cargo');
+    }
+
+    /** Documentos del chofer (licencia, chequeo médico, recalificación, psicométrico). */
+    public function documentos(): HasMany
+    {
+        return $this->hasMany(DocumentoChofer::class, 'id_bolsa');
+    }
+
+    /** Documento vigente de un tipo (LICENCIA, CHEQUEO_MEDICO, ...). */
+    public function documento(string $tipo): ?DocumentoChofer
+    {
+        return $this->documentos()->where('tipo', $tipo)->orderByDesc('id')->first();
+    }
+
+    /** Categorías de licencia del chofer (A, B, C, D, E...). */
+    public function licenciaCategorias(): HasMany
+    {
+        return $this->hasMany(LicenciaCategoria::class, 'id_bolsa');
+    }
+
+    /** ¿El chofer tiene licencia de conducción (documento LICENCIA vigente)? */
+    public function getTieneLicenciaAttribute(): bool
+    {
+        return $this->documentos()->where('tipo', 'LICENCIA')->exists();
     }
 
     public function sexoCatalogo(): BelongsTo

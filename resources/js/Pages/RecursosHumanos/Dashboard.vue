@@ -384,7 +384,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                   <tr v-for="(fila, i) in categoriasLicencia" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
-                    <td class="table-cell font-medium text-sm dark:text-gray-200">{{ fila.categorias_licencia }}</td>
+                    <td class="table-cell font-medium text-sm dark:text-gray-200">{{ fila.etiqueta }}</td>
                     <td class="table-cell text-center font-mono text-sm dark:text-gray-300">{{ fila.total }}</td>
                   </tr>
                 </tbody>

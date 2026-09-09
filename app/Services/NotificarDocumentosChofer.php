@@ -22,14 +22,14 @@ class NotificarDocumentosChofer
     public const ROLES_DESTINO = ['COMERCIAL', 'DIRECTIVOS', 'RECHUM'];
 
     /**
-     * Documentos vigentes de un chofer. clave => [etiqueta, columna fecha],
-     * la fecha que determina el vencimiento.
+     * Documentos de un chofer: clave => [etiqueta, tipo en documentos_chofer].
+     * Los documentos viven en la tabla documentos_chofer (uno por tipo).
      */
     private const DOCUMENTOS = [
-        'licencia' => ['etiqueta' => 'licencia de conducción', 'fecha' => 'licencia_vencimiento'],
-        'chequeo_medico' => ['etiqueta' => 'chequeo médico', 'fecha' => 'chequeo_medico_vencimiento'],
-        'recalificacion' => ['etiqueta' => 'recalificación', 'fecha' => 'reubicacion_vencimiento'],
-        'psicometrico' => ['etiqueta' => 'psicométrico', 'fecha' => 'psicometrico_vencimiento'],
+        'licencia' => ['etiqueta' => 'licencia de conducción', 'tipo' => 'LICENCIA'],
+        'chequeo_medico' => ['etiqueta' => 'chequeo médico', 'tipo' => 'CHEQUEO_MEDICO'],
+        'recalificacion' => ['etiqueta' => 'recalificación', 'tipo' => 'RECALIFICACION'],
+        'psicometrico' => ['etiqueta' => 'psicométrico', 'tipo' => 'PSICOMETRICO'],
     ];
 
     /**
@@ -74,13 +74,14 @@ class NotificarDocumentosChofer
         }
 
         $hoy = Carbon::today();
+        $documentos = $bolsa->documentos()->get()->keyBy('tipo');
 
         foreach (self::DOCUMENTOS as $clave => $doc) {
-            $fecha = $this->fechaValencia($bolsa, $doc['fecha']);
-            if ($fecha === null) {
+            $documento = $documentos->get($doc['tipo']);
+            if (! $documento || $documento->vencimiento === null) {
                 return false;
             }
-            if ($fecha->lt($hoy)) {
+            if (Carbon::parse($documento->vencimiento)->lt($hoy)) {
                 return false;
             }
         }
@@ -152,11 +153,14 @@ class NotificarDocumentosChofer
         $limite = Carbon::today()->addDays(self::VENTANA_DIAS);
         $alertas = collect();
 
+        $documentos = $bolsa->documentos()->get()->keyBy('tipo');
+
         foreach (self::DOCUMENTOS as $clave => $doc) {
-            $fecha = $this->fechaValencia($bolsa, $doc['fecha']);
-            if ($fecha === null) {
+            $documento = $documentos->get($doc['tipo']);
+            if (! $documento || $documento->vencimiento === null) {
                 continue;
             }
+            $fecha = Carbon::parse($documento->vencimiento);
 
             if ($fecha->lt($hoy)) {
                 $alertas->push(['etiqueta' => $doc['etiqueta'], 'fecha' => $fecha, 'estado' => 'vencida']);
@@ -166,12 +170,6 @@ class NotificarDocumentosChofer
         }
 
         return $alertas->map(fn ($a) => $a + ['fecha_html' => $a['fecha']->format('d/m/Y')]);
-    }
-
-    /** Resuelve la fecha de vencimiento de un documento, o null si no existe. */
-    private function fechaValencia(Bolsa $bolsa, string $columna): ?Carbon
-    {
-        return $bolsa->{$columna} ? Carbon::parse($bolsa->{$columna}) : null;
     }
 
     /** Usuarios CON COMERCIAL/DIRECTIVOS/RECHUM de la entidad del chofer. */

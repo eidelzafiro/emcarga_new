@@ -108,8 +108,8 @@ class DashboardRecursosHumanosService
 
         // ═══ SECCIÓN 2: FUERZA DE TRABAJO ═══
 
-        $bolsaQuery = Bolsa::whereIn('id_entidad', $idsEntidades)
-            ->where('activo', true);
+        $bolsaQuery = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
+            ->where('bolsa.activo', true);
 
         // Sexo (id → catalogo_items tipos_sexo)
         $porSexo = (clone $bolsaQuery)
@@ -208,98 +208,75 @@ class DashboardRecursosHumanosService
 
         $totalChoferes = (clone $choferesQuery)->count();
 
-        // Categorías de licencia
+        // Categorías de licencia (pivote licencia_categorias).
         $categoriasLicencia = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
             ->where('bolsa.activo', true)
             ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
             ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->where('bolsa.tiene_licencia', true)
-            ->whereNotNull('bolsa.categorias_licencia')
-            ->select('bolsa.categorias_licencia', DB::raw('COUNT(*) as total'))
-            ->groupBy('bolsa.categorias_licencia')
+            ->join('licencia_categorias as lc', 'lc.id_bolsa', '=', 'bolsa.id')
+            ->select('lc.categoria as etiqueta', DB::raw('COUNT(*) as total'))
+            ->groupBy('lc.categoria')
             ->orderByDesc('total')
             ->get()
             ->all();
 
-        // Licencias vencidas / por vencer
-        $licenciasVencidas = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->where('bolsa.tiene_licencia', true)
-            ->where('bolsa.licencia_vencimiento', '<', $hoy->toDateString())
-            ->count();
+        // Estado de documentos (tabla documentos_chofer, un documento por tipo).
+        $estadoDocumento = function (string $tipo, bool $requerirDoc = true) use ($idsEntidades, $hoy, $choferesQuery): array {
+            $limite = $hoy->copy()->addDays(90)->toDateString();
 
-        $licenciasPorVencer = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->where('bolsa.tiene_licencia', true)
-            ->where('bolsa.licencia_vencimiento', '>=', $hoy->toDateString())
-            ->where('bolsa.licencia_vencimiento', '<=', $hoy->copy()->addDays(90)->toDateString())
-            ->count();
+            $vencidos = (clone $choferesQuery)
+                ->join('documentos_chofer as d', function ($j) use ($tipo) {
+                    $j->on('d.id_bolsa', '=', 'bolsa.id')->where('d.tipo', $tipo);
+                })
+                ->whereNotNull('d.vencimiento')
+                ->where('d.vencimiento', '<', $hoy->toDateString())
+                ->count();
 
-        $licenciasVigentes = $totalChoferes - $licenciasVencidas - $licenciasPorVencer;
+            $porVencer = (clone $choferesQuery)
+                ->join('documentos_chofer as d', function ($j) use ($tipo) {
+                    $j->on('d.id_bolsa', '=', 'bolsa.id')->where('d.tipo', $tipo);
+                })
+                ->whereNotNull('d.vencimiento')
+                ->where('d.vencimiento', '>=', $hoy->toDateString())
+                ->where('d.vencimiento', '<=', $limite)
+                ->count();
 
-        // Psicométrico vencido / por vencer
-        $psicometricoVencido = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->whereNotNull('bolsa.psicometrico_vencimiento')
-            ->where('bolsa.psicometrico_vencimiento', '<', $hoy->toDateString())
-            ->count();
+            $sinVencer = (clone $choferesQuery)
+                ->join('documentos_chofer as d', function ($j) use ($tipo) {
+                    $j->on('d.id_bolsa', '=', 'bolsa.id')->where('d.tipo', $tipo);
+                })
+                ->where(function ($q) use ($limite) {
+                    $q->where('d.vencimiento', '>', $limite)
+                        ->orWhereNull('d.vencimiento');
+                })
+                ->count();
 
-        $psicometricoPorVencer = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->whereNotNull('bolsa.psicometrico_vencimiento')
-            ->where('bolsa.psicometrico_vencimiento', '>=', $hoy->toDateString())
-            ->where('bolsa.psicometrico_vencimiento', '<=', $hoy->copy()->addDays(90)->toDateString())
-            ->count();
+            return [
+                'vencidos' => $vencidos,
+                'por_vencer' => $porVencer,
+                'vigentes' => $sinVencer,
+            ];
+        };
 
-        $psicometricoVigentes = $totalChoferes - $psicometricoVencido - $psicometricoPorVencer;
+        $licencias = $estadoDocumento('LICENCIA');
+        $licenciasVencidas = $licencias['vencidos'];
+        $licenciasPorVencer = $licencias['por_vencer'];
+        $licenciasVigentes = $licencias['vigentes'];
 
-        // Recalificación (reubicacion en el esquema) vencida / por vencer
-        $recalificacionVencida = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->whereNotNull('bolsa.reubicacion_vencimiento')
-            ->where('bolsa.reubicacion_vencimiento', '<', $hoy->toDateString())
-            ->count();
+        $psicometrico = $estadoDocumento('PSICOMETRICO');
+        $psicometricoVencido = $psicometrico['vencidos'];
+        $psicometricoPorVencer = $psicometrico['por_vencer'];
+        $psicometricoVigentes = $psicometrico['vigentes'];
 
-        $recalificacionPorVencer = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->whereNotNull('bolsa.reubicacion_vencimiento')
-            ->where('bolsa.reubicacion_vencimiento', '>=', $hoy->toDateString())
-            ->where('bolsa.reubicacion_vencimiento', '<=', $hoy->copy()->addDays(90)->toDateString())
-            ->count();
+        $recalificacion = $estadoDocumento('RECALIFICACION');
+        $recalificacionVencida = $recalificacion['vencidos'];
+        $recalificacionPorVencer = $recalificacion['por_vencer'];
+        $recalificacionVigentes = $recalificacion['vigentes'];
 
-        $recalificacionVigentes = $totalChoferes - $recalificacionVencida - $recalificacionPorVencer;
-
-        // Chequeo médico vencido / por vencer
-        $chequeoMedicoVencido = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->whereNotNull('bolsa.chequeo_medico_vencimiento')
-            ->where('bolsa.chequeo_medico_vencimiento', '<', $hoy->toDateString())
-            ->count();
-
-        $chequeoMedicoPorVencer = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
-            ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
-            ->where('cargos.nombre', 'LIKE', '%CHOFER%')
-            ->whereNotNull('bolsa.chequeo_medico_vencimiento')
-            ->where('bolsa.chequeo_medico_vencimiento', '>=', $hoy->toDateString())
-            ->where('bolsa.chequeo_medico_vencimiento', '<=', $hoy->copy()->addDays(90)->toDateString())
-            ->count();
-
-        $chequeoMedicoVigentes = $totalChoferes - $chequeoMedicoVencido - $chequeoMedicoPorVencer;
+        $chequeo = $estadoDocumento('CHEQUEO_MEDICO');
+        $chequeoMedicoVencido = $chequeo['vencidos'];
+        $chequeoMedicoPorVencer = $chequeo['por_vencer'];
+        $chequeoMedicoVigentes = $chequeo['vigentes'];
 
         // ═══ SECCIÓN 4: SALARIO ═══
 

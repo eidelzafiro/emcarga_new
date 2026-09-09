@@ -34,7 +34,7 @@ class HojasRutaController extends Controller
         $inicioMes = Carbon::parse($fechaOperaciones)->startOfMonth()->toDateString();
         $finMes = Carbon::parse($fechaOperaciones)->endOfMonth()->toDateString();
 
-        $hojas = HojasRuta::with(['tractivo:id,codigo,id_entidad,id_grupo,indice_consumo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos,ci,categorias_licencia', 'chofer2:id,nombre,apellidos,ci,categorias_licencia', 'entidad:id,nombre', 'parqueo:id,nombre', 'grupo:id,nombre', 'cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')->select('id', 'id_hoja_ruta', 'numero', 'estado', 'imprimir')])
+        $hojas = HojasRuta::with(['tractivo:id,codigo,id_entidad,id_grupo,indice_consumo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos,ci', 'chofer2:id,nombre,apellidos,ci', 'entidad:id,nombre', 'parqueo:id,nombre', 'grupo:id,nombre', 'cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')->select('id', 'id_hoja_ruta', 'numero', 'estado', 'imprimir')])
             ->withCount(['cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')])
             // Entidad activa por el tractivo de la hoja de ruta
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))
@@ -99,11 +99,12 @@ class HojasRutaController extends Controller
                     'kms_disp' => $t->tara,
                 ]),
             // Choferes: solo con licencia de conducción válida
-            'choferes' => Bolsa::select('id', 'nombre', 'apellidos', 'ci', 'categorias_licencia', 'licencia_vencimiento')
+            'choferes' => Bolsa::select('id', 'nombre', 'apellidos', 'ci')
                 ->where('activo', true)
-                ->where('tiene_licencia', true)
+                ->whereHas('documentos', fn ($q) => $q->where('tipo', 'LICENCIA')
+                    ->where(fn ($dq) => $dq->whereNull('vencimiento')->orWhere('vencimiento', '>=', $hoy)))
                 ->when($entidadId, fn ($q) => $q->where('id_entidad', $entidadId))
-                ->where(fn ($q) => $q->whereNull('licencia_vencimiento')->orWhere('licencia_vencimiento', '>=', $hoy))
+                ->with('licenciaCategorias:categoria,id_bolsa')
                 ->orderBy('nombre')
                 ->get()
                 ->map(fn ($b) => [
@@ -111,7 +112,7 @@ class HojasRutaController extends Controller
                     'nombre' => $b->nombre,
                     'apellidos' => $b->apellidos,
                     'ci' => $b->ci,
-                    'categorias_licencia' => $b->categorias_licencia,
+                    'categorias_licencia' => $b->licenciaCategorias->pluck('categoria')->implode(', '),
                 ]),
             'lugares' => Lugare::select('id', 'nombre')->where('activo', true)->orderBy('nombre')->get(),
             'grupos' => \App\Support\Catalogos::opciones('grupos'),

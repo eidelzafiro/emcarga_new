@@ -126,6 +126,15 @@ function getSelectLabel(options, value) {
 
 function getFormFields() {
   const fields = { ...(props.catalogConfig?.extra || {}) }
+
+// Booleans del extra (tsuma/impsuma...): van en una sola fila compartida.
+const booleanExtras = computed(() => {
+  const out = []
+  for (const [key, cfg] of Object.entries(props.catalogConfig?.extra || {})) {
+    if (cfg.type === 'boolean' && !cfg.noForm) out.push({ key, label: cfg.label })
+  }
+  return out
+})
   Object.entries(props.catalogConfig?.fields || {}).forEach(([k, v]) => {
     if (k !== 'nombre' && k !== 'codigo') fields[k] = v
   })
@@ -496,15 +505,20 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
               </template>
             </div>
           </template>
+          <!-- Campos boolean del extra agrupados en UNA fila (col-span-2). -->
+          <div v-if="booleanExtras.length" class="col-span-2 flex flex-wrap items-center gap-6">
+            <template v-for="cfg in booleanExtras" :key="'x-bool-' + cfg.key">
+              <div class="flex items-center gap-2">
+                <ToggleSwitch v-model="form[cfg.key]" :inputId="'x-fld-' + cfg.key" />
+                <label :for="'x-fld-' + cfg.key" class="text-sm font-medium">{{ cfg.label }}</label>
+              </div>
+            </template>
+          </div>
           <template v-for="(cfg, key) in (catalogConfig?.extra || {})" :key="'x-' + key">
-            <div v-if="!(catalogConfig?.fields || {})[key] && key !== 'activo' && !cfg.noForm && !(esEquipos && (key === 'imagen' || key === 'imagen_fuente'))" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
+            <div v-if="!(catalogConfig?.fields || {})[key] && key !== 'activo' && !cfg.noForm && !(esEquipos && (key === 'imagen' || key === 'imagen_fuente')) && cfg.type !== 'boolean'" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Select v-else-if="cfg.type === 'select' && cfg.options" v-model="form[key]" :options="cfg.options" optionLabel="label" optionValue="value" placeholder="Seleccionar..." class="w-full" :showClear="true" />
-              <div v-else-if="cfg.type === 'boolean'" class="flex items-center gap-2 pt-2">
-                <ToggleSwitch v-model="form[key]" :inputId="'x-fld-' + key" />
-                <label :for="'x-fld-' + key" class="text-sm">{{ cfg.label }}</label>
-              </div>
               <template v-else>
                 <div v-if="cfg.type === 'logo'" class="flex items-start gap-4 col-span-2">
                   <div class="w-32 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">

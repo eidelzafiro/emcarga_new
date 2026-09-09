@@ -367,7 +367,10 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('historial-movimientos', HistorialMovimientosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+            ->only(['index']);
+        Route::post('historial-movimientos/alta', [HistorialMovimientosController::class, 'alta'])->name('historial-movimientos.alta');
+        Route::post('historial-movimientos/traslado', [HistorialMovimientosController::class, 'traslado'])->name('historial-movimientos.traslado');
+        Route::post('historial-movimientos/baja', [HistorialMovimientosController::class, 'baja'])->name('historial-movimientos.baja');
 
 
 

@@ -39,6 +39,7 @@ class Bolsa extends Model
     {
         return [
             'fecha_nacimiento' => 'date',
+            'falta' => 'date',
             'activo' => 'boolean',
         ];
     }

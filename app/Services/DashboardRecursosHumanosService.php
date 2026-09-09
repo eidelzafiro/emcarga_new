@@ -111,34 +111,37 @@ class DashboardRecursosHumanosService
         $bolsaQuery = Bolsa::whereIn('id_entidad', $idsEntidades)
             ->where('activo', true);
 
-        // Sexo
+        // Sexo (id → catalogo_items tipos_sexo)
         $porSexo = (clone $bolsaQuery)
+            ->leftJoin('catalogo_items as cat_sexo', 'bolsa.sexo', '=', 'cat_sexo.id')
             ->select(
-                DB::raw("CASE sexo WHEN 'M' THEN 'Masculino' WHEN 'F' THEN 'Femenino' ELSE 'No especificado' END as etiqueta"),
+                DB::raw('COALESCE(cat_sexo.nombre, "No especificado") as etiqueta'),
                 DB::raw('COUNT(*) as total')
             )
-            ->groupBy('sexo')
+            ->groupBy('cat_sexo.nombre')
             ->get()
             ->all();
 
-        // Color de piel
+        // Color de piel (id → catalogo_items tipos_color_piel)
         $porColorPiel = (clone $bolsaQuery)
+            ->leftJoin('catalogo_items as cat_piel', 'bolsa.color_piel', '=', 'cat_piel.id')
             ->select(
-                DB::raw('COALESCE(color_piel, "No especificado") as etiqueta'),
+                DB::raw('COALESCE(cat_piel.nombre, "No especificado") as etiqueta'),
                 DB::raw('COUNT(*) as total')
             )
-            ->groupBy('color_piel')
+            ->groupBy('cat_piel.nombre')
             ->orderByDesc('total')
             ->get()
             ->all();
 
-        // Nivel educacional
+        // Nivel educacional (id → catalogo_items tipos_nivel_educacion)
         $porNivelEducacional = (clone $bolsaQuery)
+            ->leftJoin('catalogo_items as cat_nivel', 'bolsa.nivel_educacional', '=', 'cat_nivel.id')
             ->select(
-                DB::raw('COALESCE(nivel_educacional, "No especificado") as etiqueta'),
+                DB::raw('COALESCE(cat_nivel.nombre, "No especificado") as etiqueta'),
                 DB::raw('COUNT(*) as total')
             )
-            ->groupBy('nivel_educacional')
+            ->groupBy('cat_nivel.nombre')
             ->orderByDesc('total')
             ->get()
             ->all();

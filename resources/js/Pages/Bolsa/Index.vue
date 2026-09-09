@@ -15,7 +15,7 @@ import Dialog from 'primevue/dialog'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ bolsa: Object, filters: Object, cargos: Array, areas: Array, entidades: Array, roles: Array, esSuperadmin: Boolean })
+const props = defineProps({ bolsa: Object, filters: Object, cargos: Array, areas: Array, entidades: Array, roles: Array, esSuperadmin: Boolean, catalogo: Object })
 const toast = useToast()
 const search = ref(props.filters?.search || '')
 const filtroCargo = ref(props.filters?.id_cargo || null)
@@ -25,8 +25,8 @@ const editing = ref(null)
 const isChofer = ref(false)
 
 const emptyForm = () => ({
-  ci: '', nombre: '', apellidos: '', sexo: null, color_piel: '', nivel_educacional: '',
-  estado_civil: '', ubicacion_defensa: '', fecha_nacimiento: null,
+  ci: '', nombre: '', apellidos: '', sexo: null, color_piel: null, nivel_educacional: null,
+  estado_civil: null, ubicacion_defensa: null, fecha_nacimiento: null,
   tiene_licencia: false, categorias_licencia: '', licencia_emision: null, licencia_vencimiento: null,
   limitaciones: '',
   chequeo_medico_emision: null, chequeo_medico_vencimiento: null,
@@ -38,10 +38,13 @@ const emptyForm = () => ({
 
 const form = ref(emptyForm())
 
-const sexos = [{ label: 'Masculino', value: 'M' }, { label: 'Femenino', value: 'F' }]
-const colorPielOpciones = ['Blanco', 'Negro', 'Mestizo']
-const nivelEducOpciones = ['6to Grado', '9no Grado', '12mo Grado', 'Técnico Medio', 'Universitario']
-const estadoCivilOpciones = ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Unión Libre']
+// Opciones del catálogo unificado (tipos_sexo, tipos_color_piel, ...) con
+// valores = ids de catalogo_items.
+const sexos = props.catalogo?.sexos || []
+const colorPielOpciones = props.catalogo?.colores_piel || []
+const nivelEducOpciones = props.catalogo?.niveles_educacion || []
+const estadoCivilOpciones = props.catalogo?.estados_civiles || []
+const ubicacionDefensaOpciones = props.catalogo?.ubicaciones_defensa || []
 
 watch(search, () => {
   router.get(route('bolsa.index'), { search: search.value, id_cargo: filtroCargo.value, id_area: filtroArea.value }, { preserveState: true, replace: true })
@@ -71,8 +74,8 @@ function openEdit(item) {
   editing.value = item
   form.value = {
     ci: item.ci, nombre: item.nombre, apellidos: item.apellidos,
-    sexo: item.sexo, color_piel: item.color_piel || '', nivel_educacional: item.nivel_educacional || '',
-    estado_civil: item.estado_civil || '', ubicacion_defensa: item.ubicacion_defensa || '',
+    sexo: item.sexo, color_piel: item.color_piel, nivel_educacional: item.nivel_educacional,
+    estado_civil: item.estado_civil, ubicacion_defensa: item.ubicacion_defensa,
     fecha_nacimiento: item.fecha_nacimiento ? new Date(item.fecha_nacimiento) : null,
     tiene_licencia: Boolean(item.tiene_licencia), categorias_licencia: item.categorias_licencia || '',
     licencia_emision: item.licencia_emision ? new Date(item.licencia_emision) : null,
@@ -121,7 +124,7 @@ function submit() {
         <Column field="ci" header="CI" sortable />
         <Column field="nombre" header="Nombre" sortable />
         <Column field="apellidos" header="Apellidos" sortable />
-        <Column field="sexo" header="Sexo" />
+        <Column field="sexo_catalogo.nombre" header="Sexo" />
         <Column header="Licencia">
           <template #body="{ data }">
             <Tag v-if="data.tiene_licencia" value="Sí" severity="success" />
@@ -170,19 +173,19 @@ function submit() {
             </div>
             <div>
               <label class="block mb-1 font-medium">Color de la Piel</label>
-              <Select v-model="form.color_piel" :options="colorPielOpciones" placeholder="Seleccione..." class="w-full" />
+              <Select v-model="form.color_piel" :options="colorPielOpciones" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Nivel Educacional</label>
-              <Select v-model="form.nivel_educacional" :options="nivelEducOpciones" placeholder="Seleccione..." class="w-full" />
+              <Select v-model="form.nivel_educacional" :options="nivelEducOpciones" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Estado Civil</label>
-              <Select v-model="form.estado_civil" :options="estadoCivilOpciones" placeholder="Seleccione..." class="w-full" />
+              <Select v-model="form.estado_civil" :options="estadoCivilOpciones" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" />
             </div>
             <div class="col-span-2">
               <label class="block mb-1 font-medium">Ubicación en la Defensa</label>
-              <InputText v-model="form.ubicacion_defensa" class="w-full" />
+              <Select v-model="form.ubicacion_defensa" :options="ubicacionDefensaOpciones" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" />
             </div>
           </div>
         </fieldset>

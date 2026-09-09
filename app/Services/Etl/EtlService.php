@@ -1617,6 +1617,13 @@ class EtlService
 
         $legacy = DB::connection('legacy');
 
+        // Mapa catálogo unificado: tipo → origen_id → catalogo_items.id.
+        $catalogoBolsa = DB::table('catalogo_items')
+            ->whereIn('tipo', ['tipos_sexo', 'tipos_color_piel', 'tipos_nivel_educacion', 'tipos_estado_civil', 'tipos_ubicacion_defensa'])
+            ->get(['id', 'tipo', 'origen_id'])
+            ->groupBy('tipo')
+            ->map(fn ($g) => $g->pluck('id', 'origen_id')->all())
+            ->all();
         // Cargo default 'SIN ASIGNAR' (id alto fijo para no colisionar con rh_cargos).
         $cargoDefaultId = 1_000_000;
         DB::table('cargos')->updateOrInsert(
@@ -1660,7 +1667,7 @@ class EtlService
         $legacy->table('rh_bolsa')
             ->orderBy('idbolsa')
             ->chunk($chunk, function ($filas) use (
-                &$procesados, &$avisos, $keepBolsaPorCi, $cargoPorBolsa, $areaPorBolsa, $cargoDefaultId
+                &$procesados, &$avisos, $keepBolsaPorCi, $cargoPorBolsa, $areaPorBolsa, $cargoDefaultId, $catalogoBolsa
             ) {
                 foreach ($filas as $fila) {
                     $ci = trim((string) $fila->cidentidad);
@@ -1683,11 +1690,17 @@ class EtlService
                         $apellidos = '';
                     }
 
-                    $sexo = match ((int) $fila->idtiposexo) {
-                        1 => 'M',
-                        2 => 'F',
-                        default => null,
+                    // Catálogo unificado: ids de catalogo_items por origen_id.
+                    $idCatalogo = static function (string $tipo, $origenId) use ($catalogoBolsa) {
+                        $origenId = (int) $origenId;
+
+                        return $origenId > 0 ? ($catalogoBolsa[$tipo][$origenId] ?? null) : null;
                     };
+                    $sexo = $idCatalogo('tipos_sexo', $fila->idtiposexo);
+                    $colorPiel = $idCatalogo('tipos_color_piel', $fila->idcolorpiel);
+                    $nivelEduc = $idCatalogo('tipos_nivel_educacion', $fila->idtiponiveducacion);
+                    $estadoCivil = $idCatalogo('tipos_estado_civil', $fila->idtipoestadocivil);
+                    $ubicDefensa = $idCatalogo('tipos_ubicacion_defensa', $fila->idtipoubicdefensa);
 
                     $direccion = trim((string) $fila->direccion) ?: null;
                     $telefono = trim((string) $fila->telefono) ?: null;
@@ -1702,6 +1715,10 @@ class EtlService
                             'nombre' => $nombre,
                             'apellidos' => $apellidos,
                             'sexo' => $sexo,
+                            'color_piel' => $colorPiel,
+                            'nivel_educacional' => $nivelEduc,
+                            'estado_civil' => $estadoCivil,
+                            'ubicacion_defensa' => $ubicDefensa,
                             'fecha_nacimiento' => null,
                             'direccion' => $direccion,
                             'telefono' => $telefono,

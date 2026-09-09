@@ -356,11 +356,11 @@ CREATE TABLE `bolsa` (
   `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `nombre` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `apellidos` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sexo` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `color_piel` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `nivel_educacional` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `estado_civil` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ubicacion_defensa` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sexo` int unsigned DEFAULT NULL,
+  `color_piel` int unsigned DEFAULT NULL,
+  `nivel_educacional` int unsigned DEFAULT NULL,
+  `estado_civil` int unsigned DEFAULT NULL,
+  `ubicacion_defensa` int unsigned DEFAULT NULL,
   `tiene_licencia` tinyint(1) NOT NULL DEFAULT '0',
   `categorias_licencia` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `licencia_emision` date DEFAULT NULL,
@@ -392,7 +392,12 @@ CREATE TABLE `bolsa` (
   KEY `bolsa_id_area_foreign` (`id_area`),
   CONSTRAINT `bolsa_id_area_foreign` FOREIGN KEY (`id_area`) REFERENCES `areas` (`id`) ON DELETE SET NULL,
   CONSTRAINT `bolsa_id_cargo_foreign` FOREIGN KEY (`id_cargo`) REFERENCES `cargos` (`id`),
-  CONSTRAINT `bolsa_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`)
+  CONSTRAINT `bolsa_id_entidad_foreign` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`),
+  CONSTRAINT `fk_bolsa_sexo_catalogo` FOREIGN KEY (`sexo`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_bolsa_color_piel_catalogo` FOREIGN KEY (`color_piel`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_bolsa_nivel_educacional_catalogo` FOREIGN KEY (`nivel_educacional`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_bolsa_estado_civil_catalogo` FOREIGN KEY (`estado_civil`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_bolsa_ubicacion_defensa_catalogo` FOREIGN KEY (`ubicacion_defensa`) REFERENCES `catalogo_items` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `cache`;

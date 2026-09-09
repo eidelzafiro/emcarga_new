@@ -22,7 +22,7 @@ class BolsaController extends Controller
     {
         
         $this->authorize('viewAny', \App\Models\Bolsa::class);
-        $items = Bolsa::with(['cargo', 'area', 'entidad'])
+        $items = Bolsa::with(['cargo', 'area', 'entidad', 'sexoCatalogo', 'colorPiel', 'nivelEducacional', 'estadoCivil', 'ubicacionDefensa'])
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('nombre', 'like', "%{$s}%")
                     ->orWhere('apellidos', 'like', "%{$s}%")
@@ -54,6 +54,7 @@ class BolsaController extends Controller
             'areas' => $areas,
             'entidades' => $entidades,
             'roles' => $roles,
+            'catalogo' => $this->opcionesCatalogo(),
             'esSuperadmin' => $request->user()->hasRole('SUPERADMIN'),
             'filters' => $request->only(['search', 'id_cargo', 'id_area']),
         ]);
@@ -123,11 +124,11 @@ class BolsaController extends Controller
             'ci' => ['required', $uniqueCi, 'max:20'],
             'nombre' => ['required', 'max:255'],
             'apellidos' => ['required', 'max:255'],
-            'sexo' => ['nullable', 'max:1'],
-            'color_piel' => ['nullable', 'max:50'],
-            'nivel_educacional' => ['nullable', 'max:100'],
-            'estado_civil' => ['nullable', 'max:50'],
-            'ubicacion_defensa' => ['nullable', 'max:200'],
+            'sexo' => ['nullable', 'exists:catalogo_items,id'],
+            'color_piel' => ['nullable', 'exists:catalogo_items,id'],
+            'nivel_educacional' => ['nullable', 'exists:catalogo_items,id'],
+            'estado_civil' => ['nullable', 'exists:catalogo_items,id'],
+            'ubicacion_defensa' => ['nullable', 'exists:catalogo_items,id'],
             'tiene_licencia' => ['boolean'],
             'categorias_licencia' => ['nullable', 'max:100'],
             'licencia_emision' => ['nullable', 'date'],
@@ -147,6 +148,33 @@ class BolsaController extends Controller
             'id_area' => ['nullable', 'exists:areas,id'],
             'id_entidad' => ['nullable', 'exists:entidades,id'],
         ];
+    }
+
+    /**
+     * Opciones del catálogo unificado para los selects de la bolsa.
+     */
+    private function opcionesCatalogo(): array
+    {
+        $tipos = [
+            'sexos' => 'tipos_sexo',
+            'colores_piel' => 'tipos_color_piel',
+            'niveles_educacion' => 'tipos_nivel_educacion',
+            'estados_civiles' => 'tipos_estado_civil',
+            'ubicaciones_defensa' => 'tipos_ubicacion_defensa',
+        ];
+
+        $out = [];
+        foreach ($tipos as $clave => $tipo) {
+            $out[$clave] = \App\Models\CatalogoItem::query()
+                ->where('tipo', $tipo)
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre'])
+                ->map(fn ($i) => ['label' => $i->nombre, 'value' => $i->id])
+                ->all();
+        }
+
+        return $out;
     }
 
     private function crearUsuario(Bolsa $bolsa, Request $request): void

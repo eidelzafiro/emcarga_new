@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bolsa extends Model
-{
-    use SoftDeletes;
+{    use SoftDeletes;
 
     protected $table = 'bolsa';
 
@@ -67,6 +66,31 @@ class Bolsa extends Model
     public function cargo(): BelongsTo
     {
         return $this->belongsTo(Cargo::class, 'id_cargo');
+    }
+
+    public function sexoCatalogo(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'sexo');
+    }
+
+    public function colorPiel(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'color_piel');
+    }
+
+    public function nivelEducacional(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'nivel_educacional');
+    }
+
+    public function estadoCivil(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'estado_civil');
+    }
+
+    public function ubicacionDefensa(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'ubicacion_defensa');
     }
 
     public function area(): BelongsTo

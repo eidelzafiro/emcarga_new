@@ -60,11 +60,20 @@ class ReportesController extends Controller
 
         $choferes = $this->choferesDelMes($mes, $ano);
 
+        // Tipos de incidencia (catálogo unificado) para el reporte de incidencias.
+        $tiposIncidencia = \App\Models\CatalogoItem::query()
+            ->where('tipo', 'tipos_incidencias')
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'origen_id'])
+            ->all();
+
         return Inertia::render('Reportes/Salarios', [
             'title' => 'Salarios y Prenóminas',
             'mes' => $mes,
             'ano' => $ano,
             'choferes' => $choferes,
+            'tiposIncidencia' => $tiposIncidencia,
         ]);
     }
 

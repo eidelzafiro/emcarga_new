@@ -12,6 +12,7 @@ const props = defineProps({
   mes: { type: Number, required: true },
   ano: { type: Number, required: true },
   choferes: { type: Array, default: () => [] },
+  tiposIncidencia: { type: Array, default: () => [] },
 })
 
 const fechaMes = ref(new Date(props.ano, props.mes - 1, 1))
@@ -24,6 +25,20 @@ const ano = computed(() => fechaMes.value.getFullYear())
 const tipos = [
   { id: 'choferes', nombre: 'Salario Choferes' },
   { id: 'administrativo', nombre: 'Salario Administrativo' },
+]
+
+// Reportes de nómina RRHH (rutas reportes.*), todos anclados al mes seleccionado.
+const reportesNomina = [
+  { ruta: 'reportes.adicionales', nombre: 'Datos p/Nóminas (Adicionales)', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.nocturnidad', nombre: 'Datos p/Nóminas (Nocturnidad)', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.pago-administrativo', nombre: 'Datos p/Nóminas Pago Administrativo', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.resumen-tiempos-choferes', nombre: 'Resumen de los Tiempos Choferes', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.analisis-salario-transportacion', nombre: 'Análisis del Salario Transportación', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.control-diario-administrativo', nombre: 'SC-4-05 Control Diario (Administrativo)', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.control-diario-choferes', nombre: 'SC-4-05 Control Diario Choferes', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.incidencias', nombre: 'Prenómina Incidencias al Tiempo Trabajado', icono: 'pi pi-file-pdf', extra: true },
+  { ruta: 'reportes.cumpleanos', nombre: 'Listado de Cumpleaños del Mes', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.licencia-conduccion', nombre: 'Personal con Licencia de Conducción', icono: 'pi pi-file-pdf' },
 ]
 
 function abrir(nombreRuta, extra = {}) {
@@ -44,6 +59,13 @@ function generarModelo1(formato) {
   const nombreRuta = formato === 'pdf' ? 'reportes.modelo1' : 'reportes.modelo1-excel'
   const extra = choferId.value ? { id_bolsa: choferId.value } : {}
   abrir(nombreRuta, extra)
+}
+
+const tipoIncidencia = ref(props.tiposIncidencia?.[0]?.origen_id ?? 1)
+
+function generarReporteNomina(r) {
+  const extra = r.extra ? { tipo_incidencia: tipoIncidencia.value } : {}
+  abrir(r.ruta, extra)
 }
 </script>
 
@@ -121,6 +143,39 @@ function generarModelo1(formato) {
           </template>
         </Card>
       </div>
+
+      <!-- Reportes de nómina RRHH -->
+      <Card class="mt-4">
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <div>
+              <h2 class="font-semibold">Reportes de Nómina</h2>
+              <p class="text-xs text-gray-500">
+                Reportes de Recursos Humanos del mes seleccionado (entidad activa).
+                El mes sale del selector superior.
+              </p>
+            </div>
+
+            <div v-if="tipoPrenomina === 'choferes'" class="flex flex-col gap-1 max-w-xs">
+              <label class="text-sm font-semibold">Tipo de incidencia (para el reporte de incidencias)</label>
+              <Select v-model="tipoIncidencia" :options="tiposIncidencia" option-label="nombre" option-value="origen_id" class="w-full" />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+              <Button
+                v-for="r in reportesNomina"
+                :key="r.ruta"
+                :label="r.nombre"
+                :icon="r.icono"
+                severity="secondary"
+                outlined
+                class="text-left whitespace-nowrap overflow-hidden"
+                @click="generarReporteNomina(r)"
+              />
+            </div>
+          </div>
+        </template>
+      </Card>
     </div>
   </AppLayout>
 </template>

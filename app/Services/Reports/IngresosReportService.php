@@ -4,6 +4,7 @@ namespace App\Services\Reports;
 
 use App\Models\Aforo;
 use App\Models\Entidad;
+use App\Services\Reports\Fpdf\IngresosChoferesFpdfReport;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -172,13 +173,13 @@ class IngresosReportService extends BaseReportService
     {
         [$d, $h] = $this->rangoFiltros($filtros);
         $entidadId = (int) entidadActivaId();
-        $ids = $entidadId ? Entidad::subEntidadesIds($entidadId) : $this->entidadIds();
+        $ids = $entidadId ? Entidad::idsPermitidos($entidadId) : $this->entidadIds();
 
         $rows = Aforo::query()
             ->join('cartas_porte', 'aforos.id_carta_porte', '=', 'cartas_porte.id')
             ->join('hojas_ruta', 'cartas_porte.id_hoja_ruta', '=', 'hojas_ruta.id')
             ->join('tractivos', 'hojas_ruta.id_tractivo', '=', 'tractivos.id')
-            ->when($d, fn ($q) => $q->whereBetween('aforos.fecha_parte', [$d, $h]))
+            ->when($d, fn ($q) => $q->whereBetween('hojas_ruta.fecha_cierre', [$d, $h]))
             ->whereIn('tractivos.id_entidad', $ids)
             ->whereNull('tractivos.deleted_at')
             ->whereNull('tractivos.fecha_baja')
@@ -257,16 +258,36 @@ class IngresosReportService extends BaseReportService
      */
     public function ingresosPorChoferes(array $filtros): \Illuminate\Http\Response
     {
+        $datos = $this->datosIngresosChoferes($filtros);
+
+        $entidadId = (int) entidadActivaId() ?: null;
+        $mes = (string) ($filtros['mes'] ?? '');
+        $ano = ($mes !== '' && $mes !== '00' && strlen($mes) >= 4) ? substr($mes, 0, 4) : date('Y');
+
+        $content = (new IngresosChoferesFpdfReport($entidadId, $mes, $ano, $filtros))->generate();
+
+        return response($content)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$datos['titulo'].'.pdf"');
+    }
+
+    /**
+     * Datos para el reporte FPDF de ingresos por choferes (réplica del legacy
+     * Reportesnew::pdf_ingresos_choferes). No muta datos; devuelve
+     * filas/totales/periodo listas para renderizar.
+     */
+    public function datosIngresosChoferes(array $filtros): array
+    {
         [$d, $h] = $this->rangoFiltros($filtros);
         $entidadId = (int) entidadActivaId();
-        $ids = $entidadId ? Entidad::subEntidadesIds($entidadId) : $this->entidadIds();
+        $ids = $entidadId ? Entidad::idsPermitidos($entidadId) : $this->entidadIds();
 
         $rows = Aforo::query()
             ->join('cartas_porte', 'aforos.id_carta_porte', '=', 'cartas_porte.id')
             ->join('hojas_ruta', 'cartas_porte.id_hoja_ruta', '=', 'hojas_ruta.id')
             ->join('tractivos', 'hojas_ruta.id_tractivo', '=', 'tractivos.id')
             ->leftJoin('bolsa', 'cartas_porte.id_chofer', '=', 'bolsa.id')
-            ->when($d, fn ($q) => $q->whereBetween('aforos.fecha_parte', [$d, $h]))
+            ->when($d, fn ($q) => $q->whereBetween('hojas_ruta.fecha_cierre', [$d, $h]))
             ->whereIn('tractivos.id_entidad', $ids)
             ->whereNull('tractivos.deleted_at')
             ->whereNull('tractivos.fecha_baja')
@@ -285,18 +306,6 @@ class IngresosReportService extends BaseReportService
             ->get();
 
         $totalEstimado = $rows->sum('produccion_aforada');
-
-        $columnas = [
-            ['key' => 'chofer', 'label' => 'CHOFER'],
-            ['key' => 'cp', 'label' => 'CP', 'num' => true],
-            ['key' => 'tons', 'label' => 'TONS', 'num' => true],
-            ['key' => 'horas', 'label' => 'HORAS', 'num' => true],
-            ['key' => 'flete', 'label' => 'FLETE', 'num' => true],
-            ['key' => 'demora', 'label' => 'DEMORA', 'num' => true],
-            ['key' => 'produccion_aforada', 'label' => 'PRODUCCION AFORADA', 'num' => true],
-            ['key' => 'porcentaje', 'label' => '%', 'num' => true],
-            ['key' => 'produccion_estimada', 'label' => 'PRODUCCION ESTIMADA', 'num' => true],
-        ];
 
         $filas = $rows->map(fn ($r) => [
             'chofer' => trim($r->chofer) ?: 'SIN CHOFER',
@@ -321,15 +330,21 @@ class IngresosReportService extends BaseReportService
             'produccion_estimada' => round($rows->sum('produccion_estimada'), 2),
         ];
 
+        $mesSel = (string) ($filtros['mes'] ?? '');
+        $titulo = ($mesSel === '00')
+            ? 'PARTE INGRESOS ACUMULADOS CHOFERES'
+            : 'PARTE INGRESOS MENSUALES CHOFERES';
+
         $periodo = $d ? Carbon::parse($d)->format('M Y') : 'Todos';
         $entidadNombre = $entidadId ? (Entidad::find($entidadId)?->nombre ?? '') : '';
 
-        return $this->reporteTablaPdf('PARTE INGRESOS MENSUALES CHOFERES',
-            $columnas, $filas, [
-                'landscape' => true,
-                'periodo' => $periodo . ($entidadNombre ? " — {$entidadNombre}" : ''),
-                'totales' => $totales,
-            ]);
+        return [
+            'filas' => $filas,
+            'totales' => $totales,
+            'titulo' => $titulo,
+            'periodo' => $periodo,
+            'entidadNombre' => $entidadNombre,
+        ];
     }
 
     private function entidadIds(): array
@@ -339,7 +354,7 @@ class IngresosReportService extends BaseReportService
             return [23];
         }
 
-        return Entidad::subEntidadesIds($activa);
+        return Entidad::idsPermitidos($activa);
     }
 
     protected function rangoFiltros(array $filtros): array
@@ -348,6 +363,14 @@ class IngresosReportService extends BaseReportService
         $h = $filtros['hasta'] ?? null;
         if (! $d && ! $h && ! empty($filtros['mes'])) {
             try { $m = Carbon::parse($filtros['mes']); $d = $m->copy()->startOfMonth()->toDateString(); $h = $m->copy()->endOfMonth()->toDateString(); } catch (\Exception) {}
+        }
+        if (! $d && ! $h) {
+            $fecha = session('fecha_operaciones') ?? now()->toDateString();
+            try {
+                $m = Carbon::parse($fecha);
+                $d = $m->startOfMonth()->toDateString();
+                $h = $m->endOfMonth()->toDateString();
+            } catch (\Exception) {}
         }
         return [$d, $h];
     }

@@ -3,7 +3,13 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-family: Helvetica, Arial, sans-serif; font-size: 9px; color: #111; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9px; color: #111; }
+        .header { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1a365d; padding-bottom: 8px; }
+        .header .logo { width: 50px; height: auto; margin-right: 15px; }
+        .header .header-text { flex: 1; text-align: center; }
+        .header .header-text h1 { font-size: 14px; color: #1a365d; margin: 0; }
+        .header .header-text p { font-size: 8px; color: #666; margin: 2px 0 0 0; }
         .titulo { text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 2px; }
         .periodo { text-align: center; font-size: 10px; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 9px; }
@@ -14,7 +20,13 @@
     </style>
 </head>
 <body>
-    <div class="titulo">{{ $titulo }}</div>
+    <div class="header">
+        <img src="{{ public_path('images/emcarga.png') }}" class="logo" alt="EMCARGA">
+        <div class="header-text">
+            <h1>EMPRESA CAMIONES EMCARGA</h1>
+            <p>{{ $titulo }}</p>
+        </div>
+    </div>
     @if(!empty($periodo))
         <div class="periodo">{{ $periodo }}</div>
     @endif

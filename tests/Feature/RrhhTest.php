@@ -49,7 +49,6 @@ class RrhhTest extends TestCase
             ['catalogo.index', ['tipo' => 'tipos_penalizaciones']],
             ['catalogo.index', ['tipo' => 'tipos_sistemas_pago']],
             ['catalogo.index', ['tipo' => 'tipos_pagos_adicionales']],
-            'salarios.index',
             'salarios-administrativos.index',
             'provincias.index',
             'municipios.index',

@@ -25,7 +25,7 @@ class ExportarTablasReportService
             return [23];
         }
 
-        return Entidad::subEntidadesIds($activa);
+        return Entidad::idsPermitidos($activa);
     }
 
     private function csv(string $filename, array $headers, array $rows): \Illuminate\Http\Response

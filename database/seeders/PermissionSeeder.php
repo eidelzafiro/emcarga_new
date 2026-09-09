@@ -272,7 +272,10 @@ class PermissionSeeder extends Seeder
                 'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
                 'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
                 'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
-                'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
+            'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
+
+            'cds.ver', 'cds.crear', 'cds.editar', 'cds.eliminar',
+
                 // Catálogos RRHH
                 'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
                 'cargos.ver', 'cargos.crear', 'cargos.editar', 'cargos.eliminar',

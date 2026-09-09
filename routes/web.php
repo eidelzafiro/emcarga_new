@@ -84,7 +84,6 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ReportesCostosController;
 use App\Http\Controllers\SalariosAdministrativosController;
-use App\Http\Controllers\SalariosController;
 use App\Http\Controllers\ServicentrosController;
 use App\Http\Controllers\SolicitudesController;
 use App\Http\Controllers\TallerController;
@@ -363,6 +362,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('bolsa', BolsaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
+        // Coeficiente CDS por entidad+mes+año (Sistema de Pago por Resultados)
+        Route::resource('cds', \App\Http\Controllers\CdsController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
         Route::resource('historial-movimientos', HistorialMovimientosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
@@ -394,9 +397,6 @@ Route::middleware('auth')->group(function () {
 
 
 
-        Route::resource('salarios', SalariosController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
         Route::resource('salarios-administrativos', SalariosAdministrativosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
@@ -411,6 +411,9 @@ Route::middleware('auth')->group(function () {
 
         Route::post('salarios-choferes/guardar-tiempo', [\App\Http\Controllers\SalariosChoferesController::class, 'guardarTiempo'])
             ->name('salarios-choferes.guardar-tiempo');
+
+        Route::post('salarios-choferes/editar-detalle', [\App\Http\Controllers\SalariosChoferesController::class, 'editarDetalle'])
+            ->name('salarios-choferes.editar-detalle');
 
         // RRHH - Catálogos pequeños (Fase 5.5 parte 3)
 
@@ -465,12 +468,26 @@ Route::middleware('auth')->group(function () {
             Route::get('salario-choferes', [ReportController::class, 'pdfSalarioChoferes'])->name('salario-choferes');
             Route::get('prenomina-choferes', [ReportController::class, 'pdfPrenominaChoferes'])->name('prenomina-choferes');
             Route::get('prenomina-administrativo', [ReportController::class, 'pdfPrenominaAdministrativo'])->name('prenomina-administrativo');
+            Route::get('cumpleanos', [ReportController::class, 'pdfCumpleanos'])->name('cumpleanos');
+            Route::get('licencia-conduccion', [ReportController::class, 'pdfLicenciaConduccion'])->name('licencia-conduccion');
+            Route::get('adicionales', [ReportController::class, 'pdfAdicionales'])->name('adicionales');
+            Route::get('nocturnidad', [ReportController::class, 'pdfNocturnidad'])->name('nocturnidad');
+            Route::get('pago-administrativo', [ReportController::class, 'pdfPagoAdministrativo'])->name('pago-administrativo');
+            Route::get('resumen-tiempos-choferes', [ReportController::class, 'pdfResumenTiemposChoferes'])->name('resumen-tiempos-choferes');
+            Route::get('incidencias', [ReportController::class, 'pdfIncidencias'])->name('incidencias');
             Route::get('modelo1', [ReportController::class, 'pdfModelo1'])->name('modelo1');
             Route::get('prenomina-choferes-excel', [ReportController::class, 'excelPrenominaChoferes'])->name('prenomina-choferes-excel');
             Route::get('prenomina-administrativo-excel', [ReportController::class, 'excelPrenominaAdministrativo'])->name('prenomina-administrativo-excel');
             Route::get('modelo1-excel', [ReportController::class, 'excelModelo1'])->name('modelo1-excel');
             Route::get('ingresos-tractivo', [ReportController::class, 'pdfIngresosTractivos'])->name('ingresos-tractivo');
             Route::get('ingresos-choferes', [ReportController::class, 'pdfIngresosChoferes'])->name('ingresos-choferes');
+            // Página de filtros del Modelo 1 (selector mes + chofer).
+            Route::get('modelo1/filtros', [ReportesController::class, 'modelo1'])->name('modelo1.filtros');
+            // Página de filtros del Resumen de Ingresos / Indicadores de Explotación.
+            Route::get('resumen', [ReportesController::class, 'resumen'])->name('resumen');
+            Route::get('resumen/{formato}', [ReportesController::class, 'resumenGenerar'])->name('resumen.generar');
+            // Página de Salarios y Prenóminas (choferes/administrativo) + Modelo 1.
+            Route::get('salarios', [ReportesController::class, 'salarios'])->name('salarios');
             // Fase A: catálogo de reportes usados (índice con filtros reutilizables)
             Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
             // GET: descarga/binario vía navegación real (sin XHR Inertia). POST: flujo

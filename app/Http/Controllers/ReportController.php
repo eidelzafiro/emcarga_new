@@ -69,6 +69,55 @@ class ReportController extends Controller
         return app(NominaReportService::class)->pdfPrenomina($request->merge(['tipo' => 'administrativo']));
     }
 
+    public function pdfCumpleanos(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfCumpleanos($request);
+    }
+
+    public function pdfLicenciaConduccion(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfLicenciaConduccion($request);
+    }
+
+    public function pdfAdicionales(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfAdicionales($request);
+    }
+
+    public function pdfNocturnidad(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfNocturnidad($request);
+    }
+
+    public function pdfPagoAdministrativo(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfPagoAdministrativo($request);
+    }
+
+    public function pdfResumenTiemposChoferes(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfResumenTiemposChoferes($request);
+    }
+
+    public function pdfIncidencias(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfIncidencias($request);
+    }
+
     public function pdfModelo1(Request $request)
     {
         abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);

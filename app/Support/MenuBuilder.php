@@ -94,8 +94,20 @@ class MenuBuilder
             'route' => $item->route,
             'url' => $routeName !== '' && $rutaExiste ? route($routeName, $params) : null,
             'disabled' => $disabled || ! $rutaExiste,
+            'nueva_ventana' => self::abreEnNuevaVentana($routeName),
             'children' => $hijos,
         ];
+    }
+
+    /**
+     * Determina si un ítem de menú debe abrirse en una ventana nueva del
+     * navegador en lugar de navegar con la SPA Inertia. Aplica a las rutas
+     * de reportes que devuelven un binario (PDF/Excel) como descarga.
+     */
+    private static function abreEnNuevaVentana(string $routeName): bool
+    {
+        return str_starts_with($routeName, 'reportes.')
+            && ! in_array($routeName, ['reportes.catalogo', 'reportes.generar', 'reportes.modelo1.filtros', 'reportes.resumen', 'reportes.salarios'], true);
     }
 
     /**

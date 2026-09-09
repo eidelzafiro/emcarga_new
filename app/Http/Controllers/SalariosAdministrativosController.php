@@ -37,7 +37,7 @@ class SalariosAdministrativosController extends Controller
         $areaTransporteId = \App\Models\Area::whereRaw("UPPER(nombre) LIKE '%TRANSPOR%'")->value('id');
 
         $empleadoIds = Bolsa::where('activo', true)
-            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja'))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(!empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
             // Excluir área de transporte
             ->when($areaTransporteId, function ($q) use ($areaTransporteId) {
@@ -77,7 +77,13 @@ class SalariosAdministrativosController extends Controller
 
         $resultados = [];
         foreach ($paginatedIds as $idBolsa) {
-            $empleado = Bolsa::with(['cargo:id,nombre,tarifa,cla,id_grupo_horario,id_grupo_escala', 'area:id,nombre'])->find($idBolsa);
+            $empleado = Bolsa::with([
+                'cargo:id,nombre,tarifa,cla,en_salario,id_categoria_cargo,id_fondo_tiempo,id_nivel_educacion,id_grupo_horario',
+                'cargo.categoria_cargo:id,nombre',
+                'cargo.fondo_tiempo:id,fondo_tiempo',
+                'cargo.nivel_educacion:id,origen_id',
+                'area:id,nombre',
+            ])->find($idBolsa);
             if (!$empleado) continue;
             $calculado = $service->calcularSalarioEmpleado($empleado, $mes, $ano);
             if ($calculado) $resultados[] = $calculado;

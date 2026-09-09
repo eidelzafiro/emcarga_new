@@ -514,7 +514,13 @@ function transformarMenu(items, parentLabel = '') {
       url: item.url,
       disabled,
       command: () => {
-        if (item.url && !disabled) router.visit(item.url);
+        if (item.url && !disabled) {
+          if (item.nueva_ventana) {
+            window.open(item.url, '_blank');
+          } else {
+            router.visit(item.url);
+          }
+        }
       },
     };
   });

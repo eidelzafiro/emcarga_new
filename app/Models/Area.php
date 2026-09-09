@@ -18,6 +18,7 @@ class Area extends Model
         'orden',
         'imagen',
         'id_area_padre',
+        'id_tipo_sistema_pago',
         'activo',
     ];
 

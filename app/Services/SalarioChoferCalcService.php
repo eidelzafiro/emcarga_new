@@ -16,6 +16,7 @@ class SalarioChoferCalcService
     private float $varnoct2 = 1.15;
     private float $varmaestria = 440;
     private int $horasMes = 240;
+    private float $almacenaje = 0.0;
 
     public function __construct()
     {
@@ -35,6 +36,7 @@ class SalarioChoferCalcService
             $this->varnoct2 = 1.88;
             $this->varmaestria = 718.22;
         }
+        $this->almacenaje = $entidad ? (float) $entidad->almacenaje : 0.0;
     }
 
     public function calcularPorChofer(int $mes, int $ano, ?int $idBolsa = null): array
@@ -61,7 +63,7 @@ class SalarioChoferCalcService
         $aforos = $this->obtenerAforosChofer($idBolsa, $mes, $ano);
         if ($aforos->isEmpty()) return null;
 
-        $chofer = Bolsa::find($idBolsa);
+        $chofer = Bolsa::with('cargo:id,nombre,tarifa')->find($idBolsa);
         if (!$chofer) return null;
 
         $cargo = $chofer->cargo;
@@ -91,6 +93,9 @@ class SalarioChoferCalcService
 
             $ingresoMt = (float) $aforo->ingreso_mt;
             $tasa = (float) $aforo->tasa;
+            // La relación tasa() queda oculta por la columna `tasa` (decimal) del
+            // aforo; se accede vía getRelation para obtener el modelo Tasa.
+            $tasaModel = $aforo->getRelation('tasa') ?? null;
             $almFlete = (float) ($aforo->almacenaje_flete ?? 0);
             $kmTotal = (float) $aforo->km_total_total;
             $kmCarga = (float) $aforo->km_carga_total;
@@ -101,10 +106,16 @@ class SalarioChoferCalcService
             $tFeriado = (float) $aforo->tiempo_feriado;
 
             $chofer2Id = $cp->id_chofer2;
-            $esDobleChofer = $chofer2Id && $chofer2Id != $idBolsa;
+            // Doble chofer es una propiedad de la carta de porte (tiene chofer2
+            // distinto del chofer principal), independiente del chofer que se
+            // esté calculando (principal o segundo).
+            $esDobleChofer = $chofer2Id > 0 && (int) $chofer2Id != (int) $cp->id_chofer;
 
             $ingreso = $ingresoMt;
             $salalm = 0;
+            // Ingreso para el reporte (columna INGRESOS TRANSP REAL): el ingreso
+            // original dividido entre 2 si es doble chofer, SIN restar almacenaje.
+            $ingresoReporte = $ingresoMt;
 
             if ($esDobleChofer) {
                 if ($kmCarga <= 250) {
@@ -112,32 +123,24 @@ class SalarioChoferCalcService
                 }
                 if ($almFlete > 0) {
                     $ingreso = round($ingresoMt - $almFlete, 2);
-                    $salalm = round(($almFlete / 2) * 0.005, 2);
+                    $salalm = round(($almFlete / 2) * $this->almacenaje, 2);
                 } else {
                     $ingreso = round($ingresoMt / 2, 2);
                 }
-                $tasa2 = (float) ($aforo->tasa?->tasa2 ?? 0);
+                $ingresoReporte = round($ingresoMt / 2, 2);
+                $tasa2 = (float) ($tasaModel?->tasa2 ?? 0);
                 $salario = $tasa2 > 0
                     ? round($ingreso * $tasa2 + $salalm, 2)
                     : round($ingreso * $tasa + $salalm, 2);
             } else {
                 if ($almFlete > 0) {
                     $ingreso = round($ingresoMt - $almFlete, 2);
-                    $salalm = round($almFlete * 0.005, 2);
+                    $salalm = round($almFlete * $this->almacenaje, 2);
                 }
                 $salario = round($ingreso * $tasa + $salalm, 2);
             }
 
             $salarioAlmacenaje = $salalm;
-            // Solo usar salario guardado si NO es doble chofer; en doble chofer
-            // el aforo guarda el total (ingreso completo * tasa2) pero aquí se
-            // calcula por chofer (ingreso/2 * tasa2), así que ignoramos el stored.
-            if (!$esDobleChofer) {
-                $salarioStored = (float) ($aforo->salario ?? 0);
-                if ($salarioStored > 0 && abs($salarioStored - $salario) > 0.01) {
-                    $salario = $salarioStored;
-                }
-            }
 
             $impCla = $kmCarga <= 90
                 ? round($tTotal * $this->varcla90, 2)
@@ -161,7 +164,7 @@ class SalarioChoferCalcService
             }
 
             $totalSalario += $salario;
-            $totalIngresos += $ingreso;
+            $totalIngresos += $ingresoReporte;
             $totalCla += $impCla;
             $totalNoct1 += $noct1;
             $totalNoct2 += $noct2;
@@ -177,16 +180,26 @@ class SalarioChoferCalcService
             $detalle[] = [
                 'id_carta_porte' => $cp->id,
                 'id_aforo' => $aforo->id,
+                'id_chofer' => $cp->id_chofer,
+                'id_chofer2' => $cp->id_chofer2,
                 'numero_cp' => $cp->numero,
                 'fecha_parte' => $aforo->fecha_parte?->format('d/m/Y'),
+                'fecha_emision' => $cp->fecha_emision?->format('d/m/Y'),
+                'numero_hr' => $hr->numero ?? '',
+                'fecha_cierre' => $hr->fecha_cierre?->format('d/m/Y'),
                 'tractivo' => $hr->tractivo?->codigo ?? $hr->tractivo?->placa ?? '—',
+                'tipo_carga' => $tasaModel?->tipoCarga?->nombre ?? '',
                 'km_total' => round($kmTotal, 2),
+                'tiempo_otros' => round((float) $aforo->tiempo_otros, 2),
+                'tiempo_movimiento' => round((float) $aforo->tiempo_movimiento, 2),
+                'tiempo_carga' => round((float) $aforo->tiempo_carga, 2),
+                'tiempo_descarga' => round((float) $aforo->tiempo_descarga, 2),
                 'tiempo_total' => round($tTotal, 2),
                 'tn_real' => round($tnReal, 2),
                 'ingreso' => round($ingreso, 2),
                 'id_tasa' => $aforo->id_tasa,
                 'tasa' => $tasa,
-                'tasa_nombre' => $aforo->tasa?->nombre ?? '',
+                'tasa_nombre' => $tasaModel?->nombre ?? '',
                 'salario' => round($salario, 2),
                 'imp_cla' => round($impCla, 2),
                 'noct1' => round($noct1, 2),
@@ -211,11 +224,13 @@ class SalarioChoferCalcService
         $vacaciones = 0;
         $otros = 0;
         foreach ($incidencias as $inc) {
-            $clave = $inc->tipoIncidencia?->origen_id ?? $inc->id_tipo_incidencia;
+            $tipo = $inc->tipoIncidencia;
+            $extra = $tipo?->extra ?? [];
+            $clave = (string) ($extra['clave'] ?? ($tipo?->origen_id ?? $inc->id_tipo_incidencia));
             $tiempo = (float) $inc->periodo_actual;
-            match ((string) $clave) {
+            match ($clave) {
+                '6' => $vacaciones += $tiempo,
                 '12', '20' => $subsidios += $tiempo,
-                '25' => $vacaciones += $tiempo,
                 default => $otros += $tiempo,
             };
         }
@@ -234,7 +249,18 @@ class SalarioChoferCalcService
 
         $impNoct1 = round($totalNoct1 * $this->varnoct1, 2);
         $impNoct2 = round($totalNoct2 * $this->varnoct2, 2);
-        $salarioFinal = round($totalSalario + $totalCla + $totalFeriados + $impNoct1 + $impNoct2, 2);
+
+        // Salario final (paridad con el reporte PRENOMINA SALARIO TRANSPORTACION):
+        // impbase2 = escala + CLA + nocturnidad; el fondo formado (salario_cp)
+        // cubre esa base y el excedente es el "resultado". No se vuelve a sumar
+        // el CLA ni la nocturnidad sobre el fondo (ya están en la base garantizada).
+        $impRegular = round($regular * $tarifa, 2);
+        $impIrregular = round($irregular * $tarifa, 2);
+        $impBase = round($impRegular + $impIrregular + $totalCla, 2);
+        $impNocturnidad = round($impNoct1 + $impNoct2, 2);
+        $impBase2 = round($impBase + $impNocturnidad, 2);
+        $impResultado = max(0, round($totalSalario - $impBase2, 2));
+        $salarioFinal = round($impBase2 + $totalFeriados + $impResultado, 2);
 
         return [
             'id_bolsa' => $idBolsa,
@@ -269,7 +295,7 @@ class SalarioChoferCalcService
         return Bolsa::where('activo', true)
             ->where('tiene_licencia', true)
             ->whereHas('movimientosRrhh', function ($q) {
-                $q->whereNull('fbaja');
+                $q->whereNull('fbaja')->where('origen', 'mov');
             })
             ->with(['cargo:id,nombre,tarifa'])
             ->orderBy('nombre')
@@ -292,18 +318,31 @@ class SalarioChoferCalcService
         ->whereYear('fecha_parte', $ano)
         ->whereMonth('fecha_parte', $mes)
         ->with([
-            'tasa:id,nombre,tasa2',
+            'tasa:id,nombre,tasa2,id_tipo_carga',
+            'tasa.tipoCarga:id,nombre',
+            'cartaPorte:id,numero,fecha_emision,id_hoja_ruta,id_chofer,id_chofer2,cancelada',
+            'cartaPorte.hojaRuta:id,numero,fecha_cierre,id_tractivo,cancelada',
             'cartaPorte.hojaRuta.tractivo:id,codigo,placa',
         ])
         ->orderBy('fecha_parte')
         ->get();
     }
 
+    private array $feriadosCache = [];
+
     private function obtenerFeriadosMes(int $mes, int $ano): array
     {
+        $clave = "{$ano}-{$mes}";
+        if (array_key_exists($clave, $this->feriadosCache)) {
+            return $this->feriadosCache[$clave];
+        }
+
         $mesRecord = DB::connection('legacy')->table('rh_meses')->where('idmes', $mes)->first();
-        if (!$mesRecord || empty($mesRecord->dias)) return [];
-        return explode(';', $mesRecord->dias);
+        $feriados = (!$mesRecord || empty($mesRecord->dias))
+            ? []
+            : explode(';', $mesRecord->dias);
+
+        return $this->feriadosCache[$clave] = $feriados;
     }
 
     private function obtenerIncidencias(int $idBolsa, int $mes, int $ano)

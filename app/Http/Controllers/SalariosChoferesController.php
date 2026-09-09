@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\EntidadScoping;
 use App\Models\Aforo;
 use App\Models\Bolsa;
+use App\Models\CartaPorte;
 use App\Models\Tasa;
 use App\Services\SalarioChoferCalcService;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ class SalariosChoferesController extends Controller
         // Obtener choferes del mes (que tienen aforos vía carta_porte)
         $choferesDelMes = Bolsa::where('activo', true)
             ->where('tiene_licencia', true)
-            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja'))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->where(function ($q) use ($mes, $ano) {
                 $q->whereHas('cartasPorte.aforos', function ($aq) use ($mes, $ano) {
                     $aq->whereYear('fecha_parte', $ano)
@@ -90,6 +91,15 @@ class SalariosChoferesController extends Controller
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'tasa', 'tasa2', 'id_tipo_carga', 'id_entidad']);
 
+        // Choferes activos con licencia (para los combos del modal de edición).
+        $choferes = Bolsa::where('activo', true)
+            ->where('tiene_licencia', true)
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
+            ->when(!empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get(['id', 'nombre', 'apellidos', 'ci']);
+
         return Inertia::render('SalariosChoferes/Index', [
             'title' => 'Salario Choferes',
             'salarios' => $resultados,
@@ -97,6 +107,11 @@ class SalariosChoferesController extends Controller
             'ano' => $ano,
             'filters' => $request->only(['search', 'mes', 'ano', 'chofer_filter']),
             'tasas' => $tasas,
+            'choferes' => $choferes->map(fn ($c) => [
+                'id' => $c->id,
+                'nombre' => $c->nombrecompleto,
+                'ci' => $c->ci ?? '',
+            ]),
             'choferesDelMes' => $choferesDelMes->map(fn ($c) => [
                 'id' => $c->id,
                 'nombre' => $c->nombrecompleto,
@@ -121,32 +136,7 @@ class SalariosChoferesController extends Controller
         $aforo = Aforo::findOrFail($validated['id_aforo']);
         $tasa = Tasa::findOrFail($validated['id_tasa']);
 
-        $ingreso = (float) $aforo->ingreso_mt;
-        $almFlete = (float) ($aforo->almacenaje_flete ?? 0);
-        $salalm = 0;
-
-        $hr = $aforo->cartaPorte?->hojaRuta;
-        $cp = $aforo->cartaPorte;
-        $esDobleChofer = $cp && $cp->id_chofer2 && $cp->id_chofer2 != ($cp->id_chofer ?? 0);
-
-        if ($esDobleChofer) {
-            $ingreso = $almFlete > 0
-                ? round($ingreso - $almFlete, 2)
-                : round($ingreso / 2, 2);
-            $salalm = $almFlete > 0 ? round(($almFlete / 2) * 0.005, 2) : 0;
-        } else {
-            if ($almFlete > 0) {
-                $ingreso = round($ingreso - $almFlete, 2);
-                $salalm = round($almFlete * 0.005, 2);
-            }
-        }
-
-        $tasa2Val = (float) $tasa->tasa2;
-        if ($esDobleChofer && $tasa2Val > 0) {
-            $nuevoSalario = round($ingreso * $tasa2Val + $salalm, 2);
-        } else {
-            $nuevoSalario = round($ingreso * (float) $tasa->tasa + $salalm, 2);
-        }
+        $nuevoSalario = $this->recalcularSalarioAforo($aforo, $tasa);
 
         $aforo->update([
             'id_tasa' => $tasa->id,
@@ -181,5 +171,101 @@ class SalariosChoferesController extends Controller
         $aforo->update($campos);
 
         return response()->json(['success' => true, 'message' => 'Datos guardados.']);
+    }
+
+    /**
+     * Edición integral de una carta de porte desde el módulo de salario:
+     * chofer 1, chofer 2, tiempos y tasa. Al guardar se recalcula el salario.
+     */
+    public function editarDetalle(Request $request)
+    {
+        $validated = $request->validate([
+            'id_aforo' => 'required|exists:aforos,id',
+            'id_chofer' => 'required|exists:bolsa,id',
+            'id_chofer2' => 'nullable|exists:bolsa,id',
+            'id_tasa' => 'nullable|exists:tasas,id',
+            'tiempo_otros' => 'nullable|numeric|min:0',
+            'tiempo_movimiento' => 'nullable|numeric|min:0',
+            'tiempo_carga' => 'nullable|numeric|min:0',
+            'tiempo_descarga' => 'nullable|numeric|min:0',
+            'tiempo_total' => 'nullable|numeric|min:0',
+            'km_total' => 'nullable|numeric|min:0',
+            'tn_real' => 'nullable|numeric|min:0',
+        ]);
+
+        $aforo = Aforo::with('cartaPorte')->findOrFail($validated['id_aforo']);
+        $cp = $aforo->cartaPorte;
+        if (!$cp) {
+            return response()->json(['success' => false, 'message' => 'La carta de porte no existe.'], 422);
+        }
+
+        // Choferes de la carta de porte.
+        $cp->update([
+            'id_chofer' => $validated['id_chofer'],
+            'id_chofer2' => $validated['id_chofer2'] ?: null,
+        ]);
+
+        // Tiempos y tasas del aforo.
+        $campos = [];
+        foreach (['tiempo_otros', 'tiempo_movimiento', 'tiempo_carga', 'tiempo_descarga', 'tiempo_total'] as $campo) {
+            if (array_key_exists($campo, $validated)) {
+                $campos[$campo] = $validated[$campo];
+            }
+        }
+        if (array_key_exists('km_total', $validated)) $campos['km_total_total'] = $validated['km_total'];
+        if (array_key_exists('tn_real', $validated)) $campos['tn_real_total'] = $validated['tn_real'];
+
+        $tasa = null;
+        if (!empty($validated['id_tasa'])) {
+            $tasa = Tasa::findOrFail($validated['id_tasa']);
+            $campos['id_tasa'] = $tasa->id;
+            $campos['tasa'] = $tasa->tasa;
+        }
+
+        // Recalcular salario por tasa una vez actualizados choferes y tasa.
+        $campos['salario'] = $this->recalcularSalarioAforo($aforo, $tasa, $cp);
+
+        $aforo->update($campos);
+
+        return response()->json(['success' => true, 'message' => 'Carta de porte actualizada y salario recalculado.']);
+    }
+
+    /**
+     * Salario por TRT de un aforo (réplica de SalarioChoferCalcService), usando
+     * la tasa dada y la condición de doble chofer de la carta de porte.
+     */
+    private function recalcularSalarioAforo(Aforo $aforo, ?Tasa $tasa, ?CartaPorte $cp = null): float
+    {
+        $cp = $cp ?? $aforo->cartaPorte;
+
+        $ingreso = (float) $aforo->ingreso_mt;
+        $almFlete = (float) ($aforo->almacenaje_flete ?? 0);
+        $salalm = 0;
+
+        $entidad = \App\Models\Entidad::find((int) entidadActivaId());
+        $almacenaje = $entidad ? (float) $entidad->almacenaje : 0.0;
+
+        $esDobleChofer = $cp && $cp->id_chofer2 && $cp->id_chofer2 != ($cp->id_chofer ?? 0);
+
+        if ($esDobleChofer) {
+            if ($almFlete > 0) {
+                $ingreso = round($ingreso - $almFlete, 2);
+                $salalm = round(($almFlete / 2) * $almacenaje, 2);
+            } else {
+                $ingreso = round($ingreso / 2, 2);
+            }
+        } elseif ($almFlete > 0) {
+            $ingreso = round($ingreso - $almFlete, 2);
+            $salalm = round($almFlete * $almacenaje, 2);
+        }
+
+        $coef = (float) ($aforo->tasa ?? 0);
+        if ($tasa) {
+            $coef = $esDobleChofer && (float) $tasa->tasa2 > 0
+                ? (float) $tasa->tasa2
+                : (float) $tasa->tasa;
+        }
+
+        return round($ingreso * $coef + $salalm, 2);
     }
 }

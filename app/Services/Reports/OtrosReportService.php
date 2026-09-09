@@ -24,7 +24,7 @@ class OtrosReportService
             return [23];
         }
 
-        return Entidad::subEntidadesIds($activa);
+        return Entidad::idsPermitidos($activa);
     }
 
     private function entidadFiltro(array $filtros): array

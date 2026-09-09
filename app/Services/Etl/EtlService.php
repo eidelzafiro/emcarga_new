@@ -1694,7 +1694,6 @@ class EtlService
 
                     $categoriasLicencia = trim((string) $fila->licencia) ?: null;
                     $fechaNula = static fn ($f) => $f && $f !== '0000-00-00' ? $f : null;
-
                     DB::table('bolsa')->updateOrInsert(
                         ['id' => $fila->idbolsa],
                         [
@@ -1709,6 +1708,7 @@ class EtlService
                             'email' => null,
                             'tiene_licencia' => $categoriasLicencia !== null ? 1 : 0,
                             'categorias_licencia' => $categoriasLicencia,
+                            'licencia' => $categoriasLicencia,
                             'licencia_emision' => $fechaNula($fila->femisionlic),
                             'licencia_vencimiento' => $fechaNula($fila->fvencelic),
                             'chequeo_medico_emision' => $fechaNula($fila->femisioncm),
@@ -2739,20 +2739,35 @@ class EtlService
                 ->orderBy('fecha_emision')
                 ->orderBy('id')
                 ->get()
-                ->map(function ($cp) use ($cartasConGirado, $entidadPorCarta) {
+                ->map(function ($cp) use ($cartasConGirado, $entidadPorCarta, $idsClientes, $idsLugares, $idsProductos, $idsTiposCarga) {
                     $g = $cartasConGirado[$cp->id] ?? null;
-                    $cp->id_cliente = $g->idcliente ?? null;
-                    $cp->id_lugar_origen = $g->idorigen ?? null;
-                    $cp->id_lugar_destino = $g->iddestino ?? null;
-                    $cp->id_producto = $g->idproducto1 ?? null;
-                    $cp->id_producto2 = $g->idproducto2 ?? null;
-                    $cp->id_tipo_carga = $g->idtipocarga1 ?? null;
-                    $cp->id_tipo_carga2 = $g->idtipocarga2 ?? null;
+
+                    // Sanitiza una FK: null si es 0 o no existe en la tabla destino
+                    // (evita violaciones de FK con ids legacy que no se migraron).
+                    $fk = function ($v, $set) {
+                        $id = (int) $v;
+
+                        return ($id > 0 && isset($set[$id])) ? $id : null;
+                    };
+
+                    $cp->id_cliente = $fk($g->idcliente ?? 0, $idsClientes);
+                    $cp->id_lugar_origen = $fk($g->idorigen ?? 0, $idsLugares);
+                    $cp->id_lugar_destino = $fk($g->iddestino ?? 0, $idsLugares);
+                    $cp->id_producto = $fk($g->idproducto1 ?? 0, $idsProductos);
+                    $cp->id_producto2 = $fk($g->idproducto2 ?? 0, $idsProductos);
+                    $cp->id_tipo_carga = $fk($g->idtipocarga1 ?? 0, $idsTiposCarga);
+                    $cp->id_tipo_carga2 = $fk($g->idtipocarga2 ?? 0, $idsTiposCarga);
                     $cp->id_moneda = null;
+
                     return $cp;
                 });
 
+            // Agrupación por (mes de parte, cliente, origen, destino, producto,
+            // productos/tipos de carga, moneda, entidad): una solicitud por mes
+            // para que las cartas del mismo cliente/origen/destino/producto de
+            // meses distintos no se mezclen en los reportes históricos.
             $grupos = $cartasSinSolicitud->groupBy(fn ($c) => implode('|', [
+                substr((string) ($c->fecha_parte ?: $c->fecha_emision), 0, 7),
                 $c->id_cliente,
                 $c->id_lugar_origen,
                 $c->id_lugar_destino,

@@ -228,7 +228,7 @@ class DocumentosReportService extends BaseReportService
             return [23];
         }
 
-        return Entidad::subEntidadesIds($activa);
+        return Entidad::idsPermitidos($activa);
     }
 
     private function periodoTexto(array $filtros): string

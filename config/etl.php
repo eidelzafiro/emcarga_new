@@ -412,6 +412,11 @@ return [
                 'nombcargo' => 'nombre',
                 'idcargos' => 'codigo',
                 'idunidad' => 'id_entidad',
+                'tarifa' => 'tarifa',
+                'cla' => 'cla',
+                'padicional' => 'pago_adicional',
+                'noct1' => 'noct1',
+                'noct2' => 'noct2',
             ],
             'defaults' => [
                 'activo' => true,

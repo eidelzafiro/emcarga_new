@@ -18,9 +18,9 @@ abstract class FpdfReportBase extends FPDF
     protected int $titlePosX = 10;
     protected int $titlePosY = 5;
 
-    public function __construct(int $entidadId, string $mes, string $ano)
+    public function __construct(int $entidadId, string $mes, string $ano, string $orientation = 'L', string $paper = 'A4')
     {
-        parent::__construct('L', 'mm', 'Letter');
+        parent::__construct($orientation, 'mm', $paper);
         $this->entidadId = $entidadId;
         $this->mes = $mes;
         $this->ano = $ano;
@@ -67,6 +67,9 @@ abstract class FpdfReportBase extends FPDF
     {
         $posX = 10;
         $rowHeight = 6;
+
+        // Fondo gris claro para el encabezado (evita el relleno negro por defecto).
+        $this->SetFillColor(200, 200, 200);
 
         // Fila 3 (campos2) - fondo
         $this->SetXY($posX, $posY);
@@ -125,24 +128,11 @@ abstract class FpdfReportBase extends FPDF
     }
 
     /**
-     * Obtener archivo de logo según idsistema de la entidad.
+     * Obtener archivo de logo de la empresa.
      */
     protected function getLogoFile(): ?string
     {
-        $entidad = \App\Models\Entidad::find($this->entidadId);
-        if (!$entidad) return null;
-
-        $idsistema = $entidad->idsistema ?? 0;
-        $logos = [
-            0 => 'enoc.png',
-            1 => 'udecam.png',
-            2 => 'etmicons.png',
-            3 => 'etrac.png',
-            4 => 'etag.png',
-        ];
-
-        $logoName = $logos[$idsistema] ?? $logos[0];
-        $path = public_path('assets/images/' . $logoName);
+        $path = public_path('images/emcarga.png');
 
         return file_exists($path) ? $path : null;
     }

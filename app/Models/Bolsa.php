@@ -24,6 +24,7 @@ class Bolsa extends Model
         'ubicacion_defensa',
         'tiene_licencia',
         'categorias_licencia',
+        'licencia',
         'licencia_emision',
         'licencia_vencimiento',
         'limitaciones',
@@ -41,6 +42,9 @@ class Bolsa extends Model
         'id_area',
         'id_entidad',
         'activo',
+        'versat',
+        'garantia',
+        'falta',
     ];
 
     protected function casts(): array

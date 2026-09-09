@@ -31,7 +31,7 @@ class FacturacionReportService
             return [23];
         }
 
-        return Entidad::subEntidadesIds($activa);
+        return Entidad::idsPermitidos($activa);
     }
 
     private function rangoFiltros(array $filtros): array

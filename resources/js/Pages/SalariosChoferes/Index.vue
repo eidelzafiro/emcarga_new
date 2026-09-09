@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import { useToast } from 'primevue/usetoast';
 import DataTable from 'primevue/datatable';
@@ -21,6 +21,7 @@ const props = defineProps({
     ano: Number,
     filters: Object,
     tasas: { type: Array, default: () => [] },
+    choferes: { type: Array, default: () => [] },
     choferesDelMes: { type: Array, default: () => [] },
     paginacion: Object,
 });
@@ -85,95 +86,67 @@ function getTagSeverity(salario) {
     return 'success';
 }
 
-// --- Edición de tasa ---
-const editingTasa = ref({});
-const savingTasa = ref({});
+// --- Modal de edición de carta de porte ---
+const showEditDialog = ref(false);
+const savingDetalle = ref(false);
+const editForm = ref({});
 
-function getTasasFiltradas(item) {
-    if (!item.id_tasa || !props.tasas.length) return props.tasas;
-    const tasaActual = props.tasas.find(t => t.id === item.id_tasa);
-    if (tasaActual && tasaActual.id_tipo_carga) {
-        return props.tasas.filter(t => !t.id_tipo_carga || t.id_tipo_carga === tasaActual.id_tipo_carga);
-    }
-    return props.tasas;
-}
+const tiempoTotalCalc = computed(() => {
+    const f = editForm.value;
+    if (!f) return 0;
+    return (Number(f.tiempo_otros) || 0)
+        + (Number(f.tiempo_movimiento) || 0)
+        + (Number(f.tiempo_carga) || 0)
+        + (Number(f.tiempo_descarga) || 0);
+});
 
-async function guardarTasa(item) {
-    const aforoId = item.id_aforo;
-    const nuevaTasaId = editingTasa.value[aforoId];
-    if (!nuevaTasaId) return;
-
-    savingTasa.value[aforoId] = true;
-    try {
-        const response = await fetch(route('salarios-choferes.actualizar-tasa'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ id_aforo: aforoId, id_tasa: nuevaTasaId }),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            item.id_tasa = nuevaTasaId;
-            item.tasa = parseFloat(data.tasa);
-            item.tasa_nombre = data.tasa_nombre;
-            item.salario = parseFloat(data.salario);
-            delete editingTasa.value[aforoId];
-            toast.add({ severity: 'success', summary: 'Tasa actualizada', detail: `${data.tasa_nombre} → Salario: ${formatCurrency(data.salario)}`, life: 2000 });
-        }
-    } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar la tasa', life: 3000 });
-    } finally {
-        savingTasa.value[aforoId] = false;
-    }
-}
-
-// --- Edición de tiempo por CP ---
-const editingTiempo = ref({});
-const savingTiempo = ref({});
-
-function abrirEditarTiempo(d) {
-    editingTiempo.value[d.id_aforo] = {
-        tiempo_total: d.tiempo_total || 0,
+function abrirEditar(d) {
+    editForm.value = {
+        id_aforo: d.id_aforo,
+        id_chofer: d.id_chofer,
+        id_chofer2: d.id_chofer2 || null,
+        id_tasa: d.id_tasa || null,
+        tiempo_otros: d.tiempo_otros || 0,
+        tiempo_movimiento: d.tiempo_movimiento || 0,
+        tiempo_carga: d.tiempo_carga || 0,
+        tiempo_descarga: d.tiempo_descarga || 0,
         km_total: d.km_total || 0,
         tn_real: d.tn_real || 0,
     };
+    showEditDialog.value = true;
 }
 
-async function guardarTiempo(d) {
-    const aforoId = d.id_aforo;
-    const datos = editingTiempo.value[aforoId];
-    if (!datos) return;
+async function guardarDetalle() {
+    const f = editForm.value;
+    if (!f || !f.id_chofer) return;
 
-    savingTiempo.value[aforoId] = true;
+    savingDetalle.value = true;
     try {
-        const response = await fetch(route('salarios-choferes.guardar-tiempo'), {
+        const response = await fetch(route('salarios-choferes.editar-detalle'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ id_aforo: aforoId, ...datos }),
+            body: JSON.stringify({
+                ...f,
+                tiempo_total: tiempoTotalCalc.value,
+            }),
         });
 
         const data = await response.json();
         if (data.success) {
-            d.tiempo_total = datos.tiempo_total;
-            d.km_total = datos.km_total;
-            d.tn_real = datos.tn_real;
-            delete editingTiempo.value[aforoId];
-            toast.add({ severity: 'success', summary: 'Datos actualizados', life: 2000 });
-            // Recalcular
+            showEditDialog.value = false;
+            toast.add({ severity: 'success', summary: 'Actualizado', detail: 'Salario recalculado.', life: 2000 });
             aplicarFiltros(currentPage.value);
+        } else {
+            toast.add({ severity: 'error', summary: 'Error', detail: data.message || 'No se pudo guardar.', life: 3000 });
         }
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron guardar los datos', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar.', life: 3000 });
     } finally {
-        savingTiempo.value[aforoId] = false;
+        savingDetalle.value = false;
     }
 }
 </script>
@@ -317,100 +290,73 @@ async function guardarTiempo(d) {
                                     <h4 class="font-semibold text-gray-700 dark:text-gray-300">
                                         Cartas de porte — {{ data.nombre_completo }} ({{ data.detalle?.length || 0 }})
                                     </h4>
-                                    <div class="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-3 py-1.5 rounded-lg">
-                                        <i class="pi pi-info-circle"></i>
-                                        Para editar el chofer, edite la hoja de ruta. Para editar tasa o tiempos, use los botones de abajo.
-                                    </div>
                                 </div>
                                 <DataTable :value="data.detalle || []" size="small" stripedRows
                                     emptyMessage="Sin cartas de porte para este chofer.">
-                                    <Column field="numero_cp" header="CP" style="width: 80px" />
-                                    <Column field="fecha_parte" header="Fecha" style="width: 90px" />
-                                    <Column field="tractivo" header="Equipo" style="width: 90px" />
-                                    <Column header="KM" class="text-right" style="width: 70px">
+                                    <Column header="CP (Emisión)" style="min-width: 150px">
                                         <template #body="{ data: d }">
-                                            <div v-if="editingTiempo[d.id_aforo] !== undefined">
-                                                <InputNumber v-model="editingTiempo[d.id_aforo].km_total"
-                                                    class="w-16" size="small" :minFractionDigits="1" :maxFractionDigits="1"
-                                                    :min="0" mode="decimal" />
-                                            </div>
-                                            <span v-else class="cursor-pointer hover:text-blue-600" @click="abrirEditarTiempo(d)">
-                                                {{ formatNum(d.km_total) }}
-                                            </span>
+                                            <div class="font-semibold">{{ d.numero_cp }}</div>
+                                            <div class="text-xs text-gray-500">{{ d.fecha_emision || '—' }}</div>
                                         </template>
                                     </Column>
-                                    <Column header="Tiempo" class="text-right" style="width: 70px">
+                                    <Column header="HR (Cierre)" style="min-width: 120px">
                                         <template #body="{ data: d }">
-                                            <div v-if="editingTiempo[d.id_aforo] !== undefined">
-                                                <InputNumber v-model="editingTiempo[d.id_aforo].tiempo_total"
-                                                    class="w-16" size="small" :minFractionDigits="2" :maxFractionDigits="2"
-                                                    :min="0" mode="decimal" />
-                                            </div>
-                                            <span v-else class="cursor-pointer hover:text-blue-600" @click="abrirEditarTiempo(d)">
-                                                {{ formatNum(d.tiempo_total) }}
-                                            </span>
+                                            <div>{{ d.numero_hr || '—' }}</div>
+                                            <div class="text-xs text-gray-500">{{ d.fecha_cierre || '—' }}</div>
                                         </template>
                                     </Column>
-                                    <Column header="TN" class="text-right" style="width: 60px">
-                                        <template #body="{ data: d }">
-                                            <div v-if="editingTiempo[d.id_aforo] !== undefined">
-                                                <InputNumber v-model="editingTiempo[d.id_aforo].tn_real"
-                                                    class="w-16" size="small" :minFractionDigits="1" :maxFractionDigits="1"
-                                                    :min="0" mode="decimal" />
-                                            </div>
-                                            <span v-else class="cursor-pointer hover:text-blue-600" @click="abrirEditarTiempo(d)">
-                                                {{ formatNum(d.tn_real) }}
-                                            </span>
-                                        </template>
+                                    <Column header="Vehículo" style="width: 100px">
+                                        <template #body="{ data: d }">{{ d.tractivo || '—' }}</template>
                                     </Column>
-                                    <Column header="Ingreso" class="text-right" style="width: 90px">
+                                    <Column header="Tipo Carga" style="min-width: 140px">
+                                        <template #body="{ data: d }">{{ d.tipo_carga || '—' }}</template>
+                                    </Column>
+                                    <Column header="KMS" class="text-right" style="width: 70px">
+                                        <template #body="{ data: d }">{{ formatNum(d.km_total) }}</template>
+                                    </Column>
+                                    <Column header="Ingresos" class="text-right" style="width: 90px">
                                         <template #body="{ data: d }">{{ formatCurrency(d.ingreso) }}</template>
                                     </Column>
-                                    <Column header="Tasa" style="min-width: 200px">
+                                    <Column header="Tasa" style="min-width: 170px">
                                         <template #body="{ data: d }">
-                                            <div v-if="editingTasa[d.id_aforo] !== undefined" class="flex items-center gap-1">
-                                                <Select v-model="editingTasa[d.id_aforo]"
-                                                    :options="getTasasFiltradas(d)" optionLabel="nombre" optionValue="id"
-                                                    placeholder="Seleccionar" class="flex-1" size="small"
-                                                    :style="{ minWidth: '140px' }" />
-                                                <Button icon="pi pi-check" size="small" severity="success" text
-                                                    :loading="savingTasa[d.id_aforo]"
-                                                    @click="guardarTasa(d)" />
-                                                <Button icon="pi pi-times" size="small" severity="secondary" text
-                                                    @click="delete editingTasa[d.id_aforo]" />
-                                            </div>
-                                            <div v-else class="flex items-center gap-2 cursor-pointer group"
-                                                @click="editingTasa[d.id_aforo] = d.id_tasa">
-                                                <span class="text-sm">{{ d.tasa_nombre || '—' }}</span>
-                                                <span class="text-xs text-gray-400">{{ d.tasa ? `(${d.tasa})` : '' }}</span>
-                                                <i class="pi pi-pencil text-xs text-gray-300 group-hover:text-blue-500 transition-colors"></i>
-                                            </div>
+                                            <span class="text-sm">{{ d.tasa_nombre || '—' }}</span>
+                                            <span v-if="d.tasa" class="text-xs text-gray-400"> ({{ d.tasa }})</span>
                                         </template>
                                     </Column>
-                                    <Column header="Salario" class="text-right" style="width: 90px">
+                                    <Column header="Salario x Tasa" class="text-right" style="width: 100px">
                                         <template #body="{ data: d }">
                                             <span class="font-semibold">{{ formatCurrency(d.salario) }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="" style="width: 80px">
+                                    <Column header="T. Otros" class="text-right" style="width: 70px">
+                                        <template #body="{ data: d }">{{ formatNum(d.tiempo_otros) }}</template>
+                                    </Column>
+                                    <Column header="T. Mov" class="text-right" style="width: 70px">
+                                        <template #body="{ data: d }">{{ formatNum(d.tiempo_movimiento) }}</template>
+                                    </Column>
+                                    <Column header="T. Carga" class="text-right" style="width: 70px">
+                                        <template #body="{ data: d }">{{ formatNum(d.tiempo_carga) }}</template>
+                                    </Column>
+                                    <Column header="T. Desc." class="text-right" style="width: 70px">
+                                        <template #body="{ data: d }">{{ formatNum(d.tiempo_descarga) }}</template>
+                                    </Column>
+                                    <Column header="T. Total" class="text-right" style="width: 80px">
                                         <template #body="{ data: d }">
-                                            <div v-if="editingTiempo[d.id_aforo] !== undefined" class="flex gap-1">
-                                                <Button icon="pi pi-check" size="small" severity="success" text
-                                                    :loading="savingTiempo[d.id_aforo]"
-                                                    @click="guardarTiempo(d)" title="Guardar" />
-                                                <Button icon="pi pi-times" size="small" severity="secondary" text
-                                                    @click="delete editingTiempo[d.id_aforo]" title="Cancelar" />
-                                            </div>
-                                            <Button v-else icon="pi pi-pencil" size="small" severity="secondary" text
-                                                @click="abrirEditarTiempo(d)" title="Editar tiempos" />
+                                            <span class="font-semibold">{{ formatNum(d.tiempo_total) }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Flags" style="width: 80px">
+                                    <Column header="Flags" style="width: 70px">
                                         <template #body="{ data: d }">
                                             <div class="flex gap-1">
                                                 <Tag v-if="d.es_feriado" value="F" severity="danger" class="text-xs" />
                                                 <Tag v-if="d.doble_chofer" value="D" severity="warn" class="text-xs" />
                                             </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="" style="width: 60px">
+                                        <template #body="{ data: d }">
+                                            <Button icon="pi pi-pencil" size="small" severity="secondary" text
+                                                @click="abrirEditar(d)" title="Editar carta de porte" />
                                         </template>
                                     </Column>
                                 </DataTable>
@@ -420,5 +366,67 @@ async function guardarTiempo(d) {
                 </div>
             </div>
         </div>
+
+        <!-- Modal de edición de carta de porte -->
+        <Dialog v-model:visible="showEditDialog" header="Editar carta de porte" modal
+            :style="{ width: '90vw', maxWidth: '640px' }" :closable="!savingDetalle">
+            <form v-if="editForm" @submit.prevent="guardarDetalle" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1 font-medium">Chofer 1</label>
+                        <Select v-model="editForm.id_chofer" :options="choferes" optionLabel="nombre" optionValue="id"
+                            placeholder="Seleccionar chofer" class="w-full" filter />
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Chofer 2</label>
+                        <Select v-model="editForm.id_chofer2" :options="choferes" optionLabel="nombre" optionValue="id"
+                            placeholder="Sin chofer 2" class="w-full" filter showClear />
+                    </div>
+                </div>
+                <div>
+                    <label class="block mb-1 font-medium">Tasa aplicada</label>
+                    <Select v-model="editForm.id_tasa" :options="tasas" optionLabel="nombre" optionValue="id"
+                        placeholder="Seleccionar tasa" class="w-full" filter showClear />
+                </div>
+                <div>
+                    <label class="block mb-1 font-medium">Tiempos (horas)</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Otros</label>
+                            <InputNumber v-model="editForm.tiempo_otros" class="w-full" :minFractionDigits="2" :maxFractionDigits="2" :min="0" mode="decimal" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Movimiento</label>
+                            <InputNumber v-model="editForm.tiempo_movimiento" class="w-full" :minFractionDigits="2" :maxFractionDigits="2" :min="0" mode="decimal" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Carga</label>
+                            <InputNumber v-model="editForm.tiempo_carga" class="w-full" :minFractionDigits="2" :maxFractionDigits="2" :min="0" mode="decimal" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Descarga</label>
+                            <InputNumber v-model="editForm.tiempo_descarga" class="w-full" :minFractionDigits="2" :maxFractionDigits="2" :min="0" mode="decimal" />
+                        </div>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                        Tiempo total: <span class="font-semibold font-mono">{{ formatNum(tiempoTotalCalc) }}</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1 font-medium">KM Total</label>
+                        <InputNumber v-model="editForm.km_total" class="w-full" :minFractionDigits="1" :maxFractionDigits="1" :min="0" mode="decimal" />
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">TN Real</label>
+                        <InputNumber v-model="editForm.tn_real" class="w-full" :minFractionDigits="1" :maxFractionDigits="1" :min="0" mode="decimal" />
+                    </div>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <Button label="Cancelar" severity="secondary" type="button" @click="showEditDialog = false" :disabled="savingDetalle" />
+                    <Button label="Guardar y recalcular" type="submit" icon="pi pi-save" :loading="savingDetalle" />
+                </div>
+            </form>
+        </Dialog>
     </AppLayout>
 </template>

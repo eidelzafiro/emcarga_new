@@ -111,6 +111,27 @@ class ReportController extends Controller
         return app(NominaReportService::class)->pdfResumenTiemposChoferes($request);
     }
 
+    public function pdfAnalisisSalarioTransportacion(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfAnalisisSalarioTransportacion($request);
+    }
+
+    public function pdfControlDiarioAdministrativo(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfControlDiarioAdministrativo($request);
+    }
+
+    public function pdfControlDiarioChoferes(Request $request)
+    {
+        abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);
+
+        return app(NominaReportService::class)->pdfControlDiarioChoferes($request);
+    }
+
     public function pdfIncidencias(Request $request)
     {
         abort_unless(auth()->user()->can('reportes-nomina.ver'), 403);

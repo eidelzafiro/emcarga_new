@@ -617,12 +617,29 @@ class ReportePrenominaService
             }
 
             $hr = $cp->hojaRuta;
-            $choferId = $cp->id_chofer;
-            $chofer = $cp->chofer;
+
+            // Paridad legacy: `mostrar_modelo1` consulta por chofer con
+            // `having idchofer = X OR idchofer2 = X`, de modo que las cartas de
+            // porte de doble chofer se contabilizan para AMBOS choferes (cada
+            // uno acumula sus propios tiempos del mismo aforo). Aquí un aforo
+            // puede therefore alimentar dos grupos: id_chofer e id_chofer2.
+            $choferesCp = [];
+            if ($cp->id_chofer) {
+                $choferesCp[$cp->id_chofer] = true;
+            }
+            if ($cp->id_chofer2 && $cp->id_chofer2 != $cp->id_chofer) {
+                $choferesCp[$cp->id_chofer2] = true;
+            }
+            if (empty($choferesCp)) {
+                continue;
+            }
+
+            foreach (array_keys($choferesCp) as $choferId) {
+            $chofer = $cp->id_chofer == $choferId ? $cp->chofer : Bolsa::with('cargo')->find($choferId);
             $nombreChofer = $chofer ? trim($chofer->nombre . ' ' . $chofer->apellidos) : 'DESCONOCIDO';
 
             if (!isset($porChofer[$choferId])) {
-                $bolsa = Bolsa::find($choferId);
+                $bolsa = $chofer ?? Bolsa::find($choferId);
                 $porChofer[$choferId] = [
                     'id_bolsa' => $choferId,
                     'nombre' => $nombreChofer,
@@ -739,6 +756,7 @@ class ReportePrenominaService
             $t['saltrtcla'] += $saltrtcla;
             $t['ingresos'] += $registro['ingresos'];
             $t['salario'] += $salario;
+            }
         }
 
         // Ordenar por nombre
@@ -888,6 +906,13 @@ class ReportePrenominaService
                 continue;
             }
 
+            // Paridad legacy (ModSalarioChofer::671/775): el tiempo total del
+            // chofer nunca supera 240 horas; el exceso pasa a tiempo irregular.
+            $ttotalOriginal = $ttotal;
+            if ($ttotal > 240) {
+                $ttotal = 240.0;
+            }
+
             // Descuentos por incidencia del mes (claves legacy).
             $vac = $sub = $reub = $recal = $gar = $receso = $otros = 0.0;
             $incidencias = Incidencia::query()
@@ -923,6 +948,10 @@ class ReportePrenominaService
                 'tcarga' => (float) ($t['tcarga'] ?? 0),
                 'tdescarga' => (float) ($t['tdescarga'] ?? 0),
                 'ttotal' => $ttotal,
+                // Paridad legacy mostrar_modelo1: regular = ttotal (cap 240),
+                // irregular = exceso sobre 240.
+                'regular' => $ttotal,
+                'irregular' => round(max(0.0, $ttotalOriginal - 240), 2),
                 'vacaciones' => round($vac, 2),
                 'subsidios' => round($sub, 2),
                 'reubicado' => round($reub, 2),
@@ -939,13 +968,570 @@ class ReportePrenominaService
             }
         }
 
-        // Orden por versat (el legacy ordena por rh_movimientos.nronomina = versat).
-        usort($registros, fn ($a, $b) => strcmp((string) $a['versat'], (string) $b['versat']));
+        // Orden alfabético por nombre (la referencia del reporte 8 sale por
+        // rh_bolsa.nombrecompleto; pdftotext lo confirma fila a fila).
+        usort($registros, fn ($a, $b) => strcmp($a['nombrecompleto'], $b['nombrecompleto']));
 
         foreach ($totales as $k => $v) {
             $totales[$k] = round((float) $v, 2);
         }
 
         return ['registros' => $registros, 'totales' => $totales];
+    }
+
+    /**
+     * MODELO ANALISIS DEL SALARIO TRANSPORTACION (reporte 7 del plan RRHH).
+     * Réplica de npdf_salario_choferes_resumen_analisis (Reportes.php:3068) +
+     * ModSalarioAdmin::mostrar_salario_emcarga (sistema de pago = 2, líneas
+     * 449-617): por chofer con ttotal > 0 o tgarantia > 0.
+     *
+     * Columnas: NOMBRE, INGRESOS, TIEMPO TRANSPOR (ttotal), GARANTIA (tgarantia),
+     * TOTAL (ttotal), COEFICIENTE (impsalfinal - impferiados), TIEMPO TRABAJADO
+     * (impbase2), RESULTADO (impresultado), TOTAL (impsalfinal), GARANTIA
+     * (impgarantia), NORMA SALARIAL, TARIFA TRANSPORTA (normatransp) y TARIFA
+     * GENERAL (normatotal).
+     *
+     * El legacy acumula las garantías e importes de incidencia con las claves:
+     * vacaciones(6), garantía/interrupción(3,44,46), feriados(21).
+     */
+    public function analisisTransportacion(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
+
+        $choferes = Bolsa::query()
+            ->where('activo', true)
+            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', 2))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
+            ->when(! empty($entidadesPermitidas),
+                fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
+                fn ($q) => $q->whereRaw('1 = 0'))
+            ->with(['cargo:id,nombre,tarifa,cla'])
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get();
+
+        $registros = [];
+        $totales = array_fill_keys(
+            ['ingresos', 'ttotal', 'tgarantia', 'coeficiente', 'tiempo_trabajado',
+                'resultado', 'total', 'garantia'], 0.0
+        );
+
+        foreach ($choferes as $chofer) {
+            $res = $this->choferCalc->calcularSalarioChofer($chofer->id, $mes, $ano);
+            if (! $res) {
+                continue;
+            }
+
+            $tarifa = (float) ($chofer->cargo?->tarifa ?? 0);
+            $ttotal = (float) $res['t_total'];
+            $regular = (float) $res['regular'];
+            $irregular = (float) $res['irregular'];
+
+            $impregular = round($regular * $tarifa, 2);
+            $impirregular = round($irregular * $tarifa, 2);
+            $impcla = round((float) $res['imp_cla'], 2);
+            $impnocturnidad = round((float) $res['imp_nocturnidad_1'] + (float) $res['imp_nocturnidad_2'], 2);
+            $impbase = round($impregular + $impirregular + $impcla, 2);
+            $impbase2 = round($impbase + $impnocturnidad, 2);
+
+            $tsalario = round((float) $res['salario_cp'], 2);
+            $ingresos = round((float) $res['ingresos'], 2);
+
+            // Incremento salarial inicial (resultado antes de penalizar).
+            $impiresultado = round($tsalario - $impbase2, 2);
+            if ($impiresultado < 0) {
+                $impiresultado = 0;
+            }
+
+            // Penalización por resultado (pago adicional 6 = RESULTADO CHOFERES).
+            $penimporte = 0.0;
+            $idPagoResultadoChoferes = DB::table('catalogo_items')
+                ->where('tipo', 'tipos_pagos_adicionales')
+                ->where('origen_id', 6)
+                ->value('id');
+            if ($idPagoResultadoChoferes && $impiresultado > 0) {
+                $penImporteSum = DB::table('penalizaciones')
+                    ->where('id_bolsa', $chofer->id)
+                    ->whereYear('fecha', $ano)
+                    ->whereMonth('fecha', $mes)
+                    ->whereIn('id_tipo_penalizacion', function ($q) use ($idPagoResultadoChoferes) {
+                        $q->select('id')->from('tipos_penalizaciones')
+                            ->where('tipo_pago_adicional_id', $idPagoResultadoChoferes);
+                    })
+                    ->sum('importe');
+                if ($penImporteSum > 0) {
+                    $penimporte = round((min($penImporteSum, 100) * $impiresultado) / 100, 2);
+                }
+            }
+            $impresultado = max(0, round($impiresultado - $penimporte, 2));
+
+            // Incidencias del mes: garantías (3,44,46), feriados (21) e importes.
+            $tgarantia = $impgarantia = $impferiados = $impincidencia = 0.0;
+            $incidencias = Incidencia::query()
+                ->where('id_bolsa', $chofer->id)
+                ->whereYear('fecha_inicio', $ano)
+                ->whereMonth('fecha_inicio', $mes)
+                ->with('tipoIncidencia')
+                ->get();
+
+            foreach ($incidencias as $inc) {
+                $extra = $inc->tipoIncidencia?->extra ?? [];
+                $clave = (string) ($extra['clave'] ?? ($inc->tipoIncidencia?->origen_id ?? $inc->id_tipo_incidencia));
+                $tiempo = (float) $inc->periodo_actual;
+                $importe = (float) $inc->importe;
+
+                if (in_array($clave, ['3', '44', '46'], true)) {
+                    $tgarantia += $tiempo;
+                    $impgarantia += $importe;
+                }
+                if ($clave === '21') {
+                    $impferiados += $importe;
+                }
+                // impsuma > 0 (tipos que suman importe a la prenomina).
+                $impsuma = (int) ($extra['impsuma'] ?? 0);
+                if ($impsuma > 0) {
+                    $impincidencia += $importe;
+                }
+            }
+            $impgarantia = round($impgarantia, 2);
+            $impferiados = round($impferiados, 2);
+            $impincidencia = round($impincidencia, 2);
+
+            // Salario final (ModSalarioAdmin:590-597).
+            $impsalfinal = round($impbase2 + $impferiados + $impgarantia + $impincidencia + $impresultado, 2);
+
+            // Normas (solo si hay valores positivos — el legacy deja '' si no).
+            $normasalarial = ($impsalfinal > 0 && $impbase > 0)
+                ? round($impsalfinal / $impbase, 2) : 0.0;
+            $normatransp = ($impsalfinal > 0 && $ttotal > 0)
+                ? round($impsalfinal / $ttotal, 2) : 0.0;
+            $normatotal = $normatransp;
+
+            // El reporte solo incluye choferes con tiempo o garantía.
+            if ($ttotal <= 0 && $tgarantia <= 0) {
+                continue;
+            }
+
+            $registro = [
+                'id_bolsa' => $chofer->id,
+                'nombrecompleto' => $chofer->nombrecompleto,
+                'ingresos' => $ingresos,
+                'ttotal' => $ttotal,
+                'tgarantia' => round($tgarantia, 2),
+                'coeficiente' => round($impsalfinal - $impferiados, 2),
+                'tiempo_trabajado' => $impbase2,
+                'resultado' => $impresultado,
+                'total' => $impsalfinal,
+                'garantia' => $impgarantia,
+                'normasalarial' => $normasalarial,
+                'normatransp' => $normatransp,
+                'normatotal' => $normatotal,
+            ];
+            $registros[] = $registro;
+
+            $totales['ingresos'] += $ingresos;
+            $totales['ttotal'] += $ttotal;
+            $totales['tgarantia'] += $registro['tgarantia'];
+            $totales['coeficiente'] += $registro['coeficiente'];
+            $totales['tiempo_trabajado'] += $impbase2;
+            $totales['resultado'] += $impresultado;
+            $totales['total'] += $impsalfinal;
+            $totales['garantia'] += $impgarantia;
+        }
+
+        // Orden alfabético (la referencia sale por rh_bolsa.nombrecompleto).
+        usort($registros, fn ($a, $b) => strcmp($a['nombrecompleto'], $b['nombrecompleto']));
+
+        foreach ($totales as $k => $v) {
+            $totales[$k] = round((float) $v, 2);
+        }
+
+        // Normas de los TOTALES (Reportes.php:3176-3177). OJO: el legacy
+        // acumula $ttotal DOS veces por empleado (líneas 3157+3159), de modo
+        // que TRANSPOR/TOTAL de la fila TOTALES y los divisores de las normas
+        // usan el DOBLE de la suma (2×2,374.31 = 4,748.62 en la referencia).
+        $ttotalDoble = round($totales['ttotal'] * 2, 2);
+        $totales['ttotal'] = $ttotalDoble;
+        $totales['normasalarial'] = $totales['tiempo_trabajado'] > 0
+            ? round($totales['coeficiente'] / $totales['tiempo_trabajado'], 2) : 0.0;
+        $totales['normatransp'] = $ttotalDoble > 0
+            ? round($totales['coeficiente'] / $ttotalDoble, 2) : 0.0;
+        $totales['normatotal'] = $ttotalDoble > 0
+            ? round($totales['total'] / $ttotalDoble, 2) : 0.0;
+
+        return ['registros' => $registros, 'totales' => $totales];
+    }
+
+    /**
+     * Días feriados del mes (legacy rh_meses.dias, ';' separado).
+     */
+    private function feriadosMesLegacy(int $mes): array
+    {
+        $record = DB::connection('legacy')->table('rh_meses')->where('idmes', $mes)->first();
+
+        return (!$record || empty($record->dias)) ? [] : array_map('intval', explode(';', $record->dias));
+    }
+
+    /**
+     * Días laborables del mes (legacy rh_meses.dlaborables / dlab2).
+     */
+    private function diasLaborablesLegacy(int $mes, int $opcion = 1): float
+    {
+        $record = DB::connection('legacy')->table('rh_meses')->where('idmes', $mes)->first();
+        if (!$record) {
+            return 0;
+        }
+
+        return (float) ($opcion == 1 ? $record->dlaborables : $record->dlab2);
+    }
+
+    /**
+     * Tiempo del mes (legacy tiempo_mes, ModSalarioAdmin:141-166).
+     * tiempo1 = (resto*9)+(viernes*8) donde resto = dias-(dom+sab+vie).
+     */
+    private function tiempoMesLegacy(int $mes, int $ano): float
+    {
+        $dias = Carbon::createFromDate($ano, $mes, 1)->daysInMonth;
+        $dom = $sab = $vie = 0;
+        for ($i = 1; $i <= $dias; $i++) {
+            $w = (int) date('w', mktime(0, 0, 0, $mes, $i, $ano));
+            if ($w === 0) $dom++;
+            if ($w === 6) $sab++;
+            if ($w === 5) $vie++;
+        }
+        $resto = $dias - ($dom + $sab + $vie);
+
+        return round(($resto * 9) + ($vie * 8), 2);
+    }
+
+    /**
+     * Descuentos por incidencia del mes (legacy ModIncidencias::mostrar_mes,
+     * claves legacy = origen_id del catálogo). Devuelve por incidencia:
+     * clave, inicio(día), final(día), tiempo (periodo_actual), tsuma, impsuma.
+     */
+    private function incidenciasMes(int $idBolsa, int $mes, int $ano): array
+    {
+        return Incidencia::query()
+            ->where('id_bolsa', $idBolsa)
+            ->whereYear('fecha_inicio', $ano)
+            ->whereMonth('fecha_inicio', $mes)
+            ->with('tipoIncidencia')
+            ->get()
+            ->map(function (Incidencia $inc) {
+                $extra = $inc->tipoIncidencia?->extra ?? [];
+
+                return [
+                    'clave' => (string) ($extra['clave'] ?? ($inc->tipoIncidencia?->origen_id ?? '')),
+                    'inicio' => (int) $inc->fecha_inicio?->format('j'),
+                    'final' => (int) $inc->fecha_fin?->format('j'),
+                    'tiempo' => (float) $inc->periodo_actual,
+                    'tsuma' => (int) ($extra['tsuma'] ?? 0),
+                    'impsuma' => (int) ($extra['impsuma'] ?? 0),
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * Tiempo irregular del mes por trabajador (legacy rh_saladmin.irregular).
+     */
+    private function irregularMovimiento(int $idMovimientoRrhh, int $mes, int $ano): float
+    {
+        // rh_saladmin se referencia por idmovimientos legacy; el nuevo
+        // movimientos_rrhh guarda id_legacy para tractivos, no para RRHH.
+        // El ETL de nómina no migró rh_saladmin: se consulta directo al legacy
+        // vía idbolsa→rh_movimientos activo (paridad mostrar_irregular).
+        $idLegacy = DB::connection('legacy')->table('rh_movimientos')
+            ->join('rh_bolsa', 'rh_movimientos.idbolsa', '=', 'rh_bolsa.idbolsa')
+            ->where('rh_movimientos.idmovimientos', $idMovimientoRrhh)
+            ->value('rh_movimientos.idmovimientos');
+
+        if (!$idLegacy) {
+            $idLegacy = $idMovimientoRrhh;
+        }
+
+        $irregular = DB::connection('legacy')->table('rh_saladmin')
+            ->where('idmovimientos', $idLegacy)
+            ->whereYear('fsaladmin', $ano)
+            ->whereMonth('fsaladmin', $mes)
+            ->sum('irregular');
+
+        return (float) $irregular;
+    }
+
+    /**
+     * Mapa de claves legacy → columnas de descuento del SC-4-05
+     * (réplica del switch de ModMovimientos::mostrar_control).
+     */
+    private const MAPA_DESCUENTOS_SC405 = [
+        '1' => 'cm', '2' => 'cm', '4' => 'cr', '6' => 'vac', '7' => 'lss',
+        '8' => 'chm', '9' => 'chm', '10' => 'lm', '11' => 'lm', '12' => 'ai',
+        '14' => 'at', '15' => 'fnt', '16' => 'ai', '18' => 'mov', '26' => 'ab',
+        '29' => 'mov', '33' => 'imp', '34' => 'imp', '35' => 'imp', '36' => 'pm',
+        '38' => 'sl', '43' => 'rt', '46' => 'int', '48' => 'cr', '49' => 'fnt',
+        '51' => 'rt', '52' => 'tadrl',
+    ];
+
+    /**
+     * SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO (reporte 10) — administrativo.
+     * Réplica de ModMovimientos::mostrar_control (sistema de pago != 2).
+     *
+     * Por trabajador: nronomina, nombrecompleto, categoría (1ra letra),
+     * tiempo por día (8/4/D o turnos si grupo horario 3; claves de incidencia
+     * encima), descuentos agregados por clave legacy, noct1/noct2 y regular.
+     */
+    public function controlDiario(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
+        $dias = Carbon::createFromDate($ano, $mes, 1)->daysInMonth;
+        $tiempom = $this->tiempoMesLegacy($mes, $ano);
+        $dialab = $this->diasLaborablesLegacy($mes, 1);
+        $dialab2 = $this->diasLaborablesLegacy($mes, 2);
+
+        $trabajadores = Bolsa::query()
+            ->where('activo', true)
+            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', '!=', 2))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
+            ->when(! empty($entidadesPermitidas),
+                fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
+                fn ($q) => $q->whereRaw('1 = 0'))
+            ->with(['cargo:id,nombre,tarifa,en_salario,id_fondo_tiempo,id_grupo_horario,id_grupo_escala,id_categoria_cargo',
+                    'cargo.fondo_tiempo:id,fondo_tiempo',
+                    'cargo.categoria_cargo:id,nombre',
+                    'cargo.grupo_escala:id,nombre',
+                    'area:id,nombre,orden'])
+            ->orderBy('id_area')
+            ->get();
+
+        // Orden legacy: rh_areas.order + grupo escala DESC + nombcatcargo… el
+        // ETL no trae grupo escala en área; se ordena por área (orden) y luego
+        // por nombre (heurística estable, misma que la referencia muestra por
+        // bloques de área).
+        $registros = [];
+        foreach ($trabajadores as $trabajador) {
+            $movimiento = $trabajador->movimientosRrhh()
+                ->whereNull('fbaja')->where('origen', 'mov')
+                ->first();
+
+            $cargo = $trabajador->cargo;
+            $fondoTiempo = (float) ($cargo?->fondo_tiempo?->fondo_tiempo ?? 0);
+            $enSalario = (int) ($cargo?->en_salario ?? 0);
+            $tarifa = (float) ($cargo?->tarifa ?? 0);
+            $catCargo = $cargo?->categoria_cargo?->nombre ?? '';
+            $grupoHorario = (int) ($cargo?->id_grupo_horario ?? 0);
+
+            // Tiempo regular según categoría (legacy 509-524).
+            if ($enSalario == 1) {
+                $regular1 = 24.0;
+            } elseif ($catCargo === 'OBRERO' || $catCargo === 'OPERARIO') {
+                $regular1 = $tiempom;
+            } else {
+                $regular1 = round($fondoTiempo * 24, 2);
+            }
+            if ($regular1 == 216.0) { $regular1 = $tiempom; }
+            if ($regular1 == 190.6) { $regular1 = round($dialab * 8, 2); }
+            if ($regular1 == 173.3) { $regular1 = round($dialab2 * 8, 2); }
+
+            $tirregular = $movimiento ? $this->irregularMovimiento($movimiento->id, $mes, $ano) : 0.0;
+
+            // Tiempo por día.
+            $tiempo = array_fill(0, $dias, '');
+            $noct1 = $noct2 = 0.0;
+            if ($grupoHorario === 3) {
+                $turnos = $movimiento
+                    ? \App\Models\Turno::where('id_movimiento_rrhh', $movimiento->id)
+                        ->whereYear('inicio', $ano)->whereMonth('inicio', $mes)
+                        ->orderBy('inicio')->get()
+                    : collect();
+                foreach ($turnos as $turno) {
+                    for ($a = (int) $turno->inicio?->format('j'); $a <= (int) $turno->final?->format('j'); $a++) {
+                        if ($a >= 1 && $a <= $dias) {
+                            $tiempo[$a - 1] = round((float) $turno->tiempo, 2);
+                        }
+                    }
+                    $noct1 += (float) $turno->noct1;
+                    $noct2 += (float) $turno->noct2;
+                }
+                $regular = $regular1;
+            } else {
+                for ($i = 0; $i < $dias; $i++) {
+                    $tiempo[$i] = 8;
+                    $w = (int) date('w', mktime(0, 0, 0, $mes, $i + 1, $ano));
+                    if ($w === 0) $tiempo[$i] = 'D';
+                    if ($w === 6) $tiempo[$i] = 4;
+                }
+            }
+
+            // Descuentos por incidencia.
+            $d = array_fill_keys(['vac','cr','ai','lm','cm','lss','mov','int','fnt','ab','chm','rt','at','pm','sl','imp','o','tadrl','tiempo1','tiempo2'], 0.0);
+            foreach ($this->incidenciasMes($trabajador->id, $mes, $ano) as $inc) {
+                for ($a = $inc['inicio']; $a <= $inc['final']; $a++) {
+                    if ($a >= 1 && $a <= $dias) {
+                        $tiempo[$a - 1] = $inc['clave'];
+                    }
+                }
+                $col = self::MAPA_DESCUENTOS_SC405[$inc['clave']] ?? 'o';
+                $d[$col] += $inc['tiempo'];
+                $d['tiempo1'] += $inc['tiempo'];
+                $d['tiempo2'] += ($inc['tsuma'] > 0) ? $inc['tiempo'] : -$inc['tiempo'];
+            }
+            $d['tiempo1'] = round($d['tiempo1'] - $d['tadrl'], 2);
+            $d['noct1'] = round($noct1, 2);
+            $d['noct2'] = round($noct2, 2);
+
+            if ($grupoHorario === 3) {
+                $regular = $regular1;
+            } else {
+                $regular = round($regular1 - $tirregular + $d['tiempo2'] + $d['tadrl'], 2);
+            }
+            if ($regular < 0) {
+                $regular = 0.0;
+            }
+
+            $registros[] = [
+                'id_bolsa' => $trabajador->id,
+                'nronomina' => $movimiento?->nronomina ?? $trabajador->versat ?? '',
+                'nombrecompleto' => $trabajador->nombrecompleto,
+                'nombarea' => $trabajador->area?->nombre ?? '',
+                'area_orden' => (int) ($trabajador->area?->orden ?? 0),
+                'grupo_escala' => (string) ($cargo?->grupo_escala?->nombre ?? ''),
+                'categoria' => substr($catCargo, 0, 1),
+                'tiempo' => $tiempo,
+                'descuentos' => $d,
+                'regular' => $regular,
+            ];
+        }
+
+        // Orden legacy: rh_areas.order + rh_gruposescala.nombgrupoescala DESC.
+        // Dentro del mismo grupo de escala se mantiene el orden natural del
+        // query (insert), igual que el legacy (sin criterio de desempate).
+        usort($registros, function ($a, $b) {
+            return ($a['area_orden'] <=> $b['area_orden'])
+                ?: strcmp($a['nombarea'], $b['nombarea'])
+                ?: strcmp($b['grupo_escala'], $a['grupo_escala']);
+        });
+
+        return ['registros' => $registros];
+    }
+
+    /**
+     * SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO CHOFERES DE TRANSPORTACION
+     * (reporte 11) — réplica de ModMovimientos::mostrar_control_choferes
+     * (sistema de pago = 2).
+     *
+     * Por chofer: tiempo por día con 'T' (hojas de ruta vigentes del mes de
+     * cierre, restando dias_trabajados), claves de incidencia encima (excepto
+     * domingos 'D'), nocturnidad de los aforos del mes, descuentos por clave
+     * y regular = min(ttotal + tiempo1, 240).
+     */
+    public function controlDiarioChoferes(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
+        $dias = Carbon::createFromDate($ano, $mes, 1)->daysInMonth;
+
+        $choferes = Bolsa::query()
+            ->where('activo', true)
+            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', 2))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
+            ->when(! empty($entidadesPermitidas),
+                fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
+                fn ($q) => $q->whereRaw('1 = 0'))
+            ->with(['cargo:id,nombre,id_categoria_cargo', 'cargo.categoria_cargo:id,nombre'])
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get();
+
+        $registros = [];
+        foreach ($choferes as $chofer) {
+            $movimiento = $chofer->movimientosRrhh()
+                ->whereNull('fbaja')->where('origen', 'mov')
+                ->first();
+            $catCargo = $chofer->cargo?->categoria_cargo?->nombre ?? '';
+
+            // Tiempos y nocturnidad de las transportaciones del mes (modelo1).
+            $res = $this->choferCalc->calcularSalarioChofer($chofer->id, $mes, $ano);
+            $ttotal = $res ? (float) $res['t_total'] : 0.0;
+            $noct1 = $res ? (float) ($res['imp_nocturnidad_1'] >= 0 ? 0 : 0) : 0.0; // ver abajo: se recalcula
+            $noct1 = 0.0; $noct2 = 0.0;
+            if ($res) {
+                // noct1/noct2 en HORAS: el detalle del motor los trae por aforo.
+                foreach (($res['detalle'] ?? []) as $det) {
+                    $noct1 += (float) $det['noct1'];
+                    $noct2 += (float) $det['noct2'];
+                }
+            }
+
+            // Tiempo por día: 'T' en el rango emisión→cierre de sus hojas de
+            // ruta (no canceladas, cierre en el mes), quitando dias_trabajados.
+            $tiempo = array_fill(0, $dias, '');
+            for ($i = 0; $i < $dias; $i++) {
+                if ((int) date('w', mktime(0, 0, 0, $mes, $i + 1, $ano)) === 0) {
+                    $tiempo[$i] = 'D';
+                }
+            }
+            $hrs = \App\Models\HojasRuta::query()
+                ->where('cancelada', false)
+                ->whereYear('fecha_cierre', $ano)
+                ->whereMonth('fecha_cierre', $mes)
+                ->where(fn ($q) => $q->where('id_chofer', $chofer->id)->orWhere('id_chofer2', $chofer->id))
+                ->orderBy('fecha_emision')
+                ->orderBy('fecha_cierre')
+                ->get(['id', 'fecha_emision', 'fecha_cierre', 'id_chofer', 'id_chofer2', 'dias_trabajados']);
+            foreach ($hrs as $hr) {
+                $inicio = (int) ($hr->fecha_emision?->format('j') ?? 0);
+                $final = (int) ($hr->fecha_cierre?->format('j') ?? 0);
+                for ($a = $inicio; $a <= $final; $a++) {
+                    if ($a >= 1 && $a <= $dias) {
+                        $tiempo[$a - 1] = 'T';
+                    }
+                }
+                // dias_trabajados quita 'T' (días sin trabajar dentro del rango).
+                $dt = array_filter(array_map('intval', explode(';', (string) $hr->dias_trabajados)));
+                foreach ($dt as $x) {
+                    if ($x >= 1 && $x <= $dias) {
+                        $tiempo[$x - 1] = '';
+                    }
+                }
+            }
+            $diasT = count(array_filter($tiempo, fn ($v) => $v === 'T'));
+
+            // Descuentos por incidencia (la clave NO pisa los domingos).
+            $d = array_fill_keys(['vac','cr','ai','lm','cm','lss','mov','int','fnt','ab','chm','rt','at','pm','sl','imp','o','tadrl','tiempo1','tiempo2'], 0.0);
+            foreach ($this->incidenciasMes($chofer->id, $mes, $ano) as $inc) {
+                for ($a = $inc['inicio']; $a <= $inc['final']; $a++) {
+                    if ($a >= 1 && $a <= $dias && $tiempo[$a - 1] !== 'D') {
+                        $tiempo[$a - 1] = substr($inc['clave'], 0, 2);
+                    }
+                }
+                $col = self::MAPA_DESCUENTOS_SC405[$inc['clave']] ?? 'o';
+                $d[$col] += $inc['tiempo'];
+                $d['tiempo1'] += $inc['tiempo'];
+            }
+            $d['noct1'] = round($noct1, 2);
+            $d['noct2'] = round($noct2, 2);
+
+            $regular = round($ttotal + $d['tiempo1'], 2);
+            if ($regular > 240) {
+                $regular = 240.0;
+            }
+            if ($regular < 0) {
+                $regular = 0.0;
+            }
+
+            $registros[] = [
+                'id_bolsa' => $chofer->id,
+                'nronomina' => $movimiento?->nronomina ?? $chofer->versat ?? '',
+                'nombrecompleto' => $chofer->nombrecompleto,
+                'categoria' => substr($catCargo, 0, 1),
+                'tiempo' => $tiempo,
+                'dias_trabajados' => $diasT,
+                'descuentos' => $d,
+                'regular' => $regular,
+            ];
+        }
+
+        usort($registros, fn ($a, $b) => strcmp($a['nombrecompleto'], $b['nombrecompleto']));
+
+        return ['registros' => $registros];
     }
 }

@@ -474,6 +474,9 @@ Route::middleware('auth')->group(function () {
             Route::get('nocturnidad', [ReportController::class, 'pdfNocturnidad'])->name('nocturnidad');
             Route::get('pago-administrativo', [ReportController::class, 'pdfPagoAdministrativo'])->name('pago-administrativo');
             Route::get('resumen-tiempos-choferes', [ReportController::class, 'pdfResumenTiemposChoferes'])->name('resumen-tiempos-choferes');
+            Route::get('analisis-salario-transportacion', [ReportController::class, 'pdfAnalisisSalarioTransportacion'])->name('analisis-salario-transportacion');
+            Route::get('control-diario-administrativo', [ReportController::class, 'pdfControlDiarioAdministrativo'])->name('control-diario-administrativo');
+            Route::get('control-diario-choferes', [ReportController::class, 'pdfControlDiarioChoferes'])->name('control-diario-choferes');
             Route::get('incidencias', [ReportController::class, 'pdfIncidencias'])->name('incidencias');
             Route::get('modelo1', [ReportController::class, 'pdfModelo1'])->name('modelo1');
             Route::get('prenomina-choferes-excel', [ReportController::class, 'excelPrenominaChoferes'])->name('prenomina-choferes-excel');

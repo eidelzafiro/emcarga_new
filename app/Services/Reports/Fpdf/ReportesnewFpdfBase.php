@@ -245,7 +245,10 @@ abstract class ReportesnewFpdfBase extends FpdfReportBase
 
     protected function fechaEmision(): string
     {
-        return session('fecha_operaciones') ?: date('Y-m-d');
+        // Paridad legacy: el pie usa formato Y/m/d (Reportesnew::Footer).
+        $fecha = session('fecha_operaciones') ?: date('Y-m-d');
+
+        return str_replace('-', '/', substr($fecha, 0, 10));
     }
 
     protected function fillGris(): int

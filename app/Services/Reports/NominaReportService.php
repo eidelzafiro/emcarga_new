@@ -14,6 +14,9 @@ use App\Services\Reports\Fpdf\IncidenciasFpdfReport;
 use App\Services\Reports\Fpdf\NocturnidadFpdfReport;
 use App\Services\Reports\Fpdf\PagoAdministrativoFpdfReport;
 use App\Services\Reports\Fpdf\ResumenTiemposChoferesFpdfReport;
+use App\Services\Reports\Fpdf\AnalisisSalarioTransportacionFpdfReport;
+use App\Services\Reports\Fpdf\ControlDiarioAdministrativoFpdfReport;
+use App\Services\Reports\Fpdf\ControlDiarioChoferesFpdfReport;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -189,6 +192,63 @@ class NominaReportService extends BaseReportService
         $titulo = 'MODELO RESUMEN DE LOS TIEMPOS CHOFERES TRANSPORTACION';
 
         $report = new ResumenTiemposChoferesFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+    }
+
+    public function pdfAnalisisSalarioTransportacion(\Illuminate\Http\Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'MODELO ANALISIS DEL SALARIO TRANSPORTACION';
+
+        $report = new AnalisisSalarioTransportacionFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+    }
+
+    public function pdfControlDiarioAdministrativo(\Illuminate\Http\Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO';
+
+        $report = new ControlDiarioAdministrativoFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+    }
+
+    public function pdfControlDiarioChoferes(\Illuminate\Http\Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO CHOFERES DE TRANSPORTACION';
+
+        $report = new ControlDiarioChoferesFpdfReport($entidadId, $mesPad, (string) $ano);
         $pdfContent = $report->generate();
 
         $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';

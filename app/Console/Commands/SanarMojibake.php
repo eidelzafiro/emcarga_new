@@ -45,6 +45,7 @@ class SanarMojibake extends Command
             ['tipos_incidencias', ['nombre']],
             ['tipos_penalizaciones', ['nombre']],
             ['entidades', ['nombre', 'abreviatura']],
+            ['menu_items', ['label']],
         ];
 
         $total = 0;

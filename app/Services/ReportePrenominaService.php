@@ -41,12 +41,13 @@ class ReportePrenominaService
         // Choferes del sistema 2 (CHOFERES TRANSPORTACION) con movimiento vigente.
         $choferes = Bolsa::query()
             ->where('activo', true)
-            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', 2))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 2)))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
                 fn ($q) => $q->whereRaw('1 = 0'))
-            ->with(['cargo:id,nombre,tarifa,cla'])
+            ->with(['movimientoVigente.plantilla.cargo:id,nombre,tarifa,cla', 'movimientoVigente.plantilla.area:id,nombre,orden'])
             ->orderBy('nombre')
             ->orderBy('apellidos')
             ->get();
@@ -65,7 +66,7 @@ class ReportePrenominaService
                 continue;
             }
 
-            $tarifa = (float) ($chofer->cargo?->tarifa ?? 0);
+            $tarifa = (float) ($chofer->cargoActual()?->tarifa ?? 0);
 
             $ttotal = (float) $res['t_total'];
             $regular = (float) $res['regular'];
@@ -125,7 +126,7 @@ class ReportePrenominaService
                 'id_bolsa' => $chofer->id,
                 'exp' => $chofer->versat ?? '',
                 'nombrecompleto' => $chofer->nombrecompleto,
-                'nombcargo' => $chofer->cargo?->nombre ?? '',
+                'nombcargo' => $chofer->cargoActual()?->nombre ?? '',
                 'tarifa' => $tarifa,
                 'ttotal' => $ttotal,
                 'escala' => round($impregular + $impirregular, 2),
@@ -310,7 +311,8 @@ class ReportePrenominaService
         $empleados = Bolsa::query()
             ->where('activo', true)
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
-            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', 1))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 1)))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
                 fn ($q) => $q->whereRaw('1 = 0'))
@@ -588,8 +590,8 @@ class ReportePrenominaService
                 'cartaPorte:id,cancelada,numero,id_hoja_ruta,id_chofer,id_chofer2,distancia',
                 'cartaPorte.hojaRuta:id,numero,id_tractivo,id_arrastre,id_chofer,id_chofer2',
                 'cartaPorte.hojaRuta.tractivo:id,codigo,capacidad_toneladas',
-                'cartaPorte.chofer:id,nombre,apellidos,id_cargo',
-                'cartaPorte.chofer.cargo:id,nombre,tarifa,cla',
+                'cartaPorte.chofer:id,nombre,apellidos',
+                
                 'tasa:id,nombre,tasa,tasa2',
             ]);
 
@@ -644,8 +646,8 @@ class ReportePrenominaService
                     'id_bolsa' => $choferId,
                     'nombre' => $nombreChofer,
                     'carnet' => $bolsa?->ci ?? '',
-                    'cargo' => $chofer?->cargo?->nombre ?? '',
-                    'tarifa' => (float) ($chofer?->cargo?->tarifa ?? 0),
+                    'cargo' => $chofer?->cargoActual()?->nombre ?? '',
+                    'tarifa' => (float) ($chofer?->cargoActual()?->tarifa ?? 0),
                     'registros' => [],
                     'totales' => [
                         'nro_cp' => 0, 'kms' => 0, 'tons' => 0,
@@ -667,7 +669,7 @@ class ReportePrenominaService
             $tasa = (float) ($aforo->tasa ?? 0);
             $tasa2 = (float) ($aforo->tasa?->tasa2 ?? 0);
             $almflete = (float) ($aforo->almacenaje_flete ?? 0);
-            $tarifa = (float) ($chofer?->cargo?->tarifa ?? 0);
+            $tarifa = (float) ($chofer?->cargoActual()?->tarifa ?? 0);
 
             // Ajustes legacy: doble chofer, almacenaje, vacaciones, feriado.
             $ajuste = 0;
@@ -1000,12 +1002,13 @@ class ReportePrenominaService
 
         $choferes = Bolsa::query()
             ->where('activo', true)
-            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', 2))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 2)))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
                 fn ($q) => $q->whereRaw('1 = 0'))
-            ->with(['cargo:id,nombre,tarifa,cla'])
+            ->with(['movimientoVigente.plantilla.cargo:id,nombre,tarifa,cla', 'movimientoVigente.plantilla.area:id,nombre,orden'])
             ->orderBy('nombre')
             ->orderBy('apellidos')
             ->get();
@@ -1022,7 +1025,7 @@ class ReportePrenominaService
                 continue;
             }
 
-            $tarifa = (float) ($chofer->cargo?->tarifa ?? 0);
+            $tarifa = (float) ($chofer->cargoActual()?->tarifa ?? 0);
             $ttotal = (float) $res['t_total'];
             $regular = (float) $res['regular'];
             $irregular = (float) $res['irregular'];
@@ -1291,7 +1294,8 @@ class ReportePrenominaService
 
         $trabajadores = Bolsa::query()
             ->where('activo', true)
-            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', '!=', 2))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', '!=', 2)))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
@@ -1314,7 +1318,7 @@ class ReportePrenominaService
                 ->whereNull('fbaja')->where('origen', 'mov')
                 ->first();
 
-            $cargo = $trabajador->cargo;
+            $cargo = $trabajador->cargoActual();
             $fondoTiempo = (float) ($cargo?->fondo_tiempo?->fondo_tiempo ?? 0);
             $enSalario = (int) ($cargo?->en_salario ?? 0);
             $tarifa = (float) ($cargo?->tarifa ?? 0);
@@ -1432,7 +1436,8 @@ class ReportePrenominaService
 
         $choferes = Bolsa::query()
             ->where('activo', true)
-            ->whereHas('area', fn ($q) => $q->where('id_tipo_sistema_pago', 2))
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 2)))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
@@ -1447,7 +1452,7 @@ class ReportePrenominaService
             $movimiento = $chofer->movimientosRrhh()
                 ->whereNull('fbaja')->where('origen', 'mov')
                 ->first();
-            $catCargo = $chofer->cargo?->categoria_cargo?->nombre ?? '';
+            $catCargo = $chofer->cargoActual()?->categoria_cargo?->nombre ?? '';
 
             // Tiempos y nocturnidad de las transportaciones del mes (modelo1).
             $res = $this->choferCalc->calcularSalarioChofer($chofer->id, $mes, $ano);

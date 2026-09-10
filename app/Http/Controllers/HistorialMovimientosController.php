@@ -56,9 +56,11 @@ class HistorialMovimientosController extends Controller
             ->paginate(20)
             ->through(fn (MovimientoRrhh $m) => $this->filaMovimiento($m));
 
-        // Opciones para los diálogos de alta/traslado.
+        // Opciones para el diálogo de alta: SOLO trabajadores sin plaza
+        // (sin movimiento vigente), como el legacy.
         $trabajadores = Bolsa::query()
             ->where('activo', true)
+            ->whereDoesntHave('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
             ->orderBy('nombre')->orderBy('apellidos')
             ->get(['id', 'nombre', 'apellidos', 'ci', 'versat'])

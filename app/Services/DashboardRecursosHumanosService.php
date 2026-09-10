@@ -39,9 +39,9 @@ class DashboardRecursosHumanosService
 
         $cargosEnUso = Bolsa::whereIn('id_entidad', $idsEntidades)
             ->where('activo', true)
-            ->whereNotNull('id_cargo')
-            ->distinct('id_cargo')
-            ->count('id_cargo');
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereNotNull('id_plantilla'))
+            ->count();
 
         $totalTrabajadores = Bolsa::whereIn('id_entidad', $idsEntidades)
             ->where('activo', true)
@@ -49,7 +49,13 @@ class DashboardRecursosHumanosService
 
         $trabajadoresPorArea = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
             ->where('bolsa.activo', true)
-            ->join('areas', 'bolsa.id_area', '=', 'areas.id')
+            ->join('movimientos_rrhh as mv', function ($j) {
+                $j->on('mv.id_bolsa', '=', 'bolsa.id')
+                    ->where('mv.origen', 'mov')
+                    ->whereNull('mv.fbaja');
+            })
+            ->join('plantilla as pl', 'mv.id_plantilla', '=', 'pl.id')
+            ->join('areas', 'pl.id_area', '=', 'areas.id')
             ->select('areas.nombre as area', DB::raw('COUNT(*) as total'))
             ->groupBy('areas.nombre')
             ->orderByDesc('total')
@@ -73,9 +79,14 @@ class DashboardRecursosHumanosService
         // Calcular trabajadores reales por cargo/area para cubierta_real
         $trabajadoresPorCargoArea = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
             ->where('bolsa.activo', true)
-            ->whereNotNull('bolsa.id_cargo')
-            ->select('id_cargo', 'id_area', DB::raw('COUNT(*) as total_reales'))
-            ->groupBy('id_cargo', 'id_area')
+            ->join('movimientos_rrhh as mv', function ($j) {
+                $j->on('mv.id_bolsa', '=', 'bolsa.id')
+                    ->where('mv.origen', 'mov')
+                    ->whereNull('mv.fbaja');
+            })
+            ->join('plantilla as pl', 'mv.id_plantilla', '=', 'pl.id')
+            ->select('pl.id_cargo', 'pl.id_area', DB::raw('COUNT(*) as total_reales'))
+            ->groupBy('pl.id_cargo', 'pl.id_area')
             ->get()
             ->keyBy(fn ($r) => $r->id_cargo . '_' . $r->id_area);
 
@@ -94,7 +105,13 @@ class DashboardRecursosHumanosService
 
         $salariosPorGrupoEscala = Cargo::whereIn('cargos.id_entidad', $idsEntidades)
             ->where('cargos.activo', true)
-            ->join('bolsa', 'cargos.id', '=', 'bolsa.id_cargo')
+            ->join('plantilla as pl', 'pl.id_cargo', '=', 'cargos.id')
+            ->join('movimientos_rrhh as mv', function ($j) {
+                $j->on('mv.id_plantilla', '=', 'pl.id')
+                    ->where('mv.origen', 'mov')
+                    ->whereNull('mv.fbaja');
+            })
+            ->join('bolsa', 'mv.id_bolsa', '=', 'bolsa.id')
             ->leftJoin('grupos_escala', 'cargos.id_grupo_escala', '=', 'grupos_escala.id')
             ->select(
                 DB::raw('COALESCE(grupos_escala.nombre, "Sin escala") as grupo_escala'),
@@ -201,9 +218,16 @@ class DashboardRecursosHumanosService
 
         // ═══ SECCIÓN 3: DOCUMENTACIÓN CHOFERES ═══
 
+        // Choferes: cargo vía movimiento vigente (plantilla → cargos).
         $choferesQuery = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
             ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
+            ->join('movimientos_rrhh as mv', function ($j) {
+                $j->on('mv.id_bolsa', '=', 'bolsa.id')
+                    ->where('mv.origen', 'mov')
+                    ->whereNull('mv.fbaja');
+            })
+            ->join('plantilla as pl', 'mv.id_plantilla', '=', 'pl.id')
+            ->join('cargos', 'pl.id_cargo', '=', 'cargos.id')
             ->where('cargos.nombre', 'LIKE', '%CHOFER%');
 
         $totalChoferes = (clone $choferesQuery)->count();
@@ -211,7 +235,13 @@ class DashboardRecursosHumanosService
         // Categorías de licencia (pivote licencia_categorias).
         $categoriasLicencia = Bolsa::whereIn('bolsa.id_entidad', $idsEntidades)
             ->where('bolsa.activo', true)
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
+            ->join('movimientos_rrhh as mv', function ($j) {
+                $j->on('mv.id_bolsa', '=', 'bolsa.id')
+                    ->where('mv.origen', 'mov')
+                    ->whereNull('mv.fbaja');
+            })
+            ->join('plantilla as pl', 'mv.id_plantilla', '=', 'pl.id')
+            ->join('cargos', 'pl.id_cargo', '=', 'cargos.id')
             ->where('cargos.nombre', 'LIKE', '%CHOFER%')
             ->join('licencia_categorias as lc', 'lc.id_bolsa', '=', 'bolsa.id')
             ->select('lc.categoria as etiqueta', DB::raw('COUNT(*) as total'))
@@ -344,7 +374,13 @@ class DashboardRecursosHumanosService
         // Salarios de choferes por tarifa (columna salarios.tarifa)
         $salariosChoferesPorTasas = Salario::whereIn('salarios.id_entidad', $idsEntidades)
             ->join('bolsa', 'salarios.id_bolsa', '=', 'bolsa.id')
-            ->join('cargos', 'bolsa.id_cargo', '=', 'cargos.id')
+            ->join('movimientos_rrhh as mv', function ($j) {
+                $j->on('mv.id_bolsa', '=', 'bolsa.id')
+                    ->where('mv.origen', 'mov')
+                    ->whereNull('mv.fbaja');
+            })
+            ->join('plantilla as pl', 'mv.id_plantilla', '=', 'pl.id')
+            ->join('cargos', 'pl.id_cargo', '=', 'cargos.id')
             ->where('cargos.nombre', 'LIKE', '%CHOFER%')
             ->select(
                 'salarios.tarifa as tasa',

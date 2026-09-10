@@ -63,10 +63,11 @@ class SalarioChoferCalcService
         $aforos = $this->obtenerAforosChofer($idBolsa, $mes, $ano);
         if ($aforos->isEmpty()) return null;
 
-        $chofer = Bolsa::with('cargo:id,nombre,tarifa')->find($idBolsa);
+        $chofer = Bolsa::find($idBolsa);
         if (!$chofer) return null;
 
-        $cargo = $chofer->cargo;
+        // Cargo vía movimiento vigente (plantilla), paridad legacy.
+        $cargo = $chofer->cargoActual();
         $tarifa = $cargo?->tarifa ?? 0;
 
         $feriados = $this->obtenerFeriadosMes($mes, $ano);
@@ -297,7 +298,6 @@ class SalarioChoferCalcService
             ->whereHas('movimientosRrhh', function ($q) {
                 $q->whereNull('fbaja')->where('origen', 'mov');
             })
-            ->with(['cargo:id,nombre,tarifa'])
             ->orderBy('nombre')
             ->orderBy('apellidos')
             ->get();

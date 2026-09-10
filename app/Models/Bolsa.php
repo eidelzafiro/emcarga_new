@@ -73,6 +73,41 @@ class Bolsa extends Model
         return $this->documentos()->where('tipo', 'LICENCIA')->exists();
     }
 
+    /**
+     * Movimiento VIGENTE del trabajador (origen 'mov', sin fbaja). El cargo y
+     * el área del trabajador salen del movimiento (plantilla), NO de la bolsa
+     * (paridad legacy rh_movimientos → rh_plantilla).
+     */
+    public function movimientoVigente()
+    {
+        return $this->hasOne(MovimientoRrhh::class, 'id_bolsa')
+            ->where('origen', 'mov')
+            ->whereNull('fbaja')
+            ->with('plantilla.cargo', 'plantilla.area');
+    }
+
+    /** Cargo del trabajador vía movimiento vigente (plantilla). Cacheado por instancia. */
+    public function cargoActual()
+    {
+        if (! array_key_exists('cargoActual', $this->relations)) {
+            $this->relations['cargoActual'] = $this->movimientoVigente()->first()?->plantilla?->cargo
+                ?? $this->belongsTo(Cargo::class, 'id_cargo')->getResults();
+        }
+
+        return $this->relations['cargoActual'];
+    }
+
+    /** Área del trabajador vía movimiento vigente (plantilla). Cacheado por instancia. */
+    public function areaActual()
+    {
+        if (! array_key_exists('areaActual', $this->relations)) {
+            $this->relations['areaActual'] = $this->movimientoVigente()->first()?->plantilla?->area
+                ?? $this->belongsTo(Area::class, 'id_area')->getResults();
+        }
+
+        return $this->relations['areaActual'];
+    }
+
     public function sexoCatalogo(): BelongsTo
     {
         return $this->belongsTo(CatalogoItem::class, 'sexo');

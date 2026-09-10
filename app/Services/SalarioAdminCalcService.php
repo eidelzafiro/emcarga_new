@@ -76,7 +76,8 @@ class SalarioAdminCalcService
 
         if (!$movimiento) return null;
 
-        $cargo = $empleado->cargo;
+        // Cargo vía movimiento vigente (plantilla), paridad legacy.
+        $cargo = $empleado->cargoActual();
         $tarifa = (float) ($cargo?->tarifa ?? 0);
         $cla = (float) ($cargo?->cla ?? 0);
 

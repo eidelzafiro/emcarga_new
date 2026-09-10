@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -12,7 +12,7 @@ import DatePicker from 'primevue/datepicker'
 import Checkbox from 'primevue/checkbox'
 import Toolbar from 'primevue/toolbar'
 import Dialog from 'primevue/dialog'
-import ToggleSwitch from 'primevue/toggleswitch'
+import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
 
 const props = defineProps({ bolsa: Object, filters: Object, cargos: Array, areas: Array, entidades: Array, roles: Array, esSuperadmin: Boolean, catalogo: Object })
@@ -22,7 +22,6 @@ const filtroCargo = ref(props.filters?.id_cargo || null)
 const filtroArea = ref(props.filters?.id_area || null)
 const showForm = ref(false)
 const editing = ref(null)
-const isChofer = ref(false)
 
 const docTipos = [
   { label: 'Licencia de Conducción', value: 'LICENCIA' },
@@ -52,6 +51,13 @@ const nivelEducOpciones = props.catalogo?.niveles_educacion || []
 const estadoCivilOpciones = props.catalogo?.estados_civiles || []
 const ubicacionDefensaOpciones = props.catalogo?.ubicaciones_defensa || []
 
+// La sección de documentos solo se muestra si el empleado tiene licencia
+// (o si acaba de marcarla en el formulario).
+const tieneLicencia = computed(() => {
+  const doc = form.value.documentos?.find(d => d.tipo === 'LICENCIA')
+  return Boolean(doc && String(doc.numero || '').trim() !== '')
+})
+
 watch(search, () => {
   router.get(route('bolsa.index'), { search: search.value, id_cargo: filtroCargo.value, id_area: filtroArea.value }, { preserveState: true, replace: true })
 })
@@ -60,20 +66,10 @@ watch([filtroCargo, filtroArea], () => {
   router.get(route('bolsa.index'), { search: search.value, id_cargo: filtroCargo.value, id_area: filtroArea.value }, { preserveState: true, replace: true })
 })
 
-watch(() => form.value.id_cargo, (val) => {
-  if (val) {
-    const cargo = props.cargos.find(c => c.id === val)
-    isChofer.value = cargo?.nombre?.toUpperCase().includes('CHOFER') || false
-  } else {
-    isChofer.value = false
-  }
-})
-
 function openCreate() {
   editing.value = null
   form.value = emptyForm()
   form.value.documentos = docTipos.map(t => ({ tipo: t.value, numero: '', emision: null, vencimiento: null, notas: '' }))
-  isChofer.value = false
   showForm.value = true
 }
 
@@ -96,7 +92,6 @@ function openEdit(item) {
     direccion: item.direccion || '', telefono: item.telefono || '', email: item.email || '',
     id_cargo: item.id_cargo, id_area: item.id_area, id_entidad: item.id_entidad,
   }
-  isChofer.value = item.cargo?.nombre?.toUpperCase().includes('CHOFER') || false
   showForm.value = true
 }
 
@@ -108,6 +103,11 @@ function submit() {
     onError: (e) => toast.add({ severity: 'error', summary: 'Error', detail: Object.values(e).join(', '), life: 5000 }),
   })
 }
+
+function estadoPlaza(data) {
+  // Verde = contratado en una plaza de la plantilla; azul = libre.
+  return data.tiene_plaza ? 'success' : 'info'
+}
 </script>
 
 <template>
@@ -115,7 +115,7 @@ function submit() {
     <div class="card">
       <Toolbar class="mb-4">
         <template #start>
-          <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate" />
+          <Button label="Nuevo" icon="pi pi-plus" severity="success" @click="openCreate()" />
         </template>
         <template #end>
           <div class="flex gap-2 flex-wrap">
@@ -127,9 +127,15 @@ function submit() {
       </Toolbar>
 
       <DataTable :value="bolsa.data" striped-rows paginator :rows="20" :total-records="bolsa.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
+        <Column header="Estado" style="width: 90px">
+          <template #body="{ data }">
+            <Tag :severity="estadoPlaza(data)" :value="data.tiene_plaza ? 'Plaza' : 'Libre'" />
+          </template>
+        </Column>
         <Column field="ci" header="CI" sortable />
-        <Column field="nombre" header="Nombre" sortable />
-        <Column field="apellidos" header="Apellidos" sortable />
+        <Column header="Nombre y Apellidos" sortable sortField="nombre">
+          <template #body="{ data }">{{ data.nombre }} {{ data.apellidos }}</template>
+        </Column>
         <Column field="sexo_catalogo.nombre" header="Sexo" />
         <Column header="Licencia">
           <template #body="{ data }">
@@ -142,9 +148,6 @@ function submit() {
             <span class="text-sm">{{ (data.licencia_categorias || []).map(c => c.categoria).join(', ') }}</span>
           </template>
         </Column>
-        <Column field="cargo.nombre" header="Cargo" />
-        <Column field="area.nombre" header="Área" />
-        <Column field="entidad.nombre" header="Entidad" />
         <Column header="Acciones" style="width: 120px">
           <template #body="{ data }">
             <div class="flex gap-1">
@@ -190,46 +193,42 @@ function submit() {
               <label class="block mb-1 font-medium">Estado Civil</label>
               <Select v-model="form.estado_civil" :options="estadoCivilOpciones" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" />
             </div>
-            <div class="col-span-2">
+            <div>
               <label class="block mb-1 font-medium">Ubicación en la Defensa</label>
               <Select v-model="form.ubicacion_defensa" :options="ubicacionDefensaOpciones" optionLabel="label" optionValue="value" placeholder="Seleccione..." class="w-full" />
             </div>
           </div>
         </fieldset>
 
-        <!-- Asignación -->
+        <!-- Contacto (debajo de datos personales) -->
         <fieldset class="border rounded-lg p-4">
-          <legend class="font-bold text-lg px-2">Asignación</legend>
+          <legend class="font-bold text-lg px-2">Contacto</legend>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block mb-1 font-medium">Cargo</label>
-              <Select v-model="form.id_cargo" :options="cargos" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
+              <label class="block mb-1 font-medium">Teléfono</label>
+              <InputText v-model="form.telefono" class="w-full" />
             </div>
             <div>
-              <label class="block mb-1 font-medium">Área</label>
-              <Select v-model="form.id_area" :options="areas" optionLabel="nombre" optionValue="id" placeholder="Seleccione..." class="w-full" />
+              <label class="block mb-1 font-medium">Email</label>
+              <InputText v-model="form.email" type="email" class="w-full" />
             </div>
-          </div>
-          <div v-if="!editing" class="mt-4 p-3 bg-blue-50 rounded-lg space-y-3">
-            <div class="flex items-center gap-2">
-              <Checkbox v-model="form.crear_usuario" :binary="true" inputId="crear_usuario" />
-              <label for="crear_usuario" class="text-sm text-blue-700 font-medium">
-                Crear usuario en el sistema (contraseña temporal: ZAFIRO)
-              </label>
-            </div>
-            <div v-if="form.crear_usuario" class="ml-6">
-              <label class="block mb-1 text-sm font-medium">Rol del usuario</label>
-              <Select v-model="form.rol" :options="roles" optionLabel="name" optionValue="name" placeholder="Seleccione rol..." class="w-48" />
+            <div class="col-span-2">
+              <label class="block mb-1 font-medium">Dirección</label>
+              <InputText v-model="form.direccion" class="w-full" />
             </div>
           </div>
         </fieldset>
 
-        <!-- Documentos del Chofer -->
-        <fieldset class="border rounded-lg p-4">
+        <!-- Documentos del Chofer: SOLO visible si tiene licencia -->
+        <fieldset v-if="tieneLicencia" class="border rounded-lg p-4">
           <legend class="font-bold text-lg px-2">Documentos</legend>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Sección visible porque el empleado tiene licencia. Para gestionar
+            chequeos y recalificaciones use el módulo de documentos de choferes.
+          </p>
           <div class="space-y-4">
             <div v-for="(doc, idx) in form.documentos" :key="doc.tipo" class="border rounded-lg p-3">
-              <div class="font-semibold mb-2 text-orange-600">{{ docEtiqueta(doc.tipo) }}</div>
+              <div class="font-semibold mb-2 text-orange-600 dark:text-orange-400">{{ docEtiqueta(doc.tipo) }}</div>
               <div class="grid grid-cols-2 gap-4">
                 <div v-if="doc.tipo === 'LICENCIA'">
                   <label class="block mb-1 font-medium">Número</label>
@@ -249,36 +248,30 @@ function submit() {
                 </div>
               </div>
             </div>
-            <div class="p-3 bg-orange-50 rounded-lg">
-              <label class="block mb-2 font-medium">Categorías de Licencia</label>
-              <div class="flex gap-2 flex-wrap">
-                <div v-for="cat in catOpciones" :key="cat" class="flex items-center gap-1">
+            <div class="p-3 rounded-lg bg-orange-50 dark:bg-orange-950/40">
+              <label class="block mb-2 font-medium dark:text-orange-200">Categorías de Licencia</label>
+              <div class="flex gap-3 flex-wrap">
+                <div v-for="cat in catOpciones" :key="cat" class="flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-gray-800 border dark:border-gray-600">
                   <Checkbox v-model="form.categorias_licencia" :value="cat" :inputId="`cat-${cat}`" />
-                  <label :for="`cat-${cat}`" class="text-sm">{{ cat }}</label>
+                  <label :for="`cat-${cat}`" class="text-sm dark:text-gray-200">{{ cat }}</label>
                 </div>
               </div>
             </div>
           </div>
         </fieldset>
 
-        <!-- Contacto -->
-        <fieldset class="border rounded-lg p-4">
-          <legend class="font-bold text-lg px-2">Contacto</legend>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block mb-1 font-medium">Teléfono</label>
-              <InputText v-model="form.telefono" class="w-full" />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Email</label>
-              <InputText v-model="form.email" type="email" class="w-full" />
-            </div>
-            <div class="col-span-2">
-              <label class="block mb-1 font-medium">Dirección</label>
-              <InputText v-model="form.direccion" class="w-full" />
-            </div>
+        <div v-if="!editing" class="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg space-y-3">
+          <div class="flex items-center gap-2">
+            <Checkbox v-model="form.crear_usuario" :binary="true" inputId="crear_usuario" />
+            <label for="crear_usuario" class="text-sm text-blue-700 dark:text-blue-300 font-medium">
+              Crear usuario en el sistema (contraseña temporal: ZAFIRO)
+            </label>
           </div>
-        </fieldset>
+          <div v-if="form.crear_usuario" class="ml-6">
+            <label class="block mb-1 text-sm font-medium">Rol del usuario</label>
+            <Select v-model="form.rol" :options="roles" optionLabel="name" optionValue="name" placeholder="Seleccione rol..." class="w-48" />
+          </div>
+        </div>
 
         <div class="flex gap-2 justify-end">
           <Button label="Cancelar" severity="secondary" @click="showForm = false" />

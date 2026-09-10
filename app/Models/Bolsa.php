@@ -72,15 +72,19 @@ class Bolsa extends Model
     }
 
     /**
-     * Movimiento VIGENTE del trabajador (origen 'mov', sin fbaja). El cargo y
-     * el área del trabajador salen del movimiento (plantilla), NO de la bolsa
-     * (paridad legacy rh_movimientos → rh_plantilla).
+     * Movimiento VIGENTE del trabajador (sin fbaja). El cargo y el área salen
+     * del movimiento (plantilla), NO de la bolsa (paridad legacy). Se acepta
+     * CUALQUIER origen ('mov' o 'hmov'): en el legacy el alta vigente de
+     * varios trabajadores vive en rh_hmovimientos (tipomov=ALTAS sin fbaja)
+     * aunque rh_movimientos solo tenga sus bajas — p.ej. Yadier Abreu
+     * (bolsa 996, hmov 182 ALTAS vigente). Si hubiera ambos, se prefiere
+     * el 'mov' (transaccional).
      */
     public function movimientoVigente()
     {
         return $this->hasOne(MovimientoRrhh::class, 'id_bolsa')
-            ->where('origen', 'mov')
             ->whereNull('fbaja')
+            ->orderByRaw("origen = 'mov' DESC, id DESC")
             ->with('plantilla.cargo', 'plantilla.area');
     }
 

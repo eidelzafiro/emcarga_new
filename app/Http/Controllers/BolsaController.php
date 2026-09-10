@@ -27,7 +27,7 @@ class BolsaController extends Controller
             'documentos' => fn ($q) => $q->orderByDesc('vencimiento'),
             'licenciaCategorias',
         ])
-            ->withExists('movimientosRrhh as tiene_plaza', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
+            ->withExists('movimientosRrhh as tiene_plaza', fn ($q) => $q->whereNull('fbaja'))
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('nombre', 'like', "%{$s}%")
                     ->orWhere('apellidos', 'like', "%{$s}%")

@@ -57,10 +57,11 @@ class HistorialMovimientosController extends Controller
             ->through(fn (MovimientoRrhh $m) => $this->filaMovimiento($m));
 
         // Opciones para el diálogo de alta: SOLO trabajadores sin plaza
-        // (sin movimiento vigente), como el legacy.
+        // (sin movimiento vigente de NINGÚN origen: en el legacy el alta
+        // vigente puede vivir en rh_hmovimientos, no solo rh_movimientos).
         $trabajadores = Bolsa::query()
             ->where('activo', true)
-            ->whereDoesntHave('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
+            ->whereDoesntHave('movimientosRrhh', fn ($q) => $q->whereNull('fbaja'))
             ->when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
             ->orderBy('nombre')->orderBy('apellidos')
             ->get(['id', 'nombre', 'apellidos', 'ci', 'versat'])

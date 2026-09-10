@@ -65,6 +65,8 @@ class PermissionSeeder extends Seeder
 
             'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
 
+            'cds.ver', 'cds.crear', 'cds.editar', 'cds.eliminar',
+
             'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
 
             'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
@@ -170,10 +172,11 @@ class PermissionSeeder extends Seeder
             'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',
             'registro-ordenes-taller.ver', 'registro-ordenes-taller.crear', 'registro-ordenes-taller.editar', 'registro-ordenes-taller.eliminar',
 
-            // Nómina (2026-08-18): incidencias, penalizaciones y dietas
+            // Nómina (2026-08-18): incidencias, penalizaciones, dietas y reembolsos
             'incidencias.ver', 'incidencias.crear', 'incidencias.editar', 'incidencias.eliminar',
             'penalizaciones.ver', 'penalizaciones.crear', 'penalizaciones.editar', 'penalizaciones.eliminar',
             'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
+            'reembolsos.ver', 'reembolsos.crear', 'reembolsos.editar', 'reembolsos.eliminar',
         ];
 
         // Permisos por tipo del catálogo unificado (catalogo.{tipo}.{accion}).

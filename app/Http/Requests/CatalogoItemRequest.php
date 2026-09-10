@@ -36,6 +36,14 @@ class CatalogoItemRequest extends FormRequest
             ];
         }
 
+        // Tipos de penalizaciones: los selects (área y pago adicional) validan
+        // contra tablas reales aunque el schema sea select sin options.
+        if ($this->route('tipo') === 'tipos_penalizaciones') {
+            $rules['area_id'] = ['nullable', 'exists:areas,id'];
+            $rules['tipo_pago_adicional_id'] = ['nullable', 'exists:catalogo_items,id'];
+            $rules['porcentaje'] = ['nullable', 'numeric', 'min:0', 'max:100'];
+        }
+
         return $rules;
     }
 

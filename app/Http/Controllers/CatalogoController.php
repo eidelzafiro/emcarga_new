@@ -151,6 +151,20 @@ class CatalogoController extends Controller
 
         $gridFields = CatalogoSchema::extraFields($tipo);
 
+        // Tipos de penalizaciones: filtrar por la entidad del área penalizada
+        // (regla de negocio: se penalizan por área, el área define la entidad).
+        if ($tipo === 'tipos_penalizaciones') {
+            $entidades = $this->entidadesPermitidas();
+            if (! empty($entidades)) {
+                $idsAreas = \App\Models\Area::whereIn('id_entidad', $entidades)->pluck('id');
+                $query->where(function ($q) use ($idsAreas) {
+                    foreach ($idsAreas as $areaId) {
+                        $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(extra, '$.area_id')) = ?", [(string) $areaId]);
+                    }
+                });
+            }
+        }
+
         // Modelos y Marcas: orden alfabético por nombre. El conteo "usos" suma
         // las referencias de TODAS las tablas de negocio (no solo tipo_vehiculos).
         $ordenarPorUsos = in_array($tipo, ['modelos', 'marcas'], true);
@@ -246,6 +260,51 @@ class CatalogoController extends Controller
                 'label' => 'Logo',
                 'type' => 'logo',
             ];
+        }
+
+        // Tipos de penalizaciones: selects con áreas de la entidad activa y
+        // pagos adicionales (con el sistema de pago que penalizan en el label).
+        if ($tipo === 'tipos_penalizaciones') {
+            $entidadId = (int) entidadActivaId();
+            $entidades = $entidadId ? \App\Models\Entidad::idsPermitidos($entidadId) : [];
+
+            $fields['area_id']['options'] = \App\Models\Area::query()
+                ->when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre'])
+                ->map(fn ($a) => ['value' => $a->id, 'label' => $a->nombre])
+                ->values()
+                ->all();
+
+            $sistemas = \App\Models\Area::query()
+                ->whereNotNull('id_tipo_sistema_pago')
+                ->distinct()
+                ->pluck('id_tipo_sistema_pago');
+
+            $fields['tipo_pago_adicional_id']['options'] = \App\Models\CatalogoItem::query()
+                ->where('tipo', 'tipos_pagos_adicionales')
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'extra'])
+                ->map(function ($pa) use ($sistemas) {
+                    $extra = is_array($pa->extra) ? $pa->extra : (json_decode((string) $pa->extra, true) ?: []);
+                    $sists = array_intersect($extra['sistemas_pago'] ?? [], $sistemas->all());
+                    $label = $pa->nombre;
+                    if ($sists) {
+                        $nombres = \App\Models\CatalogoItem::query()
+                            ->where('tipo', 'tipos_sistemas_pago')
+                            ->whereIn('origen_id', $sists)
+                            ->pluck('nombre');
+                        if ($nombres->isNotEmpty()) {
+                            $label .= ' ('.$nombres->implode(' / ').')';
+                        }
+                    }
+
+                    return ['value' => $pa->id, 'label' => $label];
+                })
+                ->values()
+                ->all();
         }
 
         return $fields;

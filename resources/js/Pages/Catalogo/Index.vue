@@ -474,7 +474,7 @@ function submit(continuarActivo = false) {  const rt = props.catalogConfig.route
           </div>
 
           <template v-for="(cfg, key) in (catalogConfig?.fields || {})" :key="key">
-            <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo' && !cfg.noForm && !(esEquipos && key === 'imagen')" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
+            <div v-if="key !== 'nombre' && key !== 'codigo' && key !== 'activo' && !cfg.noForm && cfg.type !== 'boolean' && !(esEquipos && key === 'imagen')" :class="cfg.type === 'textarea' ? 'col-span-2' : ''">
               <label class="block mb-1 font-medium">{{ cfg.label }}</label>
               <InputNumber v-if="cfg.type === 'number'" v-model="form[key]" class="w-full" />
               <Textarea v-else-if="cfg.type === 'textarea'" v-model="form[key]" class="w-full" :rows="3" />

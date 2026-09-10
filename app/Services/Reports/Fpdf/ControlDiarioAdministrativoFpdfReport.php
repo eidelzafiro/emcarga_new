@@ -25,7 +25,7 @@ class ControlDiarioAdministrativoFpdfReport extends ReportesnewFpdfBase
         $service = app(ReportePrenominaService::class);
         $data = $service->controlDiario((int) $this->mes, (int) $this->ano, $this->entidadId);
 
-        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO';
+        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO DE ADMINISTRATIVOS';
         $dias = \Carbon\Carbon::createFromDate((int) $this->ano, (int) $this->mes, 1)->daysInMonth;
 
         $registros = $data['registros'] ?? [];
@@ -39,7 +39,7 @@ class ControlDiarioAdministrativoFpdfReport extends ReportesnewFpdfBase
             return $this->Output('S');
         }
 
-        $this->paginaBase($titulo);
+        $this->paginaBase($titulo, $dias);
 
         $posY = 51;
         $max = 165;
@@ -47,7 +47,7 @@ class ControlDiarioAdministrativoFpdfReport extends ReportesnewFpdfBase
 
         foreach ($registros as $r) {
             if ($posY >= $max) {
-                $this->paginaBase($titulo);
+                $this->paginaBase($titulo, $dias);
                 $posY = 51;
             }
 
@@ -70,7 +70,7 @@ class ControlDiarioAdministrativoFpdfReport extends ReportesnewFpdfBase
      * Pinta la cabecera completa de la página (título, números de días,
      * columnas de descuentos y firmas).
      */
-    protected function paginaBase(string $titulo): void
+    protected function paginaBase(string $titulo, int $dias = 31): void
     {
         $this->inicio($this->latin1($titulo), 50, 5);
 
@@ -85,14 +85,22 @@ class ControlDiarioAdministrativoFpdfReport extends ReportesnewFpdfBase
         $this->titulos($campos, [], [], 6, 10, 35);
         $this->firmasSalario('SISTEMA PAGO ADMINISTRATIVO', 'L');
 
-        // Números de día 1..31 en dos filas (1-15 / 16-31).
+        // Números de día 1..31 en dos filas (1-15 / 16-31). Los días que no
+        // tiene el mes (ej. 31 en junio) se pintan en rojo oscuro, igual que
+        // el relleno del cuerpo (160,0,0) del legacy.
         $posX = 65;
         $posY = 41;
         $this->SetFillColor($this->fillGris());
         for ($i = 1; $i <= 31; $i++) {
             $this->SetFont('Arial', 'B', 10);
             $this->SetXY($posX, $posY);
+            if ($i > $dias) {
+                $this->SetFillColor(160, 0, 0);
+            }
             $this->Cell(10, 5, (string) $i, 1, 0, 'C', 1);
+            if ($i > $dias) {
+                $this->SetFillColor($this->fillGris());
+            }
             $posX += 10;
             if ($i == 15) {
                 $this->Cell(10, 5, '', 1, 0, 'C', 1);
@@ -118,8 +126,9 @@ class ControlDiarioAdministrativoFpdfReport extends ReportesnewFpdfBase
         $this->Cell(15, 5, 'TIEMPO', 'LR', 0, 'C', 1);
 
         // Fila inferior (A/B CHM RT/SE AT SL IMP/SAH OTROS TIEMPO NOCT1 NOCT2).
+        // El legacy usa SetXY($pos_x, 46) con $pos_x=225 tras el loop de días.
         $this->SetFont('Arial', 'B', 6);
-        $this->SetXY(305, 46);
+        $this->SetXY(225, 46);
         foreach (['A/B', 'CHM', 'RT/SE', 'AT', 'SL', 'IMP/SAH', 'OTROS', 'TIEMPO', 'NOCT1', 'NOCT2'] as $c) {
             $this->Cell(10, 5, $c, 1, 0, 'C', 1);
         }
@@ -171,13 +180,17 @@ class ControlDiarioAdministrativoFpdfReport extends ReportesnewFpdfBase
             }
         }
         // Relleno de la fila 2 hasta 16 celdas (meses de 30/29/28 días).
+        // El legacy pinta estas celdas (días que no tiene el mes) en rojo
+        // oscuro SetFillColor(160,0,0) para distinguirlas.
         if ($diasLegacy == 29 || $diasLegacy == 28 || $diasLegacy == 27) {
             $celdas = [30 => 1, 29 => 2, 28 => 3][$diasLegacy] ?? 0;
+            $this->SetFillColor(160, 0, 0);
             for ($k = 0; $k < $celdas; $k++) {
                 $this->SetXY($posX, $posY);
                 $this->Cell(10, 5, '', 1, 0, 'C', 1);
                 $posX += 10;
             }
+            $this->SetFillColor(999, 999, 999);
         }
 
         // Descuentos (fila superior a $posY-5, fila inferior a $posY).

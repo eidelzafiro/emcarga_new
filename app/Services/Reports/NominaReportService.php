@@ -227,7 +227,7 @@ class NominaReportService extends BaseReportService
         $entidadId = (int) session('entidad_activa_id') ?: null;
 
         $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
-        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO';
+        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO DE ADMINISTRATIVOS';
 
         $report = new ControlDiarioAdministrativoFpdfReport($entidadId, $mesPad, (string) $ano);
         $pdfContent = $report->generate();

@@ -22,7 +22,7 @@ class ControlDiarioChoferesFpdfReport extends ControlDiarioAdministrativoFpdfRep
         $service = app(ReportePrenominaService::class);
         $data = $service->controlDiarioChoferes((int) $this->mes, (int) $this->ano, $this->entidadId);
 
-        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO CHOFERES DE TRANSORTACION';
+        $titulo = 'SC-4-05 CONTROL DIARIO TIEMPO DE TRABAJO CHOFERES DE TRANSPORTACION';
         $dias = \Carbon\Carbon::createFromDate((int) $this->ano, (int) $this->mes, 1)->daysInMonth;
 
         $registros = $data['registros'] ?? [];
@@ -36,14 +36,14 @@ class ControlDiarioChoferesFpdfReport extends ControlDiarioAdministrativoFpdfRep
             return $this->Output('S');
         }
 
-        $this->paginaBase($titulo);
+        $this->paginaBase($titulo, $dias);
 
         $posY = 51;
         $max = 180;
 
         foreach ($registros as $r) {
             if ($posY >= $max) {
-                $this->paginaBase($titulo);
+                $this->paginaBase($titulo, $dias);
                 $posY = 51;
             }
 

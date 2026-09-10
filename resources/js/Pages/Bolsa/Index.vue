@@ -51,12 +51,23 @@ const nivelEducOpciones = props.catalogo?.niveles_educacion || []
 const estadoCivilOpciones = props.catalogo?.estados_civiles || []
 const ubicacionDefensaOpciones = props.catalogo?.ubicaciones_defensa || []
 
-// La sección de documentos solo se muestra si el empleado tiene licencia
-// (o si acaba de marcarla en el formulario).
+// Sección de Documentos: visible si el empleado tiene licencia; si no,
+// se puede mostrar opcionalmente con un toggle (los documentos son opcionales).
+const mostrarDocumentos = ref(false)
 const tieneLicencia = computed(() => {
   const doc = form.value.documentos?.find(d => d.tipo === 'LICENCIA')
   return Boolean(doc && String(doc.numero || '').trim() !== '')
 })
+const mostrarSeccionDocumentos = computed(() => tieneLicencia.value || mostrarDocumentos.value)
+
+function onPage(event) {
+  router.get(route('bolsa.index'), {
+    page: event.page + 1,
+    search: search.value,
+    id_cargo: filtroCargo.value,
+    id_area: filtroArea.value,
+  }, { preserveState: true, replace: true })
+}
 
 watch(search, () => {
   router.get(route('bolsa.index'), { search: search.value, id_cargo: filtroCargo.value, id_area: filtroArea.value }, { preserveState: true, replace: true })
@@ -126,7 +137,10 @@ function estadoPlaza(data) {
         </template>
       </Toolbar>
 
-      <DataTable :value="bolsa.data" striped-rows paginator :rows="20" :total-records="bolsa.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
+      <DataTable :value="bolsa.data" striped-rows paginator lazy :rows="bolsa.per_page" :total-records="bolsa.total"
+        :first="(bolsa.current_page - 1) * bolsa.per_page" @page="onPage"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="Total: {totalRecords} registros">
         <Column header="Estado" style="width: 90px">
           <template #body="{ data }">
             <Tag :severity="estadoPlaza(data)" :value="data.tiene_plaza ? 'Plaza' : 'Libre'" />
@@ -219,8 +233,14 @@ function estadoPlaza(data) {
           </div>
         </fieldset>
 
-        <!-- Documentos del Chofer: SOLO visible si tiene licencia -->
-        <fieldset v-if="tieneLicencia" class="border rounded-lg p-4">
+        <!-- Documentos del Chofer: visibles con licencia; opcionales si no -->
+        <div v-if="!mostrarSeccionDocumentos" class="flex items-center gap-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+          <Checkbox v-model="mostrarDocumentos" :binary="true" inputId="mostrar_docs" />
+          <label for="mostrar_docs" class="text-sm text-gray-600 dark:text-gray-300">
+            Mostrar documentos (opcionales — no tiene licencia)
+          </label>
+        </div>
+        <fieldset v-else class="border rounded-lg p-4">
           <legend class="font-bold text-lg px-2">Documentos</legend>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
             Sección visible porque el empleado tiene licencia. Para gestionar

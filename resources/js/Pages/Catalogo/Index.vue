@@ -124,9 +124,6 @@ function getSelectLabel(options, value) {
   return opt ? opt.label : value
 }
 
-function getFormFields() {
-  const fields = { ...(props.catalogConfig?.extra || {}) }
-
 // Booleans del extra (tsuma/impsuma...): van en una sola fila compartida.
 const booleanExtras = computed(() => {
   const out = []
@@ -135,6 +132,9 @@ const booleanExtras = computed(() => {
   }
   return out
 })
+
+function getFormFields() {
+  const fields = { ...(props.catalogConfig?.extra || {}) }
   Object.entries(props.catalogConfig?.fields || {}).forEach(([k, v]) => {
     if (k !== 'nombre' && k !== 'codigo') fields[k] = v
   })

@@ -166,7 +166,7 @@ class DashboardRecursosHumanosService
         // Rango de edades (usando fecha_nacimiento)
         $hoy = now();
         $todosTrabajadores = (clone $bolsaQuery)
-            ->select('id', 'fecha_nacimiento', 'ci')
+            ->select('id', 'ci')
             ->get();
 
         $rangosEdad = [
@@ -177,9 +177,9 @@ class DashboardRecursosHumanosService
         foreach ($todosTrabajadores as $t) {
             $edad = null;
 
-            if ($t->fecha_nacimiento) {
-                $edad = Carbon::parse($t->fecha_nacimiento)->age;
-            } elseif ($t->ci && strlen($t->ci) >= 6) {
+            // Edad derivada del CI cubano (YYMMDD) — la bolsa no guarda
+            // fecha de nacimiento (paridad legacy).
+            if ($t->ci && strlen($t->ci) >= 6) {
                 // Los 6 primeros dígitos del CI cubano son YYMMDD (fecha de nacimiento)
                 $anio = (int) substr($t->ci, 0, 2);
                 $mes = (int) substr($t->ci, 2, 2);

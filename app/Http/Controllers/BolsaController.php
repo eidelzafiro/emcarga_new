@@ -135,7 +135,6 @@ class BolsaController extends Controller
             'nivel_educacional' => ['nullable', 'exists:catalogo_items,id'],
             'estado_civil' => ['nullable', 'exists:catalogo_items,id'],
             'ubicacion_defensa' => ['nullable', 'exists:catalogo_items,id'],
-            'fecha_nacimiento' => ['nullable', 'date'],
             'direccion' => ['nullable', 'max:500'],
             'telefono' => ['nullable', 'max:100'],
             'email' => ['nullable', 'email', 'max:255'],

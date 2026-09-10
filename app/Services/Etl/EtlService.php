@@ -1710,7 +1710,6 @@ class EtlService
                         ['id' => $fila->idbolsa],
                         [
                             'ci' => $ci,
-                            'codigo' => null,
                             'nombre' => $nombre,
                             'apellidos' => $apellidos,
                             'sexo' => $sexo,

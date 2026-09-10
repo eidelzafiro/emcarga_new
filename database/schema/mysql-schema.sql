@@ -194,7 +194,6 @@ DROP TABLE IF EXISTS `areas`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `areas` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `nombre` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_area_padre` bigint unsigned DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT '1',
@@ -361,7 +360,6 @@ CREATE TABLE `bolsa` (
   `nivel_educacional` int unsigned DEFAULT NULL,
   `estado_civil` int unsigned DEFAULT NULL,
   `ubicacion_defensa` int unsigned DEFAULT NULL,
-  `fecha_nacimiento` date DEFAULT NULL,
   `direccion` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `telefono` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,

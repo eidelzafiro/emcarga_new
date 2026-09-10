@@ -22,7 +22,6 @@ class Bolsa extends Model
         'nivel_educacional',
         'estado_civil',
         'ubicacion_defensa',
-        'fecha_nacimiento',
         'direccion',
         'telefono',
         'email',
@@ -38,7 +37,6 @@ class Bolsa extends Model
     protected function casts(): array
     {
         return [
-            'fecha_nacimiento' => 'date',
             'falta' => 'date',
             'activo' => 'boolean',
         ];

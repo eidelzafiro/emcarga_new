@@ -35,7 +35,7 @@ const catOpciones = ['A', 'A1', 'B', 'C', 'C1', 'D', 'D1', 'E', 'F', 'FE']
 
 const emptyForm = () => ({
   ci: '', nombre: '', apellidos: '', sexo: null, color_piel: null, nivel_educacional: null,
-  estado_civil: null, ubicacion_defensa: null, fecha_nacimiento: null,
+  estado_civil: null, ubicacion_defensa: null,
   documentos: [],
   categorias_licencia: [],
   direccion: '', telefono: '', email: '', id_cargo: null, id_area: null, id_entidad: null,
@@ -85,7 +85,6 @@ function openEdit(item) {
     ci: item.ci, nombre: item.nombre, apellidos: item.apellidos,
     sexo: item.sexo, color_piel: item.color_piel, nivel_educacional: item.nivel_educacional,
     estado_civil: item.estado_civil, ubicacion_defensa: item.ubicacion_defensa,
-    fecha_nacimiento: item.fecha_nacimiento ? new Date(item.fecha_nacimiento) : null,
     documentos: docTipos.map(t => ({
       tipo: t.value,
       numero: docs[t.value]?.numero || '',
@@ -178,10 +177,6 @@ function submit() {
             <div>
               <label class="block mb-1 font-medium">Apellidos *</label>
               <InputText v-model="form.apellidos" class="w-full" required />
-            </div>
-            <div>
-              <label class="block mb-1 font-medium">Fecha Nacimiento</label>
-              <DatePicker v-model="form.fecha_nacimiento" dateFormat="dd/mm/yy" class="w-full" />
             </div>
             <div>
               <label class="block mb-1 font-medium">Color de la Piel</label>

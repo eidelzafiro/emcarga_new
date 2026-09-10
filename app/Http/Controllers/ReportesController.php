@@ -48,9 +48,10 @@ class ReportesController extends Controller
     }
 
     /**
-     * Página de Salarios y Prenóminas (choferes/administrativo) + Modelo 1.
-     * Permite elegir el mes, el tipo de prenómina, y un chofer (opcional) para
-     * emitir su Modelo 1 o el de todos los choferes del mes, en PDF o Excel.
+     * Página de Salarios y Prenóminas: una sola tarjeta de variables
+     * (mes/año/tipo incidencia/tipo penalización/sistema de pago) y un combo
+     * con TODOS los reportes de RRHH; al elegir el reporte se inactivan las
+     * variables que no le corresponden. Cada reporte sale en PDF o Excel.
      */
     public function salarios(Request $request)
     {
@@ -60,12 +61,27 @@ class ReportesController extends Controller
 
         $choferes = $this->choferesDelMes($mes, $ano);
 
-        // Tipos de incidencia (catálogo unificado) para el reporte de incidencias.
-        $tiposIncidencia = \App\Models\CatalogoItem::query()
-            ->where('tipo', 'tipos_incidencias')
+        // SOLO los tipos de incidencia que existen en el mes (con incidencias
+        // registradas de trabajadores de la entidad activa).
+        $tiposIncidencia = $this->tiposIncidenciaDelMes($mes, $ano);
+
+        // Tipos de penalización (para reportes que los usan).
+        $tiposPenalizacion = \App\Models\TipoPenalizacione::query()
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'origen_id'])
+            ->get(['id', 'nombre'])
+            ->map(fn ($p) => ['id' => $p->id, 'nombre' => $p->nombre])
+            ->values()
+            ->all();
+
+        // Sistemas de pago (catálogo unificado).
+        $sistemasPago = \App\Models\CatalogoItem::query()
+            ->where('tipo', 'tipos_sistemas_pago')
+            ->where('activo', true)
+            ->orderBy('origen_id')
+            ->get(['id', 'nombre'])
+            ->map(fn ($s) => ['id' => $s->id, 'nombre' => $s->nombre])
+            ->values()
             ->all();
 
         return Inertia::render('Reportes/Salarios', [
@@ -74,7 +90,34 @@ class ReportesController extends Controller
             'ano' => $ano,
             'choferes' => $choferes,
             'tiposIncidencia' => $tiposIncidencia,
+            'tiposPenalizacion' => $tiposPenalizacion,
+            'sistemasPago' => $sistemasPago,
         ]);
+    }
+
+    /**
+     * Tipos de incidencia (catálogo unificado) que tienen al menos una
+     * incidencia registrada en el mes/año de la entidad activa.
+     */
+    private function tiposIncidenciaDelMes(int $mes, int $ano): array
+    {
+        $entidadId = (int) entidadActivaId();
+        $entidades = $entidadId ? \App\Models\Entidad::idsPermitidos($entidadId) : [];
+
+        return \App\Models\CatalogoItem::query()
+            ->where('tipo', 'tipos_incidencias')
+            ->where('activo', true)
+            ->whereHas('incidencias', function ($q) use ($mes, $ano, $entidades) {
+                $q->whereYear('fecha_inicio', $ano)->whereMonth('fecha_inicio', $mes);
+                if (! empty($entidades)) {
+                    $q->whereHas('bolsa', fn ($b) => $b->whereIn('id_entidad', $entidades));
+                }
+            })
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'origen_id'])
+            ->map(fn ($t) => ['id' => $t->id, 'nombre' => $t->nombre, 'origen_id' => $t->origen_id])
+            ->values()
+            ->all();
     }
 
     /**

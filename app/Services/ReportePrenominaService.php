@@ -17,11 +17,31 @@ class ReportePrenominaService
      */
     private bool $nroci;
 
+    /** Ids catalogo_items de los sistemas de pago (origen 1/2/3 legacy). */
+    private ?array $spIds = null;
+
     public function __construct(
         private SalarioChoferCalcService $choferCalc,
         private SalarioAdminCalcService $adminCalc,
     ) {
         $this->nroci = ((int) session('nroci', 1)) === 1;
+    }
+
+    /**
+     * Id catalogo_items del sistema de pago legacy (1=REGULACION Y CONTROL,
+     * 2=CHOFERES TRANSPORTACION, 3=CHOFERES PAQUETERÍA). Cacheado por request.
+     */
+    private function spId(int $origenLegacy): int
+    {
+        if ($this->spIds === null) {
+            $this->spIds = DB::table('catalogo_items')
+                ->where('tipo', 'tipos_sistemas_pago')
+                ->pluck('id', 'origen_id')
+                ->map(fn ($v) => (int) $v)
+                ->all();
+        }
+
+        return $this->spIds[$origenLegacy] ?? 0;
     }
 
     /**
@@ -42,7 +62,7 @@ class ReportePrenominaService
         $choferes = Bolsa::query()
             ->where('activo', true)
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
-                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 2)))
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', $this->spId(2))))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
@@ -312,7 +332,7 @@ class ReportePrenominaService
             ->where('activo', true)
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
-                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 1)))
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', $this->spId(1))))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
                 fn ($q) => $q->whereRaw('1 = 0'))
@@ -466,7 +486,7 @@ class ReportePrenominaService
      * Réplica de Reportes.php:4491 pdf_salario_prenomina_resultado_adm +
      * ModSalarioAdmin:973-991 (SISTEMA DE PAGOS POR RESULTADOS EMCARGA HOLGUIN):
      *   impstrt      = impescala + impcla
-     *   impsrinicial = impstrt × CDS (tabla cds_entidades, por entidad+mes+año)
+     *   impsrinicial = impstrt × CDS (cds_entidades, por entidad+mes+año+sistema pago)
      *   penimporte   = % penalización (RESULTADOS ADMINISTRATIVOS, origen 5) sobre impsrinicial
      *   impsrfinal   = impsrinicial − penimporte
      *   imppadicional = impnocturnidad + impmaestrias + impextra
@@ -477,7 +497,7 @@ class ReportePrenominaService
     public function pagoAdministrativo(int $mes, int $ano, ?int $entidadId = null): array
     {
         $base = $this->prenominaAdministrativo($mes, $ano, $entidadId);
-        $cds = \App\Models\CdsEntidad::cdsDe($entidadId, $mes, $ano);
+        $cds = \App\Models\CdsEntidad::cdsDe($entidadId, $mes, $ano, $this->spId(1));
 
         $idPagoResultadoAdmin = \App\Models\CatalogoItem::query()
             ->where('tipo', 'tipos_pagos_adicionales')
@@ -1003,7 +1023,7 @@ class ReportePrenominaService
         $choferes = Bolsa::query()
             ->where('activo', true)
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
-                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 2)))
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', $this->spId(2))))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
@@ -1295,7 +1315,7 @@ class ReportePrenominaService
         $trabajadores = Bolsa::query()
             ->where('activo', true)
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
-                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', '!=', 2)))
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', '!=', $this->spId(2))))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
@@ -1437,7 +1457,7 @@ class ReportePrenominaService
         $choferes = Bolsa::query()
             ->where('activo', true)
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
-                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', 2)))
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', $this->spId(2))))
             ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov'))
             ->when(! empty($entidadesPermitidas),
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),

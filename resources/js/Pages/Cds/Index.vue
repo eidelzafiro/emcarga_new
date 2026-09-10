@@ -14,7 +14,7 @@ import Dialog from 'primevue/dialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 
-const props = defineProps({ items: Object, filters: Object })
+const props = defineProps({ items: Object, filters: Object, sistemasPago: { type: Array, default: () => [] } })
 const toast = useToast()
 const confirm = useConfirm()
 
@@ -31,7 +31,7 @@ const showForm = ref(false)
 const editing = ref(null)
 
 function baseForm() {
-  return { mes: null, ano: new Date().getFullYear(), cds: 0 }
+  return { mes: null, ano: new Date().getFullYear(), id_tipo_sistema_pago: null, cds: 0 }
 }
 const form = ref(baseForm())
 
@@ -60,7 +60,7 @@ function openCreate() {
 
 function openEdit(item) {
   editing.value = item
-  form.value = { mes: item.mes, ano: item.ano, cds: Number(item.cds) }
+  form.value = { mes: item.mes, ano: item.ano, id_tipo_sistema_pago: item.id_tipo_sistema_pago, cds: Number(item.cds) }
   showForm.value = true
 }
 
@@ -122,9 +122,12 @@ function nombreMes(id) {
           <template #body="{ data }">{{ nombreMes(data.mes) }}</template>
         </Column>
         <Column field="ano" header="Año" />
+        <Column field="sistemaPago" header="Sistema de Pago">
+          <template #body="{ data }">{{ data.sistemaPago?.nombre || '—' }}</template>
+        </Column>
         <Column field="cds" header="CDS" class="text-right">
           <template #body="{ data }">
-            <span class="font-mono font-semibold text-blue-700 dark:text-blue-300">{{ Number(data.cds).toFixed(4) }}</span>
+            <span class="font-mono font-semibold text-blue-700 dark:text-blue-300">{{ Number(data.cds).toFixed(6) }}</span>
           </template>
         </Column>
         <Column header="Acciones" style="width: 8rem">
@@ -148,8 +151,12 @@ function nombreMes(id) {
             <InputNumber v-model="form.ano" :use-grouping="false" class="w-full" />
           </div>
           <div>
+            <label class="block text-sm font-medium mb-1">Sistema de Pago</label>
+            <Select v-model="form.id_tipo_sistema_pago" :options="sistemasPago" optionLabel="nombre" optionValue="id" placeholder="Seleccione" class="w-full" />
+          </div>
+          <div>
             <label class="block text-sm font-medium mb-1">Coeficiente CDS</label>
-            <InputNumber v-model="form.cds" :min="0" :maxFractionDigits="6" mode="decimal" class="w-full" />
+            <InputNumber v-model="form.cds" :min="0" :maxFractionDigits="6" :minFractionDigits="0" mode="decimal" locale="en-US" class="w-full" />
           </div>
           <div class="flex justify-end gap-2 pt-2">
             <Button label="Cancelar" text @click="showForm = false" />

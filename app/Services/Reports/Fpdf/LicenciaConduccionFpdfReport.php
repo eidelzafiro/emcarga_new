@@ -129,7 +129,10 @@ class LicenciaConduccionFpdfReport extends ReportesnewFpdfBase
         $arr = [];
         foreach ($rows as $b) {
             $doc = $b->documentos->first();
-            $cats = $b->licenciaCategorias->pluck('categoria')->all();
+            // Mapa categoría => "X" para el render (self::CATEGORIAS).
+            $cats = collect($b->licenciaCategorias->pluck('categoria')->all())
+                ->mapWithKeys(fn ($c) => [$c => 'X'])
+                ->all();
             $arr[] = [
                 'nombrecompleto' => $b->nombre.' '.$b->apellidos,
                 'ci' => (string) $b->ci,

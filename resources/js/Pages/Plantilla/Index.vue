@@ -242,7 +242,7 @@ function areaIconClasses(area, level) {
                 </div>
                 <!-- Items del área -->
                 <div v-if="areaRaiz.items.length" class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <div v-for="item in areaRaiz.items" :key="item.id" class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                  <div v-for="item in areaRaiz.items" :key="item.id" class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/80 transition">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ item.cargo?.nombre }}</p>
                       <p v-if="item.observaciones" class="text-xs text-gray-400 truncate">{{ item.observaciones }}</p>
@@ -314,7 +314,9 @@ function areaIconClasses(area, level) {
             <Select v-model="form.id_cargo" :options="cargos" optionLabel="nombre" optionValue="id" filter class="w-full" required />
           </div>
         </div>
-        <div class="grid grid-cols-4 gap-4">
+        <!-- Plazas: números en fila de 3 con espacio; Necesidad es una pregunta
+             sí/no (¿es realmente necesario el cargo?). -->
+        <div class="grid grid-cols-3 gap-4">
           <div>
             <label class="block mb-1 font-medium">Propuesta</label>
             <InputNumber v-model="form.propuesta" :min="0" class="w-full" />
@@ -327,10 +329,16 @@ function areaIconClasses(area, level) {
             <label class="block mb-1 font-medium">Cubierta</label>
             <InputNumber v-model="form.cubierta" :min="0" class="w-full" />
           </div>
-          <div>
-            <label class="block mb-1 font-medium">Necesidad</label>
-            <InputNumber v-model="form.necesidad" :min="0" class="w-full" />
-          </div>
+        </div>
+        <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+          <label class="text-sm font-medium">¿Es realmente necesario este cargo?</label>
+          <Select
+            v-model="form.necesidad"
+            :options="[{ label: 'Sí', value: 1 }, { label: 'No', value: 0 }]"
+            optionLabel="label"
+            optionValue="value"
+            class="w-24"
+          />
         </div>
         <div>
           <label class="block mb-1 font-medium">Observaciones</label>

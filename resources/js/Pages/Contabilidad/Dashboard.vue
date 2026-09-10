@@ -105,7 +105,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="fila in tarjetasPorTipo" :key="fila.tipo_combustible" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="fila in tarjetasPorTipo" :key="fila.tipo_combustible" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.tipo_combustible }}</td>
                     <td v-for="estado in estadosUnicos" :key="estado" class="table-cell text-center dark:text-gray-400">
                       {{ getEstadoCantidad(fila, estado) || '—' }}
@@ -133,7 +133,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in saldoPorTipo" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in saldoPorTipo" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.tipo }}</td>
                     <td class="table-cell dark:text-gray-400">
                       <Tag :value="fila.moneda" :severity="fila.moneda === 'MN' ? 'success' : 'info'" />
@@ -152,7 +152,7 @@
           <div v-if="combustibleActual.length">
             <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Saldos actuales en tarjetas</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-              <div v-for="(saldo, i) in combustibleActual" :key="i" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-700">
+              <div v-for="(saldo, i) in combustibleActual" :key="i" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-700">
                 <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0">
                   <i class="pi pi-wallet text-white text-xs" />
                 </div>
@@ -198,7 +198,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in ingresosPorConcepto" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in ingresosPorConcepto" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.concepto }}</td>
                     <td class="table-cell text-center dark:text-gray-400">{{ fila.cantidad }}</td>
                     <td class="table-cell text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.total_mt) }}</td>
@@ -222,7 +222,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in facturacionPorCliente" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in facturacionPorCliente" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell text-gray-400 dark:text-gray-500 font-mono text-xs">{{ i + 1 }}</td>
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.cliente }}</td>
                     <td class="table-cell text-center dark:text-gray-400">{{ fila.cantidad_facturas }}</td>
@@ -266,7 +266,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in gastoMaterialPorConcepto" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in gastoMaterialPorConcepto" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.concepto }}</td>
                     <td class="table-cell text-right font-mono dark:text-gray-400">{{ formatNumber(fila.cantidad, 3) }}</td>
                     <td class="table-cell text-right font-mono font-semibold text-red-600 dark:text-red-400">{{ formatNumber(fila.total_mn) }}</td>
@@ -290,7 +290,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in otrosGastosPorConcepto" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in otrosGastosPorConcepto" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.concepto }}</td>
                     <td class="table-cell text-center dark:text-gray-400">{{ fila.cantidad }}</td>
                     <td class="table-cell text-right font-mono font-semibold text-red-600 dark:text-red-400">{{ formatNumber(fila.total_mn) }}</td>
@@ -315,7 +315,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in amortizacionTaller" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in amortizacionTaller" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.tractivo }}</td>
                     <td class="table-cell text-center dark:text-gray-400">{{ fila.registros }}</td>
                     <td class="table-cell text-right font-mono font-semibold text-red-600 dark:text-red-400">{{ formatNumber(fila.amortizacion_mn) }}</td>
@@ -326,7 +326,7 @@
             </div>
             <!-- Total amortización -->
             <div class="mt-3 flex justify-end">
-              <div class="px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-700">
+              <div class="px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-700">
                 <span class="text-xs text-gray-500 dark:text-gray-400">Total amortización: </span>
                 <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ formatNumber(totales.amortizacion_mn) }} MN</span>
               </div>

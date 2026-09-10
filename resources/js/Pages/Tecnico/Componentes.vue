@@ -83,7 +83,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                <tr v-for="(n, i) in d.neumaticosPorVencer" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                <tr v-for="(n, i) in d.neumaticosPorVencer" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                   <td class="table-cell font-mono text-xs dark:text-gray-400">{{ n.folio }}</td>
                   <td class="table-cell dark:text-gray-300">{{ n.medida }}</td>
                   <td class="table-cell dark:text-gray-300">{{ n.planAviso }}</td>
@@ -115,7 +115,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                <tr v-for="(b, i) in d.baterias" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                <tr v-for="(b, i) in d.baterias" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                   <td class="table-cell font-mono text-xs dark:text-gray-400">{{ b.folio }}</td>
                   <td class="table-cell tabular-nums dark:text-gray-300">{{ b.voltaje }}</td>
                   <td class="table-cell tabular-nums dark:text-gray-300">{{ b.amperaje }}</td>

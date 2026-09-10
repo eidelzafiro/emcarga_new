@@ -100,7 +100,7 @@
             <!-- Lista de vehículos -->
             <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-[400px] overflow-y-auto">
               <template v-if="tipo.activos.length">
-                <div v-for="v in tipo.activos" :key="v.id" class="px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                <div v-for="v in tipo.activos" :key="v.id" class="px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/80 transition">
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{{ v.codigo }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ v.marca }}</p>

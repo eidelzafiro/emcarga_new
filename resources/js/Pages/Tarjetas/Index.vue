@@ -243,7 +243,7 @@ function isBaja(t) {
                 <i class="pi pi-truck text-sm" style="color:#d97706" />
                 <span class="text-sm font-bold tracking-tight text-amber-800 dark:text-amber-300">{{ t.tractivo.codigo }}</span>
               </span>
-              <span v-if="t.entidad" class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 px-3 py-1.5">
+              <span v-if="t.entidad" class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/60 px-3 py-1.5">
                 <i class="pi pi-building text-sm text-gray-400" />
                 <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ t.entidad.abreviatura }}</span>
               </span>

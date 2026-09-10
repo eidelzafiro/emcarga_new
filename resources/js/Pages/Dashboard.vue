@@ -129,7 +129,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                <tr v-for="row in movimientos" :key="row.id" class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                <tr v-for="row in movimientos" :key="row.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-colors">
                   <td class="table-cell dark:text-gray-400 font-mono text-xs text-gray-400">#{{ row.id }}</td>
                   <td class="table-cell dark:text-gray-300">
                     <span class="inline-flex items-center gap-1.5">

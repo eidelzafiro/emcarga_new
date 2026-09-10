@@ -112,7 +112,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in plantillaPorArea" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in plantillaPorArea" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.area }}</td>
                     <td class="table-cell text-center font-mono dark:text-gray-300">{{ formatNumber(fila.plazas_propuesta) }}</td>
                     <td class="table-cell text-center font-mono dark:text-gray-300">{{ formatNumber(fila.plazas_aprobadas) }}</td>
@@ -125,7 +125,7 @@
                   </tr>
                 </tbody>
                 <tfoot>
-                  <tr class="bg-gray-50 dark:bg-gray-750 font-semibold">
+                  <tr class="bg-gray-50 dark:bg-gray-700/60 font-semibold">
                     <td class="table-cell dark:text-gray-200">Total</td>
                     <td class="table-cell text-center font-mono dark:text-gray-300">{{ formatNumber(totalPlazasPropuesta) }}</td>
                     <td class="table-cell text-center font-mono dark:text-gray-300">{{ formatNumber(totalPlazasAprobadas) }}</td>
@@ -383,7 +383,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in categoriasLicencia" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in categoriasLicencia" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium text-sm dark:text-gray-200">{{ fila.etiqueta }}</td>
                     <td class="table-cell text-center font-mono text-sm dark:text-gray-300">{{ fila.total }}</td>
                   </tr>
@@ -480,7 +480,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in salariosPorArea" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in salariosPorArea" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ fila.area }}</td>
                     <td class="table-cell text-center font-mono dark:text-gray-300">{{ fila.trabajadores }}</td>
                     <td class="table-cell text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.total_salario, 2) }}</td>
@@ -513,7 +513,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="(fila, i) in salariosChoferesPorTasas" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="(fila, i) in salariosChoferesPorTasas" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                     <td class="table-cell font-medium dark:text-gray-200">{{ formatNumber(fila.tasa, 4) }}</td>
                     <td class="table-cell text-center font-mono dark:text-gray-300">{{ fila.choferes }}</td>
                     <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.total_regular, 2) }}</td>

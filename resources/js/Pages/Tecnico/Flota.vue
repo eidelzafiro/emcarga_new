@@ -87,7 +87,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr v-for="v in detalle.vehiculos" :key="v.clase + v.id" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+              <tr v-for="v in detalle.vehiculos" :key="v.clase + v.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
                 <td class="table-cell font-mono text-xs dark:text-gray-400">{{ v.codigo }}</td>
                 <td class="table-cell dark:text-gray-300">{{ v.clase }}</td>
                 <td class="table-cell dark:text-gray-300">{{ v.placa }}</td>

@@ -140,19 +140,33 @@ abstract class ReportesnewFpdfBase extends FpdfReportBase
     /**
      * Firmas del reporte (réplica de Reportes.php::pdf_salario_firmas).
      * Lee de la tabla `firmas` por nombre de modelo ("SISTEMA PAGO CHOFERES",
-     * "SISTEMA PAGO ADMINISTRATIVO", ...) y dibuja CONF / APROB / ACUSE RECIBO
-     * con nombre y cargo de cada firmante.
+     * "SISTEMA PAGO ADMINISTRATIVO", ...) FILTRANDO por la entidad del
+     * reporte (cada entidad tiene sus firmantes); si la entidad no tiene
+     * fila propia cae a la matriz (OFICINA CENTRAL) y por último a cualquier
+     * fila activa. Dibuja CONF / APROB / ACUSE RECIBO.
      */
     public function firmasSalario(string $nombreModelo, string $orientacion = 'L', ?int $posY = null): void
     {
         $firma = \App\Models\Firma::query()
             ->where('nombre', $nombreModelo)
-            ->where('activo', true)
-            ->first();
+            ->where('activo', true);
 
-        if (! $firma) {
+        $entidadId = (int) ($this->entidadId ?? 0);
+
+        $fila = null;
+        if ($entidadId) {
+            // Firma de la entidad del reporte; si no, la de la matriz.
+            $fila = (clone $firma)->where('id_entidad', $entidadId)->first();
+            if (! $fila && ($matrizId = \App\Models\Entidad::where('es_matriz', true)->value('id'))) {
+                $fila = (clone $firma)->where('id_entidad', $matrizId)->first();
+            }
+        }
+        $fila ??= (clone $firma)->first();
+
+        if (! $fila) {
             return;
         }
+        $firma = $fila;
 
         $posX = 10;
         if ($posY === null) {

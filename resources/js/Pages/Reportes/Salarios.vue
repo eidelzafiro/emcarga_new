@@ -31,7 +31,7 @@ const tipos = [
 const reportesNomina = [
   { ruta: 'reportes.adicionales', nombre: 'Datos p/Nóminas (Adicionales)', icono: 'pi pi-file-pdf' },
   { ruta: 'reportes.nocturnidad', nombre: 'Datos p/Nóminas (Nocturnidad)', icono: 'pi pi-file-pdf' },
-  { ruta: 'reportes.pago-administrativo', nombre: 'Datos p/Nóminas Pago Administrativo', icono: 'pi pi-file-pdf' },
+  { ruta: 'reportes.pago-administrativo', nombre: 'Datos p/Nóminas Pago Administrativo Holguín', icono: 'pi pi-file-pdf' },
   { ruta: 'reportes.resumen-tiempos-choferes', nombre: 'Resumen de los Tiempos Choferes', icono: 'pi pi-file-pdf' },
   { ruta: 'reportes.analisis-salario-transportacion', nombre: 'Análisis del Salario Transportación', icono: 'pi pi-file-pdf' },
   { ruta: 'reportes.control-diario-administrativo', nombre: 'SC-4-05 Control Diario (Administrativo)', icono: 'pi pi-file-pdf' },

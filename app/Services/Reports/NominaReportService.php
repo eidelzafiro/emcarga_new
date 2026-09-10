@@ -170,7 +170,10 @@ class NominaReportService extends BaseReportService
         $entidadId = (int) session('entidad_activa_id') ?: null;
 
         $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
-        $titulo = 'DATOS P/NOMINAS PAGO ADMINISTRATIVO';
+        // Título interno sin HOLGUIN (corrección al legacy: título único);
+        // el nombre del archivo/nombre del reporte SÍ lo lleva porque es una
+        // prenómina diseñada para una entidad específica (decisión 2026-09-10).
+        $titulo = 'DATOS P/NOMINAS PAGO ADMINISTRATIVO HOLGUIN';
 
         $report = new PagoAdministrativoFpdfReport($entidadId, $mesPad, (string) $ano);
         $pdfContent = $report->generate();

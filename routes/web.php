@@ -35,10 +35,12 @@ use App\Http\Controllers\PlantillaController;
 use App\Http\Controllers\ConfiguracionesModeloController;
 use App\Http\Controllers\ConsecutivosController;
 use App\Http\Controllers\ContabilidadController;
+use App\Http\Controllers\ComercialController;
 use App\Http\Controllers\ContenedoresController;
 use App\Http\Controllers\CuadreContabilidadController;
 use App\Http\Controllers\ContextoTrabajoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OperativosController;
 use App\Http\Controllers\DashboardTecnicoController;
 use App\Http\Controllers\DemandasController;
 use App\Http\Controllers\DetallesCargaCombustibleController;
@@ -180,6 +182,10 @@ Route::middleware('auth')->group(function () {
     // (EnsureModulePermission infiere modulo.accion desde el nombre de la ruta)
     Route::middleware(['password.temporal', 'permiso.modulo'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Vistas de trabajo con pestañas (CRUD embebidos) por módulo.
+        Route::get('operativos/operaciones', [OperativosController::class, 'operaciones'])->name('operativos.operaciones');
+        Route::get('comercial/operaciones', [ComercialController::class, 'operaciones'])->name('comercial.operaciones');
 
         // Pizarra de vehículos en vivo (Fase 4.10)
         Route::get('pizarra', [PizarraController::class, 'index'])->name('pizarra.index');

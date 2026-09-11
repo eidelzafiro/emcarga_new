@@ -20,6 +20,7 @@ class PermissionSeeder extends Seeder
 
         $permisos = [
             'dashboard.ver',
+            'operativos.ver', 'comercial.ver',
 
             'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
 
@@ -240,6 +241,7 @@ class PermissionSeeder extends Seeder
             ],
             'COMERCIAL' => [
                 'dashboard.ver',
+                'comercial.ver',
                 'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.eliminar',
                 'lugares.ver', 'lugares.crear', 'lugares.editar', 'lugares.eliminar',
                 'distancias.ver', 'distancias.crear', 'distancias.editar', 'distancias.eliminar',
@@ -325,6 +327,7 @@ class PermissionSeeder extends Seeder
             ],
             'OPERATIVOS' => [
                 'dashboard.ver',
+                'operativos.ver',
                 'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
 
                 'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',

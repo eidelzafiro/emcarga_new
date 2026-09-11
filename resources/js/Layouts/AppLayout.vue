@@ -1,5 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Modo embebido (iframe de la vista de pestañas): solo el contenido, sin
+       sidebar ni cabecera, para no anidar el layout. Se activa con ?embed=1. -->
+  <div v-if="embed" class="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <Toast position="top-right" />
+    <ConfirmDialog />
+    <slot />
+  </div>
+
+  <div v-else class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <Toast position="top-right" />
     <ConfirmDialog />
 
@@ -256,6 +264,8 @@ import ConfirmDialog from 'primevue/confirmdialog';
 import Menubar from 'primevue/menubar';
 
 const page = usePage();
+const embed = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).get('embed') === '1';
 const user = computed(() => page.props.auth?.user);
 const roles = computed(() => page.props.auth?.roles ?? []);
 const menu = computed(() => page.props.menu ?? []);

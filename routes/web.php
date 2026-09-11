@@ -21,7 +21,6 @@ use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\CierreTarjetasController;
 use App\Http\Controllers\FusionCatalogosController;
 use App\Http\Controllers\GastoMaterialController;
-use App\Http\Controllers\CategoriasProductosController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ChoferesController;
 use App\Http\Controllers\ClientesController;
@@ -624,8 +623,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
         // Comercial - Tablas faltantes (Fase 5.8)
         Route::resource('contenedores', ContenedoresController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('categorias-productos', CategoriasProductosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::resource('productos', ProductosController::class)
             ->only(['index', 'store', 'update', 'destroy']);

@@ -90,8 +90,11 @@ function openEdit(item) {
   for (const d of (item.documentos || [])) docs[d.tipo] = d
   form.value = {
     ci: item.ci, nombre: item.nombre, apellidos: item.apellidos,
-    sexo: item.sexo, color_piel: item.color_piel, nivel_educacional: item.nivel_educacional,
-    estado_civil: item.estado_civil, ubicacion_defensa: item.ubicacion_defensa,
+    sexo: typeof item.sexo === 'object' ? item.sexo?.id : item.sexo,
+    color_piel: typeof item.color_piel === 'object' ? item.color_piel?.id : item.color_piel,
+    nivel_educacional: typeof item.nivel_educacional === 'object' ? item.nivel_educacional?.id : item.nivel_educacional,
+    estado_civil: typeof item.estado_civil === 'object' ? item.estado_civil?.id : item.estado_civil,
+    ubicacion_defensa: typeof item.ubicacion_defensa === 'object' ? item.ubicacion_defensa?.id : item.ubicacion_defensa,
     documentos: docTipos.map(t => ({
       tipo: t.value,
       numero: docs[t.value]?.numero || '',

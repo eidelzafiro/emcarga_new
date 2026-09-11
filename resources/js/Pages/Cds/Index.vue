@@ -122,8 +122,8 @@ function nombreMes(id) {
           <template #body="{ data }">{{ nombreMes(data.mes) }}</template>
         </Column>
         <Column field="ano" header="Año" />
-        <Column field="sistemaPago" header="Sistema de Pago">
-          <template #body="{ data }">{{ data.sistemaPago?.nombre || '—' }}</template>
+        <Column field="sistema_pago" header="Sistema de Pago">
+          <template #body="{ data }">{{ data.sistema_pago?.nombre || '—' }}</template>
         </Column>
         <Column field="cds" header="CDS" class="text-right">
           <template #body="{ data }">

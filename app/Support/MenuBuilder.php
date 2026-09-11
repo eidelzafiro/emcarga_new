@@ -59,7 +59,9 @@ class MenuBuilder
             ->values()
             ->all();
 
-        if (is_null($item->route) && empty($hijos)) {
+        // Los grupos marcados como `siempre_visible` (p. ej. Reportes) se
+        // muestran aunque el perfil no tenga permiso sobre ningún hijo.
+        if (is_null($item->route) && empty($hijos) && ! $item->siempre_visible) {
             return null;
         }
 
@@ -80,7 +82,7 @@ class MenuBuilder
             $disabled = true;
         }
 
-        if (is_null($item->route) && count($hijos) === 1) {
+        if (is_null($item->route) && count($hijos) === 1 && ! $item->siempre_visible) {
             return $hijos[0];
         }
 

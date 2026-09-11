@@ -40,6 +40,12 @@ class MenuSeeder extends Seeder
             MenuItem::where('id', $parentIds['Salario'])->update(['parent_id' => $parentIds['RRHH']]);
         }
 
+        // El agrupador Reportes es visible en todos los módulos; qué reportes
+        // ve cada perfil se controla con los permisos reportes-*.ver.
+        if (isset($parentIds['Reportes'])) {
+            MenuItem::where('id', $parentIds['Reportes'])->update(['siempre_visible' => true]);
+        }
+
         $hijos = [
             // Flota
             ['parent' => 'Flota', 'label' => 'Vehículos', 'route' => 'tractivos.index', 'permission' => 'tractivos.ver', 'orden' => 1],
@@ -155,7 +161,6 @@ class MenuSeeder extends Seeder
             // Facturación
             ['parent' => 'Facturación', 'label' => 'Facturas', 'route' => 'facturas.index', 'permission' => 'facturas.ver', 'orden' => 1],
             ['parent' => 'Facturación', 'label' => 'Prefacturas', 'route' => 'prefacturas.index', 'permission' => 'prefacturas.ver', 'orden' => 2],
-            ['parent' => 'Facturación', 'label' => 'Aforos Pendientes', 'route' => 'aforos.pendientes', 'permission' => 'facturas.ver', 'orden' => 3],
 
             // RRHH
             ['parent' => 'RRHH', 'label' => 'Bolsa', 'route' => 'bolsa.index', 'permission' => 'bolsa.ver', 'orden' => 1],

@@ -137,7 +137,7 @@ class ReportesDispatcher
         1055 => [NominaReportService::class, 'resumenGastosDietas'],
         1056 => [NominaReportService::class, 'resumenIndicadoresExplotacion'],
         1057 => [NominaReportService::class, 'resumenIngresosChoferes'],
-        1059 => [NominaReportService::class, 'operacionesTallerOperarios'],
+        1059 => [TecnicaReportService::class, 'operacionesTallerOperarios'],
         1060 => [NominaReportService::class, 'certificacionGastosEquipo'],
         1062 => [NominaReportService::class, 'certificacionCumplimientoCdt'],
         1064 => [NominaReportService::class, 'certificacionAlmacenamiento'],
@@ -145,7 +145,6 @@ class ReportesDispatcher
         1072 => [NominaReportService::class, 'certificacionComercialTonKm'],
         1073 => [NominaReportService::class, 'certificacionComercialTonKm'],
         4025 => [NominaReportService::class, 'certificoIndicesConsumo'],
-        4060 => [NominaReportService::class, 'reporteOperacionesEmcarga'],
         // TECNICA (10)
         138  => [TecnicaReportService::class, 'informeEstadoParque'],
         139  => [TecnicaReportService::class, 'informeAnualTractivo'],

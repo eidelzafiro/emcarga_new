@@ -10,7 +10,9 @@ use App\Models\HojasRuta;
 use App\Models\NeumaticosMovimiento;
 use App\Models\OrdenesTaller;
 use App\Models\SolicitudesServicio;
+use App\Services\DashboardComercialService;
 use App\Services\DashboardContabilidadService;
+use App\Services\DashboardOperativosService;
 use App\Services\DashboardRecursosHumanosService;
 use App\Services\DashboardTecnicoService;
 use App\Services\KpiService;
@@ -66,6 +68,30 @@ class DashboardController extends Controller
 
             return Inertia::render('RecursosHumanos/Dashboard', array_merge(
                 ['title' => 'Dashboard · Recursos Humanos'],
+                $service->datos()
+            ));
+        }
+
+        // El módulo Operativos usa su dashboard específico con datos
+        // operativos reales (hojas de ruta, cartas de porte, solicitudes,
+        // combustible descargado y flota).
+        if ($rol === 'OPERATIVOS') {
+            $service = app(DashboardOperativosService::class);
+
+            return Inertia::render('Operativos/Dashboard', array_merge(
+                ['title' => 'Dashboard · Operativos'],
+                $service->datos()
+            ));
+        }
+
+        // El módulo Comercial usa su dashboard específico con datos
+        // comerciales reales (facturación, aforos, cartas de porte,
+        // solicitudes y clientes).
+        if ($rol === 'COMERCIAL') {
+            $service = app(DashboardComercialService::class);
+
+            return Inertia::render('Comercial/Dashboard', array_merge(
+                ['title' => 'Dashboard · Comercial'],
                 $service->datos()
             ));
         }

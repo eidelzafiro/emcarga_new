@@ -32,11 +32,21 @@ const tipoOpciones = [
 
 watch([search, filtroTipo, soloVigentes], () => {
   router.get(route('historial-movimientos.index'), {
+    page: 1,
     search: search.value,
     tipo: filtroTipo.value,
     solo_vigentes: soloVigentes.value ? '1' : '',
   }, { preserveState: true, replace: true })
 })
+
+function onPage(event) {
+  router.get(route('historial-movimientos.index'), {
+    page: event.page + 1,
+    search: props.filters?.search || '',
+    tipo: props.filters?.tipo || '',
+    solo_vigentes: props.filters?.solo_vigentes || '',
+  }, { preserveState: true, preserveScroll: true, replace: true })
+}
 
 // ── Alta ──
 const showAlta = ref(false)
@@ -105,7 +115,8 @@ function darBaja(mov) {
                 </template>
             </Toolbar>
 
-            <DataTable :value="historial.data" striped-rows paginator :rows="20" :total-records="historial.total"
+            <DataTable :value="historial.data" striped-rows paginator lazy :rows="historial.per_page" :total-records="historial.total"
+                :first="(historial.current_page - 1) * historial.per_page" @page="onPage"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
                 currentPageReportTemplate="Total: {totalRecords} registros">
                 <Column field="trabajador" header="Trabajador" sortable>

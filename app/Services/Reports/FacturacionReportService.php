@@ -200,7 +200,35 @@ class FacturacionReportService
     // 18 — RESUMEN MENSUAL FACTURACION ORGANISMOS
     public function resumenMensualOrganismos(array $filtros): \Illuminate\Http\Response
     {
-        return $this->resumenPorCliente($filtros, false, 'Resumen Mensual Facturación por Organismos');
+        [$desde, $hasta] = $this->rangoFiltros($filtros);
+        $ids = $this->entidadIds();
+
+        $datos = Factura::query()
+            ->join('clientes', 'facturas.id_cliente', '=', 'clientes.id')
+            ->leftJoin('catalogo_items as organismos', 'clientes.idorganismos', '=', 'organismos.id')
+            ->whereIn('facturas.id_entidad', $ids)
+            ->whereBetween('facturas.fecha_emision', [$desde, $hasta])
+            ->where(fn ($q2) => $q2->where('facturas.oventas', 0)->orWhereNull('facturas.oventas'))
+            ->selectRaw("COALESCE(NULLIF(organismos.nombre, ''), 'SIN ORGANISMO') as organismo, COUNT(facturas.id) as facturas, SUM(facturas.ingreso_mt) as total_mt, SUM(facturas.flete_mlc) as total_mlc")
+            ->groupBy('organismo')
+            ->orderByDesc('total_mt')
+            ->get();
+
+        $columnas = [
+            ['key' => 'organismo', 'label' => 'Organismo', 'num' => false],
+            ['key' => 'facturas', 'label' => 'Facturas', 'num' => true],
+            ['key' => 'total_mt', 'label' => 'Total MT', 'num' => true],
+            ['key' => 'total_mlc', 'label' => 'Total MLC', 'num' => true],
+        ];
+
+        $filas = $datos->map(fn ($d) => [
+            'organismo' => $d->organismo,
+            'facturas' => $d->facturas,
+            'total_mt' => number_format((float) ($d->total_mt ?? 0), 2),
+            'total_mlc' => number_format((float) ($d->total_mlc ?? 0), 2),
+        ])->all();
+
+        return $this->reporteTablaPdf('Resumen Mensual Facturación por Organismos', $columnas, $filas, ['periodo' => $this->periodoTexto($filtros)]);
     }
 
     private function resumenPorCliente(array $filtros, bool $otrasVentas, string $titulo): \Illuminate\Http\Response

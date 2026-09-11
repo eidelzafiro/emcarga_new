@@ -25,6 +25,55 @@ class DashboardTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_usuario_operativos_ve_dashboard_con_datos()
+    {
+        $user = User::factory()->create();
+        $user->assignRole('OPERATIVOS');
+        $user->password_temporal = false;
+        $user->save();
+
+        $response = $this
+            ->withSession([
+                'entidad_activa_id' => $user->id_entidad,
+                'fecha_operaciones' => '2026-08-01',
+            ])
+            ->actingAs($user)
+            ->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Operativos/Dashboard')
+            ->has('totales')
+            ->has('hrPorEstado')
+            ->has('serie')
+        );
+    }
+
+    public function test_usuario_comercial_ve_dashboard_con_datos()
+    {
+        $user = User::factory()->create();
+        $user->assignRole('COMERCIAL');
+        $user->password_temporal = false;
+        $user->save();
+
+        $response = $this
+            ->withSession([
+                'entidad_activa_id' => $user->id_entidad,
+                'fecha_operaciones' => '2026-08-01',
+            ])
+            ->actingAs($user)
+            ->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Comercial/Dashboard')
+            ->has('facturacionPorConcepto')
+            ->has('facturacionPorCliente')
+            ->has('totales')
+            ->has('serie')
+        );
+    }
+
     public function test_api_kpis_devuelve_indicadores()
     {
         $user = User::first();

@@ -32,7 +32,7 @@ class OrdenesOperacione extends Model
 
     public function tipoOperacion(): BelongsTo
     {
-        return $this->belongsTo(TiposOperacione::class, 'id_tipo_operacion');
+        return $this->belongsTo(CatalogoItem::class, 'id_tipo_operacion');
     }
 
     public function operario(): BelongsTo

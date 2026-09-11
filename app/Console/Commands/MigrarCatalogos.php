@@ -27,7 +27,6 @@ class MigrarCatalogos extends Command
     ];
 
     private array $withDeletedAt = [
-        'tipos_operaciones',
         'tipos_mantenimiento',
     ];
 

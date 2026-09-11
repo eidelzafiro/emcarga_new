@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\EntidadScoping;
+use App\Models\CatalogoItem;
 use App\Models\ClasificacionOrdenTaller;
 use App\Models\GastosOrden;
 use App\Models\MotivosEntradaTaller;
@@ -12,6 +13,7 @@ use App\Models\OrdenesTaller;
 use App\Services\OrdenTallerService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class TallerController extends Controller
@@ -108,7 +110,7 @@ class TallerController extends Controller
                 'clasificaciones' => \App\Support\Catalogos::opciones('clasificaciones_ordenes_taller'),
                 'clasificacion_ligera_id' => \App\Support\Catalogos::idDe('clasificaciones_ordenes_taller', 1),
                 'tipos_mantenimiento' => \App\Models\TiposMantenimiento::orderBy('nombre')->get(['id', 'nombre', 'frecuencia']),
-                'tipos_operaciones' => \App\Models\TiposOperacione::orderBy('nombre')->get(['id', 'nombre', 'codigo']),
+                'tipos_operaciones' => CatalogoItem::where('tipo', 'tipos_operaciones')->where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'codigo']),
                 'tipos_agregados' => \App\Models\TipoAgregado::orderBy('nombre')->get(['id', 'nombre']),
                 'naves' => \App\Models\Nave::orderBy('nombre')->get(['id', 'nombre']),
                 'vallas' => \App\Models\Valla::orderBy('nombre')->get(['id', 'nombre']),
@@ -196,7 +198,7 @@ class TallerController extends Controller
             'pl_temp_aceite' => 'nullable|string|max:20',
             'pl_observacion' => 'nullable|string',
             'operaciones' => 'nullable|array',
-            'operaciones.*.id_tipo_operacion' => 'nullable|exists:tipos_operaciones,id',
+            'operaciones.*.id_tipo_operacion' => ['nullable', Rule::exists('catalogo_items', 'id')->where('tipo', 'tipos_operaciones')],
             'operaciones.*.id_operario' => 'nullable|exists:bolsa,id',
             'operaciones.*.id_operario2' => 'nullable|exists:bolsa,id',
             'operaciones.*.id_operario3' => 'nullable|exists:bolsa,id',
@@ -285,7 +287,7 @@ class TallerController extends Controller
             'pl_temp_aceite' => 'nullable|string|max:20',
             'pl_observacion' => 'nullable|string',
             'operaciones' => 'nullable|array',
-            'operaciones.*.id_tipo_operacion' => 'nullable|exists:tipos_operaciones,id',
+            'operaciones.*.id_tipo_operacion' => ['nullable', Rule::exists('catalogo_items', 'id')->where('tipo', 'tipos_operaciones')],
             'operaciones.*.id_operario' => 'nullable|exists:bolsa,id',
             'operaciones.*.id_operario2' => 'nullable|exists:bolsa,id',
             'operaciones.*.id_operario3' => 'nullable|exists:bolsa,id',
@@ -376,7 +378,7 @@ class TallerController extends Controller
         $this->autorizarEntidad($ordene->id_entidad);
 
         $validated = $request->validate([
-            'id_tipo_operacion' => 'required|exists:tipos_operaciones,id',
+            'id_tipo_operacion' => ['required', Rule::exists('catalogo_items', 'id')->where('tipo', 'tipos_operaciones')],
             'id_operario' => 'nullable|exists:bolsa,id',
             'id_operario2' => 'nullable|exists:bolsa,id',
             'id_operario3' => 'nullable|exists:bolsa,id',
@@ -447,7 +449,7 @@ class TallerController extends Controller
         abort_unless($operacione->id_orden_taller === $ordene->id, 404);
 
         $validated = $request->validate([
-            'id_tipo_operacion' => 'required|exists:tipos_operaciones,id',
+            'id_tipo_operacion' => ['required', Rule::exists('catalogo_items', 'id')->where('tipo', 'tipos_operaciones')],
             'id_operario' => 'nullable|exists:bolsa,id',
             'id_operario2' => 'nullable|exists:bolsa,id',
             'id_operario3' => 'nullable|exists:bolsa,id',

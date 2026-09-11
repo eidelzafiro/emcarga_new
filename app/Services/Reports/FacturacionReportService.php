@@ -205,7 +205,10 @@ class FacturacionReportService
 
         $datos = Factura::query()
             ->join('clientes', 'facturas.id_cliente', '=', 'clientes.id')
-            ->leftJoin('catalogo_items as organismos', 'clientes.idorganismos', '=', 'organismos.id')
+            ->leftJoin('catalogo_items as organismos', function ($join) {
+                $join->on('clientes.idorganismos', '=', 'organismos.id')
+                    ->where('organismos.tipo', '=', 'organismos');
+            })
             ->whereIn('facturas.id_entidad', $ids)
             ->whereBetween('facturas.fecha_emision', [$desde, $hasta])
             ->where(fn ($q2) => $q2->where('facturas.oventas', 0)->orWhereNull('facturas.oventas'))

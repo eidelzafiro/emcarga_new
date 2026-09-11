@@ -141,7 +141,6 @@ class PermissionSeeder extends Seeder
             'alertas.ver', 'alertas.crear', 'alertas.editar', 'alertas.eliminar',
             'indicadores.ver', 'indicadores.crear', 'indicadores.editar', 'indicadores.eliminar',
             'demandas.ver', 'demandas.crear', 'demandas.editar', 'demandas.eliminar',
-            'pizarra-tractivos.ver', 'pizarra-tractivos.crear', 'pizarra-tractivos.editar', 'pizarra-tractivos.eliminar',
             'tarifas.ver', 'tarifas.crear', 'tarifas.editar', 'tarifas.eliminar',
             'otros-ingresos-pre.ver', 'otros-ingresos-pre.crear', 'otros-ingresos-pre.editar', 'otros-ingresos-pre.eliminar',
 
@@ -257,7 +256,6 @@ class PermissionSeeder extends Seeder
                 'alertas.ver', 'alertas.crear', 'alertas.editar', 'alertas.eliminar',
                 'indicadores.ver', 'indicadores.crear', 'indicadores.editar', 'indicadores.eliminar',
                 'demandas.ver', 'demandas.crear', 'demandas.editar', 'demandas.eliminar',
-                'pizarra-tractivos.ver', 'pizarra-tractivos.crear', 'pizarra-tractivos.editar', 'pizarra-tractivos.eliminar',
                 'tarifas.ver', 'tarifas.crear', 'tarifas.editar', 'tarifas.eliminar',
                 'otros-ingresos-pre.ver', 'otros-ingresos-pre.crear', 'otros-ingresos-pre.editar', 'otros-ingresos-pre.eliminar',
                 // Comercial - Tablas faltantes parte 2

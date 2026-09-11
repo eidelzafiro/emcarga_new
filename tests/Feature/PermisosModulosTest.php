@@ -125,19 +125,6 @@ class PermisosModulosTest extends TestCase
             ->assertOk();
     }
 
-    public function test_api_pizarra_requiere_permiso_pizarra(): void
-    {
-        // La API api.pizarra se retiró en el catálogo unificado; la ruta
-        // equivalente es pizarra-tractivos.index (permiso pizarra-tractivos.ver).
-        $this->actingAs($this->usuarioSinRol())
-            ->get(route('pizarra-tractivos.index'))
-            ->assertForbidden();
-
-        $this->actingAs($this->usuarioConRol('COMERCIAL'))
-            ->get(route('pizarra-tractivos.index'))
-            ->assertOk();
-    }
-
     public function test_rutas_sin_permiso_catalogado_siguen_accesibles(): void
     {
         // notificaciones no tiene permiso catalogado: fail-open para autenticados

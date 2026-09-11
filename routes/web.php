@@ -75,7 +75,6 @@ use App\Http\Controllers\PagosController;
 use App\Http\Controllers\PenalizacionesController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraController;
-use App\Http\Controllers\PizarraTractivosController;
 use App\Http\Controllers\PrefacturasController;
 use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\ProvinciasController;
@@ -317,9 +316,6 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('demandas', DemandasController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('pizarra-tractivos', PizarraTractivosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('tarifas', TarifasController::class)

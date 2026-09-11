@@ -9,17 +9,38 @@ use App\Models\HojasRuta;
 use App\Models\SolicitudesServicio;
 use App\Models\Entidad;
 use App\Models\Tractivo;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Dashboard del módulo OPERATIVOS.
+ *
+ * Combina tres bloques:
+ *  - Documentos del día: cartas de porte y hojas de ruta emitidas /
+ *    recepcionadas / cerradas en el día de trabajo.
+ *  - Solicitudes: nuevas y cumplidas del día.
+ *  - Tablero de flota: la misma pizarra de flota que usa la técnica.
+ *
+ * El "día de trabajo" y el mes se toman de `session('fecha_operaciones')`.
+ * El filtrado por entidad usa el trait EntidadScoping (la matriz ve sus
+ * filiales; una filial solo lo suyo).
+ */
 class DashboardOperativosService
 {
     use EntidadScoping;
 
-    public function datos(): array
+    public function __construct(
+        protected DashboardTecnicoService $tecnico,
+    ) {}
+
+    public function datos(?Request $request = null): array
     {
+        $request ??= request();
+
         $fechaOperaciones = session('fecha_operaciones') ?? now()->toDateString();
         $fecha = Carbon::parse($fechaOperaciones);
+        $dia = $fecha->toDateString();
         $inicioMes = $fecha->copy()->startOfMonth()->toDateString();
         $finMes = $fecha->copy()->endOfMonth()->toDateString();
         $inicioMesAnterior = $fecha->copy()->subMonth()->startOfMonth()->toDateString();
@@ -29,9 +50,8 @@ class DashboardOperativosService
         $entidad = $entidadId ? Entidad::find($entidadId) : null;
         $entidadNombre = $entidad?->nombre ?? '—';
 
-        // ═══ KPIs ═══
+        // ═══ KPIs del mes ═══
 
-        // Hojas de ruta del mes (no canceladas)
         $hrQuery = HojasRuta::query()
             ->where('cancelada', false)
             ->whereBetween('fecha_emision', [$inicioMes, $finMes])
@@ -46,7 +66,6 @@ class DashboardOperativosService
             ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
             ->count();
 
-        // Cartas de porte del mes (scoping vía hoja de ruta)
         $cpQuery = CartaPorte::query()
             ->whereBetween('fecha_emision', [$inicioMes, $finMes])
             ->where('cancelada', false)
@@ -57,7 +76,6 @@ class DashboardOperativosService
         $cpRecepcionadas = (clone $cpQuery)->where('estado', 'recepcionada')->count();
         $cpFacturadas = (clone $cpQuery)->where('estado', 'facturada')->count();
 
-        // Solicitudes del mes (por fecha_solicitud)
         $solicitudesQuery = SolicitudesServicio::query()
             ->whereBetween('fecha_solicitud', [$inicioMes, $finMes])
             ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades));
@@ -72,7 +90,6 @@ class DashboardOperativosService
             ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
             ->count();
 
-        // Combustible descargado del mes
         $combustibleMes = CombustibleDescarga::query()
             ->whereBetween('fdescarga', [$inicioMes, $finMes])
             ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
@@ -83,7 +100,6 @@ class DashboardOperativosService
             )
             ->first();
 
-        // Combustible descargado mes anterior (variación %)
         $combustibleMesAnterior = CombustibleDescarga::query()
             ->whereBetween('fdescarga', [$inicioMesAnterior, $finMesAnterior])
             ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
@@ -111,21 +127,18 @@ class DashboardOperativosService
         $flotaEnTaller = collect($flotaPorEstado)->firstWhere('estado', 'EN TALLER');
         $flotaActiva = collect($flotaPorEstado)->firstWhere('estado', 'ACTIVO');
 
-        // ═══ SECCIÓN: HR por estado ═══
         $hrPorEstado = [
             ['estado' => 'abiertas', 'etiqueta' => 'Abiertas', 'total' => $hrAbiertas],
             ['estado' => 'cerradas', 'etiqueta' => 'Cerradas', 'total' => $hrCerradas],
             ['estado' => 'canceladas', 'etiqueta' => 'Canceladas', 'total' => $hrCanceladas],
         ];
 
-        // ═══ SECCIÓN: CP por estado ═══
         $cpPorEstado = [
             ['estado' => 'emitida', 'etiqueta' => 'Emitidas', 'total' => $cpEmitidas],
             ['estado' => 'recepcionada', 'etiqueta' => 'Recepcionadas', 'total' => $cpRecepcionadas],
             ['estado' => 'facturada', 'etiqueta' => 'Facturadas', 'total' => $cpFacturadas],
         ];
 
-        // ═══ SECCIÓN: Solicitudes por estado ═══
         $solicitudesPorEstado = [
             ['estado' => 'pendiente', 'etiqueta' => 'Pendientes', 'total' => $solicitudesPendientes],
             ['estado' => 'en_proceso', 'etiqueta' => 'En proceso', 'total' => $solicitudesEnProceso],
@@ -133,7 +146,6 @@ class DashboardOperativosService
             ['estado' => 'cancelada', 'etiqueta' => 'Canceladas', 'total' => $solicitudesCanceladas],
         ];
 
-        // ═══ SECCIÓN: KM recorridos en HR del mes ═══
         $kmsHr = HojasRuta::query()
             ->where('cancelada', false)
             ->whereNotNull('fecha_cierre')
@@ -141,8 +153,36 @@ class DashboardOperativosService
             ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
             ->sum('kms_totales');
 
-        // ═══ SERIE: Actividad diaria del mes ═══
         $serie = $this->serieDiaria($inicioMes, $finMes, $idsEntidades);
+
+        // ═══ Documentos del día ═══
+        $documentosDia = [
+            'dia' => $dia,
+            'cpEmitidasPorCliente' => $this->cpEmitidasDiaPorCliente($dia, $idsEntidades),
+            'cpRecepcionadasPorChofer' => $this->cpRecepcionadasDiaPorChofer($dia, $idsEntidades),
+            'hrEmitidasPorChofer' => $this->hrDiaPorChofer($dia, 'emision', $idsEntidades),
+            'hrCerradasPorChofer' => $this->hrDiaPorChofer($dia, 'cierre', $idsEntidades),
+        ];
+
+        // ═══ Solicitudes del día ═══
+        $solicitudesDia = [
+            'dia' => $dia,
+            'nuevas' => SolicitudesServicio::query()
+                ->where('fecha_solicitud', $dia)
+                ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
+                ->count(),
+            'cumplidas' => SolicitudesServicio::query()
+                ->where('estado', 'ejecutada')
+                ->where('fecha_ejecutada', $dia)
+                ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('id_entidad', $idsEntidades))
+                ->count(),
+            'cumplidasPorCliente' => $this->solicitudesCumplidasDiaPorCliente($dia, $idsEntidades),
+        ];
+
+        // ═══ Tablero de Flota (misma pizarra que la técnica) ═══
+        $pizarra = $this->tecnico->paraPizarraOperativa($request);
+        $columnas = $pizarra['columnas'] ?? [];
+        $flotaPorTipo = $this->flotaPorTipo($columnas);
 
         $totales = [
             'hr_del_mes' => $hrDelMes,
@@ -156,10 +196,15 @@ class DashboardOperativosService
             'flota' => collect($flotaPorEstado)->sum('total'),
             'flota_taller' => $flotaEnTaller['total'] ?? 0,
             'flota_activa' => $flotaActiva['total'] ?? 0,
+            'cp_emitidas_dia' => collect($documentosDia['cpEmitidasPorCliente'])->sum('cantidad'),
+            'hr_emitidas_dia' => collect($documentosDia['hrEmitidasPorChofer'])->sum('cantidad'),
+            'solicitudes_dia' => $solicitudesDia['nuevas'],
+            'solicitudes_cumplidas_dia' => $solicitudesDia['cumplidas'],
         ];
 
         return [
             'fechaOperaciones' => $fechaOperaciones,
+            'diaOperaciones' => $dia,
             'entidadNombre' => $entidadNombre,
             'entidad' => $entidad ? [
                 'nombre' => $entidad->nombre,
@@ -171,12 +216,139 @@ class DashboardOperativosService
             'solicitudesPorEstado' => $solicitudesPorEstado,
             'flotaPorEstado' => $flotaPorEstado,
             'serie' => $serie,
+            'documentosDia' => $documentosDia,
+            'solicitudesDia' => $solicitudesDia,
+            'flotaPorTipo' => $flotaPorTipo,
         ];
     }
 
     /**
+     * Cartas de porte emitidas en el día, agrupadas por cliente.
+     */
+    private function cpEmitidasDiaPorCliente(string $dia, array $idsEntidades): array
+    {
+        return DB::table('cartas_porte as cp')
+            ->join('solicitudes_servicio as s', 's.id', '=', 'cp.id_solicitud')
+            ->join('clientes as c', 'c.id', '=', 's.id_cliente')
+            ->whereNull('cp.deleted_at')
+            ->where('cp.fecha_emision', $dia)
+            ->where('cp.cancelada', false)
+            ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('cp.id_hoja_ruta', function ($sub) use ($idsEntidades) {
+                $sub->select('id')->from('hojas_ruta')->whereIn('id_entidad', $idsEntidades);
+            }))
+            ->groupBy('c.id', 'c.nombre')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->selectRaw('c.nombre as etiqueta, COUNT(*) as cantidad')
+            ->get()
+            ->map(fn ($row) => ['cliente' => $row->etiqueta, 'cantidad' => (int) $row->cantidad])
+            ->all();
+    }
+
+    /**
+     * Cartas de porte recepcionadas en el día, agrupadas por chofer.
+     */
+    private function cpRecepcionadasDiaPorChofer(string $dia, array $idsEntidades): array
+    {
+        return DB::table('cartas_porte as cp')
+            ->leftJoin('bolsa as b', 'b.id', '=', 'cp.id_chofer')
+            ->whereNull('cp.deleted_at')
+            ->where('cp.fecha_recepcion', $dia)
+            ->where('cp.estado', 'recepcionada')
+            ->where('cp.cancelada', false)
+            ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('cp.id_hoja_ruta', function ($sub) use ($idsEntidades) {
+                $sub->select('id')->from('hojas_ruta')->whereIn('id_entidad', $idsEntidades);
+            }))
+            ->groupBy('cp.id_chofer', 'b.nombre', 'b.apellidos')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->selectRaw("COALESCE(NULLIF(TRIM(CONCAT(COALESCE(b.nombre,''),' ',COALESCE(b.apellidos,''))), ''), 'Sin chofer') as etiqueta, COUNT(*) as cantidad")
+            ->get()
+            ->map(fn ($row) => ['chofer' => $row->etiqueta, 'cantidad' => (int) $row->cantidad])
+            ->all();
+    }
+
+    /**
+     * Hojas de ruta emitidas o cerradas en el día, agrupadas por chofer.
+     *
+     * @param  string  $tipo  'emision' usa fecha_emision; 'cierre' usa fecha_cierre.
+     */
+    private function hrDiaPorChofer(string $dia, string $tipo, array $idsEntidades): array
+    {
+        $columna = $tipo === 'cierre' ? 'h.fecha_cierre' : 'h.fecha_emision';
+
+        return DB::table('hojas_ruta as h')
+            ->leftJoin('bolsa as b', 'b.id', '=', 'h.id_chofer')
+            ->whereNull('h.deleted_at')
+            ->where($columna, $dia)
+            ->where('h.cancelada', false)
+            ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('h.id_entidad', $idsEntidades))
+            ->groupBy('h.id_chofer', 'b.nombre', 'b.apellidos')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->selectRaw("COALESCE(NULLIF(TRIM(CONCAT(COALESCE(b.nombre,''),' ',COALESCE(b.apellidos,''))), ''), 'Sin chofer') as etiqueta, COUNT(*) as cantidad")
+            ->get()
+            ->map(fn ($row) => ['chofer' => $row->etiqueta, 'cantidad' => (int) $row->cantidad])
+            ->all();
+    }
+
+    /**
+     * Solicitudes cumplidas en el día (estado ejecutada), agrupadas por cliente.
+     */
+    private function solicitudesCumplidasDiaPorCliente(string $dia, array $idsEntidades): array
+    {
+        return DB::table('solicitudes_servicio as s')
+            ->join('clientes as c', 'c.id', '=', 's.id_cliente')
+            ->where('s.estado', 'ejecutada')
+            ->where('s.fecha_ejecutada', $dia)
+            ->when(! empty($idsEntidades), fn ($q) => $q->whereIn('s.id_entidad', $idsEntidades))
+            ->groupBy('c.id', 'c.nombre')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->selectRaw('c.nombre as etiqueta, COUNT(*) as cantidad')
+            ->get()
+            ->map(fn ($row) => ['cliente' => $row->etiqueta, 'cantidad' => (int) $row->cantidad])
+            ->all();
+    }
+
+    /**
+     * Agrupa los vehículos de las columnas de la pizarra por tipo de equipo,
+     * con el mismo formato que consume la sección "Tablero de Flota" de
+     * PizarraOperativa.vue.
+     */
+    private function flotaPorTipo(array $columnas): array
+    {
+        $todos = collect($columnas)
+            ->flatMap(fn ($columna) => $columna['vehiculos'] ?? [])
+            ->filter(fn ($v) => empty($v['baja']));
+
+        $grupos = [];
+        foreach ($todos as $v) {
+            $nombre = $v['tipoVehiculo'] ?? ($v['tipo'] ?? 'Sin tipo');
+            if (! isset($grupos[$nombre])) {
+                $grupos[$nombre] = [
+                    'nombre' => $nombre,
+                    'esArrastre' => (bool) ($v['esArrastre'] ?? false),
+                    'activos' => [],
+                    'taller' => [],
+                ];
+            }
+            if (! empty($v['enTaller'])) {
+                $grupos[$nombre]['taller'][] = $v;
+            } else {
+                $grupos[$nombre]['activos'][] = $v;
+            }
+        }
+
+        $grupos = array_values($grupos);
+        usort($grupos, fn ($a, $b) => (count($b['activos']) + count($b['taller'])) <=> (count($a['activos']) + count($a['taller'])));
+
+        return array_map(fn ($g) => array_merge($g, [
+            'activosCount' => count($g['activos']),
+            'tallerCount' => count($g['taller']),
+            'total' => count($g['activos']) + count($g['taller']),
+        ]), $grupos);
+    }
+
+    /**
      * Serie diaria del mes: HR emitidas, CP emitidas y descargas de combustible.
-     * Devuelve un array con un elemento por día activo del mes.
+     * Devuelve un array con un elemento por día del mes.
      */
     private function serieDiaria(string $inicioMes, string $finMes, array $idsEntidades): array
     {

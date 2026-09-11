@@ -12,9 +12,14 @@
             {{ entidadNombre }}
           </p>
         </div>
-        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
-          {{ mesLabel }}
-        </span>
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+            {{ diaLabel }}
+          </span>
+          <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
+            {{ mesLabel }}
+          </span>
+        </div>
       </div>
 
       <!-- KPIs Totales -->
@@ -24,7 +29,7 @@
             <div class="min-w-0">
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hojas de Ruta</p>
               <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.hr_del_mes) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.kms_hr, 0) }} km recorridos</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.hr_emitidas_dia) }} emitidas hoy · {{ formatNumber(totales.kms_hr, 0) }} km</p>
             </div>
             <div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center shrink-0 ml-3">
               <i class="pi pi-truck text-white text-lg" />
@@ -36,7 +41,7 @@
             <div class="min-w-0">
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cartas de Porte</p>
               <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.cp_del_mes) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Emitidas en el mes</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.cp_emitidas_dia) }} emitidas hoy</p>
             </div>
             <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0 ml-3">
               <i class="pi pi-file text-white text-lg" />
@@ -48,7 +53,7 @@
             <div class="min-w-0">
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Solicitudes</p>
               <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.solicitudes_del_mes) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Del mes de operaciones</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.solicitudes_dia) }} nuevas · {{ formatNumber(totales.solicitudes_cumplidas_dia) }} cumplidas hoy</p>
             </div>
             <div class="w-10 h-10 rounded-lg bg-violet-500 flex items-center justify-center shrink-0 ml-3">
               <i class="pi pi-clipboard text-white text-lg" />
@@ -58,154 +63,225 @@
         <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
           <div class="flex items-start justify-between">
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Combustible</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.combustible_lts, 0) }} <span class="text-sm font-normal text-gray-400">L</span></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.combustible_descargas) }} descargas · {{ formatNumber(totales.combustible_mon, 2) }} MN</p>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Flota Activa</p>
+              <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5">{{ formatNumber(totales.flota_activa) }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.flota) }} en total · {{ formatNumber(totales.flota_taller) }} en taller</p>
             </div>
             <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0 ml-3">
-              <i class="pi pi-inbox text-white text-lg" />
-            </div>
-          </div>
-        </div>
-        <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
-          <div class="flex items-start justify-between">
-            <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Flota Total</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.flota) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Tractivos en la entidad</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-gray-500 flex items-center justify-center shrink-0 ml-3">
               <i class="pi pi-car text-white text-lg" />
             </div>
           </div>
         </div>
-        <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
-          <div class="flex items-start justify-between">
-            <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Flota Activa</p>
-              <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5">{{ formatNumber(totales.flota_activa) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Estado ACTIVO</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0 ml-3">
-              <i class="pi pi-check-circle text-white text-lg" />
-            </div>
-          </div>
-        </div>
-        <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
-          <div class="flex items-start justify-between">
-            <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">En Taller</p>
-              <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1.5">{{ formatNumber(totales.flota_taller) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Estado EN TALLER</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center shrink-0 ml-3">
-              <i class="pi pi-wrench text-white text-lg" />
-            </div>
-          </div>
-        </div>
-        <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
-          <div class="flex items-start justify-between">
-            <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Variación Combustible</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ variacionCombustible }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">vs mes anterior</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-cyan-500 flex items-center justify-center shrink-0 ml-3">
-              <i class="pi pi-chart-line text-white text-lg" />
-            </div>
-          </div>
-        </div>
       </div>
 
-      <!-- ═══════════════════ SECCIÓN 1: ESTADO DE OPERACIONES ═══════════════════ -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <!-- Pestañas (v-show: los paneles no se desmontan) -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          type="button"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border"
+          :class="tabActiva === tab.key
+            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60'"
+          @click="tabActiva = tab.key"
+        >
+          <i :class="tab.icono" />
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- ═══════════════════ PANEL 1: DOCUMENTOS DEL DÍA ═══════════════════ -->
+      <div v-show="tabActiva === 'documentos'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
-            <i class="pi pi-clipboard text-white text-sm" />
+            <i class="pi pi-file text-white text-sm" />
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Estado de Operaciones — {{ mesLabel }}</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Hojas de ruta, cartas de porte y solicitudes por estado</p>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Documentos del día — {{ diaLabel }}</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Cartas de porte y hojas de ruta emitidas, recepcionadas y cerradas hoy</p>
           </div>
         </div>
 
-        <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Hojas de Ruta</h4>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">CP emitidas · por cliente</h4>
             <div class="space-y-2">
-              <div v-for="fila in hrPorEstado" :key="fila.estado" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
-                <span class="text-sm text-gray-600 dark:text-gray-300">{{ fila.etiqueta }}</span>
-                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100">{{ formatNumber(fila.total) }}</span>
-              </div>
-              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/30">
-                <span class="text-sm font-semibold text-amber-700 dark:text-amber-300">Total</span>
-                <span class="text-sm font-bold font-mono text-amber-700 dark:text-amber-300">{{ formatNumber(totales.hr_del_mes) }}</span>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Cartas de Porte</h4>
-            <div class="space-y-2">
-              <div v-for="fila in cpPorEstado" :key="fila.estado" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
-                <span class="text-sm text-gray-600 dark:text-gray-300">{{ fila.etiqueta }}</span>
-                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100">{{ formatNumber(fila.total) }}</span>
+              <div v-for="fila in documentosDia.cpEmitidasPorCliente" :key="'cpe-' + fila.cliente" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
+                <span class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ fila.cliente }}</span>
+                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100 ml-2">{{ formatNumber(fila.cantidad) }}</span>
               </div>
               <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
                 <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Total</span>
-                <span class="text-sm font-bold font-mono text-blue-700 dark:text-blue-300">{{ formatNumber(totales.cp_del_mes) }}</span>
+                <span class="text-sm font-bold font-mono text-blue-700 dark:text-blue-300">{{ formatNumber(totalDocumentos.cpEmitidas) }}</span>
               </div>
             </div>
           </div>
+
           <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Solicitudes</h4>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">CP recepcionadas · por chofer</h4>
             <div class="space-y-2">
-              <div v-for="fila in solicitudesPorEstado" :key="fila.estado" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
-                <span class="text-sm text-gray-600 dark:text-gray-300">{{ fila.etiqueta }}</span>
-                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100">{{ formatNumber(fila.total) }}</span>
+              <div v-for="fila in documentosDia.cpRecepcionadasPorChofer" :key="'cpr-' + fila.chofer" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
+                <span class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ fila.chofer }}</span>
+                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100 ml-2">{{ formatNumber(fila.cantidad) }}</span>
               </div>
-              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-violet-50 dark:bg-violet-900/30">
-                <span class="text-sm font-semibold text-violet-700 dark:text-violet-300">Total</span>
-                <span class="text-sm font-bold font-mono text-violet-700 dark:text-violet-300">{{ formatNumber(totales.solicitudes_del_mes) }}</span>
+              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
+                <span class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total</span>
+                <span class="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-300">{{ formatNumber(totalDocumentos.cpRecepcionadas) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">HR emitidas · por chofer</h4>
+            <div class="space-y-2">
+              <div v-for="fila in documentosDia.hrEmitidasPorChofer" :key="'hre-' + fila.chofer" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
+                <span class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ fila.chofer }}</span>
+                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100 ml-2">{{ formatNumber(fila.cantidad) }}</span>
+              </div>
+              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/30">
+                <span class="text-sm font-semibold text-amber-700 dark:text-amber-300">Total</span>
+                <span class="text-sm font-bold font-mono text-amber-700 dark:text-amber-300">{{ formatNumber(totalDocumentos.hrEmitidas) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">HR cerradas · por chofer</h4>
+            <div class="space-y-2">
+              <div v-for="fila in documentosDia.hrCerradasPorChofer" :key="'hrc-' + fila.chofer" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
+                <span class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ fila.chofer }}</span>
+                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100 ml-2">{{ formatNumber(fila.cantidad) }}</span>
+              </div>
+              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700/80">
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Total</span>
+                <span class="text-sm font-bold font-mono text-gray-700 dark:text-gray-200">{{ formatNumber(totalDocumentos.hrCerradas) }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══════════════════ SECCIÓN 2: FLOTA POR ESTADO ═══════════════════ -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <!-- ═══════════════════ PANEL 2: SOLICITUDES ═══════════════════ -->
+      <div v-show="tabActiva === 'solicitudes'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center">
-            <i class="pi pi-car text-white text-sm" />
+          <div class="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center">
+            <i class="pi pi-clipboard text-white text-sm" />
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Tablero de Flota</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Tractivos por estado técnico</p>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Solicitudes — {{ diaLabel }}</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Nuevas y cumplidas en el día</p>
+          </div>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between px-4 py-3 rounded-lg bg-violet-50 dark:bg-violet-900/30 border border-violet-100 dark:border-violet-900/50">
+              <div>
+                <p class="text-xs font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wider">Nuevas del día</p>
+                <p class="text-xs text-violet-500 dark:text-violet-400 mt-0.5">Solicitudes registradas hoy</p>
+              </div>
+              <span class="text-2xl font-bold font-mono text-violet-700 dark:text-violet-300">{{ formatNumber(solicitudesDia.nuevas) }}</span>
+            </div>
+            <div class="flex items-center justify-between px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-900/50">
+              <div>
+                <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Cumplidas del día</p>
+                <p class="text-xs text-emerald-500 dark:text-emerald-400 mt-0.5">Estado ejecutada</p>
+              </div>
+              <span class="text-2xl font-bold font-mono text-emerald-700 dark:text-emerald-300">{{ formatNumber(solicitudesDia.cumplidas) }}</span>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Cumplidas · por cliente</h4>
+            <div class="space-y-2">
+              <div v-for="fila in solicitudesDia.cumplidasPorCliente" :key="'sol-' + fila.cliente" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
+                <span class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ fila.cliente }}</span>
+                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100 ml-2">{{ formatNumber(fila.cantidad) }}</span>
+              </div>
+              <div v-if="!solicitudesDia.cumplidasPorCliente.length" class="text-center py-6">
+                <i class="pi pi-inbox text-2xl text-gray-300 dark:text-gray-600 block mb-1" />
+                <p class="text-sm text-gray-400 dark:text-gray-500">Sin solicitudes cumplidas hoy</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ PANEL 3: TABLERO DE FLOTA ═══════════════════ -->
+      <div v-show="tabActiva === 'flota'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center">
+              <i class="pi pi-car text-white text-sm" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Tablero de Flota</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Vehículos por tipo de equipo</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500" /> Activo</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500" /> En taller (OT abierta)</span>
           </div>
         </div>
 
         <div class="p-5">
-          <div v-if="flotaPorEstado.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-            <div
-              v-for="fila in flotaPorEstado"
-              :key="fila.estado"
-              class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between"
-            >
-              <div class="min-w-0">
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate">{{ fila.estado }}</p>
-                <p class="text-xl font-bold font-mono text-gray-900 dark:text-gray-100 mt-1">{{ formatNumber(fila.total) }}</p>
+          <div v-if="flotaPorTipo.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+            <div v-for="tipo in flotaPorTipo" :key="tipo.nombre" class="rounded-xl border-2 overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
+              <!-- Header tipo de equipo -->
+              <div class="p-4 flex items-center gap-3 border-b border-gray-100 dark:border-gray-700"
+                   :class="tipo.tallerCount > 0 ? 'bg-gradient-to-r from-amber-50 to-white dark:from-amber-900/20 dark:to-gray-800' : 'bg-gradient-to-r from-emerald-50 to-white dark:from-emerald-900/20 dark:to-gray-800'">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                     :class="tipo.tallerCount > 0 ? 'bg-amber-100 dark:bg-amber-900/40' : 'bg-emerald-100 dark:bg-emerald-900/40'">
+                  <i :class="tipo.esArrastre ? 'pi pi-box' : 'pi pi-truck'" class="text-lg"
+                     :style="{ color: tipo.tallerCount > 0 ? '#d97706' : '#059669' }" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-gray-900 dark:text-gray-100 truncate">{{ tipo.nombre }}</h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ tipo.activosCount }} activo{{ tipo.activosCount !== 1 ? 's' : '' }}
+                    <span v-if="tipo.tallerCount > 0" class="text-amber-600 dark:text-amber-400"> · {{ tipo.tallerCount }} en taller</span>
+                  </p>
+                </div>
+                <span class="text-2xl font-extrabold" :class="tipo.tallerCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'">
+                  {{ tipo.total }}
+                </span>
               </div>
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ml-3" :class="colorEstado(fila.estado)">
-                <i class="pi pi-circle-fill text-white text-sm" />
+              <!-- Lista de vehículos -->
+              <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-[400px] overflow-y-auto">
+                <template v-if="tipo.activos.length">
+                  <div v-for="v in tipo.activos" :key="v.id" class="px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/80 transition">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{{ v.codigo }}</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ v.marca }}</p>
+                    </div>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ml-2" />
+                  </div>
+                </template>
+                <template v-if="tipo.taller.length">
+                  <div v-for="v in tipo.taller" :key="v.id" class="px-4 py-2.5 flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{{ v.codigo }}</p>
+                      <p class="text-xs text-amber-600 dark:text-amber-400 truncate">
+                        <i class="pi pi-wrench mr-1" />OT {{ v.ot?.numero ?? '—' }} · {{ v.ot?.dias ?? '' }} días
+                      </p>
+                    </div>
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0 ml-2" />
+                  </div>
+                </template>
+                <div v-if="!tipo.activos.length && !tipo.taller.length" class="px-4 py-3 text-center text-xs text-gray-400 dark:text-gray-500">
+                  Sin vehículos
+                </div>
               </div>
             </div>
           </div>
-          <p v-else class="text-sm text-gray-500 dark:text-gray-400">No hay tractivos registrados en la entidad.</p>
+          <p v-else class="text-xs text-gray-400 dark:text-gray-500 py-6 text-center">Sin vehículos en la flota</p>
         </div>
       </div>
 
-      <!-- ═══════════════════ SECCIÓN 3: ACTIVIDAD DIARIA ═══════════════════ -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <!-- ═══════════════════ PANEL 4: ACTIVIDAD DIARIA ═══════════════════ -->
+      <div v-show="tabActiva === 'actividad'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
             <i class="pi pi-chart-bar text-white text-sm" />
@@ -236,12 +312,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
   title: { type: String, default: 'Dashboard Operativos' },
   fechaOperaciones: { type: String, default: '' },
+  diaOperaciones: { type: String, default: '' },
   entidadNombre: { type: String, default: '' },
   entidad: { type: Object, default: null },
 
@@ -252,6 +329,8 @@ const props = defineProps({
       combustible_lts: 0, combustible_mon: 0, combustible_descargas: 0,
       combustible_lts_anterior: 0, kms_hr: 0,
       flota: 0, flota_taller: 0, flota_activa: 0,
+      cp_emitidas_dia: 0, hr_emitidas_dia: 0,
+      solicitudes_dia: 0, solicitudes_cumplidas_dia: 0,
     }),
   },
   hrPorEstado: { type: Array, default: () => [] },
@@ -259,7 +338,28 @@ const props = defineProps({
   solicitudesPorEstado: { type: Array, default: () => [] },
   flotaPorEstado: { type: Array, default: () => [] },
   serie: { type: Array, default: () => [] },
+  documentosDia: {
+    type: Object,
+    default: () => ({
+      dia: '', cpEmitidasPorCliente: [], cpRecepcionadasPorChofer: [],
+      hrEmitidasPorChofer: [], hrCerradasPorChofer: [],
+    }),
+  },
+  solicitudesDia: {
+    type: Object,
+    default: () => ({ dia: '', nuevas: 0, cumplidas: 0, cumplidasPorCliente: [] }),
+  },
+  flotaPorTipo: { type: Array, default: () => [] },
 });
+
+const tabActiva = ref('documentos');
+
+const tabs = [
+  { key: 'documentos', label: 'Documentos del día', icono: 'pi pi-file' },
+  { key: 'solicitudes', label: 'Solicitudes', icono: 'pi pi-clipboard' },
+  { key: 'flota', label: 'Tablero de Flota', icono: 'pi pi-car' },
+  { key: 'actividad', label: 'Actividad diaria', icono: 'pi pi-chart-bar' },
+];
 
 const mesLabel = computed(() => {
   if (!props.fechaOperaciones) return '';
@@ -267,13 +367,19 @@ const mesLabel = computed(() => {
   return d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 });
 
-const variacionCombustible = computed(() => {
-  const actual = Number(props.totales.combustible_lts) || 0;
-  const anterior = Number(props.totales.combustible_lts_anterior) || 0;
-  if (!anterior) return '—';
-  const pct = ((actual - anterior) / anterior) * 100;
-  return (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
+const diaLabel = computed(() => {
+  const base = props.diaOperaciones || props.fechaOperaciones;
+  if (!base) return '';
+  const d = new Date(base + 'T00:00:00');
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 });
+
+const totalDocumentos = computed(() => ({
+  cpEmitidas: (props.documentosDia.cpEmitidasPorCliente || []).reduce((a, f) => a + (f.cantidad || 0), 0),
+  cpRecepcionadas: (props.documentosDia.cpRecepcionadasPorChofer || []).reduce((a, f) => a + (f.cantidad || 0), 0),
+  hrEmitidas: (props.documentosDia.hrEmitidasPorChofer || []).reduce((a, f) => a + (f.cantidad || 0), 0),
+  hrCerradas: (props.documentosDia.hrCerradasPorChofer || []).reduce((a, f) => a + (f.cantidad || 0), 0),
+}));
 
 function formatNumber(valor, decimales = 0) {
   const num = Number(valor) || 0;
@@ -281,15 +387,6 @@ function formatNumber(valor, decimales = 0) {
     minimumFractionDigits: decimales,
     maximumFractionDigits: decimales,
   });
-}
-
-function colorEstado(estado) {
-  const e = String(estado).toLowerCase();
-  if (e.includes('activo') || e.includes('buen')) return 'bg-emerald-500';
-  if (e.includes('taller') || e.includes('trabajando') || e.includes('paraliz')) return 'bg-amber-500';
-  if (e.includes('malo') || e.includes('baja') || e.includes('regrab')) return 'bg-red-500';
-  if (e.includes('nuevo') || e.includes('reconstru')) return 'bg-cyan-500';
-  return 'bg-gray-400';
 }
 
 function barraAltura(valor) {

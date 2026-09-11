@@ -12,9 +12,12 @@
             {{ entidadNombre }}
           </p>
         </div>
-        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
-          {{ mesLabel }}
-        </span>
+        <div class="text-right">
+          <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
+            {{ mesLabel }}
+          </span>
+          <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">Operaciones: {{ fechaOperaciones }}</p>
+        </div>
       </div>
 
       <!-- KPIs Totales -->
@@ -23,8 +26,8 @@
           <div class="flex items-start justify-between">
             <div class="min-w-0">
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ingresos Facturados</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.ingresos_facturados, 2) }} <span class="text-sm font-normal text-gray-400">MN</span></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.facturas_del_mes) }} facturas</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.ingresos_mt, 2) }} <span class="text-sm font-normal text-gray-400">MT</span></p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.total_facturas) }} facturas</p>
             </div>
             <div class="w-10 h-10 rounded-lg bg-cyan-500 flex items-center justify-center shrink-0 ml-3">
               <i class="pi pi-dollar text-white text-lg" />
@@ -34,21 +37,9 @@
         <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
           <div class="flex items-start justify-between">
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ingresos Aforados</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.ingresos_aforados, 2) }} <span class="text-sm font-normal text-gray-400">MN</span></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.aforos_del_mes) }} aforos</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0 ml-3">
-              <i class="pi pi-receipt text-white text-lg" />
-            </div>
-          </div>
-        </div>
-        <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
-          <div class="flex items-start justify-between">
-            <div class="min-w-0">
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cartas de Porte</p>
               <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.cp_del_mes) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Emitidas en el mes</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.cp_facturadas) }} facturadas</p>
             </div>
             <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0 ml-3">
               <i class="pi pi-file text-white text-lg" />
@@ -58,165 +49,351 @@
         <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
           <div class="flex items-start justify-between">
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Clientes Activos</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.clientes_activos) }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Con cartas de porte en el mes</p>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tráfico Producido</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.traf_real) }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.toneladas) }} toneladas</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0 ml-3">
+              <i class="pi pi-chart-line text-white text-lg" />
+            </div>
+          </div>
+        </div>
+        <div class="kpi-card dark:bg-gray-800 dark:border-gray-700">
+          <div class="flex items-start justify-between">
+            <div class="min-w-0">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Solicitudes</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1.5">{{ formatNumber(totales.solicitudes_total) }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNumber(totales.hr_cerradas) }} hojas de ruta cerradas</p>
             </div>
             <div class="w-10 h-10 rounded-lg bg-violet-500 flex items-center justify-center shrink-0 ml-3">
-              <i class="pi pi-building text-white text-lg" />
+              <i class="pi pi-shopping-cart text-white text-lg" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══════════════════ SECCIÓN 1: CICLO DE OPERACIONES ═══════════════════ -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-            <i class="pi pi-sync text-white text-sm" />
+      <!-- Pestañas (secciones intercambiables; los paneles se conservan con v-show) -->
+      <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-px">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          type="button"
+          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors"
+          :class="activo === tab.key
+            ? 'border-cyan-500 text-cyan-700 dark:text-cyan-300 bg-white dark:bg-gray-800'
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+          @click="activo = tab.key"
+        >
+          <i :class="tab.icono" />
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- ═══════════════════ SECCIÓN 1: DOCUMENTOS DEL MES ═══════════════════ -->
+      <div v-show="activo === 'documentos'" class="space-y-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+              <i class="pi pi-file text-white text-sm" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Cartas de Porte por Cliente — {{ mesLabel }}</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Emitidas, recepcionadas, aforadas y facturadas</p>
+            </div>
           </div>
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Ciclo de Operaciones — {{ mesLabel }}</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Aforos, cartas de porte y solicitudes por estado</p>
+          <div class="p-5">
+            <div v-if="documentosPorCliente.length" class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300">Cliente</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Emitidas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Recepcionadas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Aforadas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Facturadas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center font-bold">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="fila in documentosPorCliente" :key="fila.cliente" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
+                    <td class="table-cell font-medium dark:text-gray-200">{{ fila.cliente }}</td>
+                    <td class="table-cell text-center font-mono text-blue-600 dark:text-blue-400">{{ formatNumber(fila.emitidas) }}</td>
+                    <td class="table-cell text-center font-mono text-amber-600 dark:text-amber-400">{{ formatNumber(fila.recepcionadas) }}</td>
+                    <td class="table-cell text-center font-mono text-cyan-600 dark:text-cyan-400">{{ formatNumber(fila.aforadas) }}</td>
+                    <td class="table-cell text-center font-mono text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.facturadas) }}</td>
+                    <td class="table-cell text-center font-mono font-bold dark:text-gray-100">{{ formatNumber(fila.total) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-sm text-gray-500 dark:text-gray-400">No hay cartas de porte en el mes de operaciones.</p>
           </div>
         </div>
 
-        <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Aforos</h4>
-            <div class="space-y-2">
-              <div v-for="fila in aforosPorEstado" :key="fila.estado" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
-                <span class="text-sm text-gray-600 dark:text-gray-300">
-                  <i class="mr-1.5" :class="'pi pi-circle-fill ' + fila.color"></i>{{ fila.etiqueta }}
-                </span>
-                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100">{{ formatNumber(fila.total) }}</span>
-              </div>
-              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-cyan-50 dark:bg-cyan-900/30">
-                <span class="text-sm font-semibold text-cyan-700 dark:text-cyan-300">Total</span>
-                <span class="text-sm font-bold font-mono text-cyan-700 dark:text-cyan-300">{{ formatNumber(totales.aforos_del_mes) }}</span>
-              </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center">
+              <i class="pi pi-truck text-white text-sm" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Hojas de Ruta por Chofer — {{ mesLabel }}</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Emitidas y cerradas en el mes</p>
             </div>
           </div>
-          <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Cartas de Porte</h4>
-            <div class="space-y-2">
-              <div v-for="fila in cpPorEstado" :key="fila.estado" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
-                <span class="text-sm text-gray-600 dark:text-gray-300">{{ fila.etiqueta }}</span>
-                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100">{{ formatNumber(fila.total) }}</span>
-              </div>
-              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
-                <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Total</span>
-                <span class="text-sm font-bold font-mono text-blue-700 dark:text-blue-300">{{ formatNumber(totales.cp_del_mes) }}</span>
-              </div>
+          <div class="p-5">
+            <div v-if="hrPorChofer.length" class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300">Chofer</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Emitidas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Cerradas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center font-bold">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="fila in hrPorChofer" :key="fila.chofer" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
+                    <td class="table-cell font-medium dark:text-gray-200">{{ fila.chofer }}</td>
+                    <td class="table-cell text-center font-mono text-blue-600 dark:text-blue-400">{{ formatNumber(fila.emitidas) }}</td>
+                    <td class="table-cell text-center font-mono text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.cerradas) }}</td>
+                    <td class="table-cell text-center font-mono font-bold dark:text-gray-100">{{ formatNumber(fila.total) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-sm text-gray-500 dark:text-gray-400">No hay hojas de ruta en el mes de operaciones.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ SECCIÓN 2: SOLICITUDES DEL MES ═══════════════════ -->
+      <div v-show="activo === 'solicitudes'">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
+              <i class="pi pi-shopping-cart text-white text-sm" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Solicitudes por Cliente — {{ mesLabel }}</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Pendientes, en proceso y ejecutadas</p>
             </div>
           </div>
-          <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Solicitudes</h4>
-            <div class="space-y-2">
-              <div v-for="fila in solicitudesPorEstado" :key="fila.estado" class="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60">
-                <span class="text-sm text-gray-600 dark:text-gray-300">{{ fila.etiqueta }}</span>
-                <span class="text-sm font-semibold font-mono text-gray-900 dark:text-gray-100">{{ formatNumber(fila.total) }}</span>
+          <div class="p-5">
+            <div v-if="solicitudesPorCliente.length" class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300">Cliente</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Pendientes</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">En proceso</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Ejecutadas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center font-bold">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="fila in solicitudesPorCliente" :key="fila.cliente" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
+                    <td class="table-cell font-medium dark:text-gray-200">{{ fila.cliente }}</td>
+                    <td class="table-cell text-center font-mono text-amber-600 dark:text-amber-400">{{ formatNumber(fila.pendientes) }}</td>
+                    <td class="table-cell text-center font-mono text-cyan-600 dark:text-cyan-400">{{ formatNumber(fila.en_proceso) }}</td>
+                    <td class="table-cell text-center font-mono text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.ejecutadas) }}</td>
+                    <td class="table-cell text-center font-mono font-bold dark:text-gray-100">{{ formatNumber(fila.total) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-sm text-gray-500 dark:text-gray-400">No hay solicitudes en el mes de operaciones.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ SECCIÓN 3: FACTURACIÓN ═══════════════════ -->
+      <div v-show="activo === 'facturacion'">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+              <i class="pi pi-dollar text-white text-sm" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Facturación</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Ingresos por concepto y principales clientes</p>
+            </div>
+          </div>
+
+          <div class="p-5 space-y-5">
+            <div v-if="ingresosPorConcepto.length">
+              <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Ingresos por concepto</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead>
+                    <tr>
+                      <th class="table-header dark:bg-gray-700 dark:text-gray-300">Concepto</th>
+                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Facturas</th>
+                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Total MT</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tr v-for="(fila, i) in ingresosPorConcepto" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
+                      <td class="table-cell font-medium dark:text-gray-200">{{ fila.concepto }}</td>
+                      <td class="table-cell text-center dark:text-gray-400">{{ fila.cantidad }}</td>
+                      <td class="table-cell text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.total_mt, 2) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-violet-50 dark:bg-violet-900/30">
-                <span class="text-sm font-semibold text-violet-700 dark:text-violet-300">Total</span>
-                <span class="text-sm font-bold font-mono text-violet-700 dark:text-violet-300">{{ formatNumber(totalSolicitudes) }}</span>
+            </div>
+
+            <div v-if="facturacionPorCliente.length">
+              <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Principales clientes</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead>
+                    <tr>
+                      <th class="table-header dark:bg-gray-700 dark:text-gray-300">#</th>
+                      <th class="table-header dark:bg-gray-700 dark:text-gray-300">Cliente</th>
+                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-center">Facturas</th>
+                      <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Total MT</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tr v-for="(fila, i) in facturacionPorCliente" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
+                      <td class="table-cell text-gray-400 dark:text-gray-500 font-mono text-xs">{{ i + 1 }}</td>
+                      <td class="table-cell font-medium dark:text-gray-200">{{ fila.cliente }}</td>
+                      <td class="table-cell text-center dark:text-gray-400">{{ fila.cantidad_facturas }}</td>
+                      <td class="table-cell text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.total_mt, 2) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
+            </div>
+
+            <div v-if="!ingresosPorConcepto.length && !facturacionPorCliente.length" class="text-center py-8">
+              <i class="pi pi-inbox text-3xl text-gray-300 dark:text-gray-600 block mb-2" />
+              <p class="text-sm text-gray-400 dark:text-gray-500">No hay datos de facturación para este período</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══════════════════ SECCIÓN 2: FACTURACIÓN POR CONCEPTO ═══════════════════ -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center">
-            <i class="pi pi-chart-pie text-white text-sm" />
+      <!-- ═══════════════════ SECCIÓN 4: TRÁFICO ═══════════════════ -->
+      <div v-show="activo === 'trafico'">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center">
+              <i class="pi pi-chart-line text-white text-sm" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Tráfico por Fecha de Parte — {{ mesLabel }}</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Toneladas, kilómetros, tráfico e ingresos del mes</p>
+            </div>
           </div>
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Facturación por Concepto</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Ingresos del mes agrupados por concepto</p>
+          <div class="p-5">
+            <div v-if="traficoPorFecha.length" class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300">Fecha</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Toneladas</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Kms Carga</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Kms Vacío</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Tráfico Posible</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Tráfico Producido</th>
+                    <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="fila in traficoPorFecha" :key="fila.fecha" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
+                    <td class="table-cell font-medium dark:text-gray-200">{{ fila.etiqueta }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.toneladas) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.km_carga) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.km_vacio) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.traf_pos) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-300">{{ formatNumber(fila.traf_real) }}</td>
+                    <td class="table-cell text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.ingreso, 2) }}</td>
+                  </tr>
+                  <tr class="font-bold bg-gray-50 dark:bg-gray-700/60">
+                    <td class="table-cell dark:text-gray-100">TOTAL</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-100">{{ formatNumber(traficoTotal.toneladas) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-100">{{ formatNumber(traficoTotal.km_carga) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-100">{{ formatNumber(traficoTotal.km_vacio) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-100">{{ formatNumber(traficoTotal.traf_pos) }}</td>
+                    <td class="table-cell text-right font-mono dark:text-gray-100">{{ formatNumber(traficoTotal.traf_real) }}</td>
+                    <td class="table-cell text-right font-mono text-emerald-600 dark:text-emerald-400">{{ formatNumber(traficoTotal.ingreso, 2) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-sm text-gray-500 dark:text-gray-400">No hay aforos en el mes de operaciones.</p>
           </div>
-        </div>
-
-        <div class="p-5">
-          <div v-if="facturacionPorConcepto.length" class="overflow-x-auto">
-            <table class="w-full">
-              <thead>
-                <tr>
-                  <th class="table-header dark:bg-gray-700 dark:text-gray-300">Concepto</th>
-                  <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Facturas</th>
-                  <th class="table-header dark:bg-gray-700 dark:text-gray-300 text-right">Total MN</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                <tr v-for="fila in facturacionPorConcepto" :key="fila.concepto" class="hover:bg-gray-50 dark:hover:bg-gray-700/80">
-                  <td class="table-cell font-medium dark:text-gray-200">{{ fila.concepto }}</td>
-                  <td class="table-cell text-right dark:text-gray-400">{{ formatNumber(fila.cantidad) }}</td>
-                  <td class="table-cell text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ formatNumber(fila.total_mt, 2) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p v-else class="text-sm text-gray-500 dark:text-gray-400">No hay facturas en el mes de operaciones.</p>
         </div>
       </div>
 
-      <!-- ═══════════════════ SECCIÓN 3: FACTURACIÓN POR CLIENTE ═══════════════════ -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <i class="pi pi-building text-white text-sm" />
+      <!-- ═══════════════════ SECCIÓN 5: TABLERO DE FLOTA ═══════════════════ -->
+      <div v-show="activo === 'flota'">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
+                <i class="pi pi-truck text-white text-sm" />
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Tablero de Flota</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Vehículos por tipo de equipo</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500" /> Activo</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500" /> En taller (OT abierta)</span>
+            </div>
           </div>
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Facturación por Cliente</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Top 10 clientes del mes</p>
-          </div>
-        </div>
-
-        <div class="p-5">
-          <div v-if="facturacionPorCliente.length" class="space-y-3">
-            <div v-for="(fila, i) in facturacionPorCliente" :key="fila.cliente" class="flex items-center gap-3">
-              <span class="w-6 text-sm font-semibold text-gray-400 dark:text-gray-500 text-right shrink-0">{{ i + 1 }}</span>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{{ fila.cliente }}</span>
-                  <span class="text-sm font-mono font-semibold text-gray-900 dark:text-gray-100 shrink-0 ml-3">{{ formatNumber(fila.total_mt, 2) }} <span class="text-xs text-gray-400 font-normal">MN</span></span>
+          <div class="p-5">
+            <div v-if="flotaPorTipo.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+              <div v-for="tipo in flotaPorTipo" :key="tipo.nombre" class="rounded-xl border-2 overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
+                <div class="p-4 flex items-center gap-3 border-b border-gray-100 dark:border-gray-700"
+                     :class="tipo.tallerCount > 0 ? 'bg-gradient-to-r from-amber-50 to-white dark:from-amber-900/20 dark:to-gray-800' : 'bg-gradient-to-r from-emerald-50 to-white dark:from-emerald-900/20 dark:to-gray-800'">
+                  <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                       :class="tipo.tallerCount > 0 ? 'bg-amber-100 dark:bg-amber-900/40' : 'bg-emerald-100 dark:bg-emerald-900/40'">
+                    <i :class="tipo.esArrastre ? 'pi pi-box' : 'pi pi-truck'" class="text-lg"
+                       :style="{ color: tipo.tallerCount > 0 ? '#d97706' : '#059669' }" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-bold text-gray-900 dark:text-gray-100 truncate">{{ tipo.nombre }}</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      {{ tipo.activosCount }} activo{{ tipo.activosCount !== 1 ? 's' : '' }}
+                      <span v-if="tipo.tallerCount > 0" class="text-amber-600 dark:text-amber-400"> · {{ tipo.tallerCount }} en taller</span>
+                    </p>
+                  </div>
+                  <span class="text-2xl font-extrabold" :class="tipo.tallerCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'">
+                    {{ tipo.total }}
+                  </span>
                 </div>
-                <div class="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                  <div class="h-full rounded-full bg-emerald-500" :style="{ width: fila.porcentaje + '%' }"></div>
+                <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-[400px] overflow-y-auto">
+                  <template v-if="tipo.activos.length">
+                    <div v-for="v in tipo.activos" :key="v.id" class="px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/80 transition">
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{{ v.codigo }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ v.marca }}</p>
+                      </div>
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ml-2" />
+                    </div>
+                  </template>
+                  <template v-if="tipo.taller.length">
+                    <div v-for="v in tipo.taller" :key="v.id" class="px-4 py-2.5 flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{{ v.codigo }}</p>
+                        <p class="text-xs text-amber-600 dark:text-amber-400 truncate">
+                          <i class="pi pi-wrench mr-1" />OT {{ v.ot?.numero ?? '—' }} · {{ v.ot?.dias ?? '' }} días
+                        </p>
+                      </div>
+                      <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0 ml-2" />
+                    </div>
+                  </template>
+                  <div v-if="!tipo.activos.length && !tipo.taller.length" class="px-4 py-3 text-center text-xs text-gray-400 dark:text-gray-500">
+                    Sin vehículos
+                  </div>
                 </div>
-                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">{{ formatNumber(fila.cantidad) }} facturas · {{ fila.porcentaje }}% del total</p>
               </div>
             </div>
-          </div>
-          <p v-else class="text-sm text-gray-500 dark:text-gray-400">No hay facturas en el mes de operaciones.</p>
-        </div>
-      </div>
-
-      <!-- ═══════════════════ SECCIÓN 4: INGRESOS DIARIOS ═══════════════════ -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <i class="pi pi-chart-bar text-white text-sm" />
-          </div>
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Ingresos Diarios — Aforos</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Ingresos aforados por día del mes</p>
-          </div>
-        </div>
-
-        <div class="p-5">
-          <div class="flex items-end gap-1.5 h-32 overflow-x-auto pb-1">
-            <div v-for="dia in serie" :key="dia.fecha" class="flex flex-col items-center justify-end min-w-6 flex-1" :title="dia.etiqueta + ': ' + formatNumber(dia.ingreso_mt, 2) + ' MN'">
-              <div
-                class="w-full rounded-t bg-emerald-500 hover:bg-emerald-600 transition-colors"
-                :style="{ height: barraAltura(dia.ingreso_mt) }"
-              ></div>
-            </div>
-          </div>
-          <div class="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-1 overflow-x-auto">
-            <span>{{ serie[0]?.etiqueta }}</span>
-            <span>{{ serie[serie.length - 1]?.etiqueta }}</span>
+            <p v-else class="text-sm text-gray-400 dark:text-gray-500 py-6 text-center">Sin vehículos en la flota</p>
           </div>
         </div>
       </div>
@@ -225,7 +402,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
@@ -234,24 +411,35 @@ const props = defineProps({
   entidadNombre: { type: String, default: '' },
   entidad: { type: Object, default: null },
 
-  totales: {
-    type: Object,
-    default: () => ({
-      facturas_del_mes: 0,
-      ingresos_facturados: 0,
-      aforos_del_mes: 0,
-      ingresos_aforados: 0,
-      cp_del_mes: 0,
-      clientes_activos: 0,
-    }),
-  },
+  totales: { type: Object, default: () => ({}) },
+
+  // Sección 1
+  documentosPorCliente: { type: Array, default: () => [] },
+  hrPorChofer: { type: Array, default: () => [] },
+  // Sección 2
+  solicitudesPorCliente: { type: Array, default: () => [] },
+  // Sección 3 (paridad Contabilidad)
+  ingresosPorConcepto: { type: Array, default: () => [] },
   facturacionPorConcepto: { type: Array, default: () => [] },
   facturacionPorCliente: { type: Array, default: () => [] },
-  aforosPorEstado: { type: Array, default: () => [] },
-  solicitudesPorEstado: { type: Array, default: () => [] },
-  cpPorEstado: { type: Array, default: () => [] },
+  // Sección 4
+  traficoPorFecha: { type: Array, default: () => [] },
+  traficoTotal: { type: Object, default: () => ({}) },
+  // Sección 5
+  flotaPorTipo: { type: Array, default: () => [] },
+  // Serie
   serie: { type: Array, default: () => [] },
 });
+
+const activo = ref('documentos');
+
+const tabs = [
+  { key: 'documentos', label: 'Documentos del mes', icono: 'pi pi-file' },
+  { key: 'solicitudes', label: 'Solicitudes del mes', icono: 'pi pi-shopping-cart' },
+  { key: 'facturacion', label: 'Facturación', icono: 'pi pi-dollar' },
+  { key: 'trafico', label: 'Tráfico', icono: 'pi pi-chart-line' },
+  { key: 'flota', label: 'Tablero de Flota', icono: 'pi pi-truck' },
+];
 
 const mesLabel = computed(() => {
   if (!props.fechaOperaciones) return '';
@@ -259,21 +447,11 @@ const mesLabel = computed(() => {
   return d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 });
 
-const totalSolicitudes = computed(() =>
-  props.solicitudesPorEstado.reduce((acc, fila) => acc + (Number(fila.total) || 0), 0)
-);
-
 function formatNumber(valor, decimales = 0) {
   const num = Number(valor) || 0;
   return num.toLocaleString('es-CU', {
     minimumFractionDigits: decimales,
     maximumFractionDigits: decimales,
   });
-}
-
-function barraAltura(valor) {
-  const max = Math.max(...props.serie.map((d) => Number(d.ingreso_mt) || 0), 1);
-  const ratio = Math.min((Number(valor) || 0) / max, 1);
-  return (8 + ratio * 96) + 'px';
 }
 </script>

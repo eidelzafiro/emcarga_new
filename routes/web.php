@@ -57,6 +57,7 @@ use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
 use App\Http\Controllers\HojasRutaController;
 use App\Http\Controllers\IncidenciasController;
+use App\Http\Controllers\IndicadoresController;
 use App\Http\Controllers\LubricantesController;
 use App\Http\Controllers\TiposLubricantesController;
 use App\Http\Controllers\ControlLubricanteController;
@@ -354,6 +355,10 @@ Route::middleware('auth')->group(function () {
         Route::post('aforos/cotizar-tiempos', [AforosController::class, 'cotizarTiempos'])->name('aforos.cotizar-tiempos');
         Route::post('aforos/cotizar-dif-horas', [AforosController::class, 'cotizarDifHoras'])->name('aforos.cotizar-dif-horas');
         Route::post('aforos/cotizar-indicadores', [AforosController::class, 'cotizarIndicadores'])->name('aforos.cotizar-indicadores');
+
+        // Editor de indicadores de explotación por aforo
+        Route::get('indicadores', [IndicadoresController::class, 'index'])->name('indicadores.index');
+        Route::put('indicadores/{aforo}', [IndicadoresController::class, 'update'])->name('indicadores.update');
 
         Route::resource('prefacturas', PrefacturasController::class)
             ->only(['index', 'create', 'store', 'update', 'destroy']);

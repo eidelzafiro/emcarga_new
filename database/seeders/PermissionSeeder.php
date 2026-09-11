@@ -322,6 +322,7 @@ class PermissionSeeder extends Seeder
                 'pagos.ver', 'pagos.crear', 'pagos.editar', 'pagos.eliminar',
                 'reembolsos.ver', 'reembolsos.crear', 'reembolsos.editar', 'reembolsos.eliminar',
                 'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
+                'indicadores.ver', 'indicadores.editar',
             ],
             'OPERATIVOS' => [
                 'dashboard.ver',
@@ -329,6 +330,7 @@ class PermissionSeeder extends Seeder
                 'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
 
                 'estadisticas-explotacion.ver', 'estadisticas-explotacion.crear', 'estadisticas-explotacion.editar', 'estadisticas-explotacion.eliminar',
+                'indicadores.ver', 'indicadores.editar',
             ],
 
             'CONFIGURACIONES' => [

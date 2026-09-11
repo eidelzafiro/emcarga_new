@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Database\Grammars\MariaDbGrammarOverride;
 use App\Database\Processors\MariaDbProcessorOverride;
+use App\Policies\IndicadorePolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\Aforo;
 use App\Models\Arrastre;
 use App\Models\Tractivo;
 use Illuminate\Support\Facades\Artisan;
@@ -74,6 +76,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Gate::policy(Role::class, RolePolicy::class);
+
+        // El módulo "Indicadores" edita los aforos; su policy no sigue el
+        // convenio Modelo→Policy (no existe App\Models\Indicadore), por eso se
+        // registra explícitamente para el modelo Aforo.
+        Gate::policy(Aforo::class, IndicadorePolicy::class);
 
         // O-1 (optimización de suite): cuando se corre con `--parallel`, Laravel
         // crea una BD propia por worker (emcarga_new_test_<token>). Como la suite

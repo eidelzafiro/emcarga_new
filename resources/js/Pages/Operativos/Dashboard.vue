@@ -74,25 +74,8 @@
         </div>
       </div>
 
-      <!-- Pestañas (v-show: los paneles no se desmontan) -->
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border"
-          :class="tabActiva === tab.key
-            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60'"
-          @click="tabActiva = tab.key"
-        >
-          <i :class="tab.icono" />
-          {{ tab.label }}
-        </button>
-      </div>
-
       <!-- ═══════════════════ PANEL 1: DOCUMENTOS DEL DÍA ═══════════════════ -->
-      <div v-show="tabActiva === 'documentos'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
             <i class="pi pi-file text-white text-sm" />
@@ -163,7 +146,7 @@
       </div>
 
       <!-- ═══════════════════ PANEL 2: SOLICITUDES ═══════════════════ -->
-      <div v-show="tabActiva === 'solicitudes'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center">
             <i class="pi pi-clipboard text-white text-sm" />
@@ -209,7 +192,7 @@
       </div>
 
       <!-- ═══════════════════ PANEL 3: TABLERO DE FLOTA ═══════════════════ -->
-      <div v-show="tabActiva === 'flota'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center">
@@ -281,7 +264,7 @@
       </div>
 
       <!-- ═══════════════════ PANEL 4: ACTIVIDAD DIARIA ═══════════════════ -->
-      <div v-show="tabActiva === 'actividad'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
             <i class="pi pi-chart-bar text-white text-sm" />
@@ -351,15 +334,6 @@ const props = defineProps({
   },
   flotaPorTipo: { type: Array, default: () => [] },
 });
-
-const tabActiva = ref('documentos');
-
-const tabs = [
-  { key: 'documentos', label: 'Documentos del día', icono: 'pi pi-file' },
-  { key: 'solicitudes', label: 'Solicitudes', icono: 'pi pi-clipboard' },
-  { key: 'flota', label: 'Tablero de Flota', icono: 'pi pi-car' },
-  { key: 'actividad', label: 'Actividad diaria', icono: 'pi pi-chart-bar' },
-];
 
 const mesLabel = computed(() => {
   if (!props.fechaOperaciones) return '';

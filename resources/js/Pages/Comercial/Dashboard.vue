@@ -72,25 +72,8 @@
         </div>
       </div>
 
-      <!-- Pestañas (secciones intercambiables; los paneles se conservan con v-show) -->
-      <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-px">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors"
-          :class="activo === tab.key
-            ? 'border-cyan-500 text-cyan-700 dark:text-cyan-300 bg-white dark:bg-gray-800'
-            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
-          @click="activo = tab.key"
-        >
-          <i :class="tab.icono" />
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <!-- ═══════════════════ SECCIÓN 1: DOCUMENTOS DEL MES ═══════════════════ -->
-      <div v-show="activo === 'documentos'" class="space-y-6">
+      <!-- ═══════════════════ DOCUMENTOS DEL MES ═══════════════════ -->
+      <div class="space-y-6">
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
@@ -167,7 +150,7 @@
       </div>
 
       <!-- ═══════════════════ SECCIÓN 2: SOLICITUDES DEL MES ═══════════════════ -->
-      <div v-show="activo === 'solicitudes'">
+      <div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
@@ -207,7 +190,7 @@
       </div>
 
       <!-- ═══════════════════ SECCIÓN 3: FACTURACIÓN ═══════════════════ -->
-      <div v-show="activo === 'facturacion'">
+      <div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
@@ -275,7 +258,7 @@
       </div>
 
       <!-- ═══════════════════ SECCIÓN 4: TRÁFICO ═══════════════════ -->
-      <div v-show="activo === 'trafico'">
+      <div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center">
@@ -328,7 +311,7 @@
       </div>
 
       <!-- ═══════════════════ SECCIÓN 5: TABLERO DE FLOTA ═══════════════════ -->
-      <div v-show="activo === 'flota'">
+      <div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -430,16 +413,6 @@ const props = defineProps({
   // Serie
   serie: { type: Array, default: () => [] },
 });
-
-const activo = ref('documentos');
-
-const tabs = [
-  { key: 'documentos', label: 'Documentos del mes', icono: 'pi pi-file' },
-  { key: 'solicitudes', label: 'Solicitudes del mes', icono: 'pi pi-shopping-cart' },
-  { key: 'facturacion', label: 'Facturación', icono: 'pi pi-dollar' },
-  { key: 'trafico', label: 'Tráfico', icono: 'pi pi-chart-line' },
-  { key: 'flota', label: 'Tablero de Flota', icono: 'pi pi-truck' },
-];
 
 const mesLabel = computed(() => {
   if (!props.fechaOperaciones) return '';

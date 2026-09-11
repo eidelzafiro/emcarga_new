@@ -87,6 +87,7 @@ class MenuSeeder extends Seeder
             ['parent' => 'Catálogos', 'label' => 'Áreas', 'route' => 'areas.index', 'permission' => 'areas.ver', 'orden' => 19],
             ['parent' => 'Catálogos', 'label' => 'Meses', 'route' => 'meses.index', 'permission' => 'meses.ver', 'orden' => 20],
             ['parent' => 'Catálogos', 'label' => 'Categorías Productos', 'route' => 'categorias-productos.index', 'permission' => 'categorias-productos.ver', 'orden' => 21],
+            ['parent' => 'Catálogos', 'label' => 'Productos', 'route' => 'productos.index', 'permission' => 'productos.ver', 'orden' => 22],
             ['parent' => 'Catálogos', 'label' => 'Provincias', 'route' => 'provincias.index', 'permission' => 'provincias.ver', 'orden' => 22],
             ['parent' => 'Catálogos', 'label' => 'Municipios', 'route' => 'municipios.index', 'permission' => 'municipios.ver', 'orden' => 23],
             // Catálogos — unificados Técnica

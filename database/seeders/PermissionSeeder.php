@@ -162,6 +162,7 @@ class PermissionSeeder extends Seeder
             // Comercial - Tablas faltantes
             'contenedores.ver', 'contenedores.crear', 'contenedores.editar', 'contenedores.eliminar',
             'categorias-productos.ver', 'categorias-productos.crear', 'categorias-productos.editar', 'categorias-productos.eliminar',
+            'productos.ver', 'productos.crear', 'productos.editar', 'productos.eliminar',
 
             // Misc
             'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
@@ -262,6 +263,7 @@ class PermissionSeeder extends Seeder
 
                 'contenedores.ver', 'contenedores.crear', 'contenedores.editar', 'contenedores.eliminar',
                 'categorias-productos.ver', 'categorias-productos.crear', 'categorias-productos.editar', 'categorias-productos.eliminar',
+                'productos.ver', 'productos.crear', 'productos.editar', 'productos.eliminar',
 
                 'devoluciones.ver', 'devoluciones.crear', 'devoluciones.editar', 'devoluciones.eliminar',
 

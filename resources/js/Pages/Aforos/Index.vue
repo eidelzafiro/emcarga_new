@@ -19,7 +19,7 @@ const search = ref(props.filters?.search || '')
 const cliente = ref(props.filters?.cliente || '')
 const chofer = ref(props.filters?.chofer || '')
 const equipo = ref(props.filters?.equipo || '')
-const vista = ref('tarjetas')
+const vista = ref('tabla')
 
 const monet = (v) => '$' + Number(v || 0).toLocaleString()
 
@@ -60,8 +60,9 @@ function abrirAforo(a) {
     }
 }
 
-function imprimir(a) {
-    window.open(route('aforos.imprimir', { aforo: a.id }), '_blank')
+// Impresión sobre formato impreso (pre-impreso) configurado por entidad.
+function imprimirImpreso(a) {
+    window.open(route('aforo.impreso', { aforo: a.id }), '_blank')
 }
 
 function navegar() {
@@ -126,7 +127,7 @@ watch([search, cliente, chofer, equipo], navegar)
                             <div class="flex gap-1">
                                 <Button v-if="data.id_factura" icon="pi pi-eye" rounded text severity="info" size="small" @click="router.get(route('aforos.show', data.id))" />
                                 <Button v-else icon="pi pi-pencil" rounded text severity="warn" size="small" @click="router.get(route('aforos.edit', data.id))" />
-                                <Button icon="pi pi-print" rounded text severity="success" size="small" @click="imprimir(data)" />
+                                <Button icon="pi pi-print" rounded text severity="success" size="small" title="Imprimir (formato impreso)" @click="imprimirImpreso(data)" />
                             </div>
                         </template>
                     </Column>
@@ -208,7 +209,7 @@ watch([search, cliente, chofer, equipo], navegar)
                             </div>
                             <Button v-if="a.id_factura" icon="pi pi-eye" rounded text severity="info" size="small" @click.stop="router.get(route('aforos.show', a.id))" v-tooltip.top="'Ver'" />
                             <Button v-else icon="pi pi-pencil" rounded text severity="warn" size="small" @click.stop="router.get(route('aforos.edit', a.id))" v-tooltip.top="'Editar'" />
-                            <Button icon="pi pi-print" rounded text severity="success" size="small" @click.stop="imprimir(a)" v-tooltip.top="'Imprimir'" />
+                            <Button icon="pi pi-print" rounded text severity="success" size="small" @click.stop="imprimirImpreso(a)" v-tooltip.top="'Imprimir (formato impreso)'" />
                         </div>
                     </article>
                 </div>

@@ -17,13 +17,18 @@
         th { background: #e8e8e8; font-weight: bold; }
         td.num, th.num { text-align: right; }
         tfoot td { font-weight: bold; border-top: 2px solid #333; background: #f3f3f3; }
+        .firmas { width: 100%; margin-top: 45px; border-collapse: collapse; }
+        .firmas td { border: none; vertical-align: top; padding: 0 15px; }
+        .firmas .firma-titulo { font-weight: bold; font-size: 11px; margin-bottom: 14px; }
+        .firmas .firma-linea { border-bottom: 1px solid #333; width: 180px; height: 22px; margin-top: 6px; }
+        .firmas .firma-label { font-size: 9px; }
     </style>
 </head>
 <body>
     <div class="header">
         <img src="{{ public_path('images/emcarga.png') }}" class="logo" alt="EMCARGA">
         <div class="header-text">
-            <h1>EMPRESA CAMIONES EMCARGA</h1>
+            <h1>{{ $encabezado ?? 'EMPRESA CAMIONES EMCARGA' }}</h1>
             <p>{{ $titulo }}</p>
         </div>
     </div>
@@ -60,5 +65,23 @@
             </tfoot>
         @endif
     </table>
+
+    @if(!empty($firmas))
+        <table class="firmas">
+            <tr>
+                @foreach($firmas as $bloque)
+                    <td>
+                        <div class="firma-titulo">{{ $bloque }}</div>
+                        <div class="firma-label">NOMBRE</div>
+                        <div class="firma-linea"></div>
+                        <div class="firma-label">CARGO</div>
+                        <div class="firma-linea"></div>
+                        <div class="firma-label">FIRMA</div>
+                        <div class="firma-linea"></div>
+                    </td>
+                @endforeach
+            </tr>
+        </table>
+    @endif
 </body>
 </html>

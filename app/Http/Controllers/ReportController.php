@@ -8,6 +8,7 @@ use App\Services\Reports\CartaPorteReportService;
 use App\Services\Reports\ControlLubricanteReportService;
 use App\Services\Reports\FacturaReportService;
 use App\Services\Reports\HojaRutaReportService;
+use App\Services\Reports\ImpresionCoordenadasService;
 use App\Services\Reports\IngresosReportService;
 use App\Services\Reports\NominaReportService;
 use App\Services\Reports\OrdenTallerReportService;
@@ -223,6 +224,35 @@ class ReportController extends Controller
         abort_unless(auth()->user()->can('facturas.ver'), 403);
 
         return app(AforoReportService::class)->pdfAforo($id);
+    }
+
+    // === Impresión sobre formato impreso (pre-impreso), coordenadas configurables ===
+
+    public function pdfCpEmision(int $id)
+    {
+        abort_unless(auth()->user()->can('carta-porte.ver'), 403);
+
+        $carta = \App\Models\CartaPorte::findOrFail($id);
+
+        return app(ImpresionCoordenadasService::class)->pdfCpEmision($carta);
+    }
+
+    public function pdfCpAforo(int $id)
+    {
+        abort_unless(auth()->user()->can('facturas.ver'), 403);
+
+        $aforo = \App\Models\Aforo::findOrFail($id);
+
+        return app(ImpresionCoordenadasService::class)->pdfCpAforo($aforo);
+    }
+
+    public function pdfHrEmision(int $id)
+    {
+        abort_unless(auth()->user()->can('hojas-ruta.ver'), 403);
+
+        $hoja = \App\Models\HojasRuta::findOrFail($id);
+
+        return app(ImpresionCoordenadasService::class)->pdfHrEmision($hoja);
     }
 
     // === Módulo Técnico (requiere reportes-tecnico.ver) ===

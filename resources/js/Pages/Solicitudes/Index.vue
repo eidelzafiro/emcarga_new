@@ -32,7 +32,7 @@ const toast = useToast()
 const confirmDialog = useConfirm()
 const search = ref(props.filters?.search || '')
 const estado = ref(props.filters?.estado || 'activas')
-const vista = ref('tarjetas')
+const vista = ref('tabla')
 const showForm = ref(false)
 const editing = ref(null)
 const form = ref({})
@@ -311,6 +311,17 @@ const estadoBadge = (s) => ({
           </Column>
           <Column field="fecha_planificada" header="Plan" sortable>
             <template #body="{ data }">{{ soloFecha(data.fecha_planificada) || soloFecha(data.fecha_solicitud) }}</template>
+          </Column>
+          <Column header="Acciones" style="width:150px">
+            <template #body="{ data }">
+              <div class="flex gap-1">
+                <Button icon="pi pi-copy" rounded text severity="secondary" size="small" title="Duplicar solicitud" @click="duplicar(data)" />
+                <Button icon="pi pi-truck" rounded text severity="info" size="small" title="Registrar carta de porte" :disabled="cumplimiento(data) === 'ejecutada'" @click="abrirCarta(data)" />
+                <Button v-if="puedeCancelar(data)" icon="pi pi-ban" rounded text severity="warning" size="small" title="Cancelar solicitud" @click="openCancelar(data)" />
+                <Button icon="pi pi-pencil" rounded text severity="info" size="small" title="Editar" @click="openEdit(data)" />
+                <Button icon="pi pi-trash" rounded text severity="danger" size="small" title="Eliminar" @click="eliminar(data)" />
+              </div>
+            </template>
           </Column>
         </DataTable>
       </div>

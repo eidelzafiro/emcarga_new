@@ -34,7 +34,7 @@ class HojasRutaController extends Controller
         $inicioMes = Carbon::parse($fechaOperaciones)->startOfMonth()->toDateString();
         $finMes = Carbon::parse($fechaOperaciones)->endOfMonth()->toDateString();
 
-        $hojas = HojasRuta::with(['tractivo:id,codigo,id_entidad,id_grupo,indice_consumo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos,ci', 'chofer2:id,nombre,apellidos,ci', 'entidad:id,nombre', 'parqueo:id,nombre', 'grupo:id,nombre', 'cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')->select('id', 'id_hoja_ruta', 'numero', 'estado', 'imprimir')])
+        $hojas = HojasRuta::with(['tractivo:id,codigo,id_entidad,id_grupo,indice_consumo', 'arrastre:id,codigo', 'chofer:id,nombre,apellidos,ci', 'chofer2:id,nombre,apellidos,ci', 'entidad:id,nombre', 'parqueo:id,nombre', 'grupo:id,nombre', 'cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')->select('id', 'id_hoja_ruta', 'numero', 'estado', 'imprimir'), 'cartasPorte.aforos:id,id_carta_porte,km_total_total'])
             ->withCount(['cartasPorte' => fn ($q) => $q->where('estado', '!=', 'cancelada')])
             // Entidad activa por el tractivo de la hoja de ruta
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereHas('tractivo', fn ($t) => $t->whereIn('id_entidad', $this->entidadesPermitidas())))

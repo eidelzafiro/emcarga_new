@@ -24,8 +24,10 @@ function activar(key) {
   cargados.value[key] = true
 }
 
+// URL relativa (mismo origen): evita que el iframe se bloquee si la app se
+// sirve con un host distinto al APP_URL (CSP frame-ancestors / X-Frame-Options).
 function urlEmbed(tab) {
-  return route(tab.ruta) + '?embed=1'
+  return route(tab.ruta, {}, false) + '?embed=1'
 }
 </script>
 
@@ -47,7 +49,14 @@ function urlEmbed(tab) {
       </button>
     </div>
 
-    <div v-for="tab in tabs" :key="tab.key" v-show="activo === tab.key">
+    <!-- Se conservan todos los iframes ya abiertos; solo se oculta el que no
+         está activo con un binding de estilo (v-show no actualiza el display
+         de forma fiable con v-for + v-if y la optimización de bloques de Vue). -->
+    <div
+      v-for="tab in tabs"
+      :key="tab.key"
+      :style="{ display: activo === tab.key ? 'block' : 'none' }"
+    >
       <iframe
         v-if="cargados[tab.key]"
         :src="urlEmbed(tab)"

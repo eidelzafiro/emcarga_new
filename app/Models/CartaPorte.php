@@ -93,7 +93,7 @@ class CartaPorte extends Model
 
     public function arrastre(): HasOneThrough
     {
-        return $this->hasOneThrough(Tractivo::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_arrastre');
+        return $this->hasOneThrough(Arrastre::class, HojasRuta::class, 'id', 'id', 'id_hoja_ruta', 'id_arrastre');
     }
 
     /**

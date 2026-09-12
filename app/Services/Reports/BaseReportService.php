@@ -88,6 +88,8 @@ abstract class BaseReportService
             'columnas'=> $columnas,
             'filas'   => $filas,
             'totales' => $opts['totales'] ?? null,
+            'firmas'  => $opts['firmas'] ?? [],
+            'encabezado' => $opts['encabezado'] ?? null,
         ]);
     }
 

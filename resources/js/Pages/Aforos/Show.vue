@@ -17,6 +17,11 @@ const estado = computed(() => {
 })
 
 const cp = computed(() => props.aforo.carta_porte || {})
+
+// Impresión sobre formato impreso (pre-impreso) configurado por entidad.
+function imprimirAforo() {
+    window.open(route('aforo.impreso', { aforo: props.aforo.id }), '_blank')
+}
 </script>
 
 <template>
@@ -127,6 +132,7 @@ const cp = computed(() => props.aforo.carta_porte || {})
 
             <div class="flex gap-2">
                 <Button label="Volver" icon="pi pi-arrow-left" severity="secondary" @click="router.get(route('aforos.index'))" />
+                <Button label="Imprimir aforo" icon="pi pi-file-edit" severity="help" @click="imprimirAforo" />
             </div>
         </div>
     </AppLayout>

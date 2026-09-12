@@ -2,340 +2,146 @@
 
 namespace App\Services\Reports;
 
-use App\Models\CartaPorte;
-use App\Models\Cliente;
 use App\Models\Entidad;
-use App\Models\HojasRuta;
-use App\Models\Tractivo;
+use App\Services\Reports\Fpdf\DocumentosFpdfReport;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Fase 6 / R-1: reportes del grupo DOCUMENTOS del legacy (controles de Cartas de
- * Porte y Hojas de Ruta: estado, parte diario, consecutivo, canceladas, registros
- * oficiales). Todos son listados tabulares sobre las mismas fuentes, filtrados por
- * mes/fecha y acotados a la entidad activa (matriz ve sus filiales).
+ * Reportes del grupo DOCUMENTOS del legacy (`Reportes2.php`): cartas de porte y
+ * hojas de ruta. Delega en `DocumentosFpdfReport`, que reproduce el layout
+ * exacto del legacy (FPDF, coordenadas, anchos, firmas y pie de página).
+ *
+ * Variables legacy:
+ *   - `mes`         → mes de emisión (YYYY-MM)
+ *   - `fecha`       → fecha única (parte diario)
+ *   - `consecutivo` → rango de folios [desde, hasta]
  */
 class DocumentosReportService extends BaseReportService
 {
-    /** ids de reporte legacy servidos por esta clase (ver ReportesDispatcher). */
-    public const CARTAS = [
-        3, 4, 5, 6, 7, 157,
-    ];
-
-    public const HOJAS = [
-        8, 9, 10, 11, 12, 158, 1014,
-    ];
-
-    // === Cartas de Porte ===
+    // =====================================================================
+    // CARTAS DE PORTE
+    // =====================================================================
 
     public function cartaPorteCanceladas(array $filtros): Response
     {
-        return $this->listadoCartas(
-            'Cartas de Porte Canceladas',
-            $filtros,
-            fn ($q) => $q->where('cancelada', true),
-            $this->columnasCarta(true),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('P', 'Letter')->pdfCpCancelada($this->mesDeFiltro($filtros));
     }
 
     public function cartaPorteConsecutivo(array $filtros): Response
     {
-        return $this->listadoCartas(
-            'Cartas de Porte por Consecutivo',
-            $filtros,
-            null,
-            $this->columnasCarta(false),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        [$inicio, $fin] = $this->rangoConsecutivo($filtros);
+
+        return $this->report('L', 'Legal')->pdfCpConsecutivo($inicio, $fin);
     }
 
     public function cartaPorteControlEstado(array $filtros): Response
     {
-        return $this->listadoCartas(
-            'Cartas de Porte - Control de Estado',
-            $filtros,
-            null,
-            $this->columnasCarta(true),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('L', 'Letter')->pdfCpEstado($this->mesDeFiltro($filtros));
     }
 
     public function cartaPorteParteDiarioEmision(array $filtros): Response
     {
-        return $this->listadoCartas(
-            'Cartas de Porte - Parte Diario de Emisión',
-            $filtros,
-            null,
-            $this->columnasCartaFecha('fecha_emision'),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('L', 'Letter')->pdfCpPdEmision($this->fechaDeFiltro($filtros));
     }
 
     public function cartaPorteParteDiarioRecepcion(array $filtros): Response
     {
-        return $this->listadoCartas(
-            'Cartas de Porte - Parte Diario de Recepción',
-            $filtros,
-            null,
-            $this->columnasCartaFecha('fecha_recepcion'),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('P', 'Letter')->pdfCpRecepcion($this->fechaDeFiltro($filtros));
     }
 
     public function cartaPorteRegistroRes2132019(array $filtros): Response
     {
-        return $this->listadoCartas(
-            'Cartas de Porte (Registro Res. 213-2019)',
-            $filtros,
-            null,
-            $this->columnasCarta(true),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('L', 'Legal')->pdfCpFolios($this->mesDeFiltro($filtros));
     }
 
-    // === Hojas de Ruta ===
+    // =====================================================================
+    // HOJAS DE RUTA
+    // =====================================================================
 
     public function hojaRutaCanceladas(array $filtros): Response
     {
-        return $this->listadoHojas(
-            'Hojas de Ruta Canceladas',
-            $filtros,
-            fn ($q) => $q->where('cancelada', true),
-            $this->columnasHoja(true),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('P', 'Letter')->pdfHrCancelada($this->mesDeFiltro($filtros));
     }
 
     public function hojaRutaConsecutivo(array $filtros): Response
     {
-        return $this->listadoHojas(
-            'Hojas de Ruta por Consecutivo',
-            $filtros,
-            null,
-            $this->columnasHoja(false),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        [$inicio, $fin] = $this->rangoConsecutivo($filtros);
+
+        return $this->report('L', 'Letter')->pdfHrConsecutivo($inicio, $fin);
     }
 
     public function hojaRutaControlEstado(array $filtros): Response
     {
-        return $this->listadoHojas(
-            'Hojas de Ruta - Control de Estado',
-            $filtros,
-            null,
-            $this->columnasHoja(true),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('L', 'Letter')->pdfHrEstado($this->mesDeFiltro($filtros));
     }
 
     public function hojaRutaParteDiarioCierre(array $filtros): Response
     {
-        return $this->listadoHojas(
-            'Hojas de Ruta - Parte Diario de Cierre',
-            $filtros,
-            null,
-            $this->columnasHojaFecha('fecha_cierre'),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('L', 'Letter')->pdfHrPdCierre($this->fechaDeFiltro($filtros));
     }
 
     public function hojaRutaParteDiarioEmision(array $filtros): Response
     {
-        return $this->listadoHojas(
-            'Hojas de Ruta - Parte Diario de Emisión',
-            $filtros,
-            null,
-            $this->columnasHojaFecha('fecha_emision'),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('P', 'Letter')->pdfHrPdEmision($this->fechaDeFiltro($filtros));
     }
 
     public function hojaRutaRegistroRes184(array $filtros): Response
     {
-        return $this->listadoHojas(
-            'Hojas de Ruta (Registro Res. 184)',
-            $filtros,
-            null,
-            $this->columnasHoja(true),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
-        );
+        return $this->report('L', 'Letter')->pdfHrFolios($this->mesDeFiltro($filtros));
     }
 
     public function hojaRutaAnalisisDocumentacion(array $filtros): Response
     {
-        return $this->listadoHojas(
-            'Hojas de Ruta - Análisis de Documentación',
-            $filtros,
-            null,
-            $this->columnasHoja(true),
-            ['landscape' => true, 'periodo' => $this->periodoTexto($filtros)],
+        return $this->report('P', 'Letter')->pdfHrAnalisis($this->mesDeFiltro($filtros));
+    }
+
+    // =====================================================================
+    // Utilidades
+    // =====================================================================
+
+    private function report(string $orientation, string $paper): DocumentosFpdfReport
+    {
+        $entidadId = (int) entidadActivaId();
+        $entidad = $entidadId ? Entidad::find($entidadId) : null;
+        $ids = $entidadId ? Entidad::idsPermitidos($entidadId) : [23];
+
+        return new DocumentosFpdfReport(
+            $orientation,
+            $paper,
+            $entidad,
+            Entidad::query()->count() > 1,
+            (string) (session('fecha_operaciones') ?? now()->toDateString()),
+            $ids,
         );
     }
 
-    // === Núcleo reutilizable ===
-
-    private function listadoCartas(string $titulo, array $filtros, ?callable $extra, array $columnas, array $opts): Response
+    private function mesDeFiltro(array $filtros): string
     {
-        [$desde, $hasta] = $this->rangoFiltros($filtros);
-        $ids = $this->entidadIds();
-
-        $query = CartaPorte::with([
-            'tractivo' => fn ($q) => $q->select('id', 'placa', 'codigo', 'id_entidad'),
-            'cliente'  => fn ($q) => $q->select('id', 'nombre'),
-        ])->whereHas('tractivo', fn ($q) => $q->whereIn('tractivos.id_entidad', $ids));
-
-        if ($desde && $hasta) {
-            $query->whereBetween('fecha_emision', [$desde, $hasta]);
-        }
-        if ($extra) {
-            $extra($query);
-        }
-
-        $filas = $query->orderBy('fecha_emision')->orderBy('numero')
-            ->get()->map(fn ($c) => $this->filaCarta($c, $columnas))->all();
-
-        return $this->reporteTablaPdf($titulo, $columnas, $filas, $opts);
+        return (string) ($filtros['mes'] ?? '');
     }
 
-    private function listadoHojas(string $titulo, array $filtros, ?callable $extra, array $columnas, array $opts): Response
+    private function fechaDeFiltro(array $filtros): string
     {
-        [$desde, $hasta] = $this->rangoFiltros($filtros);
-        $ids = $this->entidadIds();
-
-        $query = HojasRuta::with([
-            'tractivo' => fn ($q) => $q->select('id', 'placa', 'codigo', 'id_entidad'),
-            'cliente'  => fn ($q) => $q->select('id', 'nombre'),
-        ])->whereHas('tractivo', fn ($q) => $q->whereIn('tractivos.id_entidad', $ids));
-
-        if ($desde && $hasta) {
-            $query->whereBetween('fecha_emision', [$desde, $hasta]);
-        }
-        if ($extra) {
-            $extra($query);
+        $fecha = $filtros['fecha'] ?? $filtros['desde'] ?? null;
+        if (! $fecha) {
+            return (string) (session('fecha_operaciones') ?? now()->toDateString());
         }
 
-        $filas = $query->orderBy('fecha_emision')->orderBy('id')
-            ->get()->map(fn ($h) => $this->filaHoja($h, $columnas))->all();
-
-        return $this->reporteTablaPdf($titulo, $columnas, $filas, $opts);
+        try {
+            return \Carbon\Carbon::parse($fecha)->toDateString();
+        } catch (\Exception) {
+            return (string) (session('fecha_operaciones') ?? now()->toDateString());
+        }
     }
 
-    private function entidadIds(): array
+    private function rangoConsecutivo(array $filtros): array
     {
-        $activa = (int) entidadActivaId();
-        if (! $activa) {
-            return [23];
+        $inicio = (int) ($filtros['consecutivo_desde'] ?? $filtros['consecutivo'] ?? 0);
+        $fin = (int) ($filtros['consecutivo_hasta'] ?? $inicio);
+        if ($fin < $inicio) {
+            $fin = $inicio;
         }
 
-        return Entidad::idsPermitidos($activa);
-    }
-
-    private function periodoTexto(array $filtros): string
-    {
-        if (! empty($filtros['mes'])) {
-            try {
-                $m = \Carbon\Carbon::parse($filtros['mes']);
-
-                return 'Período: '.$this->nombreMes($m->month).' '.$m->year;
-            } catch (\Exception) {}
-        }
-        [$d, $h] = $this->rangoFiltros($filtros);
-
-        return $d && $h ? "Período: $d al $h" : '';
-    }
-
-    // === Columnas y filas ===
-
-    private function columnasCarta(bool $conEstado): array
-    {
-        $cols = [
-            ['key' => 'numero', 'label' => 'No.', 'num' => false],
-            ['key' => 'fecha_emision', 'label' => 'Emisión', 'num' => false],
-            ['key' => 'cliente', 'label' => 'Cliente', 'num' => false],
-            ['key' => 'tractivo', 'label' => 'Tractivo', 'num' => false],
-            ['key' => 'toneladas', 'label' => 'Ton', 'num' => true],
-            ['key' => 'distancia', 'label' => 'Kms', 'num' => true],
-        ];
-        if ($conEstado) {
-            $cols[] = ['key' => 'estado', 'label' => 'Estado', 'num' => false];
-            $cols[] = ['key' => 'cancelada', 'label' => 'Cancelada', 'num' => false];
-        }
-
-        return $cols;
-    }
-
-    private function columnasCartaFecha(string $campo): array
-    {
-        return array_merge(
-            [['key' => $campo, 'label' => 'Fecha', 'num' => false]],
-            $this->columnasCarta(false),
-        );
-    }
-
-    private function columnasHoja(bool $conEstado): array
-    {
-        $cols = [
-            ['key' => 'id', 'label' => 'No.', 'num' => false],
-            ['key' => 'fecha_emision', 'label' => 'Emisión', 'num' => false],
-            ['key' => 'cliente', 'label' => 'Cliente', 'num' => false],
-            ['key' => 'tractivo', 'label' => 'Tractivo', 'num' => false],
-        ];
-        if ($conEstado) {
-            $cols[] = ['key' => 'estado', 'label' => 'Estado', 'num' => false];
-            $cols[] = ['key' => 'cancelada', 'label' => 'Cancelada', 'num' => false];
-        }
-
-        return $cols;
-    }
-
-    private function columnasHojaFecha(string $campo): array
-    {
-        return array_merge(
-            [['key' => $campo, 'label' => 'Fecha', 'num' => false]],
-            $this->columnasHoja(false),
-        );
-    }
-
-    private function filaCarta(CartaPorte $c, array $columnas): array
-    {
-        $fila = [];
-        foreach ($columnas as $col) {
-            $k = $col['key'];
-            $fila[$k] = match ($k) {
-                'numero' => $c->numero,
-                'fecha_emision' => $this->cambiarFormatoFecha($c->fecha_emision),
-                'cliente' => $c->cliente?->nombre ?? '',
-                'tractivo' => ($c->tractivo?->placa ?? '').' '.($c->tractivo?->descripcion ?? ''),
-                'toneladas' => $this->formatoNumero($c->toneladas, 2),
-                'distancia' => $this->formatoNumero($c->distancia, 0),
-                'estado' => $c->estado ?? '',
-                'cancelada' => $c->cancelada ? 'SÍ' : '',
-                'fecha_recepcion' => $this->cambiarFormatoFecha($c->fecha_recepcion),
-                default => '',
-            };
-        }
-
-        return $fila;
-    }
-
-    private function filaHoja(HojasRuta $h, array $columnas): array
-    {
-        $fila = [];
-        foreach ($columnas as $col) {
-            $k = $col['key'];
-            $fila[$k] = match ($k) {
-                'id' => $h->id,
-                'fecha_emision' => $this->cambiarFormatoFecha($h->fecha_emision),
-                'cliente' => $h->cliente?->nombre ?? '',
-                'tractivo' => ($h->tractivo?->placa ?? '').' '.($h->tractivo?->descripcion ?? ''),
-                'estado' => $h->estado ?? '',
-                'cancelada' => $h->cancelada ? 'SÍ' : '',
-                'fecha_cierre' => $this->cambiarFormatoFecha($h->fecha_cierre),
-                default => '',
-            };
-        }
-
-        return $fila;
+        return [$inicio, $fin];
     }
 }

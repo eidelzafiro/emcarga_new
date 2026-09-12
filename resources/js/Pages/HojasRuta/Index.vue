@@ -20,7 +20,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { formatDate } from '@/Utils/date'
 
 const props = defineProps({ hojas: Object, catalogos: Object, filters: Object, filtros: Object, fechaOperaciones: String })
-const vista = ref('tarjetas')
+const vista = ref('tabla')
 const toast = useToast()
 const confirmDialog = useConfirm()
 const title = 'Hoja de Ruta'
@@ -322,8 +322,9 @@ function eliminar(row) {
   })
 }
 
-function imprimir(row) {
-  window.open(route('hojas-ruta.imprimir', { hoja: row.id }), '_blank')
+// Impresión sobre formato impreso (pre-impreso) configurado por entidad.
+function imprimirEmision(row) {
+  window.open(route('hoja-ruta.emision', { hoja: row.id }), '_blank')
 }
 
 function choferNombre(c) { return c ? `${c.nombre} ${c.apellidos || ''}`.trim() : '—' }
@@ -353,6 +354,25 @@ function estadoHR(d) {
   return { label: 'Cerrada', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' }
 }
 const diffComb = (h) => ((Number(h.combustible_consumido) || 0) - (Number(h.combustible_habilitado) || 0))
+
+// Cuadre de kms: la HR está cuadrada si su kms_total coincide con la suma de los
+// kms de los aforos de sus cartas de porte no canceladas (legacy `mostrar_suma_hojaruta`).
+function sumaAforosKm(h) {
+  let s = 0
+  for (const cp of h.cartas_porte || []) {
+    for (const a of cp.aforos || []) s += Number(a.km_total_total) || 0
+  }
+  return s
+}
+function cuadreKms(h) {
+  if (h.kms_totales === null || h.kms_totales === undefined || h.kms_totales === '') return null
+  const diff = Math.round((Number(h.kms_totales) - sumaAforosKm(h)) * 100) / 100
+  return { ok: diff === 0, diff }
+}
+function fmtFechaHora(f, h) {
+  if (!f) return '—'
+  return `${formatDate(f)}${h ? ` · ${soloHora(h)}` : ''}`
+}
 
 function tieneValor(v) {
   return v !== null && v !== undefined && v !== ''
@@ -451,25 +471,64 @@ onMounted(() => {
       <!-- VISTA TABLA -->
       <div v-if="vista === 'tabla'">
         <DataTable :value="hojas.data || []" stripedRows size="small" responsiveLayout="scroll"
-          :globalFilterFields="['numero', 'chofer.nombre', 'tractivo.codigo']">
+          :globalFilterFields="['numero', 'chofer.nombre', 'tractivo.codigo', 'arrastre.codigo']">
           <template #empty>No hay hojas de ruta para los filtros seleccionados.</template>
           <Column field="numero" header="Folio" sortable style="font-weight:700" />
-          <Column field="fecha_emision" header="Fecha" sortable>
-            <template #body="{ data }">{{ formatDate(data.fecha_emision) }}</template>
-          </Column>
-          <Column header="Tractivo" sortable sortField="tractivo.codigo">
-            <template #body="{ data }">{{ tractivoCodigo(data.tractivo) }}</template>
-          </Column>
           <Column header="Chofer" sortable sortField="chofer.nombre">
             <template #body="{ data }">{{ choferNombre(data.chofer) }}</template>
           </Column>
-          <Column header="Estado">
+          <Column header="Equipo" sortable sortField="tractivo.codigo">
+            <template #body="{ data }">{{ tractivoCodigo(data.tractivo) }}</template>
+          </Column>
+          <Column header="Arrastre" sortable sortField="arrastre.codigo">
+            <template #body="{ data }">{{ data.arrastre?.codigo || '—' }}</template>
+          </Column>
+          <Column header="F. Hora emisión" sortable sortField="fecha_emision">
+            <template #body="{ data }">{{ fmtFechaHora(data.fecha_emision, data.hora_emision) }}</template>
+          </Column>
+          <Column header="F. Hora cierre" sortable sortField="fecha_cierre">
+            <template #body="{ data }">{{ data.fecha_cierre ? fmtFechaHora(data.fecha_cierre, data.hora_cierre) : 'Abierta' }}</template>
+          </Column>
+          <Column header="Disponible" sortable sortField="kms_disponible">
+            <template #body="{ data }">{{ fmtNum(data.kms_disponible) }}</template>
+          </Column>
+          <Column header="Kms totales" sortable sortField="kms_totales">
+            <template #body="{ data }">{{ fmtNum(data.kms_totales) }}</template>
+          </Column>
+          <Column header="Consumo" sortable sortField="combustible_consumido">
+            <template #body="{ data }">{{ fmtNum(data.combustible_consumido) }}</template>
+          </Column>
+          <Column header="Habilitado" sortable sortField="combustible_habilitado">
+            <template #body="{ data }">{{ fmtNum(data.combustible_habilitado) }}</template>
+          </Column>
+          <Column header="Dif. consumo/hab.">
             <template #body="{ data }">
-              <span class="inline-block rounded px-2 py-0.5 text-[11px] font-bold" :class="estadoHR(data).cls">{{ estadoHR(data).label }}</span>
+              <span v-if="!tieneValor(data.combustible_consumido) && !tieneValor(data.combustible_habilitado)" class="text-gray-400">—</span>
+              <span v-else :class="diffComb(data) < 0 ? 'text-red-600 dark:text-red-400 font-semibold' : ''">{{ fmtNum(diffComb(data)) }}</span>
             </template>
           </Column>
-          <Column header="CP" sortable sortField="cartas_porte_count">
-            <template #body="{ data }">{{ data.cartas_porte_count || 0 }}</template>
+          <Column header="Tiempo" sortable sortField="tiempo_total">
+            <template #body="{ data }">{{ fmtNum(data.tiempo_total) }}</template>
+          </Column>
+          <Column header="Cuadrada kms">
+            <template #body="{ data }">
+              <span v-if="!cuadreKms(data)" class="text-gray-400" title="Sin kms totales">—</span>
+              <i v-else-if="cuadreKms(data).ok" class="pi pi-check-circle text-emerald-500" title="Cuadrada" />
+              <span v-else class="inline-flex items-center gap-1 text-red-600 dark:text-red-400 font-semibold" :title="`Diferencia: ${cuadreKms(data).diff}`">
+                <i class="pi pi-exclamation-triangle" />({{ fmtNum(cuadreKms(data).diff) }})
+              </span>
+            </template>
+          </Column>
+          <Column header="Acciones" style="width:180px">
+            <template #body="{ data }">
+              <div class="flex gap-1">
+                <Button v-if="!data.cancelada" icon="pi pi-print" rounded text severity="help" size="small" title="Imprimir (formato impreso)" @click="imprimirEmision(data)" />
+                <Button v-if="!data.cancelada && !data.fecha_cierre" icon="pi pi-check" rounded text severity="success" size="small" title="Cerrar" @click="openCierre(data)" />
+                <Button v-if="!data.cancelada" icon="pi pi-pencil" rounded text severity="info" size="small" title="Editar" @click="openEdicion(data)" />
+                <Button v-if="!data.cancelada" icon="pi pi-ban" rounded text severity="warning" size="small" title="Cancelar" @click="cancelar(data)" />
+                <Button icon="pi pi-trash" rounded text severity="danger" size="small" title="Eliminar" @click="eliminar(data)" />
+              </div>
+            </template>
           </Column>
         </DataTable>
       </div>
@@ -565,7 +624,7 @@ onMounted(() => {
               <span>{{ h.parqueo?.nombre || '—' }}</span>
             </div>
             <div class="mt-1.5 flex items-center justify-end gap-1">
-              <Button v-if="!h.cancelada" icon="pi pi-print" rounded text severity="success" title="Imprimir" @click="imprimir(h)" />
+              <Button v-if="!h.cancelada" icon="pi pi-file-edit" rounded text severity="help" title="Imprimir (formato impreso)" @click="imprimirEmision(h)" />
               <Button v-if="!h.cancelada && !h.fecha_cierre" icon="pi pi-check" rounded text severity="success" title="Cerrar" @click="openCierre(h)" />
               <Button v-if="!h.cancelada" icon="pi pi-pencil" rounded text severity="info" title="Editar" @click="openEdicion(h)" />
               <Button v-if="!h.cancelada" icon="pi pi-ban" rounded text severity="warning" title="Cancelar" @click="cancelar(h)" />

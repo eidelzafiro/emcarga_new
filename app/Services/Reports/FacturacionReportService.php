@@ -120,7 +120,7 @@ class FacturacionReportService
 
         $cartas = CartaPorte::with([
             'tractivo' => fn ($q) => $q->select('id', 'placa', 'codigo', 'id_entidad'),
-            'cliente' => fn ($q) => $q->select('id', 'nombre'),
+            'cliente' => fn ($q) => $q->select('clientes.id', 'clientes.nombre'),
             'hojaRuta' => fn ($q) => $q->select('id', 'origen', 'destino'),
         ])
             ->whereDoesntHave('aforos', fn ($q) => $q->whereNotNull('id_factura'))

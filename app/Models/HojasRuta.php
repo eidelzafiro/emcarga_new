@@ -74,7 +74,7 @@ class HojasRuta extends Model
 
     public function arrastre(): BelongsTo
     {
-        return $this->belongsTo(Tractivo::class, 'id_arrastre');
+        return $this->belongsTo(Arrastre::class, 'id_arrastre');
     }
 
     public function chofer(): BelongsTo

@@ -153,6 +153,46 @@ class ReportesController extends Controller
     }
 
     /**
+     * Página de Reportes de Documentos: listado de los reportes legacy del
+     * grupo DOCUMENTOS (cartas de porte y hojas de ruta) con sus variables
+     * (mes / fecha / rango de consecutivo) para generar el PDF.
+     */
+    public function documentos(ReporteCatalogoService $catalogo)
+    {
+        abort_unless(auth()->user()->can('reportes.ver'), 403);
+
+        $grupos = $catalogo->usadosAgrupados();
+        $reportes = collect($grupos['DOCUMENTOS'] ?? [])
+            ->sortBy('id')
+            ->values()
+            ->all();
+
+        return Inertia::render('Reportes/Documentos', [
+            'title' => 'Reportes de Documentos',
+            'reportes' => $reportes,
+            'mesOperaciones' => session('fecha_operaciones') ?? now()->toDateString(),
+        ]);
+    }
+
+    /**
+     * Genera un reporte de Documentos por su id legacy, construyendo las
+     * variables (mes, fecha, rango de consecutivo) y delegando al dispatcher.
+     */
+    public function documentosGenerar(Request $request, int $id)
+    {
+        abort_unless(auth()->user()->can('reportes.ver'), 403);
+
+        $filtros = array_filter([
+            'mes'               => $request->input('mes'),
+            'fecha'             => $request->input('fecha'),
+            'consecutivo_desde' => $request->input('consecutivo_desde'),
+            'consecutivo_hasta' => $request->input('consecutivo_hasta'),
+        ], fn ($v) => $v !== null && $v !== '');
+
+        return app(ReportesDispatcher::class)->generar($id, $filtros);
+    }
+
+    /**
      * Fase A: dispara la generación del reporte migrado vía el dispatcher.
      *
      * R-3: los reportes del grupo EXPORTAR TABLAS se encolan (cola database) y

@@ -504,6 +504,9 @@ Route::middleware('auth')->group(function () {
             Route::get('salarios', [ReportesController::class, 'salarios'])->name('salarios');
             // Fase A: catálogo de reportes usados (índice con filtros reutilizables)
             Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
+            // Reportes del grupo DOCUMENTOS (cartas de porte y hojas de ruta)
+            Route::get('documentos', [ReportesController::class, 'documentos'])->name('documentos');
+            Route::get('documentos/generar/{reporte}', [ReportesController::class, 'documentosGenerar'])->name('documentos.generar');
             // GET: descarga/binario vía navegación real (sin XHR Inertia). POST: flujo
             // Inertia para exportaciones en cola (feedback en la misma página).
             Route::match(['get', 'post'], 'generar/{reporte}', [ReportesController::class, 'generar'])->name('generar');
@@ -521,6 +524,10 @@ Route::middleware('auth')->group(function () {
             Route::get('carta-porte/{carta}', [ReportController::class, 'pdfCartaPorte'])->name('carta-porte.imprimir');
             Route::get('hoja-ruta/{hoja}', [ReportController::class, 'pdfHojaRuta'])->name('hojas-ruta.imprimir');
             Route::get('aforo/{aforo}', [ReportController::class, 'pdfAforo'])->name('aforos.imprimir');
+            // Impresión sobre formato impreso (pre-impreso), coordenadas configurables.
+            Route::get('carta-porte/{carta}/emision', [ReportController::class, 'pdfCpEmision'])->name('carta-porte.emision');
+            Route::get('aforo/{aforo}/impreso', [ReportController::class, 'pdfCpAforo'])->name('aforo.impreso');
+            Route::get('hoja-ruta/{hoja}/emision', [ReportController::class, 'pdfHrEmision'])->name('hoja-ruta.emision');
             // Módulo Técnico
             Route::get('plan-bajas-neumaticos', [ReportController::class, 'pdfPlanBajasNeumaticos'])->name('plan-bajas-neumaticos.imprimir');
             Route::get('control-lubricante', [ReportController::class, 'pdfControlLubricante'])->name('control-lubricante.imprimir');

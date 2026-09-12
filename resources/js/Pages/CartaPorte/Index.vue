@@ -32,7 +32,7 @@ const search = ref(props.filters?.search || '')
 const equipo = ref(props.filters?.equipo || null)
 const chofer = ref(props.filters?.chofer || null)
 const cliente = ref(props.filters?.cliente || null)
-const vista = ref('tarjetas')
+const vista = ref('tabla')
 
 const tractivosCat = computed(() => props.catalogos?.tractivos || [])
 const arrastresCat = computed(() => props.catalogos?.arrastres || [])
@@ -314,8 +314,8 @@ function irAforar(carta) {
   }
 }
 
-function imprimirCarta(carta) {
-  window.open(route('carta-porte.imprimir', { carta: carta.id }), '_blank')
+function imprimirEmisionCarta(carta) {
+  window.open(route('carta-porte.emision', { carta: carta.id }), '_blank')
 }
 
 function verAforo(carta) {
@@ -389,6 +389,23 @@ onMounted(() => {
                 <i v-else class="pi pi-star text-gray-300" title="Sin aforo" />
                 <i v-if="data.facturas_exists" class="pi pi-star-fill text-amber-400" title="Facturada" />
                 <i v-else class="pi pi-star text-gray-300" title="Sin factura" />
+              </div>
+            </template>
+          </Column>
+          <Column header="Acciones" style="width:180px">
+            <template #body="{ data }">
+              <div class="flex gap-1">
+                <template v-if="cartaFacturada(data)">
+                  <Button icon="pi pi-eye" rounded text severity="info" size="small" title="Ver" @click="verAforo(data)" />
+                </template>
+                <template v-else-if="!data.cancelada">
+                  <Button icon="pi pi-file-edit" rounded text size="small" :severity="cartaAforada(data) ? 'info' : 'success'" :title="cartaAforada(data) ? 'Editar aforo' : 'Aforar'" @click="irAforar(data)" />
+                  <Button icon="pi pi-pencil" rounded text severity="info" size="small" title="Editar" @click="openEdicion(data)" />
+                  <Button v-if="!fechaRecep(data)" icon="pi pi-star" rounded text severity="success" size="small" title="Recepcionar" @click="recepcionar(data)" />
+                  <Button icon="pi pi-ban" rounded text severity="warning" size="small" title="Cancelar" @click="cancelar(data)" />
+                </template>
+                <Button v-if="!data.cancelada" icon="pi pi-print" rounded text severity="help" size="small" title="Imprimir (formato impreso)" @click="imprimirEmisionCarta(data)" />
+                <Button v-if="!cartaFacturada(data)" icon="pi pi-trash" rounded text severity="danger" size="small" title="Eliminar" @click="eliminar(data)" />
               </div>
             </template>
           </Column>
@@ -512,7 +529,7 @@ onMounted(() => {
               <Button v-if="!data.cancelada && !fechaRecep(data)" icon="pi pi-star" rounded text severity="success" title="Recepcionar" @click="recepcionar(data)" />
               <Button v-if="!data.cancelada" icon="pi pi-ban" rounded text severity="warning" title="Cancelar" @click="cancelar(data)" />
             </template>
-            <Button v-if="!data.cancelada" icon="pi pi-print" rounded text severity="success" title="Imprimir" @click="imprimirCarta(data)" />
+            <Button v-if="!data.cancelada" icon="pi pi-file-edit" rounded text severity="help" title="Imprimir (formato impreso)" @click="imprimirEmisionCarta(data)" />
             <Button v-if="!cartaFacturada(data)" icon="pi pi-trash" rounded text severity="danger" title="Eliminar" @click="eliminar(data)" />
           </div>
         </article>

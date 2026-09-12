@@ -125,7 +125,7 @@ class CartaPorteController extends Controller
             ->map(fn ($c) => $c->solicitud?->id_cliente)->filter()->unique();
         $tractivoIds = (clone $base)->whereHas('hojaRuta')->with('hojaRuta:id,id_tractivo')->get()
             ->map(fn ($c) => $c->hojaRuta?->id_tractivo)->filter()->unique();
-        $choferIds = (clone $base)->with('id_chofer,id_chofer2')->get()
+        $choferIds = (clone $base)->get(['id_chofer', 'id_chofer2'])
             ->flatMap(fn ($c) => [$c->id_chofer, $c->id_chofer2])->filter()->unique();
 
         return [

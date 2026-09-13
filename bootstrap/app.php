@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\Api\ResolverEntidadApi;
 use App\Http\Middleware\AuditoriaEscritura;
 use App\Http\Middleware\EnsureModulePermission;
 use App\Http\Middleware\EstablecerContextoTrabajo;
@@ -38,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'api.entidad' => ResolverEntidadApi::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

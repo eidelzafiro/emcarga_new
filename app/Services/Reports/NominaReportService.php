@@ -2,32 +2,45 @@
 
 namespace App\Services\Reports;
 
-use App\Models\Bolsa;
 use App\Services\ReportePrenominaService;
-use App\Services\Reports\Fpdf\PrenominaAdministrativoFpdfReport;
-use App\Services\Reports\Fpdf\PrenominaTransportacionFpdfReport;
-use App\Services\Reports\Fpdf\Modelo1ControlDiarioFpdfReport;
-use App\Services\Reports\Fpdf\CumpleanosFpdfReport;
-use App\Services\Reports\Fpdf\LicenciaConduccionFpdfReport;
 use App\Services\Reports\Fpdf\AdicionalesFpdfReport;
-use App\Services\Reports\Fpdf\IncidenciasFpdfReport;
-use App\Services\Reports\Fpdf\NocturnidadFpdfReport;
-use App\Services\Reports\Fpdf\PagoAdministrativoFpdfReport;
-use App\Services\Reports\Fpdf\ResumenTiemposChoferesFpdfReport;
+use App\Services\Reports\Fpdf\AlmacenamientoFpdfReport;
 use App\Services\Reports\Fpdf\AnalisisSalarioTransportacionFpdfReport;
+use App\Services\Reports\Fpdf\CertificacionCdtFpdfReport;
+use App\Services\Reports\Fpdf\CertificacionComercialFpdfReport;
+use App\Services\Reports\Fpdf\CertificacionTnkmsFpdfReport;
 use App\Services\Reports\Fpdf\ControlDiarioAdministrativoFpdfReport;
 use App\Services\Reports\Fpdf\ControlDiarioChoferesFpdfReport;
-use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\Reports\Fpdf\CumpleanosFpdfReport;
+use App\Services\Reports\Fpdf\DatosTrabajadoresFpdfReport;
+use App\Services\Reports\Fpdf\GarantiaChoferesFpdfReport;
+use App\Services\Reports\Fpdf\GarantiaSalarialFpdfReport;
+use App\Services\Reports\Fpdf\IncidenciasFpdfReport;
+use App\Services\Reports\Fpdf\LicenciaConduccionFpdfReport;
+use App\Services\Reports\Fpdf\Modelo1ControlDiarioFpdfReport;
+use App\Services\Reports\Fpdf\NocturnidadFpdfReport;
+use App\Services\Reports\Fpdf\PagoAdministrativoFpdfReport;
+use App\Services\Reports\Fpdf\PenalizacionesFpdfReport;
+use App\Services\Reports\Fpdf\PrenominaAdministrativoFpdfReport;
+use App\Services\Reports\Fpdf\PrenominaResultadosFpdfReport;
+use App\Services\Reports\Fpdf\PrenominaTransportacionFpdfReport;
+use App\Services\Reports\Fpdf\ResumenConceptosAdminFpdfReport;
+use App\Services\Reports\Fpdf\ResumenDietasFpdfReport;
+use App\Services\Reports\Fpdf\ResumenTiemposChoferesFpdfReport;
+use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\Response;
 
 class NominaReportService extends BaseReportService
 {
-    public function pdfSalarioPrenomina(\Illuminate\Http\Request $request)
+    public function pdfSalarioPrenomina(Request $request)
     {
         return $this->pdfPrenomina($request);
     }
 
-    public function pdfPrenomina(\Illuminate\Http\Request $request)
+    public function pdfPrenomina(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -50,10 +63,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function excelPrenomina(\Illuminate\Http\Request $request)
+    public function excelPrenomina(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -63,14 +76,16 @@ class NominaReportService extends BaseReportService
 
         if ($tipo === 'administrativo') {
             $data = $prenominaService->prenominaAdministrativo($mes, $ano);
+
             return $this->exportarExcelAdministrativo($data, $mes, $ano);
         } else {
             $data = $prenominaService->prenominaChoferes($mes, $ano);
+
             return $this->exportarExcelChoferes($data, $mes, $ano);
         }
     }
 
-    public function pdfSalarioChoferes(\Illuminate\Http\Request $request)
+    public function pdfSalarioChoferes(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -86,10 +101,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfLicenciaConduccion(\Illuminate\Http\Request $request)
+    public function pdfLicenciaConduccion(Request $request)
     {
         $entidadId = (int) session('entidad_activa_id') ?: null;
         $mesPad = str_pad((string) (int) $request->input('mes', now()->format('m')), 2, '0', STR_PAD_LEFT);
@@ -103,10 +118,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfCumpleanos(\Illuminate\Http\Request $request)
+    public function pdfCumpleanos(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -122,10 +137,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfAdicionales(\Illuminate\Http\Request $request)
+    public function pdfAdicionales(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -141,10 +156,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfNocturnidad(\Illuminate\Http\Request $request)
+    public function pdfNocturnidad(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -160,10 +175,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfPagoAdministrativo(\Illuminate\Http\Request $request)
+    public function pdfPagoAdministrativo(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -182,10 +197,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfResumenTiemposChoferes(\Illuminate\Http\Request $request)
+    public function pdfResumenTiemposChoferes(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -201,10 +216,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfAnalisisSalarioTransportacion(\Illuminate\Http\Request $request)
+    public function pdfAnalisisSalarioTransportacion(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -220,10 +235,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfControlDiarioAdministrativo(\Illuminate\Http\Request $request)
+    public function pdfControlDiarioAdministrativo(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -239,10 +254,10 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfControlDiarioChoferes(\Illuminate\Http\Request $request)
+    public function pdfControlDiarioChoferes(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -258,7 +273,7 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
     /**
@@ -270,7 +285,7 @@ class NominaReportService extends BaseReportService
      * Verificado 1:1 contra las referencias de junio 2026 (entidad 20):
      * 23 choferes + 35 administrativos.
      */
-    public function exportarVersat(\Illuminate\Http\Request $request)
+    public function exportarVersat(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -306,7 +321,7 @@ class NominaReportService extends BaseReportService
         }
 
         // ZIP con ambos CSVs (mismo nombre que el legacy).
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $tmp = tempnam(sys_get_temp_dir(), 'versat').'.zip';
         $zip->open($tmp, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
@@ -326,7 +341,7 @@ class NominaReportService extends BaseReportService
             ->header('Content-Disposition', 'attachment; filename="versat_prenominas_'.$ano.'-'.$mesPadNombre.'.zip"');
     }
 
-    public function pdfIncidencias(\Illuminate\Http\Request $request)
+    public function pdfIncidencias(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -343,10 +358,217 @@ class NominaReportService extends BaseReportService
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
     }
 
-    public function pdfModelo1(\Illuminate\Http\Request $request)
+    public function pdfPenalizaciones(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $origenPago = (int) $request->input('pago_adicional', 1);
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'PENALIZACIONES X PAGO ADICIONAL';
+
+        $report = new PenalizacionesFpdfReport($entidadId, $mesPad, (string) $ano, $origenPago);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfDatosTrabajadores(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $idSistema = (int) $request->input('sistema', 0);
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'CONTROL DATOS GENERALES DEL TRABAJADOR';
+
+        $report = new DatosTrabajadoresFpdfReport($entidadId, $mesPad, (string) $ano, $idSistema);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfGarantiaSalarial(Request $request)
+    {
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+        $titulo = 'EMPLEADOS CON GARANTIA SALARIAL';
+
+        $report = new GarantiaSalarialFpdfReport($entidadId, '01', (string) now()->year);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfGarantiaChoferes(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'DATOS P/NOMINA GARANTIA SALARIAL CHOFERES';
+
+        $report = new GarantiaChoferesFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfResumenConceptosAdmin(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'RESUMEN DE SALARIOS ADMINISTRATIVOS';
+
+        $report = new ResumenConceptosAdminFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfCertificacionComercial(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'CERTIFICACION CHOFERES AREA COMERCIAL';
+
+        $report = new CertificacionComercialFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfAlmacenamiento(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'CERTIFICO MENSUAL DE INGRESOS POR ALMACENAMIENTO';
+
+        $report = new AlmacenamientoFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfResumenDietas(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'RESUMEN DE GASTOS DE DIETAS';
+
+        $report = new ResumenDietasFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfCertificacionCdt(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'CERTIFICO DEL CUMPLIMIENTO CDT X TRACTIVOS';
+
+        $report = new CertificacionCdtFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfCertificacionTnkms(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'CERTIFICACION CHOFERES AREA COMERCIAL (TN-KM)';
+
+        $report = new CertificacionTnkmsFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfPrenominaResultados(Request $request)
+    {
+        $mes = (int) $request->input('mes', now()->format('m'));
+        $ano = (int) $request->input('ano', now()->format('Y'));
+        $entidadId = (int) session('entidad_activa_id') ?: null;
+
+        $mesPad = str_pad((string) $mes, 2, '0', STR_PAD_LEFT);
+        $titulo = 'SALARIOS X SISTEMA DE PAGO CON RESULTADOS';
+
+        $report = new PrenominaResultadosFpdfReport($entidadId, $mesPad, (string) $ano);
+        $pdfContent = $report->generate();
+
+        $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad.'.pdf';
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'"');
+    }
+
+    public function pdfModelo1(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -360,14 +582,16 @@ class NominaReportService extends BaseReportService
         $pdfContent = $report->generate();
 
         $nombre = $this->safeName($titulo).'_'.$ano.'-'.$mesPad;
-        if ($idBolsa) $nombre .= '_chofer_' . $idBolsa;
+        if ($idBolsa) {
+            $nombre .= '_chofer_'.$idBolsa;
+        }
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $nombre . '.pdf"');
+            ->header('Content-Disposition', 'inline; filename="'.$nombre.'.pdf"');
     }
 
-    public function excelModelo1(\Illuminate\Http\Request $request)
+    public function excelModelo1(Request $request)
     {
         $mes = (int) $request->input('mes', now()->format('m'));
         $ano = (int) $request->input('ano', now()->format('Y'));
@@ -379,16 +603,16 @@ class NominaReportService extends BaseReportService
         return $this->exportarExcelModelo1($data, $mes, $ano);
     }
 
-    private function exportarExcelChoferes(array $data, int $mes, int $ano): \Symfony\Component\HttpFoundation\Response
+    private function exportarExcelChoferes(array $data, int $mes, int $ano): Response
     {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Prenomina Choferes');
 
         $meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-        $sheet->setCellValue('A1', 'PRENOMINA SALARIO TRANSPORTACION — ' . ($meses[$mes] ?? '') . ' ' . $ano);
+        $sheet->setCellValue('A1', 'PRENOMINA SALARIO TRANSPORTACION — '.($meses[$mes] ?? '').' '.$ano);
         $sheet->mergeCells('A1:Q1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
@@ -398,7 +622,7 @@ class NominaReportService extends BaseReportService
         foreach ($headers as $h) {
             $sheet->setCellValueByColumnAndRow($col, 3, $h);
             $sheet->getStyleByColumnAndRow($col, 3)->getFont()->setBold(true);
-            $sheet->getStyleByColumnAndRow($col, 3)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('D9E1F2');
+            $sheet->getStyleByColumnAndRow($col, 3)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9E1F2');
             $col++;
         }
 
@@ -442,24 +666,25 @@ class NominaReportService extends BaseReportService
         $sheet->setCellValueByColumnAndRow(16, $row, $tot['salario'] ?? 0);
         $sheet->setCellValueByColumnAndRow(17, $row, $tot['dt'] ?? 0);
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $tmp = tempnam(sys_get_temp_dir(), 'prenomina_ch') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $tmp = tempnam(sys_get_temp_dir(), 'prenomina_ch').'.xlsx';
         $writer->save($tmp);
 
-        $nombre = 'prenomina_choferes_' . $ano . '_' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '.xlsx';
+        $nombre = 'prenomina_choferes_'.$ano.'_'.str_pad($mes, 2, '0', STR_PAD_LEFT).'.xlsx';
+
         return response()->download($tmp, $nombre)->deleteFileAfterSend(true);
     }
 
-    private function exportarExcelAdministrativo(array $data, int $mes, int $ano): \Symfony\Component\HttpFoundation\Response
+    private function exportarExcelAdministrativo(array $data, int $mes, int $ano): Response
     {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Prénómina Administrativo');
 
         $meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-        $sheet->setCellValue('A1', 'PRÉNÓMINA ADMINISTRATIVO — ' . ($meses[$mes] ?? '') . ' ' . $ano);
+        $sheet->setCellValue('A1', 'PRÉNÓMINA ADMINISTRATIVO — '.($meses[$mes] ?? '').' '.$ano);
         $sheet->mergeCells('A1:L1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
@@ -468,7 +693,7 @@ class NominaReportService extends BaseReportService
         foreach ($headers as $h) {
             $sheet->setCellValueByColumnAndRow($col, 3, $h);
             $sheet->getStyleByColumnAndRow($col, 3)->getFont()->setBold(true);
-            $sheet->getStyleByColumnAndRow($col, 3)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('D9E1F2');
+            $sheet->getStyleByColumnAndRow($col, 3)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9E1F2');
             $col++;
         }
 
@@ -510,7 +735,7 @@ class NominaReportService extends BaseReportService
         $row++;
         $sheet->setCellValueByColumnAndRow(2, $row, 'TOTALES');
         $sheet->getStyleByColumnAndRow(2, $row)->getFont()->setBold(true);
-        $sheet->setCellValueByColumnAndRow(2, $row + 1, count($data['registros']) . ' empleados');
+        $sheet->setCellValueByColumnAndRow(2, $row + 1, count($data['registros']).' empleados');
         $sheet->setCellValueByColumnAndRow(6, $row, $totHoras);
         $sheet->setCellValueByColumnAndRow(7, $row, $totImpRegular);
         $sheet->setCellValueByColumnAndRow(8, $row, $totImpIrregular);
@@ -519,17 +744,18 @@ class NominaReportService extends BaseReportService
         $sheet->setCellValueByColumnAndRow(11, $row, $totIncidencias);
         $sheet->setCellValueByColumnAndRow(12, $row, $totSalario);
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $tmp = tempnam(sys_get_temp_dir(), 'prenomina_ad') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $tmp = tempnam(sys_get_temp_dir(), 'prenomina_ad').'.xlsx';
         $writer->save($tmp);
 
-        $nombre = 'prenomina_administrativo_' . $ano . '_' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '.xlsx';
+        $nombre = 'prenomina_administrativo_'.$ano.'_'.str_pad($mes, 2, '0', STR_PAD_LEFT).'.xlsx';
+
         return response()->download($tmp, $nombre)->deleteFileAfterSend(true);
     }
 
-    private function exportarExcelModelo1(array $data, int $mes, int $ano): \Symfony\Component\HttpFoundation\Response
+    private function exportarExcelModelo1(array $data, int $mes, int $ano): Response
     {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Modelo 1');
 
@@ -537,7 +763,7 @@ class NominaReportService extends BaseReportService
             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
         $titulo = $data['titulo'] ?? 'MODELO 1';
-        $sheet->setCellValue('A1', $titulo . ' — ' . ($meses[$mes] ?? '') . ' ' . $ano);
+        $sheet->setCellValue('A1', $titulo.' — '.($meses[$mes] ?? '').' '.$ano);
         $sheet->mergeCells('A1:S1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
@@ -548,7 +774,7 @@ class NominaReportService extends BaseReportService
         foreach ($headers as $h) {
             $sheet->setCellValueByColumnAndRow($col, 3, $h);
             $sheet->getStyleByColumnAndRow($col, 3)->getFont()->setBold(true);
-            $sheet->getStyleByColumnAndRow($col, 3)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('D9E1F2');
+            $sheet->getStyleByColumnAndRow($col, 3)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9E1F2');
             $col++;
         }
 
@@ -574,9 +800,9 @@ class NominaReportService extends BaseReportService
                 $nota = $reg['ajuste'] > 0 ? ($notas[$reg['ajuste']] ?? '') : '';
 
                 $sheet->setCellValueByColumnAndRow(1, $row, $i++);
-                $sheet->setCellValueByColumnAndRow(3, $row, ($reg['fcarga'] ?? '') . '-' . ($reg['hcarga1'] ?? ''));
-                $sheet->setCellValueByColumnAndRow(4, $row, ($reg['fdescarga'] ?? '') . '-' . ($reg['hdescarga1'] ?? ''));
-                $sheet->setCellValueByColumnAndRow(5, $row, ($reg['equipo'] ?? '') . '(' . ($reg['capacidad'] ?? '') . ')');
+                $sheet->setCellValueByColumnAndRow(3, $row, ($reg['fcarga'] ?? '').'-'.($reg['hcarga1'] ?? ''));
+                $sheet->setCellValueByColumnAndRow(4, $row, ($reg['fdescarga'] ?? '').'-'.($reg['hdescarga1'] ?? ''));
+                $sheet->setCellValueByColumnAndRow(5, $row, ($reg['equipo'] ?? '').'('.($reg['capacidad'] ?? '').')');
                 $sheet->setCellValueByColumnAndRow(6, $row, $reg['nro_hr']);
                 $sheet->setCellValueByColumnAndRow(7, $row, $reg['nro_cp']);
                 $sheet->setCellValueByColumnAndRow(8, $row, $reg['kmcarga']);
@@ -599,7 +825,7 @@ class NominaReportService extends BaseReportService
 
             // Subtotal chofer
             $tot = $chofer['totales'];
-            $sheet->setCellValueByColumnAndRow(2, $row, 'Subtotal ' . $chofer['nombre']);
+            $sheet->setCellValueByColumnAndRow(2, $row, 'Subtotal '.$chofer['nombre']);
             $sheet->getStyleByColumnAndRow(2, $row)->getFont()->setBold(true);
             $sheet->setCellValueByColumnAndRow(8, $row, $tot['kms']);
             $sheet->setCellValueByColumnAndRow(9, $row, $tot['tons']);
@@ -633,11 +859,12 @@ class NominaReportService extends BaseReportService
         $sheet->setCellValueByColumnAndRow(19, $row, $gran['ingresos']);
         $sheet->setCellValueByColumnAndRow(21, $row, $gran['salario']);
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $tmp = tempnam(sys_get_temp_dir(), 'modelo1') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $tmp = tempnam(sys_get_temp_dir(), 'modelo1').'.xlsx';
         $writer->save($tmp);
 
-        $nombre = 'modelo1_' . $ano . '_' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '.xlsx';
+        $nombre = 'modelo1_'.$ano.'_'.str_pad($mes, 2, '0', STR_PAD_LEFT).'.xlsx';
+
         return response()->download($tmp, $nombre)->deleteFileAfterSend(true);
     }
 }

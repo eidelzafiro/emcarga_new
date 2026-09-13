@@ -124,7 +124,7 @@ function submitBaja() {
       </template>
     </Toolbar>
 
-    <DataTable :value="baterias.data" paginator :rows="baterias.per_page" :totalRecords="baterias.total"
+    <DataTable lazy :value="baterias.data" paginator :rows="baterias.per_page" :totalRecords="baterias.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(baterias.current_page - 1) * baterias.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

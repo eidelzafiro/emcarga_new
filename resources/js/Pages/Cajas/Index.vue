@@ -150,7 +150,7 @@ const estadoSeverity = (e) => e === 'disponible' ? 'success' : e === 'baja' ? 'd
     </Toolbar>
 
     <!-- Vista tabla -->
-    <DataTable v-if="vista === 'tabla'" :value="cajas.data" paginator :rows="cajas.per_page" :totalRecords="cajas.total"
+    <DataTable lazy v-if="vista === 'tabla'" :value="cajas.data" paginator :rows="cajas.per_page" :totalRecords="cajas.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(cajas.current_page - 1) * cajas.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

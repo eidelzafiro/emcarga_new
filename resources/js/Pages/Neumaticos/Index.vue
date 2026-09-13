@@ -141,7 +141,7 @@ function submitRetiro() {
       </template>
     </Toolbar>
 
-    <DataTable :value="neumaticos.data" paginator :rows="neumaticos.per_page" :totalRecords="neumaticos.total"
+    <DataTable lazy :value="neumaticos.data" paginator :rows="neumaticos.per_page" :totalRecords="neumaticos.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(neumaticos.current_page - 1) * neumaticos.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

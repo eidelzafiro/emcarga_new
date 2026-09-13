@@ -14,7 +14,7 @@
           </div>
         </div>
 
-        <DataTable :value="items.data" stripedRows size="small" :rows="items.per_page" :paginator="true"
+        <DataTable lazy :value="items.data" stripedRows size="small" :rows="items.per_page" :paginator="true"
           :totalRecords="items.total" :first="(items.current_page - 1) * items.per_page" @page="onPage"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Total: {totalRecords} registros">

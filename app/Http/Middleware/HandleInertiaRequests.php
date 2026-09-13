@@ -96,7 +96,7 @@ class HandleInertiaRequests extends Middleware
             'perfilActivo' => $perfilActivo,
             // Solo SUPERADMIN puede cambiar de perfil
             'perfiles' => $user->hasRole('SUPERADMIN')
-                ? ['SUPERADMIN', 'TECNICA', 'COMERCIAL', 'RECHUM', 'CONTABILIDAD', 'OPERATIVOS', 'CONFIGURACIONES']
+                ? ['SUPERADMIN', 'TECNICA', 'COMERCIAL', 'RECHUM', 'CONTABILIDAD', 'OPERATIVOS', 'CONFIGURACIONES', 'DIRECTIVOS']
                 : null,
         ];
     }

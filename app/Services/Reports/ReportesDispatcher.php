@@ -236,4 +236,10 @@ class ReportesDispatcher
     {
         return in_array($id, self::EXPORT_IDS, true);
     }
+
+    /** Indica si el reporte tiene handler implementado en el dispatcher. */
+    public static function estaMapeado(int $id): bool
+    {
+        return isset(self::MAPA[$id]);
+    }
 }

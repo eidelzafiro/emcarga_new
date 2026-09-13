@@ -16,9 +16,9 @@ use App\Services\DashboardOperativosService;
 use App\Services\DashboardRecursosHumanosService;
 use App\Services\DashboardTecnicoService;
 use App\Services\KpiService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Carbon\Carbon;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -29,15 +29,43 @@ class DashboardController extends Controller
 
     private const ROLES_DISPONIBLES = [
         'SUPERADMIN', 'TECNICA', 'COMERCIAL', 'CONTABILIDAD',
-        'RECHUM', 'OPERATIVOS', 'CONFIGURACIONES',
+        'RECHUM', 'OPERATIVOS', 'CONFIGURACIONES', 'DIRECTIVOS',
     ];
 
     public function index(Request $request)
     {
+        $rol = $this->detectarRol($request, $request->user());
+
+        // El perfil DIRECTIVOS usa un panel propio con los dashboards de todos
+        // los módulos operativos en pestañas intercambiables.
+        if ($rol === 'DIRECTIVOS') {
+            return Inertia::render('Directivos/Panel', ['title' => 'Panel Directivos']);
+        }
+
+        return $this->renderModulo($rol, $request);
+    }
+
+    /**
+     * Renderiza el dashboard de un módulo concreto. Lo usan los iframes del
+     * panel DIRECTIVOS (módulos operativos: Técnica, Operativos, Comercial y
+     * Contabilidad).
+     */
+    public function modulo(Request $request, string $modulo)
+    {
+        $modulo = strtoupper($modulo);
+
+        if (! in_array($modulo, ['TECNICA', 'OPERATIVOS', 'COMERCIAL', 'CONTABILIDAD'], true)) {
+            abort(404);
+        }
+
+        return $this->renderModulo($modulo, $request);
+    }
+
+    private function renderModulo(string $rol, Request $request)
+    {
         $user = $request->user();
         $entidadId = (int) $request->session()->get('entidad_activa_id') ?: null;
         $fechaRef = $this->fechaOperaciones($request);
-        $rol = $this->detectarRol($request, $user);
 
         // El módulo Técnica usa la Pizarra Operativa como su dashboard,
         // mostrándola directamente en /dashboard (sin redirigir a la URL larga).
@@ -412,7 +440,7 @@ class DashboardController extends Controller
                 'tipo' => 'Neumático',
                 'icono' => 'pi pi-circle-fill',
                 'color' => '#7c3aed',
-                'descripcion' => "Montaje ".($n->neumatico?->folio ?? "Nº{$n->id_neumatico}").($n->tractivo ? " · {$n->tractivo->codigo}" : ''),
+                'descripcion' => 'Montaje '.($n->neumatico?->folio ?? "Nº{$n->id_neumatico}").($n->tractivo ? " · {$n->tractivo->codigo}" : ''),
                 'monto' => '—',
                 'estado' => 'Montaje',
                 'claseBadge' => 'status-badge-completado',
@@ -436,7 +464,7 @@ class DashboardController extends Controller
                 'tipo' => 'Batería',
                 'icono' => 'pi pi-bolt',
                 'color' => '#ea580c',
-                'descripcion' => "Movimiento ".($b->bateria?->folio ?? "Nº{$b->id_bateria}").($b->tractivo ? " · {$b->tractivo->codigo}" : ''),
+                'descripcion' => 'Movimiento '.($b->bateria?->folio ?? "Nº{$b->id_bateria}").($b->tractivo ? " · {$b->tractivo->codigo}" : ''),
                 'monto' => '—',
                 'estado' => 'Movimiento',
                 'claseBadge' => 'status-badge-proceso',
@@ -459,7 +487,7 @@ class DashboardController extends Controller
                 'tipo' => 'Lubricante',
                 'icono' => 'pi pi-drop',
                 'color' => '#0891b2',
-                'descripcion' => "Cambio de lubricante".($l->tractivo ? " · {$l->tractivo->codigo}" : ''),
+                'descripcion' => 'Cambio de lubricante'.($l->tractivo ? " · {$l->tractivo->codigo}" : ''),
                 'monto' => '—',
                 'estado' => 'Cambio',
                 'claseBadge' => 'status-badge-completado',

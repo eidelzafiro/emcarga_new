@@ -1,16 +1,15 @@
 <?php
 
-use App\Http\Controllers\AmortizacionTallerController;
 use App\Http\Controllers\AcuerdosController;
-use App\Http\Controllers\ExportacionController;
 use App\Http\Controllers\AforosController;
 use App\Http\Controllers\AlertasController;
+use App\Http\Controllers\AmortizacionTallerController;
 use App\Http\Controllers\AreasController;
-use App\Http\Controllers\AreasOrganigramaController;
 use App\Http\Controllers\ArrastresController;
-use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\BateriasController;
 use App\Http\Controllers\BolsaController;
@@ -18,40 +17,39 @@ use App\Http\Controllers\CajasController;
 use App\Http\Controllers\CargosController;
 use App\Http\Controllers\CartaPorteController;
 use App\Http\Controllers\CatalogoController;
-use App\Http\Controllers\CierreTarjetasController;
-use App\Http\Controllers\FusionCatalogosController;
-use App\Http\Controllers\GastoMaterialController;
-use App\Http\Controllers\ProductosController;
+use App\Http\Controllers\CdsController;
 use App\Http\Controllers\ChoferesController;
+use App\Http\Controllers\CierreTarjetasController;
 use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\CombustibleCargasController;
 use App\Http\Controllers\CombustibleDescargasController;
-use App\Http\Controllers\TarjetasController;
+use App\Http\Controllers\ComercialController;
 use App\Http\Controllers\ConciliacionesController;
-use App\Http\Controllers\DietasController;
-use App\Http\Controllers\ReembolsosController;
-use App\Http\Controllers\PlantillaController;
 use App\Http\Controllers\ConfiguracionesModeloController;
 use App\Http\Controllers\ConsecutivosController;
 use App\Http\Controllers\ContabilidadController;
-use App\Http\Controllers\ComercialController;
 use App\Http\Controllers\ContenedoresController;
-use App\Http\Controllers\CuadreContabilidadController;
 use App\Http\Controllers\ContextoTrabajoController;
+use App\Http\Controllers\ControlLubricanteController;
+use App\Http\Controllers\CuadreContabilidadController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\OperativosController;
 use App\Http\Controllers\DashboardTecnicoController;
 use App\Http\Controllers\DemandasController;
 use App\Http\Controllers\DetallesCargaCombustibleController;
 use App\Http\Controllers\DevolucionesController;
+use App\Http\Controllers\DietasController;
 use App\Http\Controllers\DiferencialesController;
+use App\Http\Controllers\DirectivosController;
 use App\Http\Controllers\DistanciasController;
 use App\Http\Controllers\EntidadesController;
 use App\Http\Controllers\EstadisticasExplotacionController;
 use App\Http\Controllers\EstadosTarjetasController;
+use App\Http\Controllers\ExportacionController;
 use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\FirmasController;
 use App\Http\Controllers\FondosTiempoController;
+use App\Http\Controllers\FusionCatalogosController;
+use App\Http\Controllers\GastoMaterialController;
 use App\Http\Controllers\GruposEscalaController;
 use App\Http\Controllers\HistorialMovimientosController;
 use App\Http\Controllers\HistorialTractivosController;
@@ -59,8 +57,6 @@ use App\Http\Controllers\HojasRutaController;
 use App\Http\Controllers\IncidenciasController;
 use App\Http\Controllers\IndicadoresController;
 use App\Http\Controllers\LubricantesController;
-use App\Http\Controllers\TiposLubricantesController;
-use App\Http\Controllers\ControlLubricanteController;
 use App\Http\Controllers\LugaresController;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\MesesController;
@@ -69,38 +65,44 @@ use App\Http\Controllers\MunicipiosController;
 use App\Http\Controllers\NavesController;
 use App\Http\Controllers\NeumaticosController;
 use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\OperativosController;
 use App\Http\Controllers\OsdesController;
 use App\Http\Controllers\OtrosAgregadosController;
 use App\Http\Controllers\OtrosGastosController;
 use App\Http\Controllers\OtrosIngresosPreController;
-use App\Http\Controllers\PagosAdicionalesCargoController;
 use App\Http\Controllers\PagosController;
 use App\Http\Controllers\PenalizacionesController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PizarraController;
+use App\Http\Controllers\PlantillaController;
 use App\Http\Controllers\PrefacturasController;
 use App\Http\Controllers\PreviewController;
+use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProvinciasController;
+use App\Http\Controllers\ReembolsosController;
 use App\Http\Controllers\RegistroOrdenesTallerController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ReportesCostosController;
 use App\Http\Controllers\SalariosAdministrativosController;
+use App\Http\Controllers\SalariosChoferesController;
 use App\Http\Controllers\ServicentrosController;
 use App\Http\Controllers\SolicitudesController;
 use App\Http\Controllers\TallerController;
-use App\Http\Controllers\TiposMantenimientoController;
 use App\Http\Controllers\TalleresController;
 use App\Http\Controllers\TarifasConfigController;
 use App\Http\Controllers\TarifasController;
+use App\Http\Controllers\TarjetasController;
+use App\Http\Controllers\TasasController;
+use App\Http\Controllers\TipoEquiposController;
 use App\Http\Controllers\TiposArrastresController;
 use App\Http\Controllers\TiposCargasReporteController;
-use App\Http\Controllers\TipoEquiposController;
+use App\Http\Controllers\TiposLubricantesController;
+use App\Http\Controllers\TiposMantenimientoController;
 use App\Http\Controllers\TiposTractivosController;
 use App\Http\Controllers\TipoVehiculoController;
 use App\Http\Controllers\TractivosController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VacacionesController;
 use App\Http\Controllers\VallasController;
 use Illuminate\Support\Facades\Route;
 
@@ -143,10 +145,10 @@ Route::middleware('auth')->group(function () {
     Route::put('perfil/cambiar-password', [PasswordController::class, 'update'])->name('password.update');
 
     // Perfil propio: datos personales + avatar
-    Route::get('perfil', [\App\Http\Controllers\Auth\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('perfil', [\App\Http\Controllers\Auth\ProfileController::class, 'update'])->name('profile.update');
-    Route::post('perfil/avatar', [\App\Http\Controllers\Auth\ProfileController::class, 'actualizarAvatar'])->name('profile.avatar');
-    Route::delete('perfil/avatar', [\App\Http\Controllers\Auth\ProfileController::class, 'eliminarAvatar'])->name('profile.avatar.delete');
+    Route::get('perfil', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('perfil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('perfil/avatar', [ProfileController::class, 'actualizarAvatar'])->name('profile.avatar');
+    Route::delete('perfil/avatar', [ProfileController::class, 'eliminarAvatar'])->name('profile.avatar.delete');
 
     // Contexto de trabajo: entidad activa y fecha de operaciones
     Route::post('contexto/entidad', [ContextoTrabajoController::class, 'cambiarEntidad'])->name('contexto.entidad');
@@ -182,6 +184,9 @@ Route::middleware('auth')->group(function () {
     // (EnsureModulePermission infiere modulo.accion desde el nombre de la ruta)
     Route::middleware(['password.temporal', 'permiso.modulo'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Dashboard de un módulo concreto (iframes del panel DIRECTIVOS).
+        Route::get('dashboard/modulo/{modulo}', [DashboardController::class, 'modulo'])->name('dashboard.modulo');
 
         // Vistas de trabajo con pestañas (CRUD embebidos) por módulo.
         Route::get('operativos/operaciones', [OperativosController::class, 'operaciones'])->name('operativos.operaciones');
@@ -310,14 +315,11 @@ Route::middleware('auth')->group(function () {
         Route::get('preview/solicitudes', [PreviewController::class, 'solicitudes'])
             ->name('preview.solicitudes');
 
-
         Route::resource('configuraciones-modelo', ConfiguracionesModeloController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-
         Route::resource('tipos-cargas-reporte', TiposCargasReporteController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-
 
         Route::resource('alertas', AlertasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -364,13 +366,12 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'create', 'store', 'update', 'destroy']);
         Route::post('prefacturas/{prefactura}/facturar', [PrefacturasController::class, 'facturar'])->name('prefacturas.facturar');
 
-
         // Módulo RRHH (Fase 5.5)
         Route::resource('bolsa', BolsaController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Coeficiente CDS por entidad+mes+año (Sistema de Pago por Resultados)
-        Route::resource('cds', \App\Http\Controllers\CdsController::class)
+        Route::resource('cds', CdsController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::resource('historial-movimientos', HistorialMovimientosController::class)
@@ -378,12 +379,6 @@ Route::middleware('auth')->group(function () {
         Route::post('historial-movimientos/alta', [HistorialMovimientosController::class, 'alta'])->name('historial-movimientos.alta');
         Route::post('historial-movimientos/traslado', [HistorialMovimientosController::class, 'traslado'])->name('historial-movimientos.traslado');
         Route::post('historial-movimientos/baja', [HistorialMovimientosController::class, 'baja'])->name('historial-movimientos.baja');
-
-
-
-
-
-
 
         // RRHH - Tablas faltantes (Fase 5.5 parte 3)
         Route::resource('provincias', ProvinciasController::class)
@@ -405,34 +400,27 @@ Route::middleware('auth')->group(function () {
         Route::resource('fondos-tiempo', FondosTiempoController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-
-
         Route::resource('salarios-administrativos', SalariosAdministrativosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
         Route::post('salarios-administrativos/guardar-turno', [SalariosAdministrativosController::class, 'guardarTurno'])
             ->name('salarios-administrativos.guardar-turno');
 
-        Route::resource('salarios-choferes', \App\Http\Controllers\SalariosChoferesController::class)
+        Route::resource('salarios-choferes', SalariosChoferesController::class)
             ->only(['index']);
 
-        Route::post('salarios-choferes/actualizar-tasa', [\App\Http\Controllers\SalariosChoferesController::class, 'actualizarTasa'])
+        Route::post('salarios-choferes/actualizar-tasa', [SalariosChoferesController::class, 'actualizarTasa'])
             ->name('salarios-choferes.actualizar-tasa');
 
-        Route::post('salarios-choferes/guardar-tiempo', [\App\Http\Controllers\SalariosChoferesController::class, 'guardarTiempo'])
+        Route::post('salarios-choferes/guardar-tiempo', [SalariosChoferesController::class, 'guardarTiempo'])
             ->name('salarios-choferes.guardar-tiempo');
 
-        Route::post('salarios-choferes/editar-detalle', [\App\Http\Controllers\SalariosChoferesController::class, 'editarDetalle'])
+        Route::post('salarios-choferes/editar-detalle', [SalariosChoferesController::class, 'editarDetalle'])
             ->name('salarios-choferes.editar-detalle');
 
         // RRHH - Catálogos pequeños (Fase 5.5 parte 3)
 
-
-
-
         // Catálogos y configuración (Fase 5.7)
-
-
 
         Route::resource('naves', NavesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -440,27 +428,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('vallas', VallasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-
-
-
         Route::resource('consecutivos', ConsecutivosController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['consecutivos' => 'id']);
 
-
-
-
-
         Route::resource('talleres', TalleresController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-
-
-
-
-
-
-
-
 
         Route::resource('grupos-escala', GruposEscalaController::class)
             ->only(['index', 'store', 'update', 'destroy'])
@@ -489,6 +462,21 @@ Route::middleware('auth')->group(function () {
             Route::get('control-diario-choferes', [ReportController::class, 'pdfControlDiarioChoferes'])->name('control-diario-choferes');
             Route::get('exportar-versat', [ReportController::class, 'exportarVersat'])->name('exportar-versat');
             Route::get('incidencias', [ReportController::class, 'pdfIncidencias'])->name('incidencias');
+            Route::get('penalizaciones', [ReportController::class, 'pdfPenalizaciones'])->name('penalizaciones');
+            Route::get('datos-trabajadores', [ReportController::class, 'pdfDatosTrabajadores'])->name('datos-trabajadores');
+            Route::get('garantia-salarial', [ReportController::class, 'pdfGarantiaSalarial'])->name('garantia-salarial');
+            Route::get('garantia-choferes', [ReportController::class, 'pdfGarantiaChoferes'])->name('garantia-choferes');
+            Route::get('resumen-conceptos-admin', [ReportController::class, 'pdfResumenConceptosAdmin'])->name('resumen-conceptos-admin');
+            Route::get('certificacion-comercial', [ReportController::class, 'pdfCertificacionComercial'])->name('certificacion-comercial');
+            Route::get('certificacion-comercial-excel', [ReportController::class, 'excelCertificacionComercial'])->name('certificacion-comercial-excel');
+            Route::get('certificacion-tnkms', [ReportController::class, 'pdfCertificacionTnkms'])->name('certificacion-tnkms');
+            Route::get('certificacion-tnkms-excel', [ReportController::class, 'excelCertificacionTnkms'])->name('certificacion-tnkms-excel');
+            Route::get('prenomina-resultados', [ReportController::class, 'pdfPrenominaResultados'])->name('prenomina-resultados');
+            Route::get('almacenamiento', [ReportController::class, 'pdfAlmacenamiento'])->name('almacenamiento');
+            Route::get('resumen-dietas', [ReportController::class, 'pdfResumenDietas'])->name('resumen-dietas');
+            Route::get('certificacion-cdt', [ReportController::class, 'pdfCertificacionCdt'])->name('certificacion-cdt');
+            Route::get('operaciones-emcarga-excel', [ReportController::class, 'excelOperacionesEmcarga'])->name('operaciones-emcarga-excel');
+            Route::get('salarios-sistema', [ReportController::class, 'pdfSalariosSistema'])->name('salarios-sistema');
             Route::get('modelo1', [ReportController::class, 'pdfModelo1'])->name('modelo1');
             Route::get('prenomina-choferes-excel', [ReportController::class, 'excelPrenominaChoferes'])->name('prenomina-choferes-excel');
             Route::get('prenomina-administrativo-excel', [ReportController::class, 'excelPrenominaAdministrativo'])->name('prenomina-administrativo-excel');
@@ -502,6 +490,10 @@ Route::middleware('auth')->group(function () {
             Route::get('resumen/{formato}', [ReportesController::class, 'resumenGenerar'])->name('resumen.generar');
             // Página de Salarios y Prenóminas (choferes/administrativo) + Modelo 1.
             Route::get('salarios', [ReportesController::class, 'salarios'])->name('salarios');
+            // Vista unificada de reportes por agrupador (todos los módulos).
+            Route::get('vista', [ReportesController::class, 'vista'])->name('vista');
+            // Vista unificada de reportes del perfil DIRECTIVOS (combo tipo → reporte → variables).
+            Route::get('directivos', [DirectivosController::class, 'reportes'])->name('directivos');
             // Fase A: catálogo de reportes usados (índice con filtros reutilizables)
             Route::get('catalogo', [ReportesController::class, 'index'])->name('catalogo');
             // Reportes del grupo DOCUMENTOS (cartas de porte y hojas de ruta)
@@ -545,7 +537,6 @@ Route::middleware('auth')->group(function () {
         // Módulo Contabilidad (Fase 5.6)
         Route::resource('conciliaciones', ConciliacionesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-
 
         Route::resource('otros-gastos', OtrosGastosController::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -595,7 +586,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('detalles-carga-combustible', DetallesCargaCombustibleController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
-
         Route::resource('dietas', DietasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::post('dietas/{dieta}/liquidar', [DietasController::class, 'liquidar'])
@@ -639,7 +629,7 @@ Route::middleware('auth')->group(function () {
             ->parameters(['historial-tractivos' => 'id']);
 
         // RRHH - Tasas
-        Route::resource('tasas', \App\Http\Controllers\TasasController::class)
+        Route::resource('tasas', TasasController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         // Comercial - Tablas faltantes (Fase 5.8)
         Route::resource('contenedores', ContenedoresController::class)

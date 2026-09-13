@@ -18,6 +18,7 @@
     />
 
     <aside
+      v-if="!esDirectivos"
       class="fixed top-0 left-0 z-30 h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 shadow-sm sidebar-transition flex flex-col lg:hidden"
       :class="sidebarOpen ? 'w-64' : 'w-0'"
     >
@@ -46,6 +47,7 @@
       <header class="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
         <div class="flex items-center gap-3 h-14 px-4 lg:px-6 border-b border-gray-100 dark:border-gray-800">
           <button
+            v-if="!esDirectivos"
             class="p-1.5 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
             @click="sidebarOpen = !sidebarOpen"
           >
@@ -54,7 +56,7 @@
           <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100 hidden sm:block shrink-0">
             Zafiro v5
           </h1>
-          <div class="hidden lg:flex items-center flex-1 min-w-0">
+          <div v-if="!esDirectivos" class="hidden lg:flex items-center flex-1 min-w-0">
             <Menubar :model="menuItems" class="!border-0 !bg-transparent" />
           </div>
         </div>
@@ -268,7 +270,11 @@ const embed = typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).get('embed') === '1';
 const user = computed(() => page.props.auth?.user);
 const roles = computed(() => page.props.auth?.roles ?? []);
-const menu = computed(() => page.props.menu ?? []);
+// El perfil DIRECTIVOS navega con su panel; no se le muestra el menú lateral.
+const esDirectivos = computed(() =>
+  page.props.contexto?.perfilActivo === 'DIRECTIVOS'
+  || (page.props.auth?.roles ?? []).includes('DIRECTIVOS'),
+);const menu = computed(() => page.props.menu ?? []);
 const flash = computed(() => page.props.flash ?? {});
 const contexto = computed(() => page.props.contexto ?? null);
 const toast = useToast();

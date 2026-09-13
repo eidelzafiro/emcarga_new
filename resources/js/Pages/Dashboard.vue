@@ -333,18 +333,24 @@ let echoChannel = null;
 onMounted(() => {
   nextTick(renderChart);
 
-  if (window.Echo) {
-    echoChannel = window.Echo.private('perfil.' + props.rol)
-      .listen('.KpisUpdated', (e) => {
-        if (e.kpis) {
-          ultimaActualizacion.value = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES');
-        }
-      });
+  // La conexión en vivo (Echo/Reverb) nunca debe romper el dashboard: si el
+  // connector no está disponible se ignora silenciosamente.
+  try {
+    if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+      echoChannel = window.Echo.private('perfil.' + props.rol)
+        .listen('.KpisUpdated', (e) => {
+          if (e.kpis) {
+            ultimaActualizacion.value = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES');
+          }
+        });
 
-    window.Echo.connector.pusher.connection.bind('state_change', (states) => {
-      conectado.value = states.current === 'connected';
-    });
-    conectado.value = window.Echo.connector.pusher.connection.state === 'connected';
+      window.Echo.connector.pusher.connection.bind('state_change', (states) => {
+        conectado.value = states.current === 'connected';
+      });
+      conectado.value = window.Echo.connector.pusher.connection.state === 'connected';
+    }
+  } catch (e) {
+    // Sin conexión en vivo; el dashboard sigue funcionando.
   }
 
   window.addEventListener('resize', () => { if (chartInstance) chartInstance.resize(); });

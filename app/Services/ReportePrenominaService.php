@@ -2,9 +2,18 @@
 
 namespace App\Services;
 
-use App\Models\Bolsa;
 use App\Models\Aforo;
+use App\Models\Bolsa;
+use App\Models\CatalogoItem;
+use App\Models\CdsEntidad;
+use App\Models\Entidad;
+use App\Models\HojasRuta;
 use App\Models\Incidencia;
+use App\Models\MovimientoRrhh;
+use App\Models\OrdenesTaller;
+use App\Models\Penalizacion;
+use App\Models\Tractivo;
+use App\Models\Turno;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -208,7 +217,7 @@ class ReportePrenominaService
                 ->whereMonth('fecha_emision', $mes))
             ->where(function ($q) use ($idBolsa) {
                 $q->whereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer', $idBolsa))
-                  ->orWhereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer2', $idBolsa));
+                    ->orWhereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer2', $idBolsa));
             })
             ->whereMonth('fecha_carga', $mes)
             ->whereMonth('fecha_descarga', $mes)
@@ -359,7 +368,7 @@ class ReportePrenominaService
         $idMovs = collect($calculados)->pluck('id_movimiento')->unique()->filter()->values();
         $nronominas = $idMovs->isEmpty()
             ? collect()
-            : \App\Models\MovimientoRrhh::whereIn('id', $idMovs)->pluck('nronomina', 'id');
+            : MovimientoRrhh::whereIn('id', $idMovs)->pluck('nronomina', 'id');
 
         $registros = [];
         $porArea = [];
@@ -497,9 +506,9 @@ class ReportePrenominaService
     public function pagoAdministrativo(int $mes, int $ano, ?int $entidadId = null): array
     {
         $base = $this->prenominaAdministrativo($mes, $ano, $entidadId);
-        $cds = \App\Models\CdsEntidad::cdsDe($entidadId, $mes, $ano, $this->spId(1));
+        $cds = CdsEntidad::cdsDe($entidadId, $mes, $ano, $this->spId(1));
 
-        $idPagoResultadoAdmin = \App\Models\CatalogoItem::query()
+        $idPagoResultadoAdmin = CatalogoItem::query()
             ->where('tipo', 'tipos_pagos_adicionales')
             ->where('origen_id', 5)
             ->value('id');
@@ -523,7 +532,7 @@ class ReportePrenominaService
             $penimporte = 0.0;
 
             if ($idPagoResultadoAdmin && $impsrinicial > 0) {
-                $penSum = \App\Models\Penalizacion::query()
+                $penSum = Penalizacion::query()
                     ->where('id_bolsa', $r['id_bolsa'])
                     ->whereYear('fecha', $ano)
                     ->whereMonth('fecha', $mes)
@@ -592,11 +601,11 @@ class ReportePrenominaService
     public function modelo1(int $mes, int $ano, ?int $idBolsa = null): array
     {
         $entidadId = (int) session('entidad_activa_id') ?: null;
-        $ids = $entidadId ? \App\Models\Entidad::idsPermitidos($entidadId) : [];
+        $ids = $entidadId ? Entidad::idsPermitidos($entidadId) : [];
 
         // Parámetros CLA por provincia (legacy: idprovincias != 3200 → 1.20/2.30;
         // == 3200 (La Habana) → 0.98/1.88).
-        $entidadActiva = $entidadId ? \App\Models\Entidad::find($entidadId) : null;
+        $entidadActiva = $entidadId ? Entidad::find($entidadId) : null;
         $esHabana = $entidadActiva && (int) $entidadActiva->id_provincia === 3200;
         $varcla90 = $esHabana ? 0.98 : 1.20;
         $varcla91 = $esHabana ? 1.88 : 2.30;
@@ -611,7 +620,7 @@ class ReportePrenominaService
                 'cartaPorte.hojaRuta:id,numero,id_tractivo,id_arrastre,id_chofer,id_chofer2',
                 'cartaPorte.hojaRuta.tractivo:id,codigo,capacidad_toneladas',
                 'cartaPorte.chofer:id,nombre,apellidos',
-                
+
                 'tasa:id,nombre,tasa,tasa2',
             ]);
 
@@ -622,7 +631,7 @@ class ReportePrenominaService
         if ($idBolsa) {
             $query->where(function ($q) use ($idBolsa) {
                 $q->whereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer', $idBolsa))
-                  ->orWhereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer2', $idBolsa));
+                    ->orWhereHas('cartaPorte', fn ($cp) => $cp->where('id_chofer2', $idBolsa));
             });
         }
 
@@ -634,7 +643,7 @@ class ReportePrenominaService
         $porChofer = [];
         foreach ($aforos as $aforo) {
             $cp = $aforo->cartaPorte;
-            if (!$cp) {
+            if (! $cp) {
                 continue;
             }
 
@@ -657,127 +666,127 @@ class ReportePrenominaService
             }
 
             foreach (array_keys($choferesCp) as $choferId) {
-            $chofer = $cp->id_chofer == $choferId ? $cp->chofer : Bolsa::with('cargo')->find($choferId);
-            $nombreChofer = $chofer ? trim($chofer->nombre . ' ' . $chofer->apellidos) : 'DESCONOCIDO';
+                $chofer = $cp->id_chofer == $choferId ? $cp->chofer : Bolsa::with('cargo')->find($choferId);
+                $nombreChofer = $chofer ? trim($chofer->nombre.' '.$chofer->apellidos) : 'DESCONOCIDO';
 
-            if (!isset($porChofer[$choferId])) {
-                $bolsa = $chofer ?? Bolsa::find($choferId);
-                $porChofer[$choferId] = [
-                    'id_bolsa' => $choferId,
-                    'nombre' => $nombreChofer,
-                    'carnet' => $bolsa?->ci ?? '',
-                    'cargo' => $chofer?->cargoActual()?->nombre ?? '',
-                    'tarifa' => (float) ($chofer?->cargoActual()?->tarifa ?? 0),
-                    'registros' => [],
-                    'totales' => [
-                        'nro_cp' => 0, 'kms' => 0, 'tons' => 0,
-                        'tperm' => 0, 'tmov' => 0, 'tcarga' => 0, 'tdescarga' => 0, 'ttotal' => 0,
-                        'saltrt' => 0, 'impcla' => 0, 'saltrtcla' => 0,
-                        'ingresos' => 0, 'salario' => 0,
-                    ],
-                ];
-            }
-
-            $kmcarga = (float) ($aforo->km_carga_total ?? 0);
-            $tnreal = (float) ($aforo->tn_real_total ?? 0);
-            $tperm = (float) ($aforo->tiempo_otros ?? 0);
-            $tmov = (float) ($aforo->tiempo_movimiento ?? 0);
-            $tcarga = (float) ($aforo->tiempo_carga ?? 0);
-            $tdescarga = (float) ($aforo->tiempo_descarga ?? 0);
-            $ttotal = (float) ($aforo->tiempo_total ?? 0);
-            $ingresomt = (float) ($aforo->ingreso_mt ?? 0);
-            $tasa = (float) ($aforo->tasa ?? 0);
-            $tasa2 = (float) ($aforo->tasa?->tasa2 ?? 0);
-            $almflete = (float) ($aforo->almacenaje_flete ?? 0);
-            $tarifa = (float) ($chofer?->cargoActual()?->tarifa ?? 0);
-
-            // Ajustes legacy: doble chofer, almacenaje, vacaciones, feriado.
-            $ajuste = 0;
-            $ingreso = $ingresomt;
-            $salalm = 0.0;
-            $esDobleChofer = $cp->id_chofer2 > 0 && $cp->id_chofer2 != $cp->id_chofer;
-
-            if ($esDobleChofer) {
-                $ajuste = 1;
-                if ($kmcarga <= 250) {
-                    $tnreal = round($tnreal / 2, 2);
+                if (! isset($porChofer[$choferId])) {
+                    $bolsa = $chofer ?? Bolsa::find($choferId);
+                    $porChofer[$choferId] = [
+                        'id_bolsa' => $choferId,
+                        'nombre' => $nombreChofer,
+                        'carnet' => $bolsa?->ci ?? '',
+                        'cargo' => $chofer?->cargoActual()?->nombre ?? '',
+                        'tarifa' => (float) ($chofer?->cargoActual()?->tarifa ?? 0),
+                        'registros' => [],
+                        'totales' => [
+                            'nro_cp' => 0, 'kms' => 0, 'tons' => 0,
+                            'tperm' => 0, 'tmov' => 0, 'tcarga' => 0, 'tdescarga' => 0, 'ttotal' => 0,
+                            'saltrt' => 0, 'impcla' => 0, 'saltrtcla' => 0,
+                            'ingresos' => 0, 'salario' => 0,
+                        ],
+                    ];
                 }
-                if ($almflete > 0) {
-                    $ingreso = round($ingresomt - $almflete, 2);
-                    $salalm = round((($almflete / 2) * $almacenaje), 2);
-                } else {
-                    $ingreso = round($ingresomt / 2, 2);
-                }
-                if ($tasa2 > 0) {
-                    $tasa = $tasa2;
-                }
-                $ingresomt = round($ingresomt / 2, 2);
-            } else {
+
+                $kmcarga = (float) ($aforo->km_carga_total ?? 0);
+                $tnreal = (float) ($aforo->tn_real_total ?? 0);
+                $tperm = (float) ($aforo->tiempo_otros ?? 0);
+                $tmov = (float) ($aforo->tiempo_movimiento ?? 0);
+                $tcarga = (float) ($aforo->tiempo_carga ?? 0);
+                $tdescarga = (float) ($aforo->tiempo_descarga ?? 0);
+                $ttotal = (float) ($aforo->tiempo_total ?? 0);
+                $ingresomt = (float) ($aforo->ingreso_mt ?? 0);
+                $tasa = (float) ($aforo->tasa ?? 0);
+                $tasa2 = (float) ($aforo->tasa?->tasa2 ?? 0);
+                $almflete = (float) ($aforo->almacenaje_flete ?? 0);
+                $tarifa = (float) ($chofer?->cargoActual()?->tarifa ?? 0);
+
+                // Ajustes legacy: doble chofer, almacenaje, vacaciones, feriado.
+                $ajuste = 0;
                 $ingreso = $ingresomt;
-                if ($almflete > 0) {
-                    $ingreso = round($ingresomt - $almflete, 2);
-                    $salalm = round($almflete * $almacenaje, 2);
+                $salalm = 0.0;
+                $esDobleChofer = $cp->id_chofer2 > 0 && $cp->id_chofer2 != $cp->id_chofer;
+
+                if ($esDobleChofer) {
+                    $ajuste = 1;
+                    if ($kmcarga <= 250) {
+                        $tnreal = round($tnreal / 2, 2);
+                    }
+                    if ($almflete > 0) {
+                        $ingreso = round($ingresomt - $almflete, 2);
+                        $salalm = round((($almflete / 2) * $almacenaje), 2);
+                    } else {
+                        $ingreso = round($ingresomt / 2, 2);
+                    }
+                    if ($tasa2 > 0) {
+                        $tasa = $tasa2;
+                    }
+                    $ingresomt = round($ingresomt / 2, 2);
+                } else {
+                    $ingreso = $ingresomt;
+                    if ($almflete > 0) {
+                        $ingreso = round($ingresomt - $almflete, 2);
+                        $salalm = round($almflete * $almacenaje, 2);
+                    }
                 }
-            }
-            $salario = round(($ingreso * $tasa) + $salalm, 2);
-            if ($almflete > 0) {
-                $ajuste = 5;
-            }
+                $salario = round(($ingreso * $tasa) + $salalm, 2);
+                if ($almflete > 0) {
+                    $ajuste = 5;
+                }
 
-            // CLA según kmcarga (escala).
-            if ($kmcarga <= 90) {
-                $tarcla = $varcla90;
-            } else {
-                $tarcla = $varcla91;
-            }
-            $impcla = round($ttotal * $tarcla, 2);
-            $saltrt = round($ttotal * $tarifa, 2);
-            $saltrtcla = round($saltrt + $impcla, 2);
+                // CLA según kmcarga (escala).
+                if ($kmcarga <= 90) {
+                    $tarcla = $varcla90;
+                } else {
+                    $tarcla = $varcla91;
+                }
+                $impcla = round($ttotal * $tarcla, 2);
+                $saltrt = round($ttotal * $tarifa, 2);
+                $saltrtcla = round($saltrt + $impcla, 2);
 
-            $registro = [
-                'fcarga' => $aforo->fecha_carga?->format('m-d') ?? '',
-                'hcarga1' => $aforo->hora_carga_1 ?? '',
-                'fdescarga' => $aforo->fecha_descarga?->format('m-d') ?? '',
-                'hdescarga1' => $aforo->hora_descarga_1 ?? '',
-                'equipo' => $hr?->tractivo?->codigo ?? '',
-                'capacidad' => (int) round((float) ($hr?->tractivo?->capacidad_toneladas ?? 0), 0),
-                'nro_hr' => $hr?->numero ?? '',
-                'nro_cp' => $cp->numero ?? '',
-                'kmcarga' => $kmcarga,
-                'tnreal' => $tnreal,
-                'tperm' => $tperm,
-                'tmov' => $tmov,
-                'tcarga' => $tcarga,
-                'tdescarga' => $tdescarga,
-                'ttotal' => $ttotal,
-                'saltrt' => $saltrt,
-                'tarcla' => $tarcla,
-                'impcla' => $impcla,
-                'saltrtcla' => $saltrtcla,
-                'ingresos' => round($ingresomt, 2),
-                'tasa' => round($tasa, 5),
-                'salario' => $salario,
-                'ajuste' => $ajuste,
-            ];
+                $registro = [
+                    'fcarga' => $aforo->fecha_carga?->format('m-d') ?? '',
+                    'hcarga1' => $aforo->hora_carga_1 ?? '',
+                    'fdescarga' => $aforo->fecha_descarga?->format('m-d') ?? '',
+                    'hdescarga1' => $aforo->hora_descarga_1 ?? '',
+                    'equipo' => $hr?->tractivo?->codigo ?? '',
+                    'capacidad' => (int) round((float) ($hr?->tractivo?->capacidad_toneladas ?? 0), 0),
+                    'nro_hr' => $hr?->numero ?? '',
+                    'nro_cp' => $cp->numero ?? '',
+                    'kmcarga' => $kmcarga,
+                    'tnreal' => $tnreal,
+                    'tperm' => $tperm,
+                    'tmov' => $tmov,
+                    'tcarga' => $tcarga,
+                    'tdescarga' => $tdescarga,
+                    'ttotal' => $ttotal,
+                    'saltrt' => $saltrt,
+                    'tarcla' => $tarcla,
+                    'impcla' => $impcla,
+                    'saltrtcla' => $saltrtcla,
+                    'ingresos' => round($ingresomt, 2),
+                    'tasa' => round($tasa, 5),
+                    'salario' => $salario,
+                    'ajuste' => $ajuste,
+                ];
 
-            $porChofer[$choferId]['registros'][] = $registro;
+                $porChofer[$choferId]['registros'][] = $registro;
 
-            $t = &$porChofer[$choferId]['totales'];
-            $t['nro_cp']++;
-            // Paridad legacy: la columna KMS muestra kmcarga, pero el TOTAL
-            // del modelo suma `distancia` (com_girado.distancia).
-            $t['kms'] += (float) ($cp->distancia ?? 0);
-            $t['tons'] += $tnreal;
-            $t['tperm'] += $tperm;
-            $t['tmov'] += $tmov;
-            $t['tcarga'] += $tcarga;
-            $t['tdescarga'] += $tdescarga;
-            $t['ttotal'] += $ttotal;
-            $t['saltrt'] += $saltrt;
-            $t['impcla'] += $impcla;
-            $t['saltrtcla'] += $saltrtcla;
-            $t['ingresos'] += $registro['ingresos'];
-            $t['salario'] += $salario;
+                $t = &$porChofer[$choferId]['totales'];
+                $t['nro_cp']++;
+                // Paridad legacy: la columna KMS muestra kmcarga, pero el TOTAL
+                // del modelo suma `distancia` (com_girado.distancia).
+                $t['kms'] += (float) ($cp->distancia ?? 0);
+                $t['tons'] += $tnreal;
+                $t['tperm'] += $tperm;
+                $t['tmov'] += $tmov;
+                $t['tcarga'] += $tcarga;
+                $t['tdescarga'] += $tdescarga;
+                $t['ttotal'] += $ttotal;
+                $t['saltrt'] += $saltrt;
+                $t['impcla'] += $impcla;
+                $t['saltrtcla'] += $saltrtcla;
+                $t['ingresos'] += $registro['ingresos'];
+                $t['salario'] += $salario;
             }
         }
 
@@ -815,7 +824,7 @@ class ReportePrenominaService
     {
         $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
 
-        $tipo = \App\Models\CatalogoItem::query()
+        $tipo = CatalogoItem::query()
             ->where('tipo', 'tipos_incidencias')
             ->where('origen_id', $origenId)
             ->first();
@@ -839,7 +848,7 @@ class ReportePrenominaService
             ->whereYear('fecha_inicio', $ano)
             ->whereMonth('fecha_inicio', $mes)
             ->with(['bolsa:id,nombre,apellidos,ci,versat,id_entidad,id_area',
-                    'bolsa.area:id,nombre,orden'])
+                'bolsa.area:id,nombre,orden'])
             ->get();
 
         $registros = [];
@@ -884,9 +893,11 @@ class ReportePrenominaService
     private function entidadesPermitidas(?int $entidadId = null): array
     {
         $id = $entidadId ?? $this->entidadActivaId();
-        if (!$id) return [];
+        if (! $id) {
+            return [];
+        }
 
-        return \App\Models\Entidad::idsPermitidos((int) $id);
+        return Entidad::idsPermitidos((int) $id);
     }
 
     /**
@@ -914,8 +925,8 @@ class ReportePrenominaService
         );
 
         foreach ($modelo1['por_chofer'] as $ch) {
-            $bolsa = \App\Models\Bolsa::find($ch['id_bolsa'] ?? null);
-            if (!$bolsa || $bolsa->id_entidad === null) {
+            $bolsa = Bolsa::find($ch['id_bolsa'] ?? null);
+            if (! $bolsa || $bolsa->id_entidad === null) {
                 continue;
             }
             if (! empty($entidadesPermitidas) && ! in_array((int) $bolsa->id_entidad, $entidadesPermitidas, true)) {
@@ -1090,6 +1101,7 @@ class ReportePrenominaService
 
             // Incidencias del mes: garantías (3,44,46), feriados (21) e importes.
             $tgarantia = $impgarantia = $impferiados = $impincidencia = 0.0;
+            $tincidencias = 0.0;
             $incidencias = Incidencia::query()
                 ->where('id_bolsa', $chofer->id)
                 ->whereYear('fecha_inicio', $ano)
@@ -1102,6 +1114,7 @@ class ReportePrenominaService
                 $clave = (string) ($extra['clave'] ?? ($inc->tipoIncidencia?->origen_id ?? $inc->id_tipo_incidencia));
                 $tiempo = (float) $inc->periodo_actual;
                 $importe = (float) $inc->importe;
+                $tincidencias += $tiempo;
 
                 if (in_array($clave, ['3', '44', '46'], true)) {
                     $tgarantia += $tiempo;
@@ -1147,6 +1160,9 @@ class ReportePrenominaService
                 'resultado' => $impresultado,
                 'total' => $impsalfinal,
                 'garantia' => $impgarantia,
+                'garantia_inicial' => (float) ($chofer->garantia ?? 0),
+                'tiempo_mes' => (float) ($res['tiempo_mes'] ?? 0),
+                'tincidencias' => round($tincidencias, 2),
                 'normasalarial' => $normasalarial,
                 'normatransp' => $normatransp,
                 'normatotal' => $normatotal,
@@ -1193,7 +1209,7 @@ class ReportePrenominaService
     {
         $record = DB::connection('legacy')->table('rh_meses')->where('idmes', $mes)->first();
 
-        return (!$record || empty($record->dias)) ? [] : array_map('intval', explode(';', $record->dias));
+        return (! $record || empty($record->dias)) ? [] : array_map('intval', explode(';', $record->dias));
     }
 
     /**
@@ -1202,7 +1218,7 @@ class ReportePrenominaService
     private function diasLaborablesLegacy(int $mes, int $opcion = 1): float
     {
         $record = DB::connection('legacy')->table('rh_meses')->where('idmes', $mes)->first();
-        if (!$record) {
+        if (! $record) {
             return 0;
         }
 
@@ -1219,9 +1235,15 @@ class ReportePrenominaService
         $dom = $sab = $vie = 0;
         for ($i = 1; $i <= $dias; $i++) {
             $w = (int) date('w', mktime(0, 0, 0, $mes, $i, $ano));
-            if ($w === 0) $dom++;
-            if ($w === 6) $sab++;
-            if ($w === 5) $vie++;
+            if ($w === 0) {
+                $dom++;
+            }
+            if ($w === 6) {
+                $sab++;
+            }
+            if ($w === 5) {
+                $vie++;
+            }
         }
         $resto = $dias - ($dom + $sab + $vie);
 
@@ -1270,7 +1292,7 @@ class ReportePrenominaService
             ->where('rh_movimientos.idmovimientos', $idMovimientoRrhh)
             ->value('rh_movimientos.idmovimientos');
 
-        if (!$idLegacy) {
+        if (! $idLegacy) {
             $idLegacy = $idMovimientoRrhh;
         }
 
@@ -1321,10 +1343,10 @@ class ReportePrenominaService
                 fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas),
                 fn ($q) => $q->whereRaw('1 = 0'))
             ->with(['cargo:id,nombre,tarifa,en_salario,id_fondo_tiempo,id_grupo_horario,id_grupo_escala,id_categoria_cargo',
-                    'cargo.fondo_tiempo:id,fondo_tiempo',
-                    'cargo.categoria_cargo:id,nombre',
-                    'cargo.grupo_escala:id,nombre',
-                    'area:id,nombre,orden'])
+                'cargo.fondo_tiempo:id,fondo_tiempo',
+                'cargo.categoria_cargo:id,nombre',
+                'cargo.grupo_escala:id,nombre',
+                'area:id,nombre,orden'])
             ->orderBy('id_area')
             ->get();
 
@@ -1353,9 +1375,15 @@ class ReportePrenominaService
             } else {
                 $regular1 = round($fondoTiempo * 24, 2);
             }
-            if ($regular1 == 216.0) { $regular1 = $tiempom; }
-            if ($regular1 == 190.6) { $regular1 = round($dialab * 8, 2); }
-            if ($regular1 == 173.3) { $regular1 = round($dialab2 * 8, 2); }
+            if ($regular1 == 216.0) {
+                $regular1 = $tiempom;
+            }
+            if ($regular1 == 190.6) {
+                $regular1 = round($dialab * 8, 2);
+            }
+            if ($regular1 == 173.3) {
+                $regular1 = round($dialab2 * 8, 2);
+            }
 
             $tirregular = $movimiento ? $this->irregularMovimiento($movimiento->id, $mes, $ano) : 0.0;
 
@@ -1364,7 +1392,7 @@ class ReportePrenominaService
             $noct1 = $noct2 = 0.0;
             if ($grupoHorario === 3) {
                 $turnos = $movimiento
-                    ? \App\Models\Turno::where('id_movimiento_rrhh', $movimiento->id)
+                    ? Turno::where('id_movimiento_rrhh', $movimiento->id)
                         ->whereYear('inicio', $ano)->whereMonth('inicio', $mes)
                         ->orderBy('inicio')->get()
                     : collect();
@@ -1382,13 +1410,17 @@ class ReportePrenominaService
                 for ($i = 0; $i < $dias; $i++) {
                     $tiempo[$i] = 8;
                     $w = (int) date('w', mktime(0, 0, 0, $mes, $i + 1, $ano));
-                    if ($w === 0) $tiempo[$i] = 'D';
-                    if ($w === 6) $tiempo[$i] = 4;
+                    if ($w === 0) {
+                        $tiempo[$i] = 'D';
+                    }
+                    if ($w === 6) {
+                        $tiempo[$i] = 4;
+                    }
                 }
             }
 
             // Descuentos por incidencia.
-            $d = array_fill_keys(['vac','cr','ai','lm','cm','lss','mov','int','fnt','ab','chm','rt','at','pm','sl','imp','o','tadrl','tiempo1','tiempo2'], 0.0);
+            $d = array_fill_keys(['vac', 'cr', 'ai', 'lm', 'cm', 'lss', 'mov', 'int', 'fnt', 'ab', 'chm', 'rt', 'at', 'pm', 'sl', 'imp', 'o', 'tadrl', 'tiempo1', 'tiempo2'], 0.0);
             foreach ($this->incidenciasMes($trabajador->id, $mes, $ano) as $inc) {
                 for ($a = $inc['inicio']; $a <= $inc['final']; $a++) {
                     if ($a >= 1 && $a <= $dias) {
@@ -1478,7 +1510,8 @@ class ReportePrenominaService
             $res = $this->choferCalc->calcularSalarioChofer($chofer->id, $mes, $ano);
             $ttotal = $res ? (float) $res['t_total'] : 0.0;
             $noct1 = $res ? (float) ($res['imp_nocturnidad_1'] >= 0 ? 0 : 0) : 0.0; // ver abajo: se recalcula
-            $noct1 = 0.0; $noct2 = 0.0;
+            $noct1 = 0.0;
+            $noct2 = 0.0;
             if ($res) {
                 // noct1/noct2 en HORAS: el detalle del motor los trae por aforo.
                 foreach (($res['detalle'] ?? []) as $det) {
@@ -1495,7 +1528,7 @@ class ReportePrenominaService
                     $tiempo[$i] = 'D';
                 }
             }
-            $hrs = \App\Models\HojasRuta::query()
+            $hrs = HojasRuta::query()
                 ->where('cancelada', false)
                 ->whereYear('fecha_cierre', $ano)
                 ->whereMonth('fecha_cierre', $mes)
@@ -1522,7 +1555,7 @@ class ReportePrenominaService
             $diasT = count(array_filter($tiempo, fn ($v) => $v === 'T'));
 
             // Descuentos por incidencia (la clave NO pisa los domingos).
-            $d = array_fill_keys(['vac','cr','ai','lm','cm','lss','mov','int','fnt','ab','chm','rt','at','pm','sl','imp','o','tadrl','tiempo1','tiempo2'], 0.0);
+            $d = array_fill_keys(['vac', 'cr', 'ai', 'lm', 'cm', 'lss', 'mov', 'int', 'fnt', 'ab', 'chm', 'rt', 'at', 'pm', 'sl', 'imp', 'o', 'tadrl', 'tiempo1', 'tiempo2'], 0.0);
             foreach ($this->incidenciasMes($chofer->id, $mes, $ano) as $inc) {
                 for ($a = $inc['inicio']; $a <= $inc['final']; $a++) {
                     if ($a >= 1 && $a <= $dias && $tiempo[$a - 1] !== 'D') {
@@ -1557,6 +1590,652 @@ class ReportePrenominaService
         }
 
         usort($registros, fn ($a, $b) => strcmp($a['nombrecompleto'], $b['nombrecompleto']));
+
+        return ['registros' => $registros];
+    }
+
+    /**
+     * PENALIZACIONES X PAGO ADICIONAL (legacy ModPenalizacion::mostrar_reporte,
+     * reporte #80). Lista las penalizaciones de un tipo de pago adicional en el
+     * mes/año de operaciones, ordenadas por área y número de nómina.
+     *
+     * @return array{registros: array<int,array<string,mixed>>, total_general: float, titulo_tipo: string}
+     */
+    public function penalizacionesPorPago(int $mes, int $ano, int $origenPago, ?int $entidadId = null): array
+    {
+        $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
+
+        $tipoPago = CatalogoItem::query()
+            ->where('tipo', 'tipos_pagos_adicionales')
+            ->where('origen_id', $origenPago)
+            ->first();
+
+        $registros = [];
+        $total = 0.0;
+
+        if ($tipoPago && ! empty($entidadesPermitidas)) {
+            $penalizaciones = Penalizacion::query()
+                ->where('id_pago_adicional', $tipoPago->id)
+                ->whereYear('fecha', $ano)
+                ->whereMonth('fecha', $mes)
+                ->whereHas('bolsa', fn ($q) => $q->whereIn('id_entidad', $entidadesPermitidas))
+                ->with([
+                    'bolsa:id,nombre,apellidos,ci,versat,id_entidad,id_area',
+                    'bolsa.area:id,nombre,orden',
+                    'tipoPenalizacion:id,nombre',
+                    'areaPenalizada:id,nombre,orden',
+                ])
+                ->get();
+
+            foreach ($penalizaciones as $p) {
+                $bolsa = $p->bolsa;
+                $importe = (float) $p->importe;
+                $total += $importe;
+
+                $registros[] = [
+                    'nronomina' => $bolsa
+                        ? ($this->nroci ? ($bolsa->ci ?? '') : ($bolsa->versat ?? $bolsa->ci ?? ''))
+                        : '',
+                    'nombrecompleto' => $bolsa ? trim($bolsa->nombre.' '.$bolsa->apellidos) : '',
+                    'nombarea' => $p->areaPenalizada?->nombre ?? $bolsa?->area?->nombre ?? 'Sin área',
+                    'area_orden' => (int) ($p->areaPenalizada?->orden ?? $bolsa?->area?->orden ?? 0),
+                    'causa' => $p->tipoPenalizacion?->nombre ?? '',
+                    'importe' => $importe,
+                ];
+            }
+        }
+
+        usort($registros, fn ($a, $b) => [$a['area_orden'], $a['nronomina']] <=> [$b['area_orden'], $b['nronomina']]);
+
+        return [
+            'registros' => $registros,
+            'total_general' => $total,
+            'titulo_tipo' => $tipoPago?->nombre ?? '',
+        ];
+    }
+
+    /**
+     * DATOS DE LOS TRABAJADORES (legacy ModMovimientos::mostrar_todos,
+     * reporte #87). Lista los trabajadores de un sistema de pago (catálogo
+     * `tipos_sistemas_pago`, id de catalogo_items) agrupados por área.
+     *
+     * @return array{registros: array<int,array<string,mixed>>}
+     */
+    public function datosTrabajadores(int $idSistemaPago, ?int $entidadId = null): array
+    {
+        $entidadesPermitidas = $this->entidadesPermitidas($entidadId);
+
+        if (empty($entidadesPermitidas) || ! $idSistemaPago) {
+            return ['registros' => []];
+        }
+
+        $filas = DB::table('bolsa as b')
+            ->join('areas as a', 'a.id', '=', 'b.id_area')
+            ->leftJoin('cargos as c', 'c.id', '=', 'b.id_cargo')
+            ->leftJoin('grupos_escala as ge', 'ge.id', '=', 'c.id_grupo_escala')
+            ->leftJoin('catalogo_items as cc', 'cc.id', '=', 'c.id_categoria_cargo')
+            ->leftJoinSub(
+                DB::table('movimientos_rrhh')
+                    ->whereNull('fbaja')
+                    ->select('id_bolsa', DB::raw('MAX(id) as mid'))
+                    ->groupBy('id_bolsa'),
+                'mv',
+                'mv.id_bolsa',
+                '=',
+                'b.id'
+            )
+            ->leftJoin('movimientos_rrhh as m', 'm.id', '=', 'mv.mid')
+            ->whereNull('b.deleted_at')
+            ->where('b.activo', true)
+            ->where('a.id_tipo_sistema_pago', $idSistemaPago)
+            ->whereIn('b.id_entidad', $entidadesPermitidas)
+            ->orderBy('a.orden')
+            ->orderBy('b.nombre')
+            ->select([
+                'b.nombre', 'b.apellidos', 'b.versat', 'b.falta',
+                'c.nombre as cargo', 'ge.nombre as grupo', 'cc.nombre as categoria',
+                'a.nombre as area', 'a.orden as area_orden', 'm.nronomina',
+            ])
+            ->get();
+
+        $registros = [];
+        foreach ($filas as $f) {
+            $registros[] = [
+                'nombrecompleto' => trim(($f->nombre ?? '').' '.($f->apellidos ?? '')),
+                'nronomina' => $f->nronomina ?? $f->versat ?? '',
+                'versat' => $f->versat ?? '',
+                'grupo' => $f->grupo ?? '',
+                'categoria' => $f->categoria ?? '',
+                'cargo' => $f->cargo ?? '',
+                'fecha_ingreso' => $f->falta ?? '',
+                'area' => $f->area ?? 'Sin área',
+                'area_orden' => (int) ($f->area_orden ?? 0),
+            ];
+        }
+
+        return ['registros' => $registros];
+    }
+
+    /**
+     * EMPLEADOS CON GARANTIA SALARIAL (legacy ModBolsa::mostrar_garantia,
+     * reporte #123). Choferes de TRANSPORTACION con garantía salarial > 0.
+     *
+     * @return array{registros: array<int,array<string,mixed>>}
+     */
+    public function garantiaSalarial(?int $entidadId = null): array
+    {
+        $entidades = $this->entidadesPermitidas($entidadId);
+
+        if (empty($entidades)) {
+            return ['registros' => []];
+        }
+
+        $filas = DB::table('bolsa as b')
+            ->join('areas as a', 'a.id', '=', 'b.id_area')
+            ->whereIn('b.id_entidad', $entidades)
+            ->whereNull('b.deleted_at')
+            ->where('b.activo', true)
+            ->where('b.garantia', '>', 0)
+            ->where('a.nombre', 'like', '%TRANSPORTACION%')
+            ->orderBy('b.nombre')
+            ->get(['b.nombre', 'b.apellidos', 'b.garantia']);
+
+        $registros = [];
+        foreach ($filas as $f) {
+            $registros[] = [
+                'nombrecompleto' => trim(($f->nombre ?? '').' '.($f->apellidos ?? '')),
+                'garantia' => $f->garantia,
+            ];
+        }
+
+        return ['registros' => $registros];
+    }
+
+    /**
+     * DATOS P/NOMINA GARANTIA SALARIAL CHOFERES (legacy
+     * npdf_salario_choferes_garantia, reporte #124). Reutiliza el análisis de
+     * transportación (choferes con tgarantia > 0).
+     *
+     * @return array{registros: array<int,array<string,mixed>>, totales: array<string,float>}
+     */
+    public function garantiaChoferes(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $base = $this->analisisTransportacion($mes, $ano, $entidadId);
+
+        $registros = [];
+        $totales = ['garantia' => 0.0, 'tincidencias' => 0.0, 'tgarantia' => 0.0, 'impgarantia' => 0.0];
+
+        foreach ($base['registros'] as $r) {
+            if (($r['tgarantia'] ?? 0) <= 0) {
+                continue;
+            }
+
+            $reg = [
+                'nronomina' => $r['versat'] ?? '',
+                'nombrecompleto' => $r['nombrecompleto'],
+                'garantia' => (float) ($r['garantia_inicial'] ?? 0),
+                'tiempo_mes' => (float) ($r['tiempo_mes'] ?? 0),
+                'tincidencias' => (float) ($r['tincidencias'] ?? 0),
+                'tgarantia' => (float) ($r['tgarantia'] ?? 0),
+                'impgarantia' => (float) ($r['garantia'] ?? 0),
+            ];
+            $registros[] = $reg;
+
+            $totales['garantia'] += $reg['garantia'];
+            $totales['tincidencias'] += $reg['tincidencias'];
+            $totales['tgarantia'] += $reg['tgarantia'];
+            $totales['impgarantia'] += $reg['impgarantia'];
+        }
+
+        foreach ($totales as $k => $v) {
+            $totales[$k] = round($v, 2);
+        }
+
+        return ['registros' => $registros, 'totales' => $totales];
+    }
+
+    /**
+     * RESUMEN DE SALARIOS X CONCEPTOS E INCIDENCIAS — administrativos
+     * (legacy pdf_salario_resumen_concepto_admin, reporte #1066).
+     * Devuelve los totales por concepto (base de cálculo y no incluidos).
+     *
+     * @return array<string,float>
+     */
+    public function resumenConceptosAdmin(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $t = $this->prenominaAdministrativo($mes, $ano, $entidadId)['totales'] ?? [];
+
+        $se = (float) ($t['impescala'] ?? 0);
+        $scla = (float) ($t['impcla'] ?? 0);
+        $sbc = round($se + $scla, 2);
+
+        $sextra = (float) ($t['impextra'] ?? 0);
+        $snoct = (float) ($t['impnocturnidad'] ?? 0);
+        $smaestria = (float) ($t['impmaestrias'] ?? 0);
+        $snbc = round($sextra + $snoct + $smaestria, 2);
+
+        return [
+            'se' => round($se, 2),
+            'scla' => round($scla, 2),
+            'sbc' => $sbc,
+            'sextra' => round($sextra, 2),
+            'snoct' => round($snoct, 2),
+            'smaestria' => round($smaestria, 2),
+            'snbc' => $snbc,
+            'st' => round($sbc + $snbc, 2),
+        ];
+    }
+
+    /**
+     * CERTIFICACION CHOFERES AREA COMERCIAL (legacy ModAforo::reporte_choferes,
+     * reportes #1048/#1068/#1072/#1073). Por chofer de transportación: cartas de
+     * porte y viajes reales vs plan, toneladas reales vs plan e ingresos reales
+     * vs plan, con su % de cumplimiento.
+     *
+     * @return array{registros: array<int,array<string,mixed>>}
+     */
+    public function certificacionComercial(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidades = $this->entidadesPermitidas($entidadId);
+
+        if (empty($entidades)) {
+            return ['registros' => []];
+        }
+
+        $choferes = Bolsa::query()
+            ->where('activo', true)
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', $this->spId(2))))
+            ->whereIn('id_entidad', $entidades)
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get(['id', 'nombre', 'apellidos', 'versat']);
+
+        if ($choferes->isEmpty()) {
+            return ['registros' => []];
+        }
+
+        $ids = $choferes->pluck('id')->all();
+
+        $agg = DB::table('aforos as af')
+            ->join('cartas_porte as cp', 'cp.id', '=', 'af.id_carta_porte')
+            ->join('hojas_ruta as hr', 'hr.id', '=', 'cp.id_hoja_ruta')
+            ->leftJoin('tractivos as t', 't.id', '=', 'hr.id_tractivo')
+            ->leftJoin('vehiculos_planes as vp', function ($j) {
+                $j->on('vp.vehiculo_id', '=', 't.id')->where('vp.vehiculo_type', 'tractivo');
+            })
+            ->whereNull('cp.deleted_at')
+            ->where('cp.cancelada', false)
+            ->whereYear('af.fecha_parte', $ano)
+            ->whereMonth('af.fecha_parte', $mes)
+            ->whereIn('hr.id_chofer', $ids)
+            ->groupBy('hr.id_chofer')
+            ->select([
+                'hr.id_chofer',
+                DB::raw('COUNT(af.id) as nrocp'),
+                DB::raw('COALESCE(SUM(af.viajes),0) as viajes'),
+                DB::raw('COALESCE(SUM(af.tn_real_total),0) as tnreal'),
+                DB::raw('COALESCE(SUM(af.ingreso_mt),0) as produccion'),
+                DB::raw('MAX(vp.plan_viajes) as planviajes'),
+                DB::raw('MAX(vp.plan_tn) as plantns'),
+                DB::raw('MAX(vp.plan_gastos) as planmensual'),
+            ])
+            ->get()
+            ->keyBy('id_chofer');
+
+        $registros = [];
+        foreach ($choferes as $c) {
+            $a = $agg->get($c->id);
+            $viajes = (float) ($a->viajes ?? 0);
+            $tnreal = (float) ($a->tnreal ?? 0);
+            $produccion = (float) ($a->produccion ?? 0);
+            $planviajes = (float) ($a->planviajes ?? 0);
+            $plantns = (float) ($a->plantns ?? 0);
+            $planmensual = (float) ($a->planmensual ?? 0);
+
+            $registros[] = [
+                'versat' => $c->versat ?? '',
+                'nombrecompleto' => trim($c->nombre.' '.$c->apellidos),
+                'nrocp' => (int) ($a->nrocp ?? 0),
+                'planviajes' => $planviajes,
+                'viajes' => $viajes,
+                'cumplimientoviajes' => $planviajes > 0 ? round($viajes * 100 / $planviajes, 2) : 0,
+                'plantns' => $plantns,
+                'tnreal' => $tnreal,
+                'cumplimientotns' => $plantns > 0 ? round($tnreal * 100 / $plantns, 2) : 0,
+                'planmensual' => $planmensual,
+                'produccion' => $produccion,
+                'cumplimiento' => $planmensual > 0 ? round($produccion * 100 / $planmensual, 2) : 0,
+            ];
+        }
+
+        return ['registros' => $registros];
+    }
+
+    /**
+     * CERTIFICO DE INGRESOS POR ALMACENAMIENTO (legacy
+     * ModAforo::reporte_choferes_almacenamiento, reporte #1064). Por chofer de
+     * transportación: importe por almacenamiento del mes.
+     *
+     * @return array{registros: array<int,array<string,mixed>>, total: float}
+     */
+    public function almacenamientoChoferes(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidades = $this->entidadesPermitidas($entidadId);
+
+        if (empty($entidades)) {
+            return ['registros' => [], 'total' => 0.0];
+        }
+
+        $choferes = Bolsa::query()
+            ->where('activo', true)
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', $this->spId(2))))
+            ->whereIn('id_entidad', $entidades)
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get(['id', 'nombre', 'apellidos', 'versat']);
+
+        if ($choferes->isEmpty()) {
+            return ['registros' => [], 'total' => 0.0];
+        }
+
+        $ids = $choferes->pluck('id')->all();
+
+        $agg = DB::table('aforos as af')
+            ->join('cartas_porte as cp', 'cp.id', '=', 'af.id_carta_porte')
+            ->join('hojas_ruta as hr', 'hr.id', '=', 'cp.id_hoja_ruta')
+            ->whereNull('cp.deleted_at')
+            ->where('cp.cancelada', false)
+            ->whereYear('af.fecha_parte', $ano)
+            ->whereMonth('af.fecha_parte', $mes)
+            ->whereIn('hr.id_chofer', $ids)
+            ->groupBy('hr.id_chofer')
+            ->select(['hr.id_chofer', DB::raw('COALESCE(SUM(af.almacenaje_flete),0) as importe')])
+            ->get()
+            ->keyBy('id_chofer');
+
+        $registros = [];
+        $total = 0.0;
+
+        foreach ($choferes as $c) {
+            $importe = (float) ($agg->get($c->id)->importe ?? 0);
+
+            if ($importe <= 0) {
+                continue;
+            }
+
+            $registros[] = [
+                'versat' => $c->versat ?? '',
+                'nombrecompleto' => trim($c->nombre.' '.$c->apellidos),
+                'importe' => round($importe, 2),
+            ];
+            $total += $importe;
+        }
+
+        return ['registros' => $registros, 'total' => round($total, 2)];
+    }
+
+    /**
+     * RESUMEN DE GASTOS DE DIETAS (legacy
+     * ModDietas::mostrar_dietas_resumen + pdf_contabilidad_dietas_resumen,
+     * reporte #1055). Agrupa las dietas del mes por trabajador.
+     *
+     * @return array{registros: array<int,array<string,mixed>>, total: float}
+     */
+    public function resumenDietas(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidades = $this->entidadesPermitidas($entidadId);
+
+        if (empty($entidades)) {
+            return ['registros' => [], 'total' => 0.0];
+        }
+
+        $filas = DB::table('dietas as d')
+            ->join('bolsa as b', 'b.id', '=', 'd.id_bolsa')
+            ->whereIn('d.id_entidad', $entidades)
+            ->whereNull('d.deleted_at')
+            ->where('d.cancelada', false)
+            ->whereYear('d.fecha', $ano)
+            ->whereMonth('d.fecha', $mes)
+            ->groupBy('d.id_bolsa', 'b.nombre', 'b.apellidos')
+            ->orderBy('b.nombre')
+            ->orderBy('b.apellidos')
+            ->select([
+                'b.nombre', 'b.apellidos',
+                DB::raw('COUNT(*) as cant'),
+                DB::raw('COALESCE(SUM(d.monto),0) as importe'),
+            ])
+            ->get();
+
+        $registros = [];
+        $total = 0.0;
+
+        foreach ($filas as $f) {
+            $importe = (float) $f->importe;
+            $registros[] = [
+                'nombrecompleto' => trim(($f->nombre ?? '').' '.($f->apellidos ?? '')),
+                'cant' => (int) $f->cant,
+                'importe' => round($importe, 2),
+            ];
+            $total += $importe;
+        }
+
+        return ['registros' => $registros, 'total' => round($total, 2)];
+    }
+
+    /**
+     * CERTIFICO DEL CUMPLIMIENTO DEL CDT X TRACTIVOS (legacy
+     * ModTaller::cdt_tractivos + Reportestec::pdf_certifico_cdt_tractivos,
+     * reporte #1062). CDT real = horas disponibles del mes / horas totales.
+     *
+     * @return array{registros: array<int,array<string,mixed>>}
+     */
+    public function cdtTractivos(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidades = $this->entidadesPermitidas($entidadId);
+
+        if (empty($entidades)) {
+            return ['registros' => []];
+        }
+
+        $inicio = sprintf('%04d-%02d-01', $ano, $mes);
+        $diasMes = (int) date('t', strtotime($inicio));
+        $fin = date('Y-m-t', strtotime($inicio));
+
+        $tractivos = Tractivo::query()
+            ->whereIn('id_entidad', $entidades)
+            ->with(['tipoVehiculo.marca', 'tipoVehiculo.modelo'])
+            ->orderBy('codigo')
+            ->get();
+
+        $ordenes = OrdenesTaller::query()
+            ->whereIn('id_entidad', $entidades)
+            ->where('cancelada', false)
+            ->where(function ($q) use ($inicio, $fin) {
+                $q->whereBetween('fecha_ingreso', [$inicio, $fin])
+                    ->orWhereBetween('fecha_salida', [$inicio, $fin])
+                    ->orWhere(function ($q2) use ($inicio, $fin) {
+                        $q2->where('fecha_ingreso', '<', $inicio)->where('fecha_salida', '>', $fin);
+                    });
+            })
+            ->get(['id_tractivo', 'fecha_ingreso', 'hora_ingreso', 'fecha_salida', 'hora_salida', 'ottiempo']);
+
+        $porTractivo = [];
+        foreach ($ordenes as $o) {
+            $porTractivo[$o->id_tractivo][] = $o;
+        }
+
+        $registros = [];
+
+        foreach ($tractivos as $t) {
+            $ots = $porTractivo[$t->id] ?? [];
+            $fhoras = 0.0;
+            $fhdisp = 0.0;
+
+            for ($dia = 1; $dia <= $diasMes; $dia++) {
+                $fecha = sprintf('%04d-%02d-%02d', $ano, $mes, $dia);
+                $tiempotaller = 0.0;
+
+                foreach ($ots as $o) {
+                    $fi = substr((string) $o->fecha_ingreso, 0, 10);
+                    $fs = $o->fecha_salida ? substr((string) $o->fecha_salida, 0, 10) : null;
+                    $hi = (float) str_replace(':', '.', (string) $o->hora_ingreso);
+                    $hs = (float) str_replace(':', '.', (string) $o->hora_salida);
+
+                    if ($fs === $fecha && $fi === $fecha) {
+                        $tiempotaller += (float) $o->ottiempo;
+                    } elseif ($fi === $fecha && ($fs === null || $fs !== $fecha)) {
+                        $tiempotaller += 24 - $hi;
+                    } elseif ($fs === $fecha && $fi !== $fecha) {
+                        $tiempotaller += $hs;
+                    } elseif ($fi < $fecha && ($fs === null || $fs > $fecha)) {
+                        $tiempotaller += 24;
+                    }
+                }
+
+                if ($tiempotaller > 24) {
+                    $tiempotaller = 24;
+                }
+
+                $fhoras += 24;
+                $fhdisp += 24 - $tiempotaller;
+            }
+
+            $real = $fhoras > 0 ? round($fhdisp / $fhoras * 100, 2) : 0.0;
+            $plan = (float) ($t->planCdt ?? 0);
+
+            $registros[] = [
+                'codigo' => $t->codigo,
+                'marca' => $t->tipoVehiculo?->marca?->nombre ?? '',
+                'modelo' => $t->tipoVehiculo?->modelo?->nombre ?? '',
+                'plan' => $plan,
+                'real' => $real,
+                'cumplimiento' => $plan > 0 ? round($real / $plan * 100, 2) : 0,
+            ];
+        }
+
+        return ['registros' => $registros];
+    }
+
+    /**
+     * CERTIFICACION CHOFERES AREA COMERCIAL — TONELADAS-KILOMETROS por tramos
+     * (legacy ModAforo::reporte_choferes_tnkms, reportes #1072/#1073). Por
+     * chofer, ingresos agrupados por tramos de distancia:
+     * 1-30, 31-190, 191-350 y 351+.
+     *
+     * @return array{registros: array<int,array<string,mixed>>}
+     */
+    public function certificacionTnkms(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $entidades = $this->entidadesPermitidas($entidadId);
+
+        if (empty($entidades)) {
+            return ['registros' => []];
+        }
+
+        $choferes = Bolsa::query()
+            ->where('activo', true)
+            ->whereHas('movimientosRrhh', fn ($q) => $q->whereNull('fbaja')->where('origen', 'mov')
+                ->whereHas('plantilla.area', fn ($a) => $a->where('id_tipo_sistema_pago', $this->spId(2))))
+            ->whereIn('id_entidad', $entidades)
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get(['id', 'nombre', 'apellidos', 'versat']);
+
+        if ($choferes->isEmpty()) {
+            return ['registros' => []];
+        }
+
+        $ids = $choferes->pluck('id')->all();
+
+        $aforos = DB::table('aforos as af')
+            ->join('cartas_porte as cp', 'cp.id', '=', 'af.id_carta_porte')
+            ->join('hojas_ruta as hr', 'hr.id', '=', 'cp.id_hoja_ruta')
+            ->whereNull('cp.deleted_at')
+            ->where('cp.cancelada', false)
+            ->whereYear('af.fecha_parte', $ano)
+            ->whereMonth('af.fecha_parte', $mes)
+            ->whereIn('hr.id_chofer', $ids)
+            ->get(['hr.id_chofer', 'cp.id_chofer as ch1', 'cp.id_chofer2 as ch2', 'cp.distancia', 'af.ingreso_mt']);
+
+        $tramos = [];
+        foreach ($aforos as $a) {
+            $dist = (float) $a->distancia;
+            $ingreso = (float) $a->ingreso_mt;
+
+            // Si la carta tiene otro chofer y distancia <= 250, el ingreso se reparte.
+            if ((int) $a->ch2 > 0 && (int) $a->ch1 !== (int) $a->ch2 && $dist <= 250) {
+                $ingreso = round($ingreso / 2, 2);
+            }
+
+            $id = (int) $a->id_chofer;
+            $tramos[$id] ??= [0.0, 0.0, 0.0, 0.0];
+
+            if ($dist <= 30) {
+                $tramos[$id][0] += $ingreso;
+            } elseif ($dist <= 190) {
+                $tramos[$id][1] += $ingreso;
+            } elseif ($dist <= 350) {
+                $tramos[$id][2] += $ingreso;
+            } else {
+                $tramos[$id][3] += $ingreso;
+            }
+        }
+
+        $registros = [];
+        foreach ($choferes as $c) {
+            $t = $tramos[$c->id] ?? [0.0, 0.0, 0.0, 0.0];
+            $total = array_sum($t);
+
+            $registros[] = [
+                'versat' => $c->versat ?? '',
+                'nombrecompleto' => trim($c->nombre.' '.$c->apellidos),
+                't1' => round($t[0], 2),
+                't2' => round($t[1], 2),
+                't3' => round($t[2], 2),
+                't4' => round($t[3], 2),
+                'total' => round($total, 2),
+            ];
+        }
+
+        return ['registros' => $registros];
+    }
+
+    /**
+     * SALARIOS X SISTEMA DE PAGO CON RESULTADOS (legacy
+     * pdf_salario_prenomina_resultado_adm, reportes #4067/#4068).
+     * Administrativos por sistema de pago, con columnas de resultado.
+     *
+     * @return array{registros: array<int,array<string,mixed>>}
+     */
+    public function prenominaResultadosAdmin(int $mes, int $ano, ?int $entidadId = null): array
+    {
+        $pre = $this->prenominaAdministrativo($mes, $ano, $entidadId);
+        $registros = [];
+
+        foreach ($pre['registros'] ?? [] as $r) {
+            $se = (float) ($r['impescala'] ?? 0);
+            $scla = (float) ($r['impcla'] ?? 0);
+
+            $registros[] = [
+                'codigo' => $r['nronomina'] ?? ($r['versat'] ?? ''),
+                'nombrecompleto' => $r['nombrecompleto'] ?? '',
+                'cargo' => $r['nombcargo'] ?? '',
+                'trt' => (float) ($r['ttotal'] ?? 0),
+                'se' => $se,
+                'scla' => $scla,
+                'strt' => round($se + $scla, 2),
+                'srinicial' => 0.0,
+                'pen' => 0.0,
+                'srfinal' => 0.0,
+                'nocturnidad' => (float) ($r['impnocturnidad'] ?? 0),
+                'maestria' => (float) ($r['impmaestrias'] ?? 0),
+                'hextras' => (float) ($r['impextra'] ?? 0),
+                'pagos' => 0.0,
+                'salario' => (float) ($r['impsalario2'] ?? 0),
+            ];
+        }
 
         return ['registros' => $registros];
     }

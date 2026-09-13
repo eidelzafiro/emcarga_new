@@ -103,7 +103,7 @@ function totalSistema(item) {
       </template>
     </Toolbar>
 
-    <DataTable :value="registros.data" paginator :rows="registros.per_page" :totalRecords="registros.total"
+    <DataTable lazy :value="registros.data" paginator :rows="registros.per_page" :totalRecords="registros.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(registros.current_page - 1) * registros.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

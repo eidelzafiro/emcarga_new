@@ -10,8 +10,8 @@ class AlertasController extends Controller
 {
     public function index(Request $request)
     {
-        
-        $this->authorize('viewAny', \App\Models\Alerta::class);
+
+        $this->authorize('viewAny', Alerta::class);
         $items = Alerta::with('user')
             ->orderBy('fecha_emision', 'desc')
             ->when($request->vencida, fn ($q, $v) => $q->where('vencida', $v === 'true'))
@@ -26,13 +26,12 @@ class AlertasController extends Controller
 
     public function store(Request $request)
     {
-        
-        $this->authorize('create', \App\Models\Alerta::class);
+
+        $this->authorize('create', Alerta::class);
         $validated = $request->validate([
             'mensaje' => 'required|string',
             'fecha_emision' => 'nullable|date',
             'fecha_vencimiento' => 'nullable|date',
-            'id_perfil' => 'nullable|exists:perfiles_rh,id',
             'vencida' => 'boolean',
         ]);
         $validated['id_user'] = auth()->id();
@@ -43,13 +42,12 @@ class AlertasController extends Controller
 
     public function update(Request $request, Alerta $alerta)
     {
-        
+
         $this->authorize('update', $alerta);
         $validated = $request->validate([
             'mensaje' => 'required|string',
             'fecha_emision' => 'nullable|date',
             'fecha_vencimiento' => 'nullable|date',
-            'id_perfil' => 'nullable|exists:perfiles_rh,id',
             'vencida' => 'boolean',
         ]);
         $alerta->update($validated);
@@ -59,7 +57,7 @@ class AlertasController extends Controller
 
     public function destroy(Alerta $alerta)
     {
-        
+
         $this->authorize('delete', $alerta);
         $alerta->delete();
 

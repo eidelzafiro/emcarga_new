@@ -96,7 +96,7 @@ function destroy(item) {
       </template>
     </Toolbar>
 
-    <DataTable :value="lubricantes.data" paginator :rows="lubricantes.per_page" :totalRecords="lubricantes.total"
+    <DataTable lazy :value="lubricantes.data" paginator :rows="lubricantes.per_page" :totalRecords="lubricantes.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(lubricantes.current_page - 1) * lubricantes.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

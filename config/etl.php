@@ -86,17 +86,6 @@ return [
             ],
         ],
 
-        'clientes_seleccion' => [
-            'legacy' => 'com_clientes_seleccion',
-            'pk' => 'idclientesel',
-            'columnas' => [
-                'nombclientesel' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-            ],
-        ],
-
         'configuraciones_modelo' => [
             'legacy' => 'com_configmodelo',
             'pk' => 'idptomodelo',
@@ -295,18 +284,6 @@ return [
          * CONTABILIDAD
          * ================================================================
          */
-
-        'amortizaciones' => [
-            'legacy' => 'cont_amortizacion',
-            'pk' => 'idamortizacion',
-            'columnas' => [
-                'idtractivos' => 'id_tractivo',
-                'amortizacionmn' => 'amortizacion_mn',
-            ],
-            'defaults' => [
-                'fecha' => '1970-01-01',
-            ],
-        ],
 
         'combustibles_lubricantes' => [
             'legacy' => 'cont_comblubricantes',
@@ -623,30 +600,6 @@ return [
             ],
         ],
 
-        'equipos_electricos' => [
-            'legacy' => 'tec_electequipos',
-            'pk' => 'idelectequipos',
-            'columnas' => [
-                'electequipos' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
-
-        'equipos_garaje' => [
-            'legacy' => 'tec_equiposgaraje',
-            'pk' => 'idequiposgaraje',
-            'columnas' => [
-                'equiposgaraje' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
-
         'estados_componentes' => [
             'legacy' => 'tec_tipoestados',
             'pk' => 'idtipoestados',
@@ -703,18 +656,6 @@ return [
             ],
             'defaults' => [
                 'id_medidor' => 0,
-            ],
-        ],
-
-        'locales_electricos' => [
-            'legacy' => 'tec_electlocales',
-            'pk' => 'idelectlocales',
-            'columnas' => [
-                'electlocales' => 'nombre',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
             ],
         ],
 
@@ -1118,23 +1059,6 @@ return [
          * ================================================================
          */
 
-        'mantenimiento_ciclos' => [
-            'legacy' => 'tec_ciclomantenimiento2000',
-            'pk' => null,
-            'columnas' => [
-                'km' => 'km',
-                'tipo' => 'tipo',
-            ],
-        ],
-
-        'motivos_espera' => [
-            'legacy' => 'tec_motespera',
-            'pk' => 'idmotespera',
-            'columnas' => [
-                'motespera' => 'nombre',
-            ],
-        ],
-
         'cierres_cdt' => [
             'legacy' => 'tec_cierrecdt',
             'pk' => 'id',
@@ -1153,18 +1077,6 @@ return [
                 'idneumtiporoturas' => 'id_tipo_rotura',
                 'neumaticosroturas' => 'nombre',
                 'codigo' => 'codigo',
-            ],
-        ],
-
-        'planes_mantenimiento' => [
-            'legacy' => 'tec_otmtto',
-            'pk' => null,
-            'columnas' => [
-                'idOrdenTaller' => 'id_orden_taller',
-                'fMtto' => 'fecha_mantenimiento',
-                'idTipoMantenimiento' => 'id_tipo_mantenimiento',
-                'kmsMtto' => 'kms_mantenimiento',
-                'kmsDisponible' => 'kms_disponible',
             ],
         ],
     ],

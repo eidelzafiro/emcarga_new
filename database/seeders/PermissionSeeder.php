@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\CatalogoTipo;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -63,7 +64,6 @@ class PermissionSeeder extends Seeder
 
             'prefacturas.ver', 'prefacturas.crear', 'prefacturas.editar', 'prefacturas.eliminar',
 
-
             'bolsa.ver', 'bolsa.crear', 'bolsa.editar', 'bolsa.eliminar',
 
             'cds.ver', 'cds.crear', 'cds.editar', 'cds.eliminar',
@@ -72,13 +72,9 @@ class PermissionSeeder extends Seeder
 
             'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
 
-
-
             'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
 
             'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
-
-
 
             'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
 
@@ -130,9 +126,9 @@ class PermissionSeeder extends Seeder
             'osdes.ver', 'osdes.crear', 'osdes.editar', 'osdes.eliminar',
             'firmas.ver', 'firmas.crear', 'firmas.editar', 'firmas.eliminar',
             'fondos-tiempo.ver', 'fondos-tiempo.crear', 'fondos-tiempo.editar', 'fondos-tiempo.eliminar',
-                'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
-                'salarios-choferes.ver',
-                'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
+            'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
+            'salarios-choferes.ver',
+            'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
             'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
 
             // Comercial - Tablas faltantes
@@ -191,36 +187,36 @@ class PermissionSeeder extends Seeder
         // Asignación de permisos por rol (perfiles legacy)
         $asignacion = [
             'SUPERADMIN' => $permisos,
-            'DIRECTIVOS' => [
-                'dashboard.ver',
-                'bolsa.ver',
-            ],
+            // DIRECTIVOS: solo lectura de módulos operativos + TODOS los
+            // reportes. Sin RRHH ni administración (decisión EIDEL 2026-09-13).
+            'DIRECTIVOS' => $this->permisosDirectivos($permisos),
             'TECNICA' => [
                 'dashboard.ver',
+                'reportes.ver',
                 'tractivos.ver', 'tractivos.crear', 'tractivos.editar', 'tractivos.eliminar',
                 'motores.ver', 'motores.crear', 'motores.editar', 'motores.eliminar',
                 'cajas.ver', 'cajas.crear', 'cajas.editar', 'cajas.eliminar',
                 'diferenciales.ver', 'diferenciales.crear', 'diferenciales.editar', 'diferenciales.eliminar',
                 'baterias.ver', 'baterias.crear', 'baterias.editar', 'baterias.eliminar',
                 'neumaticos.ver', 'neumaticos.crear', 'neumaticos.editar', 'neumaticos.eliminar',
-            'lubricantes.ver', 'lubricantes.crear', 'lubricantes.editar', 'lubricantes.eliminar',
+                'lubricantes.ver', 'lubricantes.crear', 'lubricantes.editar', 'lubricantes.eliminar',
 
-            'control-lubricante.ver', 'control-lubricante.crear', 'control-lubricante.editar', 'control-lubricante.eliminar',
+                'control-lubricante.ver', 'control-lubricante.crear', 'control-lubricante.editar', 'control-lubricante.eliminar',
 
                 'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
                 'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
 
-            'reportes-tecnico.ver', 'reportes-combustible.ver',
-            'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
+                'reportes-tecnico.ver', 'reportes-combustible.ver',
+                'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
 
-            'tipos-mantenimiento.ver', 'tipos-mantenimiento.crear', 'tipos-mantenimiento.editar', 'tipos-mantenimiento.eliminar',
+                'tipos-mantenimiento.ver', 'tipos-mantenimiento.crear', 'tipos-mantenimiento.editar', 'tipos-mantenimiento.eliminar',
                 // Catálogos técnicos
                 'naves.ver', 'naves.crear', 'naves.editar', 'naves.eliminar',
                 'vallas.ver', 'vallas.crear', 'vallas.editar', 'vallas.eliminar',
                 'consecutivos.ver', 'consecutivos.crear', 'consecutivos.editar', 'consecutivos.eliminar',
                 'talleres.ver', 'talleres.crear', 'talleres.editar', 'talleres.eliminar',
                 // Técnica - Tablas faltantes
-                                 'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
+                'arrastres.ver', 'arrastres.crear', 'arrastres.editar', 'arrastres.eliminar',
                 'tipos-tractivos.ver', 'tipos-tractivos.crear', 'tipos-tractivos.editar', 'tipos-tractivos.eliminar',
                 'tipos-arrastres.ver', 'tipos-arrastres.crear', 'tipos-arrastres.editar', 'tipos-arrastres.eliminar',
                 'tipos-equipos.ver', 'tipos-equipos.crear', 'tipos-equipos.editar', 'tipos-equipos.eliminar',
@@ -240,6 +236,7 @@ class PermissionSeeder extends Seeder
             ],
             'COMERCIAL' => [
                 'dashboard.ver',
+                'reportes.ver',
                 'comercial.ver',
                 'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.eliminar',
                 'lugares.ver', 'lugares.crear', 'lugares.editar', 'lugares.eliminar',
@@ -277,9 +274,9 @@ class PermissionSeeder extends Seeder
                 'plantilla.ver', 'plantilla.crear', 'plantilla.editar', 'plantilla.eliminar',
                 'historial-movimientos.ver', 'historial-movimientos.crear', 'historial-movimientos.editar', 'historial-movimientos.eliminar',
                 'tipos-contratos.ver', 'tipos-contratos.crear', 'tipos-contratos.editar', 'tipos-contratos.eliminar',
-            'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
+                'tipos-tasas.ver', 'tipos-tasas.crear', 'tipos-tasas.editar', 'tipos-tasas.eliminar',
 
-            'cds.ver', 'cds.crear', 'cds.editar', 'cds.eliminar',
+                'cds.ver', 'cds.crear', 'cds.editar', 'cds.eliminar',
 
                 // Catálogos RRHH
                 'grupos-escala.ver', 'grupos-escala.crear', 'grupos-escala.editar', 'grupos-escala.eliminar',
@@ -289,9 +286,9 @@ class PermissionSeeder extends Seeder
                 'osdes.ver', 'osdes.crear', 'osdes.editar', 'osdes.eliminar',
                 'firmas.ver', 'firmas.crear', 'firmas.editar', 'firmas.eliminar',
                 'fondos-tiempo.ver', 'fondos-tiempo.crear', 'fondos-tiempo.editar', 'fondos-tiempo.eliminar',
-            'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
+                'salarios.ver', 'salarios.crear', 'salarios.editar', 'salarios.eliminar',
 
-            'salarios-choferes.ver',
+                'salarios-choferes.ver',
                 'salarios-administrativos.ver', 'salarios-administrativos.crear', 'salarios-administrativos.editar', 'salarios-administrativos.eliminar',
                 'meses.ver', 'meses.crear', 'meses.editar', 'meses.eliminar',
                 'tipos-clasificacion-laboral.ver', 'tipos-clasificacion-laboral.crear', 'tipos-clasificacion-laboral.editar', 'tipos-clasificacion-laboral.eliminar',
@@ -301,11 +298,12 @@ class PermissionSeeder extends Seeder
                 // Nómina (2026-08-18)
                 'incidencias.ver', 'incidencias.crear', 'incidencias.editar', 'incidencias.eliminar',
                 'penalizaciones.ver', 'penalizaciones.crear', 'penalizaciones.editar', 'penalizaciones.eliminar',
-            'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
-            'reembolsos.ver', 'reembolsos.crear', 'reembolsos.editar', 'reembolsos.eliminar',
+                'dietas.ver', 'dietas.crear', 'dietas.editar', 'dietas.eliminar',
+                'reembolsos.ver', 'reembolsos.crear', 'reembolsos.editar', 'reembolsos.eliminar',
             ],
             'CONTABILIDAD' => [
                 'dashboard.ver',
+                'reportes.ver',
                 'reportes-ingresos.ver',
                 'reportes-combustible.ver',
                 'conciliaciones.ver', 'conciliaciones.crear', 'conciliaciones.editar', 'conciliaciones.eliminar',
@@ -329,6 +327,7 @@ class PermissionSeeder extends Seeder
             ],
             'OPERATIVOS' => [
                 'dashboard.ver',
+                'reportes.ver',
                 'operativos.ver',
                 'choferes.ver', 'choferes.crear', 'choferes.editar', 'choferes.eliminar',
 
@@ -338,6 +337,7 @@ class PermissionSeeder extends Seeder
 
             'CONFIGURACIONES' => [
                 'dashboard.ver',
+                'reportes.ver',
 
                 'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
                 'usuarios.desbloquear', 'usuarios.restablecer',
@@ -361,6 +361,72 @@ class PermissionSeeder extends Seeder
     }
 
     /**
+     * Permisos del perfil DIRECTIVOS: solo lectura de los módulos operativos
+     * (`.ver`) más TODOS los reportes. Excluye RRHH y administración.
+     *
+     * Se deriva del listado completo de permisos para no quedar desfasado
+     * cuando se agreguen nuevos módulos.
+     */
+    private function permisosDirectivos(array $todos): array
+    {
+        $modulosOperativos = [
+            // Flota / Técnica
+            'tractivos', 'motores', 'cajas', 'diferenciales', 'baterias', 'neumaticos',
+            'lubricantes', 'control-lubricante', 'otros-agregados', 'energia', 'arrastres',
+            'tipos-tractivos', 'tipos-arrastres', 'tipos-equipos', 'tipo-vehiculos',
+            'historial-tractivos', 'choferes', 'estadisticas-explotacion',
+            'registro-ordenes-taller', 'taller', 'tarjetero', 'movimientos-inventario',
+            'balances-electricos', 'locales-electricos', 'tipos-mantenimiento',
+            // Operativos / Comercial / Facturación
+            'comercial', 'operativos', 'clientes', 'lugares', 'distancias', 'acuerdos',
+            'solicitudes', 'carta-porte', 'facturas', 'prefacturas', 'hojas-ruta',
+            'alertas', 'indicadores', 'demandas', 'tarifas', 'otros-ingresos-pre',
+            'contenedores', 'productos', 'devoluciones',
+            // Contabilidad / Combustible / Costos
+            'conciliaciones', 'combustible-cargas', 'combustible-descargas', 'tarjetas',
+            'servicentros', 'reportes-costos', 'estados-tarjetas', 'combustibles-lubricantes',
+            'pagos', 'otros-gastos', 'cierre-tarjetas', 'dietas', 'gasto-material',
+            'amortizacion-taller', 'cuadre-contabilidad', 'firmas-autorizadas',
+        ];
+
+        $seleccionados = ['dashboard.ver'];
+
+        // Reportes: TODOS, pero solo lectura/generación (no se confunden con
+        // el módulo operativo `reportes-costos.*`).
+        $reportesLectura = [
+            'reportes.ver', 'reportes.generar',
+            'reportes-nomina.ver', 'reportes-ingresos.ver', 'reportes-tecnico.ver',
+            'reportes-combustible.ver', 'reportes-facturacion.ver',
+        ];
+
+        foreach ($todos as $permiso) {
+            if (in_array($permiso, $reportesLectura, true)) {
+                $seleccionados[] = $permiso;
+
+                continue;
+            }
+
+            // Catálogo unificado: solo lectura (catalogo.ver y catalogo.{tipo}.ver).
+            if ($permiso === 'catalogo.ver'
+                || (str_starts_with($permiso, 'catalogo.') && str_ends_with($permiso, '.ver'))) {
+                $seleccionados[] = $permiso;
+
+                continue;
+            }
+
+            // Módulos operativos: solo lectura (.ver).
+            if (str_ends_with($permiso, '.ver')) {
+                $prefijo = strstr($permiso, '.', true);
+                if (in_array($prefijo, $modulosOperativos, true)) {
+                    $seleccionados[] = $permiso;
+                }
+            }
+        }
+
+        return array_values(array_unique($seleccionados));
+    }
+
+    /**
      * Permisos del catálogo unificado por tipo de catálogo.
      *
      * - 'todos': TODOS los permisos catalogo.{tipo}.{ver|crear|editar|eliminar}
@@ -380,7 +446,7 @@ class PermissionSeeder extends Seeder
         $todos = [];
         $porRol = [];
 
-        foreach (\App\Models\CatalogoTipo::all(['tipo', 'agrupacion']) as $ct) {
+        foreach (CatalogoTipo::all(['tipo', 'agrupacion']) as $ct) {
             $tipo = $ct->tipo;
             $base = "catalogo.{$tipo}";
             foreach (['ver', 'crear', 'editar', 'eliminar'] as $accion) {

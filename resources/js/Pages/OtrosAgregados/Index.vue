@@ -95,7 +95,7 @@ function destroy(item) {
       </template>
     </Toolbar>
 
-    <DataTable :value="agregados.data" paginator :rows="agregados.per_page" :totalRecords="agregados.total"
+    <DataTable lazy :value="agregados.data" paginator :rows="agregados.per_page" :totalRecords="agregados.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(agregados.current_page - 1) * agregados.per_page"
       stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

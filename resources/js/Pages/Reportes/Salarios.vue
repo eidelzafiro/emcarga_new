@@ -15,6 +15,7 @@ const props = defineProps({
   tiposIncidencia: { type: Array, default: () => [] },
   tiposPenalizacion: { type: Array, default: () => [] },
   sistemasPago: { type: Array, default: () => [] },
+  tiposPagoAdicional: { type: Array, default: () => [] },
 })
 
 const fechaMes = ref(new Date(props.ano, props.mes - 1, 1))
@@ -22,6 +23,7 @@ const reporte = ref(null)
 const tipoIncidencia = ref(props.tiposIncidencia?.[0]?.origen_id ?? null)
 const tipoPenalizacion = ref(props.tiposPenalizacion?.[0]?.id ?? null)
 const sistemaPago = ref(props.sistemasPago?.[0]?.id ?? null)
+const pagoAdicional = ref(props.tiposPagoAdicional?.[0]?.origen_id ?? null)
 const choferId = ref(null)
 
 const mes = computed(() => fechaMes.value.getMonth() + 1)
@@ -49,6 +51,18 @@ const REPORTES = [
   { id: 'control-diario-admin', nombre: 'SC-4-05 Control Diario (Administrativos)', ruta: 'reportes.control-diario-administrativo', formatos: ['pdf'] },
   { id: 'control-diario-choferes', nombre: 'SC-4-05 Control Diario Choferes Transportación', ruta: 'reportes.control-diario-choferes', formatos: ['pdf'] },
   { id: 'incidencias', nombre: 'Prenómina Incidencias al Tiempo Trabajado', ruta: 'reportes.incidencias', formatos: ['pdf'], vars: ['incidencia'] },
+  { id: 'penalizaciones', nombre: 'Penalizaciones x Pago Adicional', ruta: 'reportes.penalizaciones', formatos: ['pdf'], vars: ['pagoAdicional'] },
+  { id: 'datos-trabajadores', nombre: 'Datos de los Trabajadores', ruta: 'reportes.datos-trabajadores', formatos: ['pdf'], vars: ['sistema'] },
+  { id: 'garantia-salarial', nombre: 'Empleados con Garantía Salarial', ruta: 'reportes.garantia-salarial', formatos: ['pdf'] },
+  { id: 'garantia-choferes', nombre: 'Garantía Salarial Choferes (datos p/nómina)', ruta: 'reportes.garantia-choferes', formatos: ['pdf'] },
+  { id: 'resumen-conceptos-admin', nombre: 'Resumen de Salarios x Conceptos (Administrativos)', ruta: 'reportes.resumen-conceptos-admin', formatos: ['pdf'] },
+  { id: 'certificacion-comercial', nombre: 'Certificación Choferes Área Comercial', ruta: 'reportes.certificacion-comercial', formatos: ['pdf', 'excel'] },
+  { id: 'certificacion-tnkms', nombre: 'Certificación Choferes Área Comercial (TN-KM)', ruta: 'reportes.certificacion-tnkms', formatos: ['pdf', 'excel'] },
+  { id: 'prenomina-resultados', nombre: 'Salarios x Sistema de Pago con Resultados', ruta: 'reportes.prenomina-resultados', formatos: ['pdf'] },
+  { id: 'almacenamiento', nombre: 'Certificado de Ingresos por Almacenamiento', ruta: 'reportes.almacenamiento', formatos: ['pdf'] },
+  { id: 'resumen-dietas', nombre: 'Resumen de Gastos de Dietas', ruta: 'reportes.resumen-dietas', formatos: ['pdf'] },
+  { id: 'certificacion-cdt', nombre: 'Certificación CDT x Tractivos', ruta: 'reportes.certificacion-cdt', formatos: ['pdf'] },
+  { id: 'salarios-sistema', nombre: 'Salarios x Sistema de Pago', ruta: 'reportes.salarios-sistema', formatos: ['pdf'], vars: ['sistema'] },
   { id: 'cumpleanos', nombre: 'Listado de Cumpleaños del Mes', ruta: 'reportes.cumpleanos', formatos: ['pdf'] },
   { id: 'licencia', nombre: 'Personal con Licencia de Conducción', ruta: 'reportes.licencia-conduccion', formatos: ['pdf'] },
   { id: 'versat', nombre: 'Exportación al VERSAT (CSV ZIP)', ruta: 'reportes.exportar-versat', formatos: ['excel'] },
@@ -71,9 +85,13 @@ function abrir(formato) {
   if (formato === 'excel' && nombreRuta === 'reportes.modelo1') nombreRuta = 'reportes.modelo1-excel'
   if (formato === 'excel' && nombreRuta === 'reportes.prenomina-choferes') nombreRuta = 'reportes.prenomina-choferes-excel'
   if (formato === 'excel' && nombreRuta === 'reportes.prenomina-administrativo') nombreRuta = 'reportes.prenomina-administrativo-excel'
+  if (formato === 'excel' && nombreRuta === 'reportes.certificacion-comercial') nombreRuta = 'reportes.certificacion-comercial-excel'
+  if (formato === 'excel' && nombreRuta === 'reportes.certificacion-tnkms') nombreRuta = 'reportes.certificacion-tnkms-excel'
 
   const params = { mes: mes.value, ano: ano.value }
   if (usa('incidencia') && tipoIncidencia.value) params.tipo_incidencia = tipoIncidencia.value
+  if (usa('pagoAdicional') && pagoAdicional.value) params.pago_adicional = pagoAdicional.value
+  if (usa('sistema') && sistemaPago.value) params.sistema = sistemaPago.value
   if (usa('chofer') && choferId.value) params.id_bolsa = choferId.value
 
   const url = route(nombreRuta) + '?' + new URLSearchParams(params).toString()
@@ -144,6 +162,19 @@ function abrir(formato) {
                   placeholder="Seleccione"
                   class="w-full"
                   :disabled="!usa('penalizacion')"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1" :class="{ 'opacity-40 pointer-events-none': !usa('pagoAdicional') }">
+                <label class="text-sm font-semibold">Pago adicional</label>
+                <Select
+                  v-model="pagoAdicional"
+                  :options="tiposPagoAdicional"
+                  optionLabel="nombre"
+                  optionValue="origen_id"
+                  placeholder="Seleccione"
+                  class="w-full"
+                  :disabled="!usa('pagoAdicional')"
                 />
               </div>
 

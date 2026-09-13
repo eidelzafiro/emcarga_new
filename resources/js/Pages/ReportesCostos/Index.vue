@@ -50,7 +50,7 @@ const fmt = (n) => n?.toLocaleString('es-CU', { minimumFractionDigits: 2, maximu
       </template>
     </Toolbar>
 
-    <DataTable :value="reportes.data" paginator :rows="reportes.per_page" :totalRecords="reportes.total"
+    <DataTable lazy :value="reportes.data" paginator :rows="reportes.per_page" :totalRecords="reportes.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(reportes.current_page - 1) * reportes.per_page"
       stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

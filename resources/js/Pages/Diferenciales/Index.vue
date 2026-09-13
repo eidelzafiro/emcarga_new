@@ -152,7 +152,7 @@ const estadoSeverity = (e) => e === 'disponible' ? 'success' : e === 'baja' ? 'd
     </Toolbar>
 
     <!-- Vista tabla -->
-    <DataTable v-if="vista === 'tabla'" :value="diferenciales.data" paginator :rows="diferenciales.per_page" :totalRecords="diferenciales.total"
+    <DataTable lazy v-if="vista === 'tabla'" :value="diferenciales.data" paginator :rows="diferenciales.per_page" :totalRecords="diferenciales.total"
       :rowsPerPageOptions="[10, 20, 50]" :first="(diferenciales.current_page - 1) * diferenciales.per_page"
       @page="onPage" stripedRows class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"

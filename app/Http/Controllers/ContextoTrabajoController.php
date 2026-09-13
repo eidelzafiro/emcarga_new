@@ -50,7 +50,7 @@ class ContextoTrabajoController extends Controller
         }
 
         $datos = $request->validate([
-            'perfil' => ['required', 'string', 'in:SUPERADMIN,TECNICA,COMERCIAL,RECHUM,CONTABILIDAD,OPERATIVOS'],
+            'perfil' => ['required', 'string', 'in:SUPERADMIN,TECNICA,COMERCIAL,RECHUM,CONTABILIDAD,OPERATIVOS,CONFIGURACIONES,DIRECTIVOS'],
         ]);
 
         $perfil = $datos['perfil'];

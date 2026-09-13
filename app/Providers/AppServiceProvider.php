@@ -4,18 +4,20 @@ namespace App\Providers;
 
 use App\Database\Grammars\MariaDbGrammarOverride;
 use App\Database\Processors\MariaDbProcessorOverride;
-use App\Policies\IndicadorePolicy;
-use App\Policies\RolePolicy;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Models\Aforo;
 use App\Models\Arrastre;
 use App\Models\Tractivo;
+use App\Policies\IndicadorePolicy;
+use App\Policies\RolePolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\ParallelTesting;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 
@@ -41,6 +43,12 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(config('app.env') === 'local');
 
         Schema::defaultStringLength(191);
+
+        // Rate limiter del login de la API móvil (5/min por usuario+IP).
+        RateLimiter::for('login', function ($request) {
+            return Limit::perMinute(5)
+                ->by(strtolower((string) $request->input('username')).'|'.$request->ip());
+        });
 
         // Fase C: tipo polimórfico de las fichas de vehículo (amortización,
         // planes, documentación). Debe coincidir con el valor insertado en las

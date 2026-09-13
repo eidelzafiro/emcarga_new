@@ -51,12 +51,12 @@ abstract class FpdfReportBase extends FPDF
         // Subtítulo del reporte
         $this->SetXY($posX, $posY + 6);
         $this->SetFont('Arial', 'B', 13);
-        $this->Cell(0, 6, $titulo, 0, 1, 'C');
+        $this->Cell(0, 6, $this->latin1($titulo), 0, 1, 'C');
 
         // Info: mes, año, entidad
         $this->SetXY($posX, $posY + 12);
         $this->SetFont('Arial', 'B', 12);
-        $this->Cell(0, 6, 'MES: ' . $this->mes . '  AÑO: ' . $this->ano, 0, 1, 'C');
+        $this->Cell(0, 6, $this->latin1('MES: ' . $this->mes . '  AÑO: ' . $this->ano), 0, 1, 'C');
     }
 
     /**
@@ -77,7 +77,7 @@ abstract class FpdfReportBase extends FPDF
             $this->setColumnFont($campo, '8');
             $bordes = $campo['bordes'] ?? '';
             $fill = empty($bordes) ? 0 : 1;
-            $this->Cell($campo['ancho'], $rowHeight, $campo['titulo'], 1, 0, $campo['direccion'], $fill);
+            $this->Cell($campo['ancho'], $rowHeight, $this->latin1((string) $campo['titulo']), 1, 0, $campo['direccion'], $fill);
         }
         $this->Ln($rowHeight);
 
@@ -85,7 +85,7 @@ abstract class FpdfReportBase extends FPDF
         $this->SetXY($posX, $posY + $rowHeight);
         foreach ($campos as $campo) {
             $this->setColumnFont($campo, '9');
-            $this->Cell($campo['ancho'], $rowHeight, $campo['titulo'], 1, 0, $campo['direccion'], 1);
+            $this->Cell($campo['ancho'], $rowHeight, $this->latin1((string) $campo['titulo']), 1, 0, $campo['direccion'], 1);
         }
         $this->Ln($rowHeight);
 
@@ -93,7 +93,7 @@ abstract class FpdfReportBase extends FPDF
         $this->SetXY($posX, $posY + $rowHeight * 2);
         foreach ($campos1 as $campo) {
             $this->setColumnFont($campo, '9');
-            $this->Cell($campo['ancho'], $rowHeight, $campo['titulo'], 1, 0, $campo['direccion'], 1);
+            $this->Cell($campo['ancho'], $rowHeight, $this->latin1((string) $campo['titulo']), 1, 0, $campo['direccion'], 1);
         }
         $this->Ln($rowHeight);
     }
@@ -124,7 +124,13 @@ abstract class FpdfReportBase extends FPDF
         // Fecha emisión
         $this->SetXY(10, $posY + 18);
         $this->SetFont('Arial', '', 8);
-        $this->Cell(0, 6, 'Fecha emisión: ' . date('d/m/Y'), 0, 0, 'C');
+        $this->Cell(0, 6, $this->latin1('Fecha emisión: ') . date('d/m/Y'), 0, 0, 'C');
+    }
+
+    /** Convierte texto UTF-8 a ISO-8859-1 (FPDF core usa latin-1). */
+    protected function latin1(string $value): string
+    {
+        return mb_convert_encoding($value, 'ISO-8859-1', 'UTF-8');
     }
 
     /**

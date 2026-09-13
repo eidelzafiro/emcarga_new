@@ -108,7 +108,7 @@ class PermissionSeeder extends Seeder
             'areas.ver', 'areas.crear', 'areas.editar', 'areas.eliminar',
             'entidades.ver', 'entidades.crear', 'entidades.editar', 'entidades.eliminar',
 
-            'reportes.ver', 'reportes.generar', 'reportes-nomina.ver', 'reportes-ingresos.ver', 'reportes-tecnico.ver',
+            'reportes.ver', 'reportes.generar', 'reportes-nomina.ver', 'reportes-ingresos.ver', 'reportes-tecnico.ver', 'reportes-combustible.ver', 'reportes-facturacion.ver',
 
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
             'usuarios.desbloquear', 'usuarios.restablecer',
@@ -210,7 +210,7 @@ class PermissionSeeder extends Seeder
                 'otros-agregados.ver', 'otros-agregados.crear', 'otros-agregados.editar', 'otros-agregados.eliminar',
                 'energia.ver', 'energia.crear', 'energia.editar', 'energia.eliminar',
 
-            'reportes-tecnico.ver',
+            'reportes-tecnico.ver', 'reportes-combustible.ver',
             'taller.ver', 'taller.crear', 'taller.editar', 'taller.eliminar',
 
             'tipos-mantenimiento.ver', 'tipos-mantenimiento.crear', 'tipos-mantenimiento.editar', 'tipos-mantenimiento.eliminar',
@@ -267,6 +267,8 @@ class PermissionSeeder extends Seeder
 
                 'devoluciones.ver', 'devoluciones.crear', 'devoluciones.editar', 'devoluciones.eliminar',
 
+                'reportes-combustible.ver',
+
             ],
             'RECHUM' => [
                 'dashboard.ver',
@@ -305,6 +307,7 @@ class PermissionSeeder extends Seeder
             'CONTABILIDAD' => [
                 'dashboard.ver',
                 'reportes-ingresos.ver',
+                'reportes-combustible.ver',
                 'conciliaciones.ver', 'conciliaciones.crear', 'conciliaciones.editar', 'conciliaciones.eliminar',
                 'tipos-conceptos.ver', 'tipos-conceptos.crear', 'tipos-conceptos.editar', 'tipos-conceptos.eliminar',
                 'otros-gastos.ver', 'otros-gastos.crear', 'otros-gastos.editar', 'otros-gastos.eliminar',

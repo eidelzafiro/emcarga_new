@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Jobs\ProcesarExportacionTabla;
 use App\Models\Bolsa;
+use App\Models\Entidad;
+use App\Models\ReporteLegacy;
+use App\Models\Tarjeta;
+use App\Models\Tractivo;
 use App\Services\Reports\ReporteCatalogoService;
 use App\Services\Reports\ReportesDispatcher;
 use App\Services\Reports\ResumenExplotacionService;
@@ -190,6 +194,181 @@ class ReportesController extends Controller
         ], fn ($v) => $v !== null && $v !== '');
 
         return app(ReportesDispatcher::class)->generar($id, $filtros);
+    }
+
+    // =====================================================================
+    // Reportes agrupados de TÉCNICA y COMBUSTIBLE
+    // =====================================================================
+
+    /** Tipos de la tabla `reportes` que agrupa la página de Técnica. */
+    private const TIPOS_TECNICA = ['TECNICA', 'BATERIAS', 'NEUMATICOS', 'CONTROL TALLER'];
+
+    /** Tipos de la tabla `reportes` que agrupa la página de Combustibles. */
+    private const TIPOS_COMBUSTIBLE = ['COMBUSTIBLE'];
+
+    /** Tipos de la tabla `reportes` que agrupa la página de Facturación. */
+    private const TIPOS_FACTURACION = ['FACTURACION'];
+
+    /**
+     * Página de Reportes de Técnica: reportes del módulo técnico (Técnica,
+     * Baterías, Neumáticos, Control Taller) con sus variables para generar el PDF.
+     */
+    public function tecnicas(ReporteCatalogoService $catalogo)
+    {
+        abort_unless(auth()->user()->can('reportes-tecnico.ver'), 403);
+
+        return Inertia::render('Reportes/Generador', $this->payloadAgrupado(
+            $catalogo,
+            self::TIPOS_TECNICA,
+            'Reportes de Técnica',
+            // CERTIFICO INDICES DE CONSUMO (dominio técnico, tipo CERTIFICOS)
+            [4025],
+        ));
+    }
+
+    public function tecnicasGenerar(Request $request, int $id)
+    {
+        abort_unless(auth()->user()->can('reportes-tecnico.ver'), 403);
+
+        return $this->generarAgrupado($request, $id);
+    }
+
+    /**
+     * Página de Reportes de Combustibles (dominio de Contabilidad).
+     */
+    public function combustibles(ReporteCatalogoService $catalogo)
+    {
+        abort_unless(auth()->user()->can('reportes-combustible.ver'), 403);
+
+        return Inertia::render('Reportes/Generador', $this->payloadAgrupado(
+            $catalogo,
+            self::TIPOS_COMBUSTIBLE,
+            'Reportes de Combustibles',
+            // Conciliaciones de combustible (tipo INDICADORES): 23 y 28.
+            [23, 28],
+        ));
+    }
+
+    public function combustiblesGenerar(Request $request, int $id)
+    {
+        abort_unless(auth()->user()->can('reportes-combustible.ver'), 403);
+
+        return $this->generarAgrupado($request, $id);
+    }
+
+    /**
+     * Página de Reportes de Facturación (dominio de Contabilidad y Comercial).
+     */
+    public function facturacion(ReporteCatalogoService $catalogo)
+    {
+        abort_unless(auth()->user()->can('reportes-facturacion.ver'), 403);
+
+        return Inertia::render('Reportes/Generador', $this->payloadAgrupado(
+            $catalogo,
+            self::TIPOS_FACTURACION,
+            'Reportes de Facturación',
+        ));
+    }
+
+    public function facturacionGenerar(Request $request, int $id)
+    {
+        abort_unless(auth()->user()->can('reportes-facturacion.ver'), 403);
+
+        return $this->generarAgrupado($request, $id);
+    }
+
+    /**
+     * Payload de una página de reportes agrupados: reportes de los tipos
+     * indicados (más ids extra), catálogos de filtros y mes de operaciones.
+     */
+    private function payloadAgrupado(ReporteCatalogoService $catalogo, array $tipos, string $title, array $idsExtra = []): array
+    {
+        $grupos = $catalogo->usadosAgrupados();
+
+        $reportes = collect();
+        foreach ($tipos as $tipo) {
+            $reportes = $reportes->merge($grupos[$tipo] ?? []);
+        }
+
+        if ($idsExtra) {
+            $ids = array_map('intval', $idsExtra);
+            $reportes = $reportes->merge(
+                collect($grupos)->flatten(1)->filter(fn ($r) => in_array((int) $r['id'], $ids, true))
+            );
+        }
+
+        return [
+            'title' => $title,
+            'reportes' => $reportes->unique('id')->sortBy('id')->values()->all(),
+            'opciones' => $this->opcionesFiltros(),
+            'mesOperaciones' => session('fecha_operaciones') ?? now()->toDateString(),
+        ];
+    }
+
+    /**
+     * Catálogos para los selectores de filtro de las páginas agrupadas.
+     */
+    private function opcionesFiltros(): array
+    {
+        return [
+            'tractivo' => Tractivo::query()
+                ->whereNull('fecha_baja')->orderBy('codigo')
+                ->get(['id', 'codigo'])
+                ->map(fn ($t) => ['id' => $t->id, 'label' => $t->codigo])->values()->all(),
+            'tarjeta' => Tarjeta::query()
+                ->orderBy('numero')
+                ->get(['id', 'numero'])
+                ->map(fn ($t) => ['id' => $t->id, 'label' => $t->numero])->values()->all(),
+            'unidad' => Entidad::query()
+                ->orderBy('nombre')
+                ->get(['id', 'nombre'])
+                ->map(fn ($e) => ['id' => $e->id, 'label' => $e->nombre])->values()->all(),
+        ];
+    }
+
+    /**
+     * Genera un reporte agrupado (Técnica/Combustible) traduciendo el valor del
+     * filtro al parámetro que espera el servicio del reporte.
+     */
+    private function generarAgrupado(Request $request, int $id)
+    {
+        $reporte = ReporteLegacy::find($id);
+        $variable = strtolower(trim((string) ($reporte->variable ?? '')));
+        $tipo = app(ReporteCatalogoService::class)->tipoFiltroDe($variable);
+
+        $filtros = [];
+        switch ($tipo) {
+            case 'mes':
+                $filtros['mes'] = $request->input('mes');
+                break;
+            case 'fecha':
+                $filtros['fecha'] = $request->input('fecha');
+                break;
+            case 'consecutivo':
+                $filtros['consecutivo_desde'] = $request->input('consecutivo_desde');
+                $filtros['consecutivo_hasta'] = $request->input('consecutivo_hasta');
+                break;
+            default:
+                $valor = $request->input('valor');
+                if ($valor !== null && $valor !== '') {
+                    $clave = match ($variable) {
+                        'tractivo2' => 'tractivo',
+                        'nombrecompleto2' => 'nombrecompleto',
+                        '' => 'valor',
+                        default => $variable,
+                    };
+                    $filtros[$clave] = $valor;
+                }
+        }
+
+        if ($request->filled('desde')) {
+            $filtros['desde'] = $request->input('desde');
+        }
+        if ($request->filled('hasta')) {
+            $filtros['hasta'] = $request->input('hasta');
+        }
+
+        return app(ReportesDispatcher::class)->generar($id, array_filter($filtros, fn ($v) => $v !== null && $v !== ''));
     }
 
     /**

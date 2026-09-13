@@ -12,6 +12,11 @@ import { formatDate } from '@/Utils/date'
 const props = defineProps({ factura: Object })
 
 const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', cancelada: 'danger', refacturada: 'warn' }
+
+// Impresión del reporte legacy "factura" (id 13) directamente desde la vista.
+function imprimir() {
+  window.open(route('reportes.generar', 13) + '?filtros[factura]=' + props.factura.id, '_blank')
+}
 </script>
 
 <template>
@@ -100,6 +105,7 @@ const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', canc
             </Card>
 
             <div class="flex gap-2">
+                <Button label="Imprimir" icon="pi pi-print" severity="success" @click="imprimir" />
                 <Button label="PDF" icon="pi pi-file-pdf" severity="danger" @click="window.open(route('facturas.imprimir', factura.id), '_blank')" />
                 <Button label="Volver" icon="pi pi-arrow-left" severity="secondary" @click="router.get(route('facturas.index'))" />
             </div>

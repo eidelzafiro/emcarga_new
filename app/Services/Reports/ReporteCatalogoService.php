@@ -74,6 +74,16 @@ class ReporteCatalogoService extends BaseReportService
     }
 
     /**
+     * Expone el tipo de filtro de una variable (mes/fecha/consecutivo/tractivo/
+     * tarjeta/cliente/agrupacion/directo...) para que el controlador construya
+     * los filtros de generación de los reportes agrupados.
+     */
+    public function tipoFiltroDe(string $variable): string
+    {
+        return $this->tipoFiltro($variable);
+    }
+
+    /**
      * Conteo de reportes usados por agrupación (para el resumen de la página).
      */
     public function resumenPorTipo(): array

@@ -20,8 +20,26 @@ const toast = useToast()
 const confirm = useConfirm()
 const search = ref(props.filters?.search || '')
 const estado = ref(props.filters?.estado || '')
+const seleccionadas = ref([])
 
 const severityMap = { emitida: 'info', firmada: 'warn', cobrada: 'success', cancelada: 'danger', refacturada: 'warn' }
+
+// Exporta a CSV: todas las filtradas o solo las seleccionadas.
+function exportar(ids = []) {
+    const params = new URLSearchParams()
+    ids.forEach((id) => params.append('ids[]', id))
+    const qs = ids.length ? '?' + params.toString() : ''
+    window.location = route('facturas.exportar') + qs
+}
+
+function exportarSeleccionadas() {
+    exportar(seleccionadas.value.map((f) => f.id))
+}
+
+// Impresión del reporte legacy "factura" (id 13) de una factura.
+function imprimir(factura) {
+    window.open(route('reportes.generar', 13) + '?filtros[factura]=' + factura.id, '_blank')
+}
 
 watch([search, estado], () => {
     router.get(route('facturas.index'), { search: search.value, estado: estado.value }, { preserveState: true, replace: true })
@@ -83,14 +101,20 @@ function confirmEliminar(factura) {
                 </template>
                 <template #end>
                     <div class="flex gap-2">
-                        <Button label="Exportar" icon="pi pi-download" severity="info" @click="window.location = route('facturas.exportar')" />
+                        <Button label="Exportar todo" icon="pi pi-download" severity="info" @click="exportar()" />
+                        <Button label="Exportar seleccionadas" icon="pi pi-download" severity="success" :disabled="!seleccionadas.length" @click="exportarSeleccionadas" />
                         <InputText v-model="search" placeholder="Buscar..." />
                         <Select v-model="estado" :options="['', 'emitida', 'firmada', 'cobrada', 'cancelada', 'refacturada']" placeholder="Estado" class="w-40" />
                     </div>
                 </template>
             </Toolbar>
 
-            <DataTable :value="facturas.data" :loading="false" striped-rows paginator :rows="20" :total-records="facturas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros">
+            <DataTable :value="facturas.data" :loading="false" striped-rows paginator :rows="20" :total-records="facturas.total" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport" currentPageReportTemplate="Total: {totalRecords} registros"
+                v-model:selection="seleccionadas" selectionMode="multiple" dataKey="id"
+                rowGroupMode="subheader" groupRowsBy="fecha_emision">
+                <template #groupheader="{ data }">
+                    <span class="font-bold text-blue-700 dark:text-blue-300">Facturación del {{ formatDate(data.fecha_emision) }}</span>
+                </template>
                 <Column field="numero" header="No. Factura" sortable />
                 <Column field="cliente.nombre" header="Cliente" sortable />
                 <Column field="fecha_emision" header="Fecha Emisión" sortable>
@@ -108,6 +132,7 @@ function confirmEliminar(factura) {
                     <template #body="{ data }">
                         <div class="flex gap-1">
                             <Button icon="pi pi-eye" rounded text severity="info" @click="router.get(route('facturas.show', data.id))" v-tooltip.top="'Ver'" />
+                            <Button icon="pi pi-print" rounded text severity="success" @click="imprimir(data)" v-tooltip.top="'Imprimir factura'" />
                             <Button v-if="data.estado === 'emitida'" icon="pi pi-check" rounded text severity="success" @click="firmar(data)" v-tooltip.top="'Firmar'" />
                             <Button v-if="data.estado === 'emitida'" icon="pi pi-dollar" rounded text severity="warn" @click="cobrar(data)" v-tooltip.top="'Cobrar'" />
                             <Button v-if="data.estado === 'emitida'" icon="pi pi-refresh" rounded text severity="warn" @click="confirmRefacturar(data)" v-tooltip.top="'Refacturar'" />

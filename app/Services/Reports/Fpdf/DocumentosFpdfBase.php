@@ -92,12 +92,12 @@ abstract class DocumentosFpdfBase extends FPDF
             $this->Cell(80, 6, 'UNIDAD: '.$this->txt((string) ($this->entidad->abreviatura ?? '')), 0, 1, 'L');
         }
 
-        // Pie: página + fecha de emisión
+        // Pie: página + fecha de emisión (convertido a ISO-8859-1 para FPDF)
         $this->SetY(-15);
         $this->SetFont('Arial', 'I', 12);
-        $this->Cell(0, 10, 'Página '.$this->PageNo().'/{nb}', 0, 0, 'C');
+        $this->Cell(0, 10, $this->txt('Página ').$this->PageNo().'/{nb}', 0, 0, 'C');
         $this->SetXY(10, -15);
-        $this->Cell(0, 10, 'Fecha emisión: '.$fecha, 0, 1, 'L');
+        $this->Cell(0, 10, $this->txt('Fecha emisión: ').$fecha, 0, 1, 'L');
     }
 
     /**

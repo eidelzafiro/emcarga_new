@@ -507,6 +507,14 @@ Route::middleware('auth')->group(function () {
             // Reportes del grupo DOCUMENTOS (cartas de porte y hojas de ruta)
             Route::get('documentos', [ReportesController::class, 'documentos'])->name('documentos');
             Route::get('documentos/generar/{reporte}', [ReportesController::class, 'documentosGenerar'])->name('documentos.generar');
+            // Reportes agrupados de Técnica y Combustibles
+            Route::get('tecnicas', [ReportesController::class, 'tecnicas'])->name('tecnicas');
+            Route::get('tecnicas/generar/{reporte}', [ReportesController::class, 'tecnicasGenerar'])->name('tecnicas.generar');
+            Route::get('combustibles', [ReportesController::class, 'combustibles'])->name('combustibles');
+            Route::get('combustibles/generar/{reporte}', [ReportesController::class, 'combustiblesGenerar'])->name('combustibles.generar');
+            // Reportes agrupados de Facturación
+            Route::get('facturacion', [ReportesController::class, 'facturacion'])->name('facturacion');
+            Route::get('facturacion/generar/{reporte}', [ReportesController::class, 'facturacionGenerar'])->name('facturacion.generar');
             // GET: descarga/binario vía navegación real (sin XHR Inertia). POST: flujo
             // Inertia para exportaciones en cola (feedback en la misma página).
             Route::match(['get', 'post'], 'generar/{reporte}', [ReportesController::class, 'generar'])->name('generar');

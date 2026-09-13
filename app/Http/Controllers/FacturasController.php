@@ -264,9 +264,12 @@ class FacturasController extends Controller
     {
         $this->authorize('viewAny', Factura::class);
 
+        $ids = array_filter((array) $request->input('ids', []), fn ($v) => $v !== null && $v !== '');
+
         $facturas = Factura::with('cliente:id,nombre', 'entidad:id,nombre,abreviatura,talon_versat')
-            ->when($request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%"))->orWhere('numero', 'like', "%{$s}%"))
-            ->when($request->estado, fn ($q, $v) => $q->where('estado', $v))
+            ->when(! empty($ids), fn ($q) => $q->whereIn('id', $ids))
+            ->when(empty($ids) && $request->search, fn ($q, $s) => $q->whereHas('cliente', fn ($q) => $q->where('nombre', 'like', "%{$s}%"))->orWhere('numero', 'like', "%{$s}%"))
+            ->when(empty($ids) && $request->estado, fn ($q, $v) => $q->where('estado', $v))
             ->when(! empty($this->entidadesPermitidas()), fn ($q) => $q->whereIn('id_entidad', $this->entidadesPermitidas()))
             ->orderBy('fecha_emision', 'desc')
             ->orderBy('numero', 'desc')

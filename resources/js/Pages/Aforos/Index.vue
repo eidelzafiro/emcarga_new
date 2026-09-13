@@ -102,8 +102,12 @@ watch([search, cliente, chofer, equipo], navegar)
             <div v-if="vista === 'tabla'">
                 <DataTable :value="aforos.data || []" stripedRows size="small" responsiveLayout="scroll"
                     :paginator="(aforos.data || []).length > 25" :rows="25"
+                    rowGroupMode="subheader" groupRowsBy="fecha_parte"
                     :globalFilterFields="['carta_porte.numero', 'carta_porte.cliente.nombre']">
                     <template #empty>No hay aforos para el período.</template>
+                    <template #groupheader="{ data }">
+                        <span class="font-bold text-blue-700 dark:text-blue-300">Aforos del {{ formatDate(data.fecha_parte) }}</span>
+                    </template>
                     <Column field="carta_porte.numero" header="CP" sortable class="font-bold" />
                     <Column field="carta_porte.hoja_ruta.numero" header="HR" sortable />
                     <Column field="fecha_parte" header="Fecha" sortable>

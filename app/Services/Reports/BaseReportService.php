@@ -291,12 +291,13 @@ abstract class BaseReportService
     protected function tipoFiltro(string $variable): string
     {
         return match (strtolower(trim($variable))) {
-            'mes', 'mes1' => 'mes',
+            'mes', 'mes1', 'mesano' => 'mes',
             'fecha', 'fparte' => 'fecha',
             'consecutivo' => 'consecutivo',
-            'tractivo' => 'tractivo',
+            'tractivo', 'tractivo2' => 'tractivo',
             'cliente', 'clientes', 'abreviatura', 'organismo' => 'cliente',
             'tarjeta' => 'tarjeta',
+            'unidad' => 'unidad',
             'cargas', 'devoluciones', 'ingresos', 'indicadores', 'variable',
             'variable2', 'imptipocomb', 'nombrecompleto2' => 'agrupacion',
             default => 'directo',

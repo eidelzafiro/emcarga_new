@@ -3,6 +3,44 @@
 Estado: 2026-09-13. Stack real: **Laravel 13.8 + MariaDB 10.19 + Inertia/Vue**.
 Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo/FCM** (con fallback in-app).
 
+## Estado de avance (2026-09-13)
+
+- ✅ **Fase 0** rama `feature/api-mobile`.
+- ✅ **Fase 1** Sanctum ^4.3 + `personal_access_tokens` + `HasApiTokens` (commit `fd44a9d`).
+- ✅ **Fase 2** `/api/v1` registrado en `bootstrap/app.php` → `routes/api.php` → `api_v1.php`.
+- ✅ **Fase 3** `AuthController` (login/me/logout/logout-all) + `UserResource` + rate limiter `login` (commit `fd44a9d`).
+- ✅ **Fase 4 (piloto)** Flota/Tractivos + `ResolverEntidadApi` + `ScopesEntidadApi` + test de aislamiento (commit `dbcb38b`).
+- Suite: **248 fast verdes**. Endpoint probado: `GET /api/v1/ping` → `{"ok":true,"version":"v1"}`.
+
+## Plan para mañana (2026-09-14)
+
+### 1. Completar Fase 4 — resto de módulos (mismo molde)
+Patrón por módulo: `Controller` (index/show) + `Resource` + `ScopesEntidadApi` + rutas `auth:sanctum,api.entidad` + test de aislamiento.
+- [ ] **RRHH**: `bolsa` (empleados), `cargos`, `salarios` (admin/choferes, lectura del mes de operaciones).
+- [ ] **Clientes**: `clientes`, `lugares`, `acuerdos`.
+- [ ] **Ingresos/Indicadores**: `aforos` (por mes de operaciones), `facturas`, `indicadores` (resumen).
+- [ ] **Combustible**: `combustible-cargas`, `combustible-descargas`, `tarjetas`, `reportes-costos`.
+- [ ] **Taller**: `ordenes-taller`, `control-lubricantes`.
+- [ ] `contexto/entidad` y `contexto/fecha` (fijar entidad/mes del token; abilities editables).
+
+### 2. Fase 5 — Resources + paginación + filtros
+- [ ] `per_page` (≤100), `cursorPaginate` en tablas grandes, `meta`/`links` uniformes.
+- [ ] Filtros `search`, `desde`, `hasta`, `mes`, `id_entidad`.
+
+### 3. Fase 6 — Seguridad
+- [ ] `throttle:api` (60/min), CORS del origen Ionic, expiración de tokens, `logout-all`.
+- [ ] `SecurityHeaders` en API (HSTS).
+
+### 4. Fase 7 — Eficiencia
+- [ ] Eager loading + `withCount`, cache de catálogos, índices compuestos.
+
+### Decisiones pendientes
+- [ ] Ionic+Vue vs Ionic+React (asumido Vue).
+- [ ] Hosting backend de la API.
+- [ ] Redis para cache/colas (phpredis ausente) o `database`/`file`.
+
+---
+
 ## Decisiones
 - [x] Móvil: Ionic + Vue (repo separado)
 - [x] Offline-first: parcial (cache lecturas + cola escrituras append)

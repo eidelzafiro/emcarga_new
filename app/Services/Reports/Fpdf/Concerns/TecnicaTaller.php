@@ -10,8 +10,8 @@ use App\Models\ControlLubricante;
 use App\Models\GastosOrden;
 use App\Models\Motore;
 use App\Models\OrdenesTaller;
-use App\Models\OrdenesOperacione;
 use App\Models\Tractivo;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -74,7 +74,7 @@ trait TecnicaTaller
             return '';
         }
         try {
-            return \Carbon\Carbon::parse($valor)->format('d/m/Y');
+            return Carbon::parse($valor)->format('d/m/Y');
         } catch (\Throwable) {
             return (string) $valor;
         }
@@ -87,10 +87,21 @@ trait TecnicaTaller
             return '';
         }
         try {
-            return \Carbon\Carbon::parse($valor)->format('H:i');
+            return Carbon::parse($valor)->format('H:i');
         } catch (\Throwable) {
             return (string) $valor;
         }
+    }
+
+    /** Número de ficha técnica CT-1 sin decimales sobrantes (135.00 → 135). */
+    protected function ct1Num($valor): string
+    {
+        if ($valor === null || $valor === '' || ! is_numeric($valor)) {
+            return '';
+        }
+        $n = (float) $valor;
+
+        return (string) (fmod($n, 1.0) === 0.0 ? (int) $n : $n);
     }
 
     /** Diferencia absoluta en días (paridad restaFechas legacy). */
@@ -100,7 +111,7 @@ trait TecnicaTaller
             return null;
         }
         try {
-            return (int) round(abs(\Carbon\Carbon::parse($desde)->diffInDays(\Carbon\Carbon::parse($hasta))));
+            return (int) round(abs(Carbon::parse($desde)->diffInDays(Carbon::parse($hasta))));
         } catch (\Throwable) {
             return null;
         }
@@ -113,7 +124,7 @@ trait TecnicaTaller
             return null;
         }
         try {
-            return (int) round(\Carbon\Carbon::parse($hasta)->diffInDays(\Carbon\Carbon::parse($desde), false));
+            return (int) round(Carbon::parse($hasta)->diffInDays(Carbon::parse($desde), false));
         } catch (\Throwable) {
             return null;
         }
@@ -698,7 +709,17 @@ trait TecnicaTaller
 
         $titulo = 'DATOS TECNICOS (MODELO CT-1)';
         $this->inicio($titulo);
-        $t->loadMissing(['motor', 'caja', 'diferencial', 'documentacion', 'grupo', 'tipoVehiculo', 'tipoServicio', 'colorPrimario', 'colorSecundario']);
+        $t->loadMissing([
+            'motor', 'caja', 'diferencial', 'documentacion', 'grupo',
+            'tipoVehiculo.tipoEquipo', 'tipoVehiculo.marca', 'tipoVehiculo.modelo',
+            'tipoVehiculo.tipoTractivo.pais',
+            'tipoVehiculo.tipoTractivo.medidaDel',
+            'tipoVehiculo.tipoTractivo.medidaTra',
+            'tipoVehiculo.tipoTractivo.medidaRes',
+            'tipoServicio', 'colorPrimario', 'colorSecundario',
+        ]);
+
+        $tt = $t->tipoVehiculo?->tipoTractivo;
 
         $posY = 28;
         $fila = function (array $cols, bool $header) use (&$posY) {
@@ -734,18 +755,22 @@ trait TecnicaTaller
             $this->Cell($c[0], 6, $this->txt($c[1]), 'LRB', 0, 'C', true);
         }
         $fila([
-            [20, $t->codigo], [40, $t->tipoVehiculo?->nombre ?? ''],
-            [40, $t->motor?->marca ?? ''], [40, $t->motor?->modelo ?? ''],
-            [35, ''], [25, $t->anno], [30, $doc?->circulacion ?? ''], [30, $t->placa],
+            [20, $t->codigo], [40, $t->tipoVehiculo?->tipoEquipo?->nombre ?? ''],
+            [40, $t->tipoVehiculo?->marca?->nombre ?? ''], [40, $t->tipoVehiculo?->modelo?->nombre ?? ''],
+            [35, $tt?->pais?->nombre ?? ''], [25, $t->anno], [30, $doc?->circulacion ?? ''], [30, $t->placa],
         ], false);
 
         $fila([[50, 'CHASIS'], [90, 'SERVICIO QUE PRESTA'], [65, 'FECHA ULTIMA RECONSTRUCCION'], [28, 'DIST /EJES (I/T)'], [27, '# EJES']], true);
-        $fila([[50, $doc?->nro_chasis ?? ''], [90, $t->tipoServicio?->nombre ?? ''], [65, $this->tecnicaFecha($doc?->f_reconstruccion)], [28, ''], [27, '']], false);
+        $fila([
+            [50, $doc?->nro_chasis ?? ''], [90, $t->tipoServicio?->nombre ?? ''],
+            [65, $this->tecnicaFecha($doc?->f_reconstruccion)],
+            [28, trim($this->ct1Num($tt?->dist_eje_inter).'/'.$this->ct1Num($tt?->dist_eje_tras), '/')], [27, $this->ct1Num($tt?->ejes_cant)],
+        ], false);
 
         $fila([[50, 'ACUMULADOR'], [90, 'NEUMATICOS'], [65, 'COMBUSTIBLE'], [55, 'CAMA VEHICULO/ARRASTRE']], true);
-        $fila([[35, 'CANTIDAD'], [15, ''], [30, 'DELANTERO'], [30, 'TRASERO'], [30, 'RESPUESTA'], [65, $t->tipoCombustible?->nombre ?? ''], [18, 'LARGO'], [9, ''], [18, 'ALTURA'], [10, '']], false);
-        $fila([[35, 'VOLTAJE'], [15, ''], [30, ''], [30, ''], [30, ''], [55, 'CAPACIDAD TANQUE LITROS'], [10, $t->cap_deposito], [18, 'ANCHO'], [9, ''], [18, 'm3'], [10, '']], false);
-        $fila([[35, 'AMPERAJE'], [15, ''], [10, 'MED'], [20, ''], [10, 'MED'], [20, ''], [10, 'MED'], [20, ''], [120, '']], false);
+        $fila([[35, 'CANTIDAD'], [15, $this->ct1Num($tt?->bat_cant)], [30, 'DELANTERO'], [30, 'TRASERO'], [30, 'RESPUESTA'], [65, $t->tipoCombustible?->nombre ?? ''], [18, 'LARGO'], [9, $this->ct1Num($tt?->cama_largo)], [18, 'ALTURA'], [10, $this->ct1Num($tt?->cama_altura)]], false);
+        $fila([[35, 'VOLTAJE'], [15, $this->ct1Num($tt?->bat_volt)], [30, $this->ct1Num($tt?->neum_del_cant)], [30, $this->ct1Num($tt?->neum_tras_cant)], [30, $this->ct1Num($tt?->neum_resp_cant)], [55, 'CAPACIDAD TANQUE LITROS'], [10, $this->ct1Num($t->cap_deposito)], [18, 'ANCHO'], [9, $this->ct1Num($tt?->cama_ancho)], [18, 'm3'], [10, ($tt?->cama_largo && $tt?->cama_ancho && $tt?->cama_altura) ? round($tt->cama_largo * $tt->cama_ancho * $tt->cama_altura / 1000000, 1) : '']], false);
+        $fila([[35, 'AMPERAJE'], [15, $this->ct1Num($tt?->bat_amp)], [10, 'MED'], [20, $tt?->medidaDel?->nombre ?? ''], [10, 'MED'], [20, $tt?->medidaTra?->nombre ?? ''], [10, 'MED'], [20, $tt?->medidaRes?->nombre ?? ''], [120, '']], false);
 
         $fila([[40, 'NO RESOLUCION'], [25, $doc?->nro_resolucion ?? ''], [35, 'VIN'], [40, $doc?->vin ?? ''], [30, 'COLOR'], [40, $t->colorPrimario?->nombre ?? ''], [50, 'NO CARROCERIA O CABINA']], true);
         $fila([[40, 'PATRIMONIO ESTATAL'], [25, ''], [35, ''], [40, ''], [30, ''], [40, $t->colorSecundario?->nombre ?? ''], [50, $doc?->nro_carroceria ?? '']], false);

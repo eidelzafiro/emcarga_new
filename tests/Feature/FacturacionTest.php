@@ -13,7 +13,6 @@ use Tests\TestCase;
  */
 class FacturacionTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,6 +22,16 @@ class FacturacionTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole('COMERCIAL');
+        $user->password_temporal = false;
+        $user->save();
+
+        return $user;
+    }
+
+    private function usuarioRechum(): User
+    {
+        $user = User::factory()->create();
+        $user->assignRole('RECHUM');
         $user->password_temporal = false;
         $user->save();
 
@@ -126,7 +135,10 @@ class FacturacionTest extends TestCase
 
     public function test_tipo_ingresos_index(): void
     {
-        $this->actingAs($this->usuarioComercial())
+        // `tipo_ingresos` pertenece a la agrupación RRHH del catálogo unificado,
+        // por lo que su permiso específico (catalogo.tipo_ingresos.ver) lo tiene
+        // RECHUM, no COMERCIAL.
+        $this->actingAs($this->usuarioRechum())
             ->get(route('catalogo.index', ['tipo' => 'tipo_ingresos']))
             ->assertOk();
     }

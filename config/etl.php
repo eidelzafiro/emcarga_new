@@ -144,7 +144,6 @@ return [
             ],
         ],
 
-
         'lugares' => [
             'legacy' => 'com_lugares',
             'pk' => 'idlugar',
@@ -241,9 +240,6 @@ return [
             'pk' => 'idtipocargasreporte',
         ],
 
-
-
-
         'tipos_modelo' => [
             'legacy' => 'com_tipomodelo',
             'pk' => 'idtipomod',
@@ -258,8 +254,6 @@ return [
                 'activo' => true,
             ],
         ],
-
-
 
         // Tarjetas de combustible (legacy cont_tarjetas): campos originales
         // completos. id_cliente queda NULL (legacy relaciona con empleado/
@@ -341,9 +335,6 @@ return [
             ],
             'cero_a_null' => ['id_provincia'],
         ],
-
-
-
 
         /*
          * ================================================================
@@ -436,7 +427,6 @@ return [
             ],
         ],
 
-
         'firmas' => [
             'legacy' => 'rh_firmas',
             'pk' => 'idfirmas',
@@ -476,7 +466,6 @@ return [
             ],
         ],
 
-
         'meses' => [
             'legacy' => 'rh_meses',
             'pk' => 'idmes',
@@ -498,7 +487,6 @@ return [
             ],
         ],
 
-
         'osdes' => [
             'legacy' => 'rh_osdes',
             'pk' => 'idosdes',
@@ -513,7 +501,6 @@ return [
             ],
         ],
 
-
         'provincias' => [
             'legacy' => 'rh_provincias',
             'pk' => 'idprovincias',
@@ -526,12 +513,6 @@ return [
         // tipos_causas_movimiento, tipos_especialidad, tipos_plantillas y
         // tipos_tallas fueron eliminadas intencionalmente del nuevo esquema
         // (migración 2026_07_31_010000_drop_unused_legacy_catalog_tables).
-
-
-
-
-
-
 
         'tipos_incidencias' => [
             'legacy' => 'rh_tipoincidencias',
@@ -550,11 +531,6 @@ return [
             ],
         ],
 
-
-
-
-
-
         'tipos_penalizaciones' => [
             'legacy' => 'rh_tipopenalizaciones',
             'pk' => 'idtipopenalizaciones',
@@ -568,10 +544,6 @@ return [
                 'activo' => true,
             ],
         ],
-
-
-
-
 
         // Arrastres: el legacy NO tiene tabla de arrastres (tec_naves está vacía).
         // Los arrastres son tractivos idgrupo=8 (grupo ARRASTRES), unificados en
@@ -597,8 +569,6 @@ return [
                 'estado' => 'disponible',
             ],
         ],
-
-
 
         'consecutivos' => [
             'legacy' => 'tec_consecutivos',
@@ -639,7 +609,6 @@ return [
                 'idagua' => 'id_agua',
             ],
         ],
-
 
         'diferenciales' => [
             'legacy' => 'tec_diferenciales',
@@ -702,7 +671,6 @@ return [
             ],
         ],
 
-
         'historial_tractivos' => [
             'legacy' => 'tec_htractivos',
             'pk' => 'idhtractivos',
@@ -762,8 +730,6 @@ return [
             ],
         ],
 
-
-
         'medidores' => [
             'legacy' => 'tec_electdatos',
             'pk' => 'idelectdatos',
@@ -777,9 +743,6 @@ return [
                 'activo' => true,
             ],
         ],
-
-
-
 
         'motores' => [
             'legacy' => 'tec_motores',
@@ -905,8 +868,6 @@ return [
             ],
         ],
 
-
-
         'subsistemas' => [
             'legacy' => 'tec_tiposubsistemas',
             'pk' => 'idtiposubsistemas',
@@ -946,12 +907,9 @@ return [
         'tipos_arrastres' => [
             'legacy' => 'tec_tipoarrastres',
             'pk' => 'idtipoarrastres',
+            // Post-unificación (2026-08-23): marca/modelo/país/tipo_equipo/
+            // fabricación/tipo_mantenimiento viven en `tipo_vehiculos`, no aquí.
             'columnas' => [
-                'idmarca' => 'id_marca',
-                'idmodelo' => 'id_modelo',
-                'idpaises' => 'id_pais',
-                'idtipoequipos' => 'id_tipo_equipo',
-                'fabricacion' => 'fabricacion',
                 'frecuencia' => 'frecuencia',
                 'idtiposuspension' => 'id_tipo_suspension',
                 'idneumaticosmedidasd' => 'id_medida_del',
@@ -971,32 +929,23 @@ return [
                 'ancho_total' => 'ancho_total',
                 'idlubricantes' => 'id_lubricante',
                 'idlubcubo' => 'id_lub_cubo',
-                'idtipomtto' => 'id_tipo_mantenimiento',
             ],
             'cero_a_null' => [
-                'id_marca', 'id_modelo', 'id_pais', 'id_tipo_equipo', 'id_tipo_suspension',
+                'id_tipo_suspension',
                 'id_medida_del', 'id_medida_tra', 'id_medida_res',
-                'id_lubricante', 'id_lub_cubo', 'id_tipo_mantenimiento',
+                'id_lubricante', 'id_lub_cubo',
             ],
             'fk_validar' => [
-                'id_marca' => 'marcas',
-                'id_modelo' => 'modelos',
-                'id_pais' => 'paises',
-                'id_tipo_equipo' => 'tipos_equipos',
-                'id_tipo_suspension' => 'tipos_suspension',
-                'id_medida_del' => 'medidas_neumaticos',
-                'id_medida_tra' => 'medidas_neumaticos',
-                'id_medida_res' => 'medidas_neumaticos',
+                'id_medida_del' => 'catalogo_items',
+                'id_medida_tra' => 'catalogo_items',
+                'id_medida_res' => 'catalogo_items',
                 'id_lubricante' => 'lubricantes',
                 'id_lub_cubo' => 'lubricantes',
-                'id_tipo_mantenimiento' => 'tipos_mantenimiento',
             ],
             'defaults' => [
                 'activo' => true,
-                'nombre' => '',
             ],
         ],
-
 
         'tipos_combustibles' => [
             'legacy' => 'tec_tipocombustibles',
@@ -1027,7 +976,6 @@ return [
             ],
         ],
 
-
         'tipos_mantenimiento' => [
             'legacy' => 'tec_tipomtto',
             'pk' => 'idtipomtto',
@@ -1057,21 +1005,9 @@ return [
             ],
         ],
 
-        'tipos_operaciones' => [
-            'legacy' => 'tec_tipooperaciones',
-            'pk' => 'idtipooperaciones',
-            'columnas' => [
-                'tipooperaciones' => 'nombre',
-                'codigo' => 'codigo',
-            ],
-            'defaults' => [
-                'activo' => true,
-                'nombre' => '',
-            ],
-        ],
-
-
-
+        // NOTA: tipos_operaciones fue consolidada en el catálogo unificado
+        // (`catalogo_items`, tipo=tipos_operaciones) en la migración
+        // 2026_09_11_140000; ya no tiene tabla propia ni mapeo ETL.
 
         // NOTA: tractivos se migra con EtlService::migrarTractivos() (dedicado):
         // excluye dados de baja, sufijo -entidad en duplicados, estado mapeado
@@ -1088,14 +1024,14 @@ return [
         'tipos_tractivos' => [
             'legacy' => 'tec_tipotractivos',
             'pk' => 'idtipotractivos',
+            // Post-unificación (2026-08-23): marca/modelo/tipo_mantenimiento/
+            // fabricación viven en `tipo_vehiculos`; país y batería voltaje son
+            // columnas propias (migración 2026_09_13_100000).
             'columnas' => [
-                'idmarca' => 'id_marca',
-                'idmodelo' => 'id_modelo',
                 'idpaises' => 'id_pais',
-                'idtipomtto' => 'id_tipo_mantenimiento',
-                'fabricacion' => 'fabricacion',
                 'bat_cant' => 'bat_cant',
                 'bat_amp' => 'bat_amp',
+                'bat_volt' => 'bat_volt',
                 'dif_cant' => 'dif_cant',
                 'dif_relacion' => 'dif_relacion',
                 'dif_ancho' => 'dif_ancho',
@@ -1120,27 +1056,20 @@ return [
                 'cama_altura' => 'cama_altura',
             ],
             'cero_a_null' => [
-                'id_marca', 'id_modelo', 'id_pais', 'id_medida_del', 'id_medida_tra', 'id_medida_res',
-                'id_tipo_combustible', 'id_lubricante_motor', 'id_lubricante_cubo', 'id_tipo_mantenimiento',
-            ],
-            'int_or_null' => [
-                'fabricacion',
+                'id_pais', 'id_medida_del', 'id_medida_tra', 'id_medida_res',
+                'id_tipo_combustible', 'id_lubricante_motor', 'id_lubricante_cubo',
             ],
             'fk_validar' => [
-                'id_marca' => 'marcas',
-                'id_modelo' => 'modelos',
-                'id_pais' => 'paises',
-                'id_medida_del' => 'medidas_neumaticos',
-                'id_medida_tra' => 'medidas_neumaticos',
-                'id_medida_res' => 'medidas_neumaticos',
+                'id_pais' => 'catalogo_items',
+                'id_medida_del' => 'catalogo_items',
+                'id_medida_tra' => 'catalogo_items',
+                'id_medida_res' => 'catalogo_items',
                 'id_tipo_combustible' => 'tipos_combustibles',
                 'id_lubricante_motor' => 'lubricantes',
                 'id_lubricante_cubo' => 'lubricantes',
-                'id_tipo_mantenimiento' => 'tipos_mantenimiento',
             ],
             'defaults' => [
                 'activo' => true,
-                'nombre' => '',
             ],
         ],
 

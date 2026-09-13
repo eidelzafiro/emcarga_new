@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\EntidadScoping;
 use App\Http\Requests\CatalogoItemRequest;
+use App\Models\Area;
 use App\Models\CatalogoItem;
 use App\Models\CatalogoTipo;
-use App\Support\CatalogoSchema;
+use App\Models\Entidad;
 use App\Support\Catalogos;
+use App\Support\CatalogoSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -156,7 +158,7 @@ class CatalogoController extends Controller
         if ($tipo === 'tipos_penalizaciones') {
             $entidades = $this->entidadesPermitidas();
             if (! empty($entidades)) {
-                $idsAreas = \App\Models\Area::whereIn('id_entidad', $entidades)->pluck('id');
+                $idsAreas = Area::whereIn('id_entidad', $entidades)->pluck('id');
                 $query->where(function ($q) use ($idsAreas) {
                     foreach ($idsAreas as $areaId) {
                         $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(extra, '$.area_id')) = ?", [(string) $areaId]);
@@ -266,9 +268,9 @@ class CatalogoController extends Controller
         // pagos adicionales (con el sistema de pago que penalizan en el label).
         if ($tipo === 'tipos_penalizaciones') {
             $entidadId = (int) entidadActivaId();
-            $entidades = $entidadId ? \App\Models\Entidad::idsPermitidos($entidadId) : [];
+            $entidades = $entidadId ? Entidad::idsPermitidos($entidadId) : [];
 
-            $fields['area_id']['options'] = \App\Models\Area::query()
+            $fields['area_id']['options'] = Area::query()
                 ->when(! empty($entidades), fn ($q) => $q->whereIn('id_entidad', $entidades))
                 ->where('activo', true)
                 ->orderBy('nombre')
@@ -277,12 +279,12 @@ class CatalogoController extends Controller
                 ->values()
                 ->all();
 
-            $sistemas = \App\Models\Area::query()
+            $sistemas = Area::query()
                 ->whereNotNull('id_tipo_sistema_pago')
                 ->distinct()
                 ->pluck('id_tipo_sistema_pago');
 
-            $fields['tipo_pago_adicional_id']['options'] = \App\Models\CatalogoItem::query()
+            $fields['tipo_pago_adicional_id']['options'] = CatalogoItem::query()
                 ->where('tipo', 'tipos_pagos_adicionales')
                 ->where('activo', true)
                 ->orderBy('nombre')
@@ -292,7 +294,7 @@ class CatalogoController extends Controller
                     $sists = array_intersect($extra['sistemas_pago'] ?? [], $sistemas->all());
                     $label = $pa->nombre;
                     if ($sists) {
-                        $nombres = \App\Models\CatalogoItem::query()
+                        $nombres = CatalogoItem::query()
                             ->where('tipo', 'tipos_sistemas_pago')
                             ->whereIn('origen_id', $sists)
                             ->pluck('nombre');
@@ -433,7 +435,6 @@ class CatalogoController extends Controller
             && DB::table('tipos_equipos')->where('id', $item->origen_id)->exists()) {
             DB::table('tipos_equipos')->where('id', $item->origen_id)->update([
                 'imagen' => $itemData['extra']['imagen'],
-                'imagen_fuente' => null,
                 'updated_at' => now(),
             ]);
         }

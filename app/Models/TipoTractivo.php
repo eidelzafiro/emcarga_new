@@ -4,9 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 
 class TipoTractivo extends Model
@@ -14,11 +13,11 @@ class TipoTractivo extends Model
     protected $table = 'tipos_tractivos';
 
     protected $fillable = [
-        'bat_cant', 'bat_amp',
+        'bat_cant', 'bat_amp', 'bat_volt',
         'dif_cant', 'dif_relacion', 'dif_ancho',
         'id_medida_del', 'id_medida_tra', 'id_medida_res',
         'neum_del_cant', 'neum_tras_cant', 'neum_resp_cant', 'neum_tractivos',
-        'ejes_cant', 'eject_trac',
+        'ejes_cant', 'eject_trac', 'id_pais',
         'id_tipo_combustible', 'id_lubricante_motor', 'id_lubricante_cubo',
         'id_lubricante_hidraulico', 'cap_hidraulico',
         'lub_norma', 'lub_caja',
@@ -100,5 +99,10 @@ class TipoTractivo extends Model
     public function medidaRes(): BelongsTo
     {
         return $this->belongsTo(CatalogoItem::class, 'id_medida_res');
+    }
+
+    public function pais(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoItem::class, 'id_pais');
     }
 }

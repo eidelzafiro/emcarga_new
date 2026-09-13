@@ -2,14 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\TipoTractivo;
+use App\Models\TipoVehiculo;
 use App\Models\Tractivo;
 use App\Models\User;
 use Tests\TestCase;
 
 class FlotaTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,7 +26,7 @@ class FlotaTest extends TestCase
 
     private function tractivoValido(): Tractivo
     {
-        $tipo = TipoTractivo::create(['codigo' => 'TST', 'nombre' => 'Test']);
+        $tipo = TipoVehiculo::create(['clase' => 'tractivo']);
 
         return Tractivo::factory()->create(['id_tipo_vehiculo' => $tipo->id]);
     }

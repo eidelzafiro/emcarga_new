@@ -6,7 +6,6 @@ use App\Models\CatalogoItem;
 use App\Models\CatalogoTipo;
 use App\Models\User;
 use App\Support\CatalogoSchema;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -19,7 +18,6 @@ use Tests\TestCase;
  */
 class CatalogosTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -130,7 +128,9 @@ class CatalogosTest extends TestCase
 
         $this->assertSame('Activo editado', $item->nombre);
         $this->assertSame('AC2', $item->extra['siglas']);
-        $this->assertSame('a2.png', $item->extra['imagen']);
+        // `imagen` de tipos_estados es de tipo logo: se gestiona por archivo
+        // (logo_archivo). Sin archivo nuevo, se preserva la imagen previa.
+        $this->assertSame('a.png', $item->extra['imagen']);
     }
 
     public function test_catalogo_destroy_elimina(): void

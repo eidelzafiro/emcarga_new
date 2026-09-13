@@ -3,14 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Pizarra;
-use App\Models\TipoTractivo;
+use App\Models\TipoVehiculo;
 use App\Models\Tractivo;
 use App\Models\User;
 use Tests\TestCase;
 
 class PizarraTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -18,9 +17,8 @@ class PizarraTest extends TestCase
 
     private function tractivoValido(): Tractivo
     {
-        $tipo = TipoTractivo::create([
-            'codigo' => 'TEST',
-            'nombre' => 'Test',
+        $tipo = TipoVehiculo::create([
+            'clase' => 'tractivo',
         ]);
 
         return Tractivo::factory()->create([

@@ -24,7 +24,7 @@ class MenuTest extends TestCase
      */
     private function cargarMenuBackup(): void
     {
-        $path = database_path('menu_items_backup_2026-08-17_menuct7.json');
+        $path = database_path('menu_items_backup_2026-09-13.json');
         $items = json_decode(file_get_contents($path), true);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
@@ -39,6 +39,7 @@ class MenuTest extends TestCase
                 'permission' => $i['permission'] ?? null,
                 'orden' => $i['orden'],
                 'activo' => $i['activo'],
+                'siempre_visible' => $i['siempre_visible'] ?? 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -63,12 +64,11 @@ class MenuTest extends TestCase
             fn (Assert $page) => $page
                 ->has('menu', 6)
                 ->where('menu.0.label', 'Dashboard')
-                ->where('menu.1.label', 'Folios')
-                ->where('menu.2.label', 'Catálogos')
-                ->where('menu.2.children.0.label', 'Marcas')
-                ->where('menu.3.label', 'Flota')
-                ->where('menu.3.children.0.label', 'Motores')
-                ->where('menu.4.label', 'Taller')
+                ->where('menu.1.label', 'Catálogos')
+                ->where('menu.2.label', 'Flota')
+                ->where('menu.2.children.0.label', 'Vehículos')
+                ->where('menu.3.label', 'Taller')
+                ->where('menu.4.label', 'Folios')
                 ->where('menu.5.label', 'Reportes')
         );
     }
@@ -80,24 +80,24 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 10)
+                ->has('menu', 14)
                 ->where('menu.0.label', 'Dashboard')
-                ->where('menu.1.label', 'Administración')
-                ->where('menu.1.children.0.label', 'Entidades')
+                ->where('menu.1.label', 'Gestión')
                 ->where('menu.2.label', 'Catálogos')
                 ->where('menu.2.children.0.label', 'Marcas')
-                ->where('menu.3.label', 'Flota')
-                ->where('menu.3.children.0.label', 'Motores')
-                ->where('menu.4.label', 'Taller')
-                ->where('menu.5.label', 'Comercial')
-                ->where('menu.5.children.0.label', 'Hojas de Ruta')
-                ->where('menu.6.label', 'Facturación')
-                ->where('menu.6.children.0.label', 'Facturas')
-                ->where('menu.7.label', 'RRHH')
-                ->where('menu.7.children.0.label', 'Bolsa')
-                ->where('menu.8.label', 'Contabilidad')
-                ->where('menu.8.children.0.label', 'Conciliaciones')
-                ->where('menu.9.label', 'Reportes')
+                ->where('menu.3.label', 'Operativa')
+                ->where('menu.4.label', 'RRHH')
+                ->where('menu.5.label', 'Salario')
+                ->where('menu.6.label', 'Flota')
+                ->where('menu.7.label', 'Taller')
+                ->where('menu.8.label', 'Comercial')
+                ->where('menu.8.children.0.label', 'Clientes')
+                ->where('menu.9.label', 'Facturación')
+                ->where('menu.9.children.0.label', 'Facturas')
+                ->where('menu.10.label', 'Contabilidad')
+                ->where('menu.11.label', 'Administración')
+                ->where('menu.12.label', 'Reportes')
+                ->where('menu.13.label', 'Combustibles')
         );
     }
 
@@ -108,14 +108,13 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 5)
+                ->has('menu', 6)
                 ->where('menu.0.label', 'Dashboard')
-                ->where('menu.1.label', 'Tipos de Documentos')
-                ->where('menu.2.label', 'Catálogos')
-                ->where('menu.2.children.0.label', 'Incidencias')
-                ->where('menu.3.label', 'RRHH')
-                ->where('menu.3.children.0.label', 'Bolsa')
-                ->where('menu.4.label', 'Reportes')
+                ->where('menu.1.label', 'Catálogos')
+                ->where('menu.2.label', 'RRHH')
+                ->where('menu.3.label', 'Salario')
+                ->where('menu.4.label', 'Contabilidad')
+                ->where('menu.5.label', 'Reportes')
         );
     }
 
@@ -126,16 +125,15 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 6)
+                ->has('menu', 7)
                 ->where('menu.0.label', 'Dashboard')
-                ->where('menu.1.label', 'Administración')
+                ->where('menu.1.label', 'Gestión')
                 ->where('menu.2.label', 'Catálogos')
-                ->where('menu.2.children.0.label', 'Distancias')
                 ->where('menu.3.label', 'Comercial')
-                ->where('menu.3.children.0.label', 'Hojas de Ruta')
+                ->where('menu.3.children.0.label', 'Clientes')
                 ->where('menu.4.label', 'Facturación')
-                ->where('menu.4.children.0.label', 'Facturas')
-                ->where('menu.5.label', 'Reportes')
+                ->where('menu.5.label', 'Configurar Impresión Documentos')
+                ->where('menu.6.label', 'Reportes')
         );
     }
 
@@ -146,11 +144,14 @@ class MenuTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertInertia(
             fn (Assert $page) => $page
-                ->has('menu', 3)
+                ->has('menu', 6)
                 ->where('menu.0.label', 'Dashboard')
-                ->where('menu.1.label', 'Contabilidad')
-                ->where('menu.1.children.0.label', 'Conciliaciones')
-                ->where('menu.2.label', 'Reportes')
+                ->where('menu.1.label', 'Tipos Concepto')
+                ->where('menu.2.label', 'Indicadores')
+                ->where('menu.3.label', 'Contabilidad')
+                ->where('menu.3.children.0.label', 'Conciliaciones')
+                ->where('menu.4.label', 'Reportes')
+                ->where('menu.5.label', 'Combustibles')
         );
     }
 }

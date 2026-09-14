@@ -15,10 +15,10 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 
 ## Plan pendiente (2026-09-14 en adelante)
 
-### 1. Fase 5 — Resources + paginación + filtros (parcial)
+### 1. Fase 5 — Resources + paginación + filtros
 - [x] `per_page` (≤100) en todos los índices, `meta`/`links` uniformes (JsonResource).
 - [x] Filtros `search`, `desde`, `hasta`, `mes`, `id_entidad` donde aplica.
-- [ ] `cursorPaginate` en tablas grandes (aforos, descargas).
+- [x] `cursorPaginate` en tablas grandes: `aforos` y `combustible/descargas` (avance con `?cursor=`).
 - [ ] Filtros por fecha de operaciones expuestos en `me` para el cliente.
 
 ### 2. Fase 6 — Seguridad
@@ -29,7 +29,9 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 - [x] `logout-all` (revoca todos los tokens del usuario).
 
 ### 3. Fase 7 — Eficiencia
-- [ ] Eager loading + `withCount`, cache de catálogos, índices compuestos.
+- [x] Eager loading en todos los índices/show (relaciones cargadas con columnas acotadas).
+- [x] Cache de catálogos: `App\Support\Catalogos` (Cache::remember con TTL) ya cubre los catálogos unificados.
+- [x] Índices compuestos `api_*` (migración `2026_09_14_120000`): tractivos(id_entidad,codigo), bolsa(id_entidad,id_area), clientes(id_entidad,nombre), tarjetas(id_entidad,numero), combustible_descargas(id_entidad,fdescarga), ordenes_taller(id_entidad,estado), salarios(id_entidad,mes,ano).
 
 ### 4. Fase 8+ — Colas, Testing, Documentación, Cliente Ionic, CI/CD
 

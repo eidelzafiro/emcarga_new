@@ -93,4 +93,13 @@ class EndpointsApiTest extends TestCase
             ->assertOk()
             ->assertJsonStructure(['user', 'perfil_activo', 'entidades']);
     }
+
+    public function test_aforos_usa_paginacion_por_cursor(): void
+    {
+        [, $token] = $this->usuario();
+
+        $response = $this->withToken($token)->getJson('/api/v1/aforos');
+        $response->assertOk();
+        $response->assertJsonStructure(['data', 'meta' => ['per_page', 'next_cursor', 'prev_cursor']]);
+    }
 }

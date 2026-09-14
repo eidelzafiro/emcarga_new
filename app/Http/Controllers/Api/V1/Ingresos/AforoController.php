@@ -53,7 +53,8 @@ class AforoController extends Controller
 
         $perPage = min(max((int) $request->integer('per_page', 25), 1), 100);
 
-        return AforoResource::collection($query->paginate($perPage));
+        // Paginación por cursor (tabla grande): el cliente avanza con ?cursor=.
+        return AforoResource::collection($query->cursorPaginate($perPage));
     }
 
     public function show(Request $request, Aforo $aforo)

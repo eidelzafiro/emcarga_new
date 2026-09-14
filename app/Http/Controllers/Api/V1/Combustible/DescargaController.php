@@ -51,7 +51,8 @@ class DescargaController extends Controller
 
         $perPage = min(max((int) $request->integer('per_page', 25), 1), 100);
 
-        return CombustibleDescargaResource::collection($query->paginate($perPage));
+        // Paginación por cursor (tabla grande): el cliente avanza con ?cursor=.
+        return CombustibleDescargaResource::collection($query->cursorPaginate($perPage));
     }
 
     public function show(Request $request, CombustibleDescarga $descarga)

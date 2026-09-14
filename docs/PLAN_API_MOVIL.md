@@ -3,36 +3,32 @@
 Estado: 2026-09-13. Stack real: **Laravel 13.8 + MariaDB 10.19 + Inertia/Vue**.
 Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo/FCM** (con fallback in-app).
 
-## Estado de avance (2026-09-13)
+## Estado de avance (2026-09-14)
 
 - ✅ **Fase 0** rama `feature/api-mobile`.
 - ✅ **Fase 1** Sanctum ^4.3 + `personal_access_tokens` + `HasApiTokens` (commit `fd44a9d`).
 - ✅ **Fase 2** `/api/v1` registrado en `bootstrap/app.php` → `routes/api.php` → `api_v1.php`.
 - ✅ **Fase 3** `AuthController` (login/me/logout/logout-all) + `UserResource` + rate limiter `login` (commit `fd44a9d`).
-- ✅ **Fase 4 (piloto)** Flota/Tractivos + `ResolverEntidadApi` + `ScopesEntidadApi` + test de aislamiento (commit `dbcb38b`).
-- Suite: **248 fast verdes**. Endpoint probado: `GET /api/v1/ping` → `{"ok":true,"version":"v1"}`.
+- ✅ **Fase 4** Flota/Tractivos + `ResolverEntidadApi` + `ScopesEntidadApi` (commit `dbcb38b`).
+- ✅ **Fase 4 completa (2026-09-14)**: 17 endpoints de negocio + `ResolverFechaOperacionesApi` (ability `fecha:{Y-m}`) + `ContextoController` (`contexto/entidad`, `contexto/fecha` editan las abilities del token). Módulos: RRHH (bolsa, cargos, salarios), Comercial (clientes, lugares, acuerdos), Ingresos (aforos, facturas, indicadores), Combustible (cargas, descargas, tarjetas, reportes-costos), Taller (órdenes, control-lubricantes).
+- Suite: **290 fast verdes** (42 nuevos: smoke de endpoints + aislamiento por entidad). Endpoint probado: `GET /api/v1/ping` → `{"ok":true,"version":"v1"}`.
 
-## Plan para mañana (2026-09-14)
+## Plan pendiente (2026-09-14 en adelante)
 
-### 1. Completar Fase 4 — resto de módulos (mismo molde)
-Patrón por módulo: `Controller` (index/show) + `Resource` + `ScopesEntidadApi` + rutas `auth:sanctum,api.entidad` + test de aislamiento.
-- [ ] **RRHH**: `bolsa` (empleados), `cargos`, `salarios` (admin/choferes, lectura del mes de operaciones).
-- [ ] **Clientes**: `clientes`, `lugares`, `acuerdos`.
-- [ ] **Ingresos/Indicadores**: `aforos` (por mes de operaciones), `facturas`, `indicadores` (resumen).
-- [ ] **Combustible**: `combustible-cargas`, `combustible-descargas`, `tarjetas`, `reportes-costos`.
-- [ ] **Taller**: `ordenes-taller`, `control-lubricantes`.
-- [ ] `contexto/entidad` y `contexto/fecha` (fijar entidad/mes del token; abilities editables).
+### 1. Fase 5 — Resources + paginación + filtros (parcial)
+- [x] `per_page` (≤100) en todos los índices, `meta`/`links` uniformes (JsonResource).
+- [x] Filtros `search`, `desde`, `hasta`, `mes`, `id_entidad` donde aplica.
+- [ ] `cursorPaginate` en tablas grandes (aforos, descargas).
+- [ ] Filtros por fecha de operaciones expuestos en `me` para el cliente.
 
-### 2. Fase 5 — Resources + paginación + filtros
-- [ ] `per_page` (≤100), `cursorPaginate` en tablas grandes, `meta`/`links` uniformes.
-- [ ] Filtros `search`, `desde`, `hasta`, `mes`, `id_entidad`.
-
-### 3. Fase 6 — Seguridad
-- [ ] `throttle:api` (60/min), CORS del origen Ionic, expiración de tokens, `logout-all`.
+### 2. Fase 6 — Seguridad
+- [ ] `throttle:api` (60/min), CORS del origen Ionic, expiración de tokens.
 - [ ] `SecurityHeaders` en API (HSTS).
 
-### 4. Fase 7 — Eficiencia
+### 3. Fase 7 — Eficiencia
 - [ ] Eager loading + `withCount`, cache de catálogos, índices compuestos.
+
+### 4. Fase 8+ — Colas, Testing, Documentación, Cliente Ionic, CI/CD
 
 ### Decisiones pendientes
 - [ ] Ionic+Vue vs Ionic+React (asumido Vue).
@@ -116,7 +112,7 @@ routes/{api.php,api_v1.php}
 - [ ] Token con abilities `entidad:{id}`, `perfil:{rol}`, `fecha:{Y-m}`
 
 ### Fase 4 — Endpoints de negocio (30 h)
-- [ ] Flota, RRHH, Clientes, Ingresos/Indicadores, Combustible, Taller (scoping por entidad)
+- [x] Flota, RRHH, Clientes, Ingresos/Indicadores, Combustible, Taller (scoping por entidad)
 
 ### Fase 5 — Resources + paginación + filtros (10 h)
 ### Fase 6 — Seguridad (8 h)

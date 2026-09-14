@@ -43,7 +43,7 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 
 ### 5. Fase 9+ — Testing, Documentación, Cliente Ionic, CI/CD
 - [x] Fase 10: documentación OpenAPI con **Scramble** (`dedoc/scramble` ^0.13). UI en `/docs/api`, JSON en `/docs/api.json`; spec exportado en `docs/openapi-v1.json` (`php artisan scramble:export`). Acceso restringido a local o SUPERADMIN (gate `viewApiDocs`). Bearer documentado automáticamente.
-- [ ] Fase 11: cliente móvil Ionic (repo separado).
+- [x] Fase 11 (MVP): cliente **Ionic 9 + Vue 3 + Capacitor** en repo separado `../zafiro-mobile`. Login, contexto (entidad/mes), dashboard, módulos genéricos (17 endpoints), notificaciones in-app, offline (caché 15 min) y push (best-effort). `npm run build` y tests Vitest verdes.
 - [ ] Fase 12: CI/CD.
 
 ### Decisiones pendientes
@@ -139,6 +139,8 @@ routes/{api.php,api_v1.php}
 ### Fase 10 — Documentación (Scribe/Scramble) (6 h)
 - [x] Scramble: OpenAPI 3.1 + UI `/docs/api`; spec `docs/openapi-v1.json`; acceso SUPERADMIN/local.
 ### Fase 11 — Cliente móvil Ionic (25 h)
+- [x] MVP scaffolded en `../zafiro-mobile` (Ionic 9 + Vue 3 + Capacitor 8): auth, contexto, dashboard, listados genéricos, notificaciones, offline, push.
+- [ ] Empaquetado nativo (Android/iOS), iconos/splash y pruebas en dispositivo.
 ### Fase 12 — CI/CD (8 h)
 
 Total: ~141 h (~18 días).

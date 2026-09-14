@@ -36,17 +36,21 @@ artifact `zafiro-debug-apk` (ruta `android/app/build/outputs/apk/debug/app-debug
   actual. Además esta sesión: login rediseñado (sin placeholder "EIDEL", mostrar/ocultar
   contraseña) y selector de tema Claro/Oscuro/Sistema en Perfil (`stores/tema.ts`,
   `html.dark` en `variables.css`).
-- ✅ **Etapa D (push real)** — desajuste detectado y resuelto en código (commit por llegar):
-  el cliente Ionic+Capacitor genera tokens **FCM**, no `ExponentPushToken`, por lo que
-  `ExpoPushSender` nunca habría funcionado. Se implementó `FcmPushSender` (FCM HTTP v1:
-  JWT RS256 firmado con la private key del service account → `access_token` OAuth 2.0
-  cacheado 55 min → `messages:send`, con `data`, `android.priority=high` y
-  `apns.aps.sound`). Config: `PUSH_PROVIDER=off|fcm|expo` (default `off`, im-varying
-  soporta Expo como legacy); `.env` con `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`,
-  `FCM_PRIVATE_KEY`, `FCM_SEND_URI` y `EXPO_ACCESS_TOKEN`; `NullPushSender` si faltan
-  credenciales. 5 tests nuevos (`Fase8FcmPushTest`, 12 assertions) + 308 del baseline =
-  313 verdes. Falta para activar: proyecto Firebase + `google-services.json` en
-  `zafiro-mobile/android/app/` y salida a internet (FCM bloqueado en Cuba).
+- ✅ **Etapa D (push real)** — desajuste detectado y resuelto en código (commits `41fa8fe`,
+  `(c9a4f14)`): el cliente Ionic+Capacitor genera tokens **FCM**, no `ExponentPushToken`,
+  por lo que `ExpoPushSender` nunca habría funcionado. Se implementó `FcmPushSender`
+  (FCM HTTP v1: JWT RS256 firmado con la private key del service account → `access_token`
+  OAuth 2.0 cacheado 55 min → `messages:send`, con `data`, `android.priority=high` y
+  `apns.aps.sound`). Config: `PUSH_PROVIDER=off|fcm|expo` (default `off`, Expo queda como
+  legacy); credenciales vía `FCM_CREDENTIALS_JSON` (archivo completo del service account,
+  alternativas sueltas `FCM_PROJECT_ID/FCM_CLIENT_EMAIL/FCM_PRIVATE_KEY`); `NullPushSender`
+  si faltan credenciales. 5 tests nuevos (`Fase8FcmPushTest`, 12 assertions) + baseline
+  = 313 verdes. **Verificado 2026-09-14 con proyecto Firebase real** `zafiro-8cff8`:
+  `google-services.json` en `zafiro-mobile/android/app/`, service account en
+  `storage/app/firebase/zafiro-service-account.json`; OAuth autentica y FCM responde a
+  envíos (400 en prueba con token dummy = conexión OK). Activo en `.env`
+  (`PUSH_PROVIDER=fcm`). Pendiente: token FCM real de un dispositivo (instalar APK con el
+  plugin y `google-services.json`), ya que FCM sigue necesitando prueba de extremo a extremo.
 
 ## Plan pendiente (2026-09-14 en adelante)
 

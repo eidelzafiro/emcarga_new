@@ -39,7 +39,7 @@ class AppServiceProvider extends ServiceProvider
             $provider = (string) config('services.push.provider', 'off');
 
             if ($provider === 'fcm') {
-                $fcm = config('services.fcm');
+                $fcm = $this->credencialesFcm();
 
                 if (empty($fcm['project_id']) || empty($fcm['client_email']) || empty($fcm['private_key'])) {
                     return new NullPushSender();
@@ -62,6 +62,41 @@ class AppServiceProvider extends ServiceProvider
 
             return new NullPushSender();
         });
+    }
+
+    /**
+     * Credenciales FCM: prioriza el archivo del service account de Firebase
+     * (`FCM_CREDENTIALS_JSON`) y como alternativa las variables sueltas del
+     * .env (`FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY`).
+     *
+     * @return array{project_id: string|null, client_email: string|null, private_key: string|null, token_uri: string|null, send_uri: string|null}
+     */
+    private function credencialesFcm(): array
+    {
+        $fcm = config('services.fcm');
+
+        $ruta = $fcm['credentials_json'] ?? null;
+        if ($ruta !== null && $ruta !== '' && is_file($ruta)) {
+            $datos = json_decode((string) file_get_contents($ruta), true);
+
+            if (is_array($datos)) {
+                return [
+                    'project_id' => $datos['project_id'] ?? null,
+                    'client_email' => $datos['client_email'] ?? null,
+                    'private_key' => $datos['private_key'] ?? null,
+                    'token_uri' => $datos['token_uri'] ?? null,
+                    'send_uri' => $fcm['send_uri'] ?? null,
+                ];
+            }
+        }
+
+        return [
+            'project_id' => $fcm['project_id'] ?? null,
+            'client_email' => $fcm['client_email'] ?? null,
+            'private_key' => $fcm['private_key'] ?? null,
+            'token_uri' => $fcm['token_uri'] ?? null,
+            'send_uri' => $fcm['send_uri'] ?? null,
+        ];
     }
 
     /**

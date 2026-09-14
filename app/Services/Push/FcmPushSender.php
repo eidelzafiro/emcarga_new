@@ -41,7 +41,9 @@ class FcmPushSender implements PushSender
                 return false;
             }
 
-            $url = $this->sendUri ?? "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
+            $url = (! empty($this->sendUri))
+                ? $this->sendUri
+                : "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
 
             $response = Http::timeout(10)
                 ->acceptJson()

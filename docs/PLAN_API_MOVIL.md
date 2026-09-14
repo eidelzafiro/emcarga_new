@@ -36,7 +36,17 @@ artifact `zafiro-debug-apk` (ruta `android/app/build/outputs/apk/debug/app-debug
   actual. Además esta sesión: login rediseñado (sin placeholder "EIDEL", mostrar/ocultar
   contraseña) y selector de tema Claro/Oscuro/Sistema en Perfil (`stores/tema.ts`,
   `html.dark` en `variables.css`).
-- ⏳ **Etapa D (push real)** — pendiente: activar `EXPO_PUSH_ENABLED` cuando haya salida a internet.
+- ✅ **Etapa D (push real)** — desajuste detectado y resuelto en código (commit por llegar):
+  el cliente Ionic+Capacitor genera tokens **FCM**, no `ExponentPushToken`, por lo que
+  `ExpoPushSender` nunca habría funcionado. Se implementó `FcmPushSender` (FCM HTTP v1:
+  JWT RS256 firmado con la private key del service account → `access_token` OAuth 2.0
+  cacheado 55 min → `messages:send`, con `data`, `android.priority=high` y
+  `apns.aps.sound`). Config: `PUSH_PROVIDER=off|fcm|expo` (default `off`, im-varying
+  soporta Expo como legacy); `.env` con `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`,
+  `FCM_PRIVATE_KEY`, `FCM_SEND_URI` y `EXPO_ACCESS_TOKEN`; `NullPushSender` si faltan
+  credenciales. 5 tests nuevos (`Fase8FcmPushTest`, 12 assertions) + 308 del baseline =
+  313 verdes. Falta para activar: proyecto Firebase + `google-services.json` en
+  `zafiro-mobile/android/app/` y salida a internet (FCM bloqueado en Cuba).
 
 ## Plan pendiente (2026-09-14 en adelante)
 
@@ -60,11 +70,11 @@ artifact `zafiro-debug-apk` (ruta `android/app/build/outputs/apk/debug/app-debug
 
 ### 4. Fase 8 — Colas/async + push
 - [x] Tablas `device_tokens` y `api_sync_log` (migración `2026_09_14_130000`).
-- [x] `PushSender` (contrato) + `ExpoPushSender` + `NullPushSender` (fallback offline, Cuba).
+- [x] `PushSender` (contrato) + `FcmPushSender` (HTTP v1, proveedor real) + `ExpoPushSender` (legacy) + `NullPushSender` (fallback offline, Cuba).
 - [x] Job `EnviarPush` (cola `database`, 3 intentos) y listener `EnviarPushNotificacion` sobre `NotificationSent`.
 - [x] Endpoints: `POST/DELETE /dispositivos`, `GET /notificaciones`, `POST /notificaciones/{id}/leer`, `POST /notificaciones/leer-todas`, `POST /sync/pull`.
-- [x] Push desactivado por defecto (`EXPO_PUSH_ENABLED=false`); el cliente recibe la notificación in-app.
-- [ ] Push real cuando haya salida a internet (activar `EXPO_PUSH_ENABLED` + token).
+- [x] Push desactivado por defecto (`PUSH_PROVIDER=off`); el cliente recibe la notificación in-app.
+- [ ] Push real cuando haya salida a internet (`PUSH_PROVIDER=fcm` + credenciales Firebase + `google-services.json` en el móvil).
 
 ### 5. Fase 9+ — Testing, Documentación, Cliente Ionic, CI/CD
 - [x] Fase 10: documentación OpenAPI con **Scramble** (`dedoc/scramble` ^0.13). UI en `/docs/api`, JSON en `/docs/api.json`; spec exportado en `docs/openapi-v1.json` (`php artisan scramble:export`). Acceso restringido a local o SUPERADMIN (gate `viewApiDocs`). Bearer documentado automáticamente.

@@ -8,6 +8,7 @@ use App\Models\Aforo;
 use App\Models\Arrastre;
 use App\Models\Tractivo;
 use App\Services\Push\ExpoPushSender;
+use App\Services\Push\FcmPushSender;
 use App\Services\Push\NullPushSender;
 use App\Services\Push\PushSender;
 use App\Policies\IndicadorePolicy;
@@ -31,11 +32,31 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Envío push móvil: Expo si está habilitado, si no un no-op (offline).
+        // Envío push móvil: Firebase (FCM) si está habilitado, Expo como
+        // alternativa legacy, y un no-op (offline) por defecto. El cliente
+        // Ionic genera tokens FCM → `PUSH_PROVIDER=fcm` es el camino real.
         $this->app->singleton(PushSender::class, function () {
-            $expo = config('services.expo');
+            $provider = (string) config('services.push.provider', 'off');
 
-            if (! empty($expo['push_enabled'])) {
+            if ($provider === 'fcm') {
+                $fcm = config('services.fcm');
+
+                if (empty($fcm['project_id']) || empty($fcm['client_email']) || empty($fcm['private_key'])) {
+                    return new NullPushSender();
+                }
+
+                return new FcmPushSender(
+                    $fcm['project_id'],
+                    $fcm['client_email'],
+                    $fcm['private_key'],
+                    $fcm['token_uri'] ?? 'https://oauth2.googleapis.com/token',
+                    $fcm['send_uri'] ?? null,
+                );
+            }
+
+            if ($provider === 'expo') {
+                $expo = config('services.expo');
+
                 return new ExpoPushSender($expo['endpoint'], $expo['access_token'] ?? null);
             }
 

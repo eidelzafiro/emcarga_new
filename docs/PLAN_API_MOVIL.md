@@ -28,9 +28,14 @@ artifact `zafiro-debug-apk` (ruta `android/app/build/outputs/apk/debug/app-debug
   `src/utils/formato.ts` (formatear/colorEstado/labelHumano/tipoDeCampo); config `modulo.filtros`
   y `modulo.detalle` (aforos/facturas/tarjetas/órdenes/lubricantes con filtros de estado estáticos).
   `indicadores` queda sin detalle (backend no expone `show`).
-- 🔄 **Etapa C (dashboard con gráficos)** — en curso: preparar endpoint `GET /api/v1/dashboard/resumen`
-  (series mensuales/diarias de ingresos aforos, scoping entidad como `AforoController`) + gráfico
-  de barras SVG (sin dependencias).
+- ✅ **Etapa C (dashboard con gráficos)** — commit `696c83e` backend / `9a12ca5` móvil:
+  endpoint `GET /api/v1/dashboard/resumen` (series mensual 12 meses + diaria del mes de
+  operaciones de `aforos.ingreso_mt`, scoping entidad vía `whereHas cartaPorte`), controlador
+  `Api/V1/DashboardController` + tests de smoke (200/401), 37 tests API verdes; gráfico de
+  barras SVG sin dependencias (`GraficoBarras.vue`) en el dashboard con resaltado del mes
+  actual. Además esta sesión: login rediseñado (sin placeholder "EIDEL", mostrar/ocultar
+  contraseña) y selector de tema Claro/Oscuro/Sistema en Perfil (`stores/tema.ts`,
+  `html.dark` en `variables.css`).
 - ⏳ **Etapa D (push real)** — pendiente: activar `EXPO_PUSH_ENABLED` cuando haya salida a internet.
 
 ## Plan pendiente (2026-09-14 en adelante)
@@ -64,7 +69,7 @@ artifact `zafiro-debug-apk` (ruta `android/app/build/outputs/apk/debug/app-debug
 ### 5. Fase 9+ — Testing, Documentación, Cliente Ionic, CI/CD
 - [x] Fase 10: documentación OpenAPI con **Scramble** (`dedoc/scramble` ^0.13). UI en `/docs/api`, JSON en `/docs/api.json`; spec exportado en `docs/openapi-v1.json` (`php artisan scramble:export`). Acceso restringido a local o SUPERADMIN (gate `viewApiDocs`). Bearer documentado automáticamente.
 - [x] Fase 11 (MVP): cliente **Ionic 9 + Vue 3 + Capacitor** en repo separado `../zafiro-mobile`. Login, contexto (entidad/mes), dashboard, módulos genéricos (17 endpoints), notificaciones in-app, offline (caché 15 min) y push (best-effort). `npm run build` y tests Vitest verdes.
-- [ ] Fase 12: CI/CD.
+- [ ] Fase 12: CI/CD (APK debug ya compila en GitHub Actions; falta firma release).
 
 ### Decisiones pendientes
 - [ ] Ionic+Vue vs Ionic+React (asumido Vue).

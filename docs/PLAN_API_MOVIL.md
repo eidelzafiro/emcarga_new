@@ -140,7 +140,9 @@ routes/{api.php,api_v1.php}
 - [x] Scramble: OpenAPI 3.1 + UI `/docs/api`; spec `docs/openapi-v1.json`; acceso SUPERADMIN/local.
 ### Fase 11 — Cliente móvil Ionic (25 h)
 - [x] MVP scaffolded en `../zafiro-mobile` (Ionic 9 + Vue 3 + Capacitor 8): auth, contexto, dashboard, listados genéricos, notificaciones, offline, push.
-- [ ] Empaquetado nativo (Android/iOS), iconos/splash y pruebas en dispositivo.
+- [x] Marca e integración nativa: iconos/splash vectoriales (136 recursos Android), plugins splash-screen/status-bar, plataforma **Android andamiada** (`android/`).
+- [ ] Compilar el APK (`./gradlew assembleDebug`) — requiere JDK 21 + Android SDK (no disponibles en el entorno de build).
+- [ ] iOS (requiere macOS/Xcode) y firma de release.
 ### Fase 12 — CI/CD (8 h)
 
 Total: ~141 h (~18 días).

@@ -138,6 +138,12 @@ class User extends Authenticatable
         return $this->belongsToMany(Entidad::class, 'entidad_user')->withTimestamps();
     }
 
+    /** Dispositivos móviles registrados para notificaciones push. */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class, 'user_id');
+    }
+
     /**
      * Entidades que el usuario puede seleccionar como contexto de trabajo:
      * su propia entidad + las subordinadas en la jerarquía (para ADMIN

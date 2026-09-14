@@ -9,13 +9,16 @@ use App\Http\Controllers\Api\V1\Combustible\DescargaController as CombustibleDes
 use App\Http\Controllers\Api\V1\Combustible\ReporteCostoController;
 use App\Http\Controllers\Api\V1\Combustible\TarjetaController;
 use App\Http\Controllers\Api\V1\ContextoController;
+use App\Http\Controllers\Api\V1\DispositivoController;
 use App\Http\Controllers\Api\V1\Flota\TractivoController;
 use App\Http\Controllers\Api\V1\Ingresos\AforoController;
 use App\Http\Controllers\Api\V1\Ingresos\FacturaController;
 use App\Http\Controllers\Api\V1\Ingresos\IndicadorController;
+use App\Http\Controllers\Api\V1\NotificacionController;
 use App\Http\Controllers\Api\V1\Rrhh\BolsaController;
 use App\Http\Controllers\Api\V1\Rrhh\CargoController;
 use App\Http\Controllers\Api\V1\Rrhh\SalarioController;
+use App\Http\Controllers\Api\V1\SyncController;
 use App\Http\Controllers\Api\V1\Taller\ControlLubricanteController;
 use App\Http\Controllers\Api\V1\Taller\OrdenController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +42,18 @@ Route::middleware(['auth:sanctum', 'api.entidad', 'api.fecha', 'throttle:api'])-
     // Contexto de trabajo (edita las abilities del token)
     Route::post('contexto/entidad', [ContextoController::class, 'entidad']);
     Route::post('contexto/fecha', [ContextoController::class, 'fecha']);
+
+    // Dispositivos push (Fase 8)
+    Route::post('dispositivos', [DispositivoController::class, 'store']);
+    Route::delete('dispositivos', [DispositivoController::class, 'destroy']);
+
+    // Notificaciones in-app (fallback del push)
+    Route::get('notificaciones', [NotificacionController::class, 'index']);
+    Route::post('notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
+    Route::post('notificaciones/{id}/leer', [NotificacionController::class, 'leer']);
+
+    // Sincronización offline-first
+    Route::post('sync/pull', [SyncController::class, 'pull']);
 
     // Flota · Tractivos
     Route::get('tractivos', [TractivoController::class, 'index']);

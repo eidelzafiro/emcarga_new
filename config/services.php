@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Push móvil (Expo)
+    |--------------------------------------------------------------------------
+    |
+    | El envío push es best-effort: en Cuba FCM/Expo puede estar bloqueado, así
+    | que por defecto está DESACTIVADO y el cliente recibe la notificación
+    | in-app (canal database). Activar con EXPO_PUSH_ENABLED=true cuando haya
+    | salida a internet.
+    |
+    */
+
+    'expo' => [
+        'push_enabled' => (bool) env('EXPO_PUSH_ENABLED', false),
+        'access_token' => env('EXPO_ACCESS_TOKEN'),
+        'endpoint' => env('EXPO_PUSH_ENDPOINT', 'https://exp.host/--/api/v2/push/send'),
+    ],
+
 ];

@@ -7,6 +7,9 @@ use App\Database\Processors\MariaDbProcessorOverride;
 use App\Models\Aforo;
 use App\Models\Arrastre;
 use App\Models\Tractivo;
+use App\Services\Push\ExpoPushSender;
+use App\Services\Push\NullPushSender;
+use App\Services\Push\PushSender;
 use App\Policies\IndicadorePolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -28,7 +31,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Envío push móvil: Expo si está habilitado, si no un no-op (offline).
+        $this->app->singleton(PushSender::class, function () {
+            $expo = config('services.expo');
+
+            if (! empty($expo['push_enabled'])) {
+                return new ExpoPushSender($expo['endpoint'], $expo['access_token'] ?? null);
+            }
+
+            return new NullPushSender();
+        });
     }
 
     /**

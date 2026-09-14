@@ -33,7 +33,18 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 - [x] Cache de catálogos: `App\Support\Catalogos` (Cache::remember con TTL) ya cubre los catálogos unificados.
 - [x] Índices compuestos `api_*` (migración `2026_09_14_120000`): tractivos(id_entidad,codigo), bolsa(id_entidad,id_area), clientes(id_entidad,nombre), tarjetas(id_entidad,numero), combustible_descargas(id_entidad,fdescarga), ordenes_taller(id_entidad,estado), salarios(id_entidad,mes,ano).
 
-### 4. Fase 8+ — Colas, Testing, Documentación, Cliente Ionic, CI/CD
+### 4. Fase 8 — Colas/async + push
+- [x] Tablas `device_tokens` y `api_sync_log` (migración `2026_09_14_130000`).
+- [x] `PushSender` (contrato) + `ExpoPushSender` + `NullPushSender` (fallback offline, Cuba).
+- [x] Job `EnviarPush` (cola `database`, 3 intentos) y listener `EnviarPushNotificacion` sobre `NotificationSent`.
+- [x] Endpoints: `POST/DELETE /dispositivos`, `GET /notificaciones`, `POST /notificaciones/{id}/leer`, `POST /notificaciones/leer-todas`, `POST /sync/pull`.
+- [x] Push desactivado por defecto (`EXPO_PUSH_ENABLED=false`); el cliente recibe la notificación in-app.
+- [ ] Push real cuando haya salida a internet (activar `EXPO_PUSH_ENABLED` + token).
+
+### 5. Fase 9+ — Testing, Documentación, Cliente Ionic, CI/CD
+- [ ] Fase 10: documentación OpenAPI (Scribe/Scramble).
+- [ ] Fase 11: cliente móvil Ionic (repo separado).
+- [ ] Fase 12: CI/CD.
 
 ### Decisiones pendientes
 - [ ] Ionic+Vue vs Ionic+React (asumido Vue).
@@ -123,6 +134,7 @@ routes/{api.php,api_v1.php}
 ### Fase 6 — Seguridad (8 h)
 ### Fase 7 — Eficiencia (10 h)
 ### Fase 8 — Colas/async (6 h)
+- [x] Tablas `device_tokens` + `api_sync_log`; job `EnviarPush` en cola `database`; listener de `NotificationSent`.
 ### Fase 9 — Testing (12 h)
 ### Fase 10 — Documentación (Scribe/Scramble) (6 h)
 ### Fase 11 — Cliente móvil Ionic (25 h)
@@ -138,7 +150,7 @@ Total: ~141 h (~18 días).
 
 ## 5. Datos
 - Verificar `personal_access_tokens` (ya existe).
-- Nuevas: `device_tokens`, `api_sync_log`.
+- Nuevas: `device_tokens`, `api_sync_log` (migración `2026_09_14_130000`, aplicada).
 - Índices: `tractivos(id_entidad,codigo)`, `bolsa(id_entidad,id_area)`, `aforos(id_carta_porte,fecha_parte)`, `combustible_descargas(id_tarjeta,fdescarga)`, `ordenes_taller(id_entidad,estado)`.
 
 ## 6. Checklist de seguridad

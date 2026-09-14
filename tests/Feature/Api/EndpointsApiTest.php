@@ -91,7 +91,7 @@ class EndpointsApiTest extends TestCase
 
         $this->withToken($token)->getJson('/api/v1/auth/me')
             ->assertOk()
-            ->assertJsonStructure(['user', 'perfil_activo', 'entidades']);
+            ->assertJsonStructure(['user', 'perfil_activo', 'entidad_activa', 'fecha_operaciones', 'entidades']);
     }
 
     public function test_aforos_usa_paginacion_por_cursor(): void

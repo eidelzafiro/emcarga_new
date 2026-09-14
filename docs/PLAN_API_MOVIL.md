@@ -19,7 +19,7 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 - [x] `per_page` (≤100) en todos los índices, `meta`/`links` uniformes (JsonResource).
 - [x] Filtros `search`, `desde`, `hasta`, `mes`, `id_entidad` donde aplica.
 - [x] `cursorPaginate` en tablas grandes: `aforos` y `combustible/descargas` (avance con `?cursor=`).
-- [ ] Filtros por fecha de operaciones expuestos en `me` para el cliente.
+- [x] Filtros por fecha de operaciones expuestos en `me` para el cliente (`entidad_activa`, `fecha_operaciones`).
 
 ### 2. Fase 6 — Seguridad
 - [x] `throttle:api` (60/min por usuario/IP) en el grupo autenticado; `throttle:login` (5/min) en login.

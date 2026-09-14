@@ -95,6 +95,8 @@ class AuthController extends Controller
         return response()->json([
             'user' => new UserResource($user),
             'perfil_activo' => $user->getRoleNames()->first(),
+            'entidad_activa' => $request->attributes->get('api_entidad_id'),
+            'fecha_operaciones' => $request->attributes->get('api_fecha_operaciones'),
             'permisos' => $user->getAllPermissions()->pluck('name'),
             'entidades' => $user->entidadesAcceso()
                 ->map(fn ($e) => ['id' => $e->id, 'nombre' => $e->nombre, 'abreviatura' => $e->abreviatura ?? $e->nombre])

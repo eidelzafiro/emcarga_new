@@ -141,7 +141,8 @@ routes/{api.php,api_v1.php}
 ### Fase 11 — Cliente móvil Ionic (25 h)
 - [x] MVP scaffolded en `../zafiro-mobile` (Ionic 9 + Vue 3 + Capacitor 8): auth, contexto, dashboard, listados genéricos, notificaciones, offline, push.
 - [x] Marca e integración nativa: iconos/splash vectoriales (136 recursos Android), plugins splash-screen/status-bar, plataforma **Android andamiada** (`android/`).
-- [ ] Compilar el APK (`./gradlew assembleDebug`) — requiere JDK 21 + Android SDK (no disponibles en el entorno de build).
+- [x] **APK compilada vía GitHub Actions** (`eidelzafiro/zafiro-mobile`, workflow `android.yml`): run 34877719400 en verde; APK debug 6.3 MB entregada en `C:\Users\eidel\Downloads\zafiro-debug.apk`.
+- [x] HTTP en claro habilitado (`network_security_config.xml`) para la API en la LAN (`VITE_API_URL=http://192.168.1.102:56561/api/v1`).
 - [ ] iOS (requiere macOS/Xcode) y firma de release.
 ### Fase 12 — CI/CD (8 h)
 

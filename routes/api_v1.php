@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Combustible\DescargaController as CombustibleDes
 use App\Http\Controllers\Api\V1\Combustible\ReporteCostoController;
 use App\Http\Controllers\Api\V1\Combustible\TarjetaController;
 use App\Http\Controllers\Api\V1\ContextoController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DispositivoController;
 use App\Http\Controllers\Api\V1\Flota\TractivoController;
 use App\Http\Controllers\Api\V1\Ingresos\AforoController;
@@ -42,6 +43,9 @@ Route::middleware(['auth:sanctum', 'api.entidad', 'api.fecha', 'throttle:api'])-
     // Contexto de trabajo (edita las abilities del token)
     Route::post('contexto/entidad', [ContextoController::class, 'entidad']);
     Route::post('contexto/fecha', [ContextoController::class, 'fecha']);
+
+    // Dashboard · resumen de ingresos (serie mensual y diaria)
+    Route::get('dashboard/resumen', [DashboardController::class, 'resumen']);
 
     // Dispositivos push (Fase 8)
     Route::post('dispositivos', [DispositivoController::class, 'store']);

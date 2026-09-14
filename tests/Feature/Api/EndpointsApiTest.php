@@ -102,4 +102,31 @@ class EndpointsApiTest extends TestCase
         $response->assertOk();
         $response->assertJsonStructure(['data', 'meta' => ['per_page', 'next_cursor', 'prev_cursor']]);
     }
+
+    public function test_dashboard_resumen_devuelve_series(): void
+    {
+        [, $token] = $this->usuario();
+
+        $response = $this->withToken($token)->getJson('/api/v1/dashboard/resumen');
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'periodo',
+            'entidad',
+            'serie_mensual' => [
+                '*' => ['mes', 'etiqueta', 'aforos', 'ingreso_mt'],
+            ],
+            'serie_diaria' => [
+                '*' => ['dia', 'aforos', 'ingreso_mt'],
+            ],
+        ]);
+
+        $this->assertCount(12, $response->json('serie_mensual'));
+        $this->assertSame(now()->format('Y-m'), $response->json('periodo'));
+    }
+
+    public function test_dashboard_resumen_requiere_token(): void
+    {
+        $this->getJson('/api/v1/dashboard/resumen')->assertUnauthorized();
+    }
 }

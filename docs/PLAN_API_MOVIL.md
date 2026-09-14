@@ -13,6 +13,26 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 - ✅ **Fase 4 completa (2026-09-14)**: 17 endpoints de negocio + `ResolverFechaOperacionesApi` (ability `fecha:{Y-m}`) + `ContextoController` (`contexto/entidad`, `contexto/fecha` editan las abilities del token). Módulos: RRHH (bolsa, cargos, salarios), Comercial (clientes, lugares, acuerdos), Ingresos (aforos, facturas, indicadores), Combustible (cargas, descargas, tarjetas, reportes-costos), Taller (órdenes, control-lubricantes).
 - Suite: **290 fast verdes** (42 nuevos: smoke de endpoints + aislamiento por entidad). Endpoint probado: `GET /api/v1/ping` → `{"ok":true,"version":"v1"}`.
 
+## Estado del cliente móvil (2026-09-14) — repo `../zafiro-mobile`
+
+Stack: **Ionic 9 + Vue 3 + Capacitor 8** (TypeScript, sin empaquetados extra). Build CI en
+GitHub Actions (`android.yml`): `npm ci → test → build → cap sync → JDK 21 → assembleDebug`,
+artifact `zafiro-debug-apk` (ruta `android/app/build/outputs/apk/debug/app-debug.apk`).
+
+- ✅ **Etapa A (UI)** — commit `2f94101`: tema corporativo (`variables.css`), dashboard con
+  tarjetas de contexto (entidad/mes) editables via `SelectorContexto.vue`, `EstadoVacio.vue`,
+  `ModulosPage` como rejilla por grupo.
+- ✅ **Etapa B (detalle + filtros)** — commit `e0f4844`: `DetailPage.vue` genérica (campos
+  auto-formateados fecha/moneda/número/estado, colecciones anidadas como tabla), ruta
+  `/m/:moduloId/:id`, navegación desde listas; `FiltrosPanel.vue` (modal con selects);
+  `src/utils/formato.ts` (formatear/colorEstado/labelHumano/tipoDeCampo); config `modulo.filtros`
+  y `modulo.detalle` (aforos/facturas/tarjetas/órdenes/lubricantes con filtros de estado estáticos).
+  `indicadores` queda sin detalle (backend no expone `show`).
+- 🔄 **Etapa C (dashboard con gráficos)** — en curso: preparar endpoint `GET /api/v1/dashboard/resumen`
+  (series mensuales/diarias de ingresos aforos, scoping entidad como `AforoController`) + gráfico
+  de barras SVG (sin dependencias).
+- ⏳ **Etapa D (push real)** — pendiente: activar `EXPO_PUSH_ENABLED` cuando haya salida a internet.
+
 ## Plan pendiente (2026-09-14 en adelante)
 
 ### 1. Fase 5 — Resources + paginación + filtros

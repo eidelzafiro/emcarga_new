@@ -109,6 +109,10 @@ class AppServiceProvider extends ServiceProvider
         // registra explícitamente para el modelo Aforo.
         Gate::policy(Aforo::class, IndicadorePolicy::class);
 
+        // Documentación OpenAPI (Scramble): RestrictedDocsAccess la limita a
+        // entorno local; fuera de local solo SUPERADMIN (usuarios con sesión web).
+        Gate::define('viewApiDocs', fn ($user = null) => $user !== null && $user->hasRole('SUPERADMIN'));
+
         // O-1 (optimización de suite): cuando se corre con `--parallel`, Laravel
         // crea una BD propia por worker (emcarga_new_test_<token>). Como la suite
         // usa DatabaseTransactions sobre un baseline sembrado (no RefreshDatabase),

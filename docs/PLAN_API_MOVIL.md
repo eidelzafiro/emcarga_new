@@ -42,7 +42,7 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 - [ ] Push real cuando haya salida a internet (activar `EXPO_PUSH_ENABLED` + token).
 
 ### 5. Fase 9+ — Testing, Documentación, Cliente Ionic, CI/CD
-- [ ] Fase 10: documentación OpenAPI (Scribe/Scramble).
+- [x] Fase 10: documentación OpenAPI con **Scramble** (`dedoc/scramble` ^0.13). UI en `/docs/api`, JSON en `/docs/api.json`; spec exportado en `docs/openapi-v1.json` (`php artisan scramble:export`). Acceso restringido a local o SUPERADMIN (gate `viewApiDocs`). Bearer documentado automáticamente.
 - [ ] Fase 11: cliente móvil Ionic (repo separado).
 - [ ] Fase 12: CI/CD.
 
@@ -137,6 +137,7 @@ routes/{api.php,api_v1.php}
 - [x] Tablas `device_tokens` + `api_sync_log`; job `EnviarPush` en cola `database`; listener de `NotificationSent`.
 ### Fase 9 — Testing (12 h)
 ### Fase 10 — Documentación (Scribe/Scramble) (6 h)
+- [x] Scramble: OpenAPI 3.1 + UI `/docs/api`; spec `docs/openapi-v1.json`; acceso SUPERADMIN/local.
 ### Fase 11 — Cliente móvil Ionic (25 h)
 ### Fase 12 — CI/CD (8 h)
 

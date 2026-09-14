@@ -34,6 +34,12 @@ return Application::configure(basePath: dirname(__DIR__))
             AuditoriaEscritura::class,
         ]);
 
+        // La API móvil también recibe cabeceras de seguridad (nosniff, HSTS si
+        // la petición llega por HTTPS, etc.).
+        $middleware->api(append: [
+            SecurityHeaders::class,
+        ]);
+
         $middleware->alias([
             'password.temporal' => RedirectIfPasswordTemporal::class,
             'permiso.modulo' => EnsureModulePermission::class,

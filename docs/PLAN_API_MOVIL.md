@@ -22,8 +22,11 @@ Cliente: **Ionic + Vue** (repo separado). Offline-first **parcial**. Push **Expo
 - [ ] Filtros por fecha de operaciones expuestos en `me` para el cliente.
 
 ### 2. Fase 6 — Seguridad
-- [ ] `throttle:api` (60/min), CORS del origen Ionic, expiración de tokens.
-- [ ] `SecurityHeaders` en API (HSTS).
+- [x] `throttle:api` (60/min por usuario/IP) en el grupo autenticado; `throttle:login` (5/min) en login.
+- [x] CORS del cliente Ionic (`config/cors.php`, orígenes vía `MOBILE_ORIGINS`, sin `*`).
+- [x] Expiración de tokens: `SANCTUM_EXPIRATION` (por defecto 43200 min = 30 días).
+- [x] `SecurityHeaders` aplicado al grupo `api` (nosniff, HSTS si HTTPS).
+- [x] `logout-all` (revoca todos los tokens del usuario).
 
 ### 3. Fase 7 — Eficiencia
 - [ ] Eager loading + `withCount`, cache de catálogos, índices compuestos.

@@ -50,6 +50,13 @@ class AppServiceProvider extends ServiceProvider
                 ->by(strtolower((string) $request->input('username')).'|'.$request->ip());
         });
 
+        // Rate limiter general de la API móvil (60/min por usuario autenticado
+        // o por IP si aún no hay token). Protege todos los endpoints de negocio.
+        RateLimiter::for('api', function ($request) {
+            return Limit::perMinute(60)
+                ->by($request->user()?->id ? 'u:'.$request->user()->id : 'ip:'.$request->ip());
+        });
+
         // Fase C: tipo polimórfico de las fichas de vehículo (amortización,
         // planes, documentación). Debe coincidir con el valor insertado en las
         // tablas vehiculos_* ('tractivo' / 'arrastre' tras la Fase D).

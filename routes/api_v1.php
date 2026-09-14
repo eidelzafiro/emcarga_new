@@ -30,7 +30,7 @@ Route::get('ping', fn () => response()->json(['ok' => true, 'version' => 'v1']))
 
 Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
-Route::middleware(['auth:sanctum', 'api.entidad', 'api.fecha'])->group(function () {
+Route::middleware(['auth:sanctum', 'api.entidad', 'api.fecha', 'throttle:api'])->group(function () {
     // Autenticación
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);

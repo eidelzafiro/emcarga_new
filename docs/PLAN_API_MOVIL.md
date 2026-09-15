@@ -49,8 +49,14 @@ artifact `zafiro-debug-apk` (ruta `android/app/build/outputs/apk/debug/app-debug
   `google-services.json` en `zafiro-mobile/android/app/`, service account en
   `storage/app/firebase/zafiro-service-account.json`; OAuth autentica y FCM responde a
   envíos (400 en prueba con token dummy = conexión OK). Activo en `.env`
-  (`PUSH_PROVIDER=fcm`). Pendiente: token FCM real de un dispositivo (instalar APK con el
-  plugin y `google-services.json`), ya que FCM sigue necesitando prueba de extremo a extremo.
+  (`PUSH_PROVIDER=fcm`). **✅ E2E VERIFICADO 2026-09-15**: APK con `google-services.json`
+  instalado y login OK → token FCM real registrado en `device_tokens` (POST
+  `/api/v1/dispositivos`); `emcarga:notificar` → `EnviarPush` → FCM confirma entrega
+  (`last_used_at` actualizado solo si el proveedor devuelve éxito). ⚠️ Lección de
+  despliegue: el worker `queue:work` es un proceso persistente que cachea el provider
+  al arrancar — tras añadir/quitar bindings del contenedor en `AppServiceProvider`, hay
+  que `docker compose restart app`, o los jobs fallan con
+  `BindingResolutionException: Target [PushSender] is not instantiable`.
 
 ## Plan pendiente (2026-09-14 en adelante)
 
